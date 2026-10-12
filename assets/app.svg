@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="none">
+  <!-- 蓝色直角背景，圆角交给外层容器裁切 -->
+  <rect width="256" height="256" fill="#3a6ff0"/>
+
+  <!-- 四个白色圆角方块，2×2 均匀排列 -->
+  <rect x="40"  y="40"  width="80" height="80" rx="18" fill="#ffffff"/>
+  <rect x="136" y="40"  width="80" height="80" rx="18" fill="#ffffff"/>
+  <rect x="40"  y="136" width="80" height="80" rx="18" fill="#ffffff"/>
+  <rect x="136" y="136" width="80" height="80" rx="18" fill="#ffffff"/>
+</svg>

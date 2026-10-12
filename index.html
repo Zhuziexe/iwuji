@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>iWuji</title>
+<style>
+  :root {
+    --bar-h: 48px;
+    --gap: 16px;
+    --radius: 12px;
+    --design-w: 300px;
+    --design-h: 400px;
+    --key-w: 14px;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; height: 100%; }
+
+  body {
+    display: flex; flex-direction: column;
+    height: 100vh; height: 100dvh;
+    overflow: hidden; overscroll-behavior: none;
+    background: #0f1116; color: #e9ecf2;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI",
+                 "PingFang SC", "Microsoft YaHei", sans-serif;
+  }
+
+  .titlebar {
+    flex: 0 0 auto; height: var(--bar-h);
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 12px; padding: 0 16px;
+    background: #1a1d24; border-bottom: 1px solid #2a2f3a;
+    user-select: none; z-index: 10;
+  }
+  .titlebar .title { font-size: 16px; font-weight: 600; letter-spacing: .6px; }
+  .tb-actions { display: flex; gap: 8px; }
+  .tb-btn {
+    font: inherit; font-size: 13px; line-height: 1;
+    padding: 7px 12px; color: #8ad4ff;
+    background: rgba(138, 212, 255, .08);
+    border: 1px solid rgba(138, 212, 255, .35);
+    border-radius: 6px; cursor: pointer; white-space: nowrap;
+    transition: background .15s, transform .05s;
+  }
+  .tb-btn:hover  { background: rgba(138, 212, 255, .18); }
+  .tb-btn:active { transform: translateY(1px); }
+  .tb-btn--danger {
+    color: #ff9fb5; background: rgba(224,53,107,.08);
+    border-color: rgba(224,53,107,.35);
+  }
+  .tb-btn--danger:hover { background: rgba(224,53,107,.18); }
+
+  .stage {
+    flex: 1 1 auto; min-height: 0;
+    display: flex; align-items: center; justify-content: center;
+    padding: var(--gap) calc(var(--gap) + 20px);
+    overflow: hidden; container-type: size;
+    background: radial-gradient(1200px 600px at 50% 0%, #171b23 0%, #0f1116 70%);
+  }
+
+  .device {
+    position: relative; aspect-ratio: 3 / 4;
+    width: min(100cqw, calc(100cqh * 3 / 4));
+    max-width: 100%; max-height: 100%;
+  }
+  .screen-wrap { position: absolute; inset: 0; }
+
+  .screen {
+    position: absolute; inset: 0;
+    overflow: hidden; background: #000;
+    border-radius: var(--radius);
+    box-shadow: 0 10px 40px rgba(0,0,0,.55), 0 0 0 1px #2a2f3a;
+    z-index: 1;
+  }
+  .screen iframe {
+    position: absolute; left: 50%; top: 50%;
+    width: var(--design-w); height: var(--design-h);
+    border: 0; display: block; background: #000;
+    transform-origin: center center;
+    transform: translate(-50%, -50%) scale(1);
+    will-change: transform;
+  }
+
+  .camera-notch {
+    position: absolute; top: 1.8%; right: 4%;
+    width: clamp(12px, 4.5%, 18px);
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background: #05070c;
+    z-index: 5; pointer-events: none;
+    box-shadow:
+      inset 0 0 0 1px rgba(255,255,255,.06),
+      inset 0 -1px 3px rgba(90,130,255,.6),
+      inset 0 1.5px 2px rgba(0,0,0,1),
+      0 0 6px rgba(0,0,0,.65);
+  }
+  .camera-notch::after {
+    content: "";
+    position: absolute; top: 18%; left: 18%;
+    width: 34%; height: 34%;
+    border-radius: 50%;
+    background: rgba(170,210,255,.45);
+    filter: blur(.6px);
+  }
+
+  /* =========================================================
+     音量 HUD：左侧竖条，带阴影
+     ========================================================= */
+  .volume-hud {
+    position: absolute;
+    left: 5px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 5px;
+    height: 28%;
+    border-radius: 3px;
+    background: rgba(0, 0, 0, 0.42);
+    overflow: hidden;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .25s ease;
+    z-index: 7;
+    /* 阴影：外阴影 + 微内阴影 */
+    box-shadow:
+      0 2px 10px rgba(0, 0, 0, 0.45),
+      0 0 0 1px rgba(0, 0, 0, 0.25),
+      inset 0 1px 1px rgba(255, 255, 255, 0.08);
+  }
+  .volume-hud.is-visible { opacity: 1; }
+
+  .volume-hud i {
+    display: block;
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: 100%;
+    height: 60%;
+    background: #fff;
+    border-radius: inherit;
+    transition: height .08s linear;
+    box-shadow: 0 0 6px rgba(255, 255, 255, 0.5);
+  }
+
+  .screen-sleep {
+    position: absolute; inset: 0;
+    background: #000; border-radius: inherit;
+    opacity: 0; pointer-events: none;
+    transition: opacity .35s;
+    z-index: 100;
+  }
+  .screen.is-sleep .screen-sleep { opacity: 1; pointer-events: auto; }
+
+  .power-menu-overlay {
+    position: absolute; inset: 0; z-index: 200;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(0,0,0,.55);
+    backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+    opacity: 0; pointer-events: none;
+    transition: opacity .2s; border-radius: inherit;
+  }
+  .power-menu-overlay.is-open { opacity: 1; pointer-events: auto; }
+  .power-menu-panel {
+    width: 78%; max-width: 200px; padding: 8px;
+    background: rgba(28, 32, 42, .95);
+    border: 1px solid rgba(255,255,255,.15);
+    border-radius: 12px;
+    box-shadow: 0 20px 50px rgba(0,0,0,.6);
+    display: flex; flex-direction: column; gap: 4px;
+    transform: translateY(6px) scale(.96);
+    transition: transform .2s;
+  }
+  .power-menu-overlay.is-open .power-menu-panel { transform: translateY(0) scale(1); }
+  .power-menu-panel button {
+    padding: 11px 12px; border: 0; border-radius: 7px;
+    background: transparent; color: #e9ecf2;
+    font: inherit; font-size: 13px; letter-spacing: .5px;
+    cursor: pointer; text-align: center;
+    transition: background .15s, color .15s;
+  }
+  .power-menu-panel button:hover { background: rgba(255,255,255,.1); }
+  .power-menu-panel button[data-action="shutdown"]:hover {
+    background: rgba(224,53,107,.2); color: #ff9fb5;
+  }
+  .power-menu-panel button[data-action="cancel"] {
+    color: #8b98ac; border-top: 1px solid rgba(255,255,255,.06);
+  }
+
+  .hw-rail {
+    position: absolute; display: flex; flex-direction: column;
+    gap: 8px; z-index: 2;
+  }
+  .hw-rail--right { left: 100%;  margin-left: 5px;  top: 16%; }
+  .hw-rail--left  { right: 100%; margin-right: 5px; top: 22%; }
+
+  .hw-key {
+    position: relative; width: var(--key-w);
+    padding: 0; border: 0; border-radius: 4px;
+    background: linear-gradient(180deg, #3a4050, #232732);
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,.18),
+      inset 0 -1px 0 rgba(0,0,0,.55),
+      0 2px 4px rgba(0,0,0,.45);
+    cursor: pointer;
+    transition: transform .1s, background .1s, box-shadow .1s;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: none;
+  }
+  .hw-key::before {
+    content: "";
+    position: absolute;
+    inset: -8px -12px;
+    border-radius: inherit;
+  }
+  .hw-key:hover { background: linear-gradient(180deg, #464e60, #2b3140); }
+  .hw-key:active {
+    transform: scaleX(.7);
+    background: linear-gradient(180deg, #4a7dff, #2b5adf);
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,.35),
+      0 0 16px rgba(74,125,255,.8);
+  }
+  .hw-key--power { height: 72px; }
+  .hw-key--vol-up, .hw-key--vol-down { height: 58px; }
+
+  .device:fullscreen, .device:-webkit-full-screen {
+    aspect-ratio: auto;
+    width: 100vw !important; height: 100vh !important;
+    max-width: none !important; max-height: none !important;
+    background: #000;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .device:fullscreen .screen-wrap, .device:-webkit-full-screen .screen-wrap {
+    position: relative; inset: auto; flex: 0 0 auto;
+    width: min(88vw, calc(88vh * 3 / 4)); aspect-ratio: 3 / 4;
+  }
+  .device::backdrop { background: #000; }
+</style>
+</head>
+<body>
+
+<header class="titlebar">
+  <span class="title">iWuji</span>
+  <div class="tb-actions">
+    <button class="tb-btn tb-btn--danger" id="clearDataBtn" type="button">清除数据</button>
+    <button class="tb-btn" id="fsBtn" type="button">[全屏]</button>
+  </div>
+</header>
+
+<main class="stage">
+  <div class="device" id="device">
+    <div class="screen-wrap">
+
+      <div class="screen" id="screen">
+        <iframe id="osFrame" src="wujios.html" title="iWuji OS"></iframe>
+
+        <div class="camera-notch" aria-hidden="true"></div>
+
+        <div class="volume-hud" id="volumeHud" aria-hidden="true">
+          <i id="volumeBar"></i>
+        </div>
+
+        <div class="screen-sleep" aria-hidden="true"></div>
+
+        <div class="power-menu-overlay" id="powerMenu">
+          <div class="power-menu-panel" id="powerMenuPanel"></div>
+        </div>
+      </div>
+
+      <div class="hw-rail hw-rail--right">
+        <button class="hw-key hw-key--power" id="powerKey" type="button"
+                aria-label="电源键" title="短按息屏/亮屏 · 长按弹出菜单"></button>
+      </div>
+
+      <div class="hw-rail hw-rail--left">
+        <button class="hw-key hw-key--vol-up"   id="volUpKey"   type="button"
+                aria-label="音量加" title="点按/长按调整音量"></button>
+        <button class="hw-key hw-key--vol-down" id="volDownKey" type="button"
+                aria-label="音量减" title="点按/长按调整音量"></button>
+      </div>
+
+    </div>
+  </div>
+</main>
+
+<script>
+const DESIGN_W = 300, DESIGN_H = 400;
+const LONG_PRESS_MS = 650;
+const VOL_STEP = 5;
+const VOL_REPEAT_START = 400;
+const VOL_REPEAT_EVERY = 80;
+const SLEEP_COVER_MS = 380;
+
+const deviceEl = document.getElementById('device');
+const screenEl = document.getElementById('screen');
+const osFrame  = document.getElementById('osFrame');
+const fsBtn    = document.getElementById('fsBtn');
+const clearBtn = document.getElementById('clearDataBtn');
+
+const powerKey   = document.getElementById('powerKey');
+const volUpKey   = document.getElementById('volUpKey');
+const volDownKey = document.getElementById('volDownKey');
+
+const volumeHud  = document.getElementById('volumeHud');
+const volumeBar  = document.getElementById('volumeBar');
+
+const powerMenu  = document.getElementById('powerMenu');
+const menuPanel  = document.getElementById('powerMenuPanel');
+
+let osState = 'off';
+let isSleep = false;
+let isMenuOpen = false;
+let volume = 60;
+
+function fit() {
+  const r = screenEl.getBoundingClientRect();
+  if (!r.width || !r.height) return;
+  const scale = Math.min(r.width / DESIGN_W, r.height / DESIGN_H);
+  osFrame.style.transform = `translate(-50%,-50%) scale(${scale})`;
+}
+new ResizeObserver(fit).observe(screenEl);
+osFrame.addEventListener('load', fit);
+window.addEventListener('load', fit);
+document.addEventListener('fullscreenchange', () => setTimeout(fit, 60));
+document.addEventListener('webkitfullscreenchange', () => setTimeout(fit, 60));
+fit();
+
+function sendToOS(action, payload = {}) {
+  try { osFrame.contentWindow?.postMessage({ type: 'iwuji:control', action, payload }, '*'); } catch {}
+}
+window.addEventListener('message', e => {
+  const d = e.data;
+  if (!d || d.type !== 'iwuji:event') return;
+
+  if (d.event === 'statechange') {
+    osState = d.payload?.state || 'off';
+    if (osState !== 'running' && isMenuOpen) hidePowerMenu();
+  }
+
+  /* 物理键：更新音量并显示侧边 HUD */
+  if (d.event === 'volume-change') {
+    volume = Math.max(0, Math.min(100, d.payload?.volume ?? 60));
+    volumeBar.style.height = volume + '%';
+    showVolumeHud();
+  }
+
+  /* 控制中心：静默同步数值，不显示侧边 HUD */
+  if (d.event === 'volume-set') {
+    volume = Math.max(0, Math.min(100, d.payload?.volume ?? 60));
+    volumeBar.style.height = volume + '%';
+  }
+});
+
+fsBtn.addEventListener('click', async () => {
+  try {
+    if (!document.fullscreenElement) await deviceEl.requestFullscreen();
+    else await document.exitFullscreen();
+  } catch (err) { console.error(err); }
+});
+
+clearBtn.addEventListener('click', () => {
+  if (!confirm('确定清除 iWuji 的全部用户数据？')) return;
+  sendToOS('clear-data');
+});
+
+let sleepNotifyTimer = null;
+
+function setSleep(v) {
+  if (isSleep === v) return;
+  isSleep = v;
+  screenEl.classList.toggle('is-sleep', v);
+
+  clearTimeout(sleepNotifyTimer);
+
+  if (v) {
+    sleepNotifyTimer = setTimeout(() => {
+      sendToOS('sleep');
+    }, SLEEP_COVER_MS);
+  } else {
+    sendToOS('wake');
+  }
+}
+
+function buildMenuButtons() {
+  if (osState === 'off') {
+    return `<button type="button" data-action="power-on">开机</button>
+            <button type="button" data-action="cancel">取消</button>`;
+  }
+  if (osState === 'booting' || osState === 'shuttingdown') {
+    return `<button type="button" data-action="cancel">取消</button>`;
+  }
+  return `<button type="button" data-action="shutdown">关机</button>
+          <button type="button" data-action="restart">重启</button>
+          <button type="button" data-action="cancel">取消</button>`;
+}
+function showPowerMenu() {
+  if (isSleep) setSleep(false);
+  menuPanel.innerHTML = buildMenuButtons();
+  powerMenu.classList.add('is-open');
+  isMenuOpen = true;
+}
+function hidePowerMenu() {
+  powerMenu.classList.remove('is-open');
+  isMenuOpen = false;
+}
+powerMenu.addEventListener('click', e => {
+  if (e.target === powerMenu) { hidePowerMenu(); return; }
+  const btn = e.target.closest('button[data-action]');
+  if (!btn) return;
+  const action = btn.dataset.action;
+  hidePowerMenu();
+  if (action === 'power-on') sendToOS('power-on');
+  else if (action === 'shutdown') sendToOS('power-off');
+  else if (action === 'restart') sendToOS('restart');
+});
+
+let pressStartAt = 0, longPressTimer = null, longPressed = false;
+
+powerKey.addEventListener('pointerdown', e => {
+  e.preventDefault();
+  try { powerKey.setPointerCapture(e.pointerId); } catch {}
+  pressStartAt = Date.now();
+  longPressed = false;
+  clearTimeout(longPressTimer);
+  longPressTimer = setTimeout(() => {
+    longPressed = true;
+    if (navigator.vibrate) { try { navigator.vibrate(18); } catch {} }
+    showPowerMenu();
+  }, LONG_PRESS_MS);
+});
+powerKey.addEventListener('pointerup', () => {
+  clearTimeout(longPressTimer);
+  const d = Date.now() - pressStartAt;
+  if (!longPressed && d < LONG_PRESS_MS && !isMenuOpen) shortPress();
+  longPressed = false;
+});
+powerKey.addEventListener('pointercancel', () => {
+  clearTimeout(longPressTimer); longPressed = false;
+});
+function shortPress() {
+  if (osState === 'off') {
+    if (isSleep) setSleep(false);
+    sendToOS('power-on');
+    return;
+  }
+  if (osState === 'booting' || osState === 'shuttingdown') return;
+  setSleep(!isSleep);
+}
+
+let volHideTimer = null;
+let volStartTimer = null;
+let volRepeatTimer = null;
+
+function showVolumeHud() {
+  volumeBar.style.height = volume + '%';
+  volumeHud.classList.add('is-visible');
+  clearTimeout(volHideTimer);
+  volHideTimer = setTimeout(() => volumeHud.classList.remove('is-visible'), 1400);
+}
+
+function changeVolume(delta) {
+  const prev = volume;
+  volume = Math.max(0, Math.min(100, volume + delta));
+  if (volume === prev) return;
+  showVolumeHud();
+  sendToOS('volume-change', { volume });
+}
+
+function bindVolumeKey(el, dir) {
+  const start = e => {
+    e.preventDefault();
+    try { el.setPointerCapture(e.pointerId); } catch {}
+    changeVolume(dir * VOL_STEP);
+    clearTimeout(volStartTimer);
+    clearInterval(volRepeatTimer);
+    volStartTimer = setTimeout(() => {
+      volRepeatTimer = setInterval(() => changeVolume(dir * VOL_STEP), VOL_REPEAT_EVERY);
+    }, VOL_REPEAT_START);
+  };
+  const stop = () => {
+    clearTimeout(volStartTimer);
+    clearInterval(volRepeatTimer);
+  };
+  el.addEventListener('pointerdown', start);
+  el.addEventListener('pointerup', stop);
+  el.addEventListener('pointercancel', stop);
+  el.addEventListener('pointerleave', stop);
+}
+bindVolumeKey(volUpKey,   +1);
+bindVolumeKey(volDownKey, -1);
+
+volumeBar.style.height = volume + '%';
+
+window.addEventListener('keydown', e => {
+  if ((e.ctrlKey || e.metaKey) && e.altKey && e.key.toLowerCase() === 'p') {
+    e.preventDefault(); shortPress();
+  }
+  if (e.key === 'Escape' && isMenuOpen) hidePowerMenu();
+});
+</script>
+
+</body>
+</html>

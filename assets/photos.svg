@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+  <!-- 白色背景 -->
+  <rect width="256" height="256" fill="#FFFFFF"/>
+
+  <!-- 画框内部裁剪区域 -->
+  <defs>
+    <clipPath id="frameClip">
+      <rect x="40" y="50" width="176" height="156"/>
+    </clipPath>
+  </defs>
+
+  <!-- 画框里的画面 -->
+  <g clip-path="url(#frameClip)">
+    <!-- 蓝色天空 -->
+    <rect x="40" y="50" width="176" height="156" fill="#00eeff"/>
+
+    <!-- 大太阳：左上角 -->
+    <circle cx="88" cy="92" r="24" fill="#FFCC00"/>
+
+    <!-- 左边山 -->
+    <path d="M40 206 L88 150 Q98 134 108 150 L156 206 Z" fill="#24df53"/>
+
+    <!-- 右边山 -->
+    <path d="M110 206 L156 148 Q166 132 176 148 L216 206 Z" fill="#20ad32"/>
+  </g>
+
+  <!-- 棕色画框 -->
+  <rect x="32" y="42" width="192" height="172"
+        fill="none" stroke="#c47f3e" stroke-width="16"/>
+</svg>

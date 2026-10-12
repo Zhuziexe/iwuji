@@ -1,0 +1,1691 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WuJiOS</title>
+<link rel="stylesheet" href="styles/tokens.css">
+<link rel="stylesheet" href="styles/components.css">
+<style>
+  :root { --statusbar-h: 26px; }
+
+  html { font-size: 16px; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  * { scrollbar-width: none; -ms-overflow-style: none; }
+  *::-webkit-scrollbar { display: none; }
+
+  html, body {
+    width: 100%; height: 100%; overflow: hidden;
+    font-family: var(--wj-font);
+    -webkit-font-smoothing: antialiased;
+    -webkit-text-size-adjust: 100%;
+    background: #000; color: #fff;
+  }
+
+  .os {
+    position: relative;
+    width: 100%; height: 100%;
+    overflow: hidden;
+    user-select: none; -webkit-user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    background: url('./themes/sea.png') center center / cover no-repeat;
+  }
+
+  /* =========================================================
+     状态栏 —— z-index 高于控制中心，控制中心打开时仍显示
+     ========================================================= */
+  .statusbar {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: var(--statusbar-h);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 12px 0 14px;
+    padding-right: 34px;
+    font-size: var(--wj-fs-xs);
+    font-weight: 600;
+    background: linear-gradient(
+      to bottom,
+      rgba(255, 255, 255, .55) 0%,
+      rgba(255, 255, 255, .25) 60%,
+      rgba(255, 255, 255, 0)   100%
+    );
+    color: #000;
+    z-index: 60;                                  /* 提高：盖过控制中心 */
+    pointer-events: none;
+    opacity: 1;
+    transition:
+      opacity .25s,
+      color .25s,
+      background .25s,
+      text-shadow .25s;
+    text-shadow: none;
+  }
+  .os[data-view="locked"] .statusbar,
+  .os:not([data-power="running"]) .statusbar { opacity: 0; }
+
+  /* 控制中心打开时：状态栏显示但变成白色文字，背景透明 */
+  .os.cc-open .statusbar {
+    background: transparent;
+    color: #fff;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+  }
+
+  .statusbar .right { display: flex; align-items: center; gap: 7px; }
+
+  .battery {
+    position: relative;
+    width: 22px; height: 11px;
+    padding: 1px;
+    border: 1px solid currentColor;
+    border-radius: 3px;
+    color: inherit;
+    opacity: .9;
+  }
+  .battery::after {
+    content: "";
+    position: absolute;
+    right: -3.5px; top: 50%;
+    transform: translateY(-50%);
+    width: 2px; height: 5px;
+    background: currentColor;
+    border-radius: 0 2px 2px 0;
+  }
+  .battery i {
+    display: block; height: 100%; width: 72%;
+    background: currentColor;
+    border-radius: 1.5px;
+  }
+
+  /* =========================================================
+     视图层
+     ========================================================= */
+  .view {
+    position: absolute;
+    left: 0; right: 0; bottom: 0;
+    opacity: 0; visibility: hidden;
+    transition: none;
+  }
+  .view--locked { top: 0;                     z-index: 5; }
+  .view--home   { top: var(--statusbar-h);    z-index: 1; }
+  .view--app    { top: 0;                     z-index: 10; }
+
+  .os:not([data-power="running"]) .view {
+    opacity: 0 !important; visibility: hidden !important; pointer-events: none !important;
+  }
+  .os[data-view="locked"] .view--locked { opacity: 1; visibility: visible; }
+  .os[data-view="home"] .view--home,
+  .os[data-view="app"]  .view--home { visibility: visible; opacity: 1; }
+  .os[data-view="app"] .view--app { opacity: 1; visibility: visible; }
+
+  /* =========================================================
+     锁屏
+     ========================================================= */
+  .view--locked {
+    background: transparent;
+    display: flex; flex-direction: column; align-items: center;
+    padding-top: 16%;
+    color: #1c2536;
+    will-change: transform, opacity;
+    touch-action: none;
+    text-align: center;
+    overflow: hidden;
+  }
+
+  .lock-content {
+    width: 100%;
+    display: flex; flex-direction: column; align-items: center;
+    transition: opacity .25s ease, transform .25s ease;
+  }
+  .lock-content.is-hidden {
+    opacity: 0;
+    transform: scale(.96);
+    pointer-events: none;
+  }
+
+  .lock-time {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .lock-time__hour,
+  .lock-time__min {
+    display: block;
+    margin: 0 auto;
+    text-align: center;
+    font-size: 96px;
+    font-weight: 700;
+    letter-spacing: 0;
+    line-height: 1;
+    font-family: 'Consolas', monospace;
+    background: linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.7)  0%,
+      rgba(255, 255, 255, 0.6)  6%,
+      rgba(255, 255, 255, 0.58) 18%,
+      rgba(255, 255, 255, 0.55) 40%,
+      rgba(255, 255, 255, 0.4)  62%,
+      rgba(255, 255, 255, 0.55) 82%,
+      rgba(255, 255, 255, 0.6)  96%,
+      rgba(255, 255, 255, 0.7) 100%
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+
+    filter:
+      drop-shadow(0 -1px 0.5px rgba(255, 255, 255, 1))
+      drop-shadow(0  1px 0.5px rgba(30, 50, 80, 0.55))
+      drop-shadow(0  2px 1px   rgba(30, 50, 80, 0.35))
+      drop-shadow(0  6px 14px  rgba(30, 50, 80, 0.35))
+      drop-shadow(0 14px 32px  rgba(30, 50, 80, 0.22));
+  }
+
+  .lock-time__min { margin-top: 8px; opacity: .98; }
+
+  .lock-date {
+    margin-top: 26px;
+    font-size: var(--wj-fs-md);
+    color: #ffffff;
+    letter-spacing: .5px;
+    text-shadow:
+      0 1px 2px rgba(40, 60, 90, 0.55),
+      0 4px 12px rgba(40, 60, 90, 0.4);
+  }
+
+  /* =========================================================
+     锁屏密码面板
+     ========================================================= */
+  .password-panel {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    padding: 8% 6% 5%;
+    background: rgba(20, 30, 50, 0.5);
+    backdrop-filter: blur(24px) saturate(140%);
+    -webkit-backdrop-filter: blur(24px) saturate(140%);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity .28s ease, visibility .28s ease;
+    z-index: 10;
+  }
+  .password-panel.is-open { opacity: 1; visibility: visible; }
+
+  .password-header {
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 16px;
+  }
+
+  .password-title {
+    font-size: 15px;
+    font-weight: 500;
+    color: #fff;
+    letter-spacing: 1px;
+    text-shadow: 0 1px 4px rgba(0,0,0,.4);
+    transition: color .2s ease;
+    min-height: 20px;
+  }
+  .password-title.is-error { color: #ffb8c6; }
+
+  .password-dots { display: flex; gap: 18px; }
+  .password-dot {
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    border: 2px solid rgba(255, 255, 255, 0.9);
+    background: transparent;
+    transition: background .15s ease, transform .15s ease;
+  }
+  .password-dot.is-filled {
+    background: #fff;
+    transform: scale(1.15);
+  }
+
+  .lock-pin-pad {
+    flex: 0 0 auto;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    width: 100%;
+    max-width: 200px;
+    margin: auto auto 0;
+  }
+
+  .lock-pin-key {
+    aspect-ratio: 1;
+    width: 100%;
+    border: 0.5px solid rgba(255, 255, 255, 0.35);
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.16);
+    color: #fff;
+    font: inherit;
+    font-size: 24px;
+    font-weight: 400;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background .12s, transform .08s;
+    -webkit-tap-highlight-color: transparent;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+  .lock-pin-key:active { transform: scale(.94); background: rgba(255, 255, 255, 0.42); }
+  .lock-pin-key--empty  { visibility: hidden; pointer-events: none; }
+  .lock-pin-key--action { font-size: 22px; }
+
+  /* =========================================================
+     桌面
+     ========================================================= */
+  .view--home {
+    background: transparent;
+    will-change: transform, opacity;
+  }
+  .desktop {
+    position: absolute;
+    inset: 0;
+    padding: 18px 14px 24px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+  .apps {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    row-gap: 20px;
+    column-gap: 6px;
+  }
+  .app {
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+    padding: 6px 0; border-radius: 14px;
+    cursor: pointer;
+    transition: background .15s, transform .1s;
+  }
+  .app:active { background: rgba(0,0,0,.08); transform: scale(.94); }
+
+  .app__icon {
+    width: 52px; height: 52px;
+    border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 26px; line-height: 1;
+    box-shadow:
+      0 4px 10px rgba(15,20,45,.35),
+      inset 0 1px 0 rgba(255,255,255,.12);
+    background: var(--wj-icon-bg, transparent);
+    overflow: hidden;
+  }
+  .app__icon img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    display: block;
+    pointer-events: none;
+    user-select: none;
+    -webkit-user-drag: none;
+  }
+  .app__name {
+    font-size: var(--wj-fs-xs);
+    color: #ffffff;
+    letter-spacing: .2px;
+    text-shadow:
+      0 1px 2px rgba(40, 60, 90, 0.55),
+      0 2px 6px rgba(40, 60, 90, 0.35);
+    max-width: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    padding: 0 2px;
+  }
+
+  /* =========================================================
+     应用视图
+     ========================================================= */
+  .app-screen {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column;
+    background: var(--wj-bg); color: var(--wj-text);
+    box-shadow: -14px 0 36px rgba(0,0,0,.3);
+    will-change: transform;
+    transition: none;
+    touch-action: pan-y;
+  }
+  .app-body {
+    flex: 1 1 auto;
+    padding: var(--wj-pad);
+    padding-top: calc(var(--wj-pad) + var(--statusbar-h));
+    overflow-y: auto;
+    font-size: var(--wj-fs-md);
+    line-height: 1.65;
+    color: var(--wj-text-muted);
+    height: 100%;
+  }
+
+  /* =========================================================
+     电源层
+     ========================================================= */
+  .power-overlay {
+    position: absolute; inset: 0;
+    background: #000;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 18px; z-index: 100;
+    opacity: 0; visibility: hidden;
+    transition: opacity .35s, visibility .35s;
+  }
+  .os[data-power="off"]          .power-overlay--off,
+  .os[data-power="booting"]      .power-overlay--boot,
+  .os[data-power="shuttingdown"] .power-overlay--shutdown {
+    opacity: 1; visibility: visible;
+  }
+  .os[data-power="booting"] .power-overlay--boot,
+  .os[data-power="shuttingdown"] .power-overlay--shutdown {
+    transition: none;
+  }
+
+  .boot-stage {
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    text-align: center;
+  }
+  .boot-stage.no-anim,
+  .boot-stage.no-anim * { transition: none !important; }
+
+  .boot-mark {
+    display: inline-flex;
+    align-items: baseline;
+    font-size: 42px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    line-height: 1;
+    color: #fff;
+    white-space: nowrap;
+  }
+  .boot-i {
+    display: inline-block;
+    width: .28em;
+    overflow: hidden;
+    transition:
+      width .55s cubic-bezier(.2,.7,.3,1),
+      opacity .35s ease;
+  }
+  .boot-mark.stage-2 .boot-i { opacity: 0; }
+  .boot-mark.stage-3 .boot-i { width: 0; opacity: 0; }
+
+  .boot-os {
+    display: inline-block;
+    width: 0;
+    overflow: hidden;
+    opacity: 0;
+    transition:
+      width .55s cubic-bezier(.2,.7,.3,1),
+      opacity .4s ease .15s;
+  }
+  .boot-mark.stage-3 .boot-os { width: 1.55em; opacity: 1; }
+
+  .spinner {
+    width: 36px; height: 36px; border-radius: 50%;
+    border: 3px solid rgba(255,255,255,.15);
+    border-top-color: #8ad4ff;
+    animation: spin .8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .shutdown-text { font-size: var(--wj-fs-md); color: rgba(255,255,255,.5); }
+  .off-hint { font-size: var(--wj-fs-md); color: rgba(255,255,255,.35); letter-spacing: 2.5px; }
+
+  /* =========================================================
+     控制中心
+     ========================================================= */
+  .control-center {
+    position: absolute;
+    inset: 0;
+    padding: 44px 14px 34px;
+    box-sizing: border-box;
+
+    background: rgba(12, 18, 36, 0.28);
+    backdrop-filter: blur(28px) saturate(180%);
+    -webkit-backdrop-filter: blur(28px) saturate(180%);
+
+    transform: translateY(-100%);
+    transition: transform .35s cubic-bezier(.2,.7,.3,1);
+    z-index: 50;
+    overflow: hidden;
+    touch-action: none;
+    will-change: transform;
+  }
+
+  .control-center::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(circle at 12% 6%, rgba(120, 160, 255, 0.20), transparent 55%),
+      radial-gradient(circle at 90% 94%, rgba(160, 120, 255, 0.16), transparent 55%),
+      radial-gradient(circle at 88% 10%, rgba(100, 190, 255, 0.10), transparent 45%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .os.cc-open .control-center { transform: translateY(0); }
+
+  .cc-handle {
+    position: absolute;
+    bottom: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 40px;
+    height: 4px;
+    border-radius: 2px;
+    background: rgba(255, 255, 255, 0.42);
+    z-index: 2;
+  }
+
+  /* ===================================================
+     4 列 × 3 行网格
+     =================================================== */
+  .cc-grid {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    grid-template-rows: 56px 56px 56px;
+    gap: 9px;
+    width: 100%;
+  }
+
+  /* ---------- 音量 / 亮度：竖向胶囊 ---------- */
+  .cc-slider-card {
+    position: relative;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.14);
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    overflow: hidden;
+    cursor: ns-resize;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: none;
+    isolation: isolate;
+
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    padding-bottom: 16px;
+
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.14),
+      0 6px 18px rgba(0, 0, 0, 0.18);
+  }
+
+  .cc-slider-fill {
+    position: absolute;
+    left: 0; right: 0; bottom: 0;
+    height: 60%;
+    background: #ffffff;
+    transition: height .06s linear;
+    z-index: 0;
+  }
+
+  .cc-slider-icon {
+    position: relative;
+    z-index: 1;
+    width: 20px;
+    height: 20px;
+    color: #ffffff;
+    mix-blend-mode: difference;
+    pointer-events: none;
+  }
+  .cc-slider-icon svg { width: 100%; height: 100%; display: block; }
+
+  .cc-slider-card[data-slider="volume"]     { grid-column: 1; grid-row: 1 / span 2; }
+  .cc-slider-card[data-slider="brightness"] { grid-column: 2; grid-row: 1 / span 2; }
+
+  /* ---------- 开关 ---------- */
+  .cc-toggle {
+    position: relative;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 10px;
+    padding: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.14);
+    color: #fff;
+    font: inherit;
+    cursor: pointer;
+    overflow: hidden;
+    transition: transform .1s ease, box-shadow .25s ease;
+    -webkit-tap-highlight-color: transparent;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.10),
+      0 6px 18px rgba(0, 0, 0, 0.14);
+  }
+
+  .cc-toggle:active { transform: scale(.96); }
+
+  .cc-toggle .cc-icon {
+    width: 40px; height: 40px;
+    display: flex; align-items: center; justify-content: center;
+    color: #fff;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.16);
+    transition: background .25s ease, transform .2s ease;
+    flex: 0 0 40px;
+  }
+  .cc-toggle .cc-icon svg { width: 22px; height: 22px; display: block; }
+
+  .cc-toggle .cc-label {
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: .2px;
+    white-space: nowrap;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+    background: transparent;
+    line-height: 1.1;
+    color: #fff;
+  }
+
+  .cc-toggle.is-on .cc-icon {
+    background: #3a6ff0;
+    transform: scale(1.04);
+    box-shadow: 0 4px 12px rgba(58, 111, 240, 0.45);
+  }
+
+  .cc-toggle[data-key="wifi"]      { grid-column: 3 / span 2; grid-row: 1; }
+  .cc-toggle[data-key="bluetooth"] { grid-column: 3 / span 2; grid-row: 2; }
+  .cc-toggle[data-key="nb"]        { grid-column: 1 / span 2; grid-row: 3; }
+  .cc-toggle[data-key="cellular"]  { grid-column: 3 / span 2; grid-row: 3; }
+</style>
+</head>
+<body>
+
+<div class="os" id="os" data-view="locked" data-power="off">
+
+  <div class="statusbar">
+    <span id="clock">9:41</span>
+    <span class="right">
+      <span>5G</span>
+      <span class="battery"><i></i></span>
+    </span>
+  </div>
+
+  <div class="view view--locked" id="lockedView">
+    <div class="lock-content" id="lockContent">
+      <div class="lock-time">
+        <span class="lock-time__hour" id="lockHour">09</span>
+        <span class="lock-time__min"  id="lockMin">41</span>
+      </div>
+      <div class="lock-date" id="lockDate">10月12日 星期一</div>
+    </div>
+
+    <div class="password-panel" id="passwordPanel">
+      <div class="password-header">
+        <div class="password-title" id="passwordTitle">输入密码</div>
+        <div class="password-dots" id="passwordDots">
+          <span class="password-dot"></span>
+          <span class="password-dot"></span>
+          <span class="password-dot"></span>
+          <span class="password-dot"></span>
+        </div>
+      </div>
+
+      <div class="lock-pin-pad" id="lockPinPad">
+        <button class="lock-pin-key" data-digit="1">1</button>
+        <button class="lock-pin-key" data-digit="2">2</button>
+        <button class="lock-pin-key" data-digit="3">3</button>
+        <button class="lock-pin-key" data-digit="4">4</button>
+        <button class="lock-pin-key" data-digit="5">5</button>
+        <button class="lock-pin-key" data-digit="6">6</button>
+        <button class="lock-pin-key" data-digit="7">7</button>
+        <button class="lock-pin-key" data-digit="8">8</button>
+        <button class="lock-pin-key" data-digit="9">9</button>
+        <button class="lock-pin-key lock-pin-key--empty" disabled></button>
+        <button class="lock-pin-key" data-digit="0">0</button>
+        <button class="lock-pin-key lock-pin-key--action" data-action="backspace">⌫</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="view view--home" id="homeView">
+    <div class="desktop" id="desktop">
+      <div class="apps" id="appGrid"></div>
+    </div>
+  </div>
+
+  <div class="view view--app" id="appView">
+    <div class="app-screen" id="appScreen"></div>
+  </div>
+
+  <!-- 控制中心 -->
+  <div class="control-center" id="controlCenter">
+    <div class="cc-grid">
+      <div class="cc-slider-card" data-slider="volume">
+        <div class="cc-slider-fill" id="ccVolumeFill"></div>
+        <div class="cc-slider-icon" data-icon="volume"></div>
+      </div>
+
+      <div class="cc-slider-card" data-slider="brightness">
+        <div class="cc-slider-fill" id="ccBrightnessFill"></div>
+        <div class="cc-slider-icon" data-icon="brightness"></div>
+      </div>
+
+      <button class="cc-toggle" data-key="wifi" type="button">
+        <span class="cc-icon" data-icon="wifi"></span>
+        <span class="cc-label">WLAN</span>
+      </button>
+
+      <button class="cc-toggle" data-key="bluetooth" type="button">
+        <span class="cc-icon" data-icon="bluetooth"></span>
+        <span class="cc-label">蓝牙</span>
+      </button>
+
+      <button class="cc-toggle" data-key="nb" type="button">
+        <span class="cc-icon" data-icon="rocket"></span>
+        <span class="cc-label">牛逼模式</span>
+      </button>
+
+      <button class="cc-toggle" data-key="cellular" type="button">
+        <span class="cc-icon" data-icon="cellular"></span>
+        <span class="cc-label">移动数据</span>
+      </button>
+    </div>
+
+    <div class="cc-handle" aria-hidden="true"></div>
+  </div>
+
+  <div class="power-overlay power-overlay--off">
+    <div class="off-hint">按下电源键开机</div>
+  </div>
+
+  <div class="power-overlay power-overlay--boot">
+    <div class="boot-stage" id="bootStage">
+      <div class="boot-mark" id="bootMark">
+        <span class="boot-i">i</span>
+        <span class="boot-wuji">Wuji</span>
+        <span class="boot-os">OS</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="power-overlay power-overlay--shutdown">
+    <div class="spinner"></div>
+    <div class="shutdown-text">正在关机…</div>
+  </div>
+
+</div>
+
+<script src="navigation.js"></script>
+<script src="core.js"></script>
+<script src="apps/phone.js"></script>
+<script src="apps/weather.js"></script>
+<script src="apps/camera.js"></script>
+<script src="apps/settings.js"></script>
+<script src="apps/photos.js"></script>
+
+<script>
+/* =========================================================
+   内联 SVG 图标
+   ========================================================= */
+const ICONS = {
+  volume: `
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+      <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+      <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
+    </svg>`,
+  brightness: `
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="4"/>
+      <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/>
+    </svg>`,
+  wifi: `
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M5 12.55a11 11 0 0 1 14.08 0"/>
+      <path d="M1.42 9a16 16 0 0 1 21.16 0"/>
+      <path d="M8.53 16.11a6 6 0 0 1 6.95 0"/>
+      <line x1="12" y1="20" x2="12.01" y2="20"/>
+    </svg>`,
+  bluetooth: `
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M6.5 6.5l11 11L12 23V1l5.5 5.5-11 11"/>
+    </svg>`,
+  rocket: `
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/>
+      <path d="M12 15l-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/>
+      <path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/>
+      <path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/>
+    </svg>`,
+  cellular: `
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M2 22h.01"/>
+      <path d="M7 22v-4"/>
+      <path d="M12 22V12"/>
+      <path d="M17 22V6"/>
+      <path d="M22 22V2"/>
+    </svg>`,
+};
+
+document.querySelectorAll('[data-icon]').forEach(el => {
+  const name = el.dataset.icon;
+  if (ICONS[name]) el.innerHTML = ICONS[name];
+});
+
+/* =========================================================
+   系统状态
+   ========================================================= */
+const osEl       = document.getElementById('os');
+const lockedView = document.getElementById('lockedView');
+const homeView   = document.getElementById('homeView');
+const appView    = document.getElementById('appView');
+const appScreen  = document.getElementById('appScreen');
+
+const S = {
+  view: 'locked',
+  currentBundle: null,
+  power: 'off',
+  viewBeforeLock: 'home',
+};
+
+let currentNav         = null;
+let currentBackHandler = null;
+
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+function setView(v) {
+  S.view = v;
+  osEl.dataset.view = v;
+}
+function setPower(p) {
+  S.power = p;
+  osEl.dataset.power = p;
+  notifyParent('statechange', { state: p });
+}
+function notifyParent(event, payload) {
+  if (window.parent !== window) {
+    try { window.parent.postMessage({ type: 'iwuji:event', event, payload }, '*'); } catch {}
+  }
+}
+
+/* =========================================================
+   时钟
+   ========================================================= */
+(function startClock() {
+  const days = ['星期日','星期一','星期二','星期三','星期四','星期五','星期六'];
+  const tick = () => {
+    const d = new Date();
+    const hh = String(d.getHours()).padStart(2, '0');
+    const mm = String(d.getMinutes()).padStart(2, '0');
+
+    document.getElementById('clock').textContent = `${d.getHours()}:${mm}`;
+    document.getElementById('lockHour').textContent = hh;
+    document.getElementById('lockMin').textContent  = mm;
+    document.getElementById('lockDate').textContent =
+      `${d.getMonth() + 1}月${d.getDate()}日 ${days[d.getDay()]}`;
+  };
+  tick();
+  setInterval(tick, 15000);
+})();
+
+/* =========================================================
+   桌面
+   ========================================================= */
+function renderIcon(app) {
+  const icon = app.icon || '';
+  if (/^(https?:|data:|\.{1,2}\/|\/)/.test(icon)) {
+    return `<img src="${icon}" alt="" draggable="false">`;
+  }
+  return `<span>${icon}</span>`;
+}
+
+(function renderHome() {
+  const apps = WujiApps.all();
+
+  document.getElementById('appGrid').innerHTML = apps.map(a => `
+    <div class="app" data-bundle="${a.bundlename}">
+      <div class="app__icon" style="${a.iconStyle || ''}">${renderIcon(a)}</div>
+      <div class="app__name">${a.name}</div>
+    </div>
+  `).join('');
+
+  document.querySelectorAll('#appGrid .app').forEach(el => {
+    el.addEventListener('click', () => openApp(el.dataset.bundle));
+  });
+})();
+
+/* =========================================================
+   打开应用
+   ========================================================= */
+function openApp(bundle) {
+  const app = WujiApps.get(bundle);
+  if (!app) return;
+
+  S.currentBundle    = bundle;
+  currentBackHandler = null;
+
+  appScreen.innerHTML = `<div id="navHost"
+    style="position:absolute;inset:0;overflow:hidden;"></div>`;
+  const navHost = document.getElementById('navHost');
+
+  const nav = new WujiNavigation({
+    host: navHost,
+    routes: app.routes || {},
+  });
+  currentNav = nav;
+
+  const legacyCtx = {
+    closeApp,
+    onBack(fn) { currentBackHandler = fn; },
+    nav,
+    push(name, data) { nav.push(name, data); },
+    pop() { return nav.pop(); },
+  };
+
+  if (app.routes) {
+    const initial = app.initialRoute || Object.keys(app.routes)[0];
+    nav.push(app.routes[initial], {}, { animate: false });
+  } else {
+    nav.push({
+      name: app.bundlename,
+      render: () => `<div class="app-body" id="legacyBody"></div>`,
+      mount: (el) => {
+        const body = el.querySelector('#legacyBody');
+        body.innerHTML = app.render ? app.render(legacyCtx) : '';
+        app.mount?.(body, legacyCtx);
+      },
+      unmount: () => app.unmount?.(),
+    }, {}, { animate: false });
+  }
+
+  appScreen.style.transition = 'none';
+  appScreen.style.transform  = 'translateX(100%)';
+  setView('app');
+  requestAnimationFrame(() => {
+    appScreen.style.transition = 'transform .32s cubic-bezier(.2,.7,.3,1)';
+    appScreen.style.transform  = 'translateX(0)';
+  });
+}
+
+function finishCloseApp() {
+  if (currentNav) {
+    currentNav.destroy();
+    currentNav = null;
+  } else {
+    const app = S.currentBundle ? WujiApps.get(S.currentBundle) : null;
+    app?.unmount?.();
+  }
+
+  appScreen.innerHTML = '';
+  appScreen.style.transition = 'none';
+  appScreen.style.transform  = '';
+  S.currentBundle    = null;
+  currentBackHandler = null;
+  setView('home');
+  notifyParent('app-close', {});
+}
+
+function closeApp() {
+  const w = appView.offsetWidth;
+  appScreen.style.transition = 'transform .26s cubic-bezier(.4,0,.6,1)';
+  appScreen.style.transform  = `translateX(${w}px)`;
+  setTimeout(finishCloseApp, 260);
+}
+
+/* =========================================================
+   锁屏密码
+   ========================================================= */
+const passwordPanel = document.getElementById('passwordPanel');
+const passwordDots  = document.getElementById('passwordDots');
+const passwordTitle = document.getElementById('passwordTitle');
+const lockPinPad    = document.getElementById('lockPinPad');
+const lockContent   = document.getElementById('lockContent');
+
+const PIN_LENGTH = 4;
+let enteredPin = '';
+let pinChecking = false;
+let errorTimer = null;
+
+function showPasswordPanel() {
+  enteredPin = '';
+  pinChecking = false;
+  clearTimeout(errorTimer);
+  updateDots();
+  passwordTitle.textContent = '输入密码';
+  passwordTitle.classList.remove('is-error');
+  lockContent.classList.add('is-hidden');
+  passwordPanel.classList.add('is-open');
+}
+
+function hidePasswordPanel() {
+  passwordPanel.classList.remove('is-open');
+  lockContent.classList.remove('is-hidden');
+  clearTimeout(errorTimer);
+  enteredPin = '';
+  pinChecking = false;
+  updateDots();
+  passwordTitle.textContent = '输入密码';
+  passwordTitle.classList.remove('is-error');
+}
+
+function updateDots() {
+  const dots = passwordDots.querySelectorAll('.password-dot');
+  dots.forEach((dot, i) => {
+    dot.classList.toggle('is-filled', i < enteredPin.length);
+  });
+}
+
+function checkPin() {
+  const password = Store.get('lock.password', '');
+  if (enteredPin === password) {
+    const target = S.viewBeforeLock === 'app' && S.currentBundle ? 'app' : 'home';
+    completeUnlock(target);
+  } else {
+    passwordTitle.textContent = '密码错误';
+    passwordTitle.classList.add('is-error');
+
+    if (navigator.vibrate) {
+      try { navigator.vibrate([30, 40, 30]); } catch {}
+    }
+
+    clearTimeout(errorTimer);
+    errorTimer = setTimeout(() => {
+      passwordTitle.textContent = '输入密码';
+      passwordTitle.classList.remove('is-error');
+      enteredPin = '';
+      pinChecking = false;
+      updateDots();
+    }, 900);
+  }
+}
+
+lockPinPad.addEventListener('click', e => {
+  const key = e.target.closest('.lock-pin-key');
+  if (!key || key.disabled || pinChecking) return;
+
+  const digit  = key.dataset.digit;
+  const action = key.dataset.action;
+
+  if (action === 'backspace') {
+    enteredPin = enteredPin.slice(0, -1);
+    updateDots();
+    return;
+  }
+
+  if (digit && enteredPin.length < PIN_LENGTH) {
+    enteredPin += digit;
+    updateDots();
+
+    if (enteredPin.length === PIN_LENGTH) {
+      pinChecking = true;
+      setTimeout(checkPin, 180);
+    }
+  }
+});
+
+window.addEventListener('keydown', e => {
+  if (!passwordPanel.classList.contains('is-open')) return;
+  if (pinChecking) return;
+
+  if (/^\d$/.test(e.key) && enteredPin.length < PIN_LENGTH) {
+    enteredPin += e.key;
+    updateDots();
+    if (enteredPin.length === PIN_LENGTH) {
+      pinChecking = true;
+      setTimeout(checkPin, 180);
+    }
+  } else if (e.key === 'Backspace') {
+    enteredPin = enteredPin.slice(0, -1);
+    updateDots();
+  }
+});
+
+/* =========================================================
+   解锁动作
+   ========================================================= */
+function completeUnlock(target) {
+  lockedView.style.transition = 'transform .3s ease, opacity .3s ease';
+  homeView.style.transition   = 'opacity .3s ease';
+  lockedView.style.transform  = 'translateY(-100%)';
+  lockedView.style.opacity    = '0';
+  homeView.style.opacity      = '1';
+
+  setTimeout(() => {
+    setView(target);
+    lockedView.style.transition = '';
+    lockedView.style.transform  = '';
+    lockedView.style.opacity    = '';
+    homeView.style.transition   = '';
+    homeView.style.opacity      = '';
+    homeView.style.removeProperty('visibility');
+    appView.style.removeProperty('visibility');
+    hidePasswordPanel();
+  }, 320);
+}
+
+/* =========================================================
+   锁屏：上滑解锁
+   ========================================================= */
+(function bindLockGesture() {
+  let dragging = false;
+  let startY = 0;
+  let deltaY = 0;
+  let hasPassword = false;
+
+  lockedView.addEventListener('pointerdown', e => {
+    if (S.view !== 'locked' || S.power !== 'running') return;
+    if (passwordPanel.classList.contains('is-open')) return;
+    const rect = osEl.getBoundingClientRect();
+    if ((e.clientY - rect.top) < 30 && (e.clientX - rect.left) / rect.width >= 0.5) return;
+
+    dragging = true;
+    startY = e.clientY;
+    deltaY = 0;
+    hasPassword = !!Store.get('lock.password', '');
+
+    const target = S.viewBeforeLock === 'app' && S.currentBundle ? 'app' : 'home';
+
+    if (!hasPassword) {
+      if (target === 'app') appView.style.setProperty('visibility', 'visible');
+      homeView.style.setProperty('visibility', 'visible');
+      homeView.style.setProperty('opacity', '0');
+    }
+
+    lockedView.style.transition = 'none';
+
+    try { lockedView.setPointerCapture(e.pointerId); } catch {}
+  });
+
+  lockedView.addEventListener('pointermove', e => {
+    if (!dragging) return;
+    const dy = e.clientY - startY;
+    if (dy >= 0) { deltaY = 0; return; }
+    deltaY = dy;
+
+    if (hasPassword) {
+      const damp = dy * 0.12;
+      const p = Math.min(-dy / 300, 1);
+      lockedView.style.transform = `translateY(${damp}px)`;
+      lockedView.style.opacity   = String(1 - p * 0.25);
+    } else {
+      const p = Math.min(-dy / 120, 1);
+      lockedView.style.transform = `translateY(${dy}px)`;
+      lockedView.style.opacity   = String(1 - p * 0.65);
+      homeView.style.opacity     = String(p);
+    }
+  });
+
+  function endDrag() {
+    if (!dragging) return;
+    dragging = false;
+
+    const target = S.viewBeforeLock === 'app' && S.currentBundle ? 'app' : 'home';
+    const unlocked = -deltaY > 70;
+
+    if (hasPassword) {
+      lockedView.style.transition = 'transform .22s ease, opacity .22s ease';
+      lockedView.style.transform  = '';
+      lockedView.style.opacity    = '';
+
+      setTimeout(() => {
+        lockedView.style.transition = '';
+        if (unlocked) showPasswordPanel();
+      }, 200);
+
+      deltaY = 0;
+      return;
+    }
+
+    if (unlocked) {
+      completeUnlock(target);
+    } else {
+      lockedView.style.transition = 'transform .26s ease, opacity .26s ease';
+      homeView.style.transition   = 'opacity .26s ease';
+      lockedView.style.transform  = '';
+      lockedView.style.opacity    = '';
+      homeView.style.opacity      = '0';
+
+      setTimeout(() => {
+        lockedView.style.transition = '';
+        homeView.style.transition   = '';
+        homeView.style.opacity      = '';
+        homeView.style.removeProperty('visibility');
+        appView.style.removeProperty('visibility');
+      }, 280);
+    }
+    deltaY = 0;
+  }
+
+  lockedView.addEventListener('pointerup', endDrag);
+  lockedView.addEventListener('pointercancel', endDrag);
+})();
+
+/* =========================================================
+   应用：从左往右滑返回
+   ========================================================= */
+(function bindAppGesture() {
+  let dragging = false, startX = 0, startY = 0, deltaX = 0, dir = null;
+  let navDragging = false;
+
+  appScreen.addEventListener('pointerdown', e => {
+    if (S.view !== 'app') return;
+    const rect = osEl.getBoundingClientRect();
+    if ((e.clientY - rect.top) < 30 && (e.clientX - rect.left) / rect.width >= 0.5) return;
+
+    dragging = true;
+    navDragging = false;
+    startX = e.clientX;
+    startY = e.clientY;
+    deltaX = 0;
+    dir = null;
+    appScreen.style.transition = 'none';
+  });
+
+  appScreen.addEventListener('pointermove', e => {
+    if (!dragging) return;
+    const dx = e.clientX - startX;
+    const dy = e.clientY - startY;
+
+    if (!dir) {
+      if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return;
+      dir = Math.abs(dx) > Math.abs(dy) ? 'h' : 'v';
+
+      if (dir === 'h') {
+        try { appScreen.setPointerCapture(e.pointerId); } catch {}
+        if (currentNav && currentNav.depth > 1) {
+          navDragging = currentNav.dragStart();
+        }
+      } else {
+        dragging = false;
+        appScreen.style.transition = 'none';
+        return;
+      }
+    }
+    if (dir !== 'h') return;
+    if (dx <= 0) {
+      deltaX = 0;
+      if (navDragging) currentNav.dragMove(0);
+      else appScreen.style.transform = '';
+      return;
+    }
+
+    deltaX = dx;
+
+    if (navDragging) {
+      currentNav.dragMove(dx);
+      appScreen.style.transform = '';
+    } else {
+      appScreen.style.transform = `translateX(${dx}px)`;
+    }
+  });
+
+  function endGesture() {
+    if (!dragging) return;
+    dragging = false;
+
+    if (deltaX === 0) {
+      appScreen.style.transition = 'none';
+      appScreen.style.transform  = '';
+      if (navDragging) { currentNav.dragCancel(); navDragging = false; }
+      dir = null;
+      return;
+    }
+
+    const w = appView.offsetWidth;
+    const threshold = w * 0.32;
+
+    if (navDragging) {
+      currentNav.dragEnd(deltaX, 0.32);
+      navDragging = false;
+      appScreen.style.transition = 'none';
+      appScreen.style.transform  = '';
+    } else if (deltaX > threshold) {
+      if (currentBackHandler && currentBackHandler()) {
+        appScreen.style.transition = 'transform .26s cubic-bezier(.4,0,.6,1)';
+        appScreen.style.transform  = '';
+      } else {
+        appScreen.style.transition = 'transform .26s cubic-bezier(.4,0,.6,1)';
+        appScreen.style.transform  = `translateX(${w}px)`;
+        setTimeout(finishCloseApp, 260);
+      }
+    } else {
+      appScreen.style.transition = 'transform .24s ease';
+      appScreen.style.transform  = '';
+      setTimeout(() => { appScreen.style.transition = 'none'; }, 240);
+    }
+    deltaX = 0;
+    dir = null;
+  }
+
+  appScreen.addEventListener('pointerup', endGesture);
+  appScreen.addEventListener('pointercancel', endGesture);
+})();
+
+/* =========================================================
+   开机动画
+   ========================================================= */
+async function playBootAnimation() {
+  const T = { show1: 950, fadeI: 500, expandOS: 400, hold: 1400 };
+
+  const stage = document.getElementById('bootStage');
+  const mark  = document.getElementById('bootMark');
+
+  stage.classList.add('no-anim');
+  mark.className = 'boot-mark';
+  void stage.offsetWidth;
+  stage.classList.remove('no-anim');
+
+  await sleep(T.show1);
+  mark.classList.add('stage-2');
+  await sleep(T.fadeI);
+  mark.classList.add('stage-3');
+  await sleep(T.expandOS);
+  await sleep(T.hold);
+}
+
+/* =========================================================
+   电源状态机
+   ========================================================= */
+async function powerOn() {
+  if (S.power !== 'off') return;
+  setPower('booting');
+
+  Store.set('bootCount', Store.get('bootCount', 0) + 1);
+  Store.set('lastBootAt', Date.now());
+
+  await playBootAnimation();
+
+  hidePasswordPanel();
+  closeControlCenter();
+
+  lockedView.style.transition = '';
+  lockedView.style.transform  = '';
+  lockedView.style.opacity    = '';
+  homeView.style.transition   = '';
+  homeView.style.transform    = '';
+  homeView.style.opacity      = '';
+  homeView.style.removeProperty('visibility');
+  appView.style.removeProperty('visibility');
+  appScreen.style.transition  = 'none';
+  appScreen.style.transform   = '';
+
+  S.viewBeforeLock = 'home';
+  setView('locked');
+  setPower('running');
+}
+
+async function powerOff() {
+  if (S.power !== 'running' && S.power !== 'booting') return;
+  setPower('shuttingdown');
+  Store.set('lastShutdownAt', Date.now());
+  await sleep(800);
+
+  hidePasswordPanel();
+  closeControlCenter();
+  S.viewBeforeLock = 'home';
+  setView('locked');
+  setPower('off');
+}
+
+async function restart() {
+  await powerOff();
+  await sleep(300);
+  await powerOn();
+}
+
+/* =========================================================
+   控制中心
+   ========================================================= */
+const controlCenter    = document.getElementById('controlCenter');
+const ccVolumeFill     = document.getElementById('ccVolumeFill');
+const ccBrightnessFill = document.getElementById('ccBrightnessFill');
+
+const CC_KEYS = ['wifi', 'bluetooth', 'nb', 'cellular'];
+const ccState = {};
+CC_KEYS.forEach(k => {
+  ccState[k] = !!Store.get('control.' + k, false);
+});
+
+let volume     = Store.get('control.volume', 60);
+let brightness = Store.get('control.brightness', 80);
+
+function applyToggleUI() {
+  CC_KEYS.forEach(k => {
+    const el = document.querySelector(`.cc-toggle[data-key="${k}"]`);
+    if (el) el.classList.toggle('is-on', !!ccState[k]);
+  });
+}
+
+function applyVolumeUI() {
+  ccVolumeFill.style.height = volume + '%';
+}
+
+function applyBrightnessUI() {
+  ccBrightnessFill.style.height = brightness + '%';
+}
+
+applyToggleUI();
+applyVolumeUI();
+applyBrightnessUI();
+
+document.querySelectorAll('.cc-toggle').forEach(el => {
+  el.addEventListener('click', () => {
+    const key = el.dataset.key;
+    ccState[key] = !ccState[key];
+    Store.set('control.' + key, ccState[key]);
+    el.classList.toggle('is-on', ccState[key]);
+    if (navigator.vibrate) { try { navigator.vibrate(8); } catch {} }
+  });
+});
+
+function bindSlider(el, { setValue }) {
+  const computeFromEvent = e => {
+    const rect = el.getBoundingClientRect();
+    const y = e.clientY - rect.top;
+    const p = 1 - Math.max(0, Math.min(1, y / rect.height));
+    return Math.round(p * 100);
+  };
+
+  el.addEventListener('pointerdown', e => {
+    e.stopPropagation();
+    e.preventDefault();
+    try { el.setPointerCapture(e.pointerId); } catch {}
+    setValue(computeFromEvent(e));
+  });
+
+  el.addEventListener('pointermove', e => {
+    if (!el.hasPointerCapture?.(e.pointerId)) return;
+    setValue(computeFromEvent(e));
+  });
+
+  el.addEventListener('pointerup', e => {
+    try { el.releasePointerCapture(e.pointerId); } catch {}
+  });
+  el.addEventListener('pointercancel', e => {
+    try { el.releasePointerCapture(e.pointerId); } catch {}
+  });
+}
+
+bindSlider(document.querySelector('[data-slider="volume"]'), {
+  setValue: v => {
+    volume = Math.max(0, Math.min(100, v));
+    Store.set('control.volume', volume);
+    applyVolumeUI();
+    notifyParent('volume-set', { volume });
+  },
+});
+
+bindSlider(document.querySelector('[data-slider="brightness"]'), {
+  setValue: v => {
+    brightness = Math.max(0, Math.min(100, v));
+    Store.set('control.brightness', brightness);
+    applyBrightnessUI();
+  },
+});
+
+let ccOpen       = false;
+let ccDragState  = null;
+
+function setCCOpen(open) {
+  ccOpen = open;
+  controlCenter.style.transition = 'transform .35s cubic-bezier(.2,.7,.3,1)';
+  controlCenter.style.transform  = open ? 'translateY(0)' : 'translateY(-100%)';
+  osEl.classList.toggle('cc-open', open);
+}
+
+function closeControlCenter() {
+  ccDragState = null;
+  ccOpen = false;
+  controlCenter.style.transition = 'transform .35s cubic-bezier(.2,.7,.3,1)';
+  controlCenter.style.transform  = 'translateY(-100%)';
+  osEl.classList.remove('cc-open');
+}
+
+osEl.addEventListener('pointerdown', e => {
+  if (S.power !== 'running') return;
+  if (ccDragState) return;
+
+  const rect   = osEl.getBoundingClientRect();
+  const localY = e.clientY - rect.top;
+  const relX   = (e.clientX - rect.left) / rect.width;
+
+  if (!ccOpen && localY < 30 && relX >= 0.5) {
+    e.stopPropagation();
+    e.preventDefault();
+
+    const h = controlCenter.offsetHeight;
+    ccDragState = {
+      mode: 'open',
+      startY: e.clientY,
+      startPos: -h,
+      curPos: -h,
+      height: h,
+      captured: true,
+    };
+
+    controlCenter.style.transition = 'none';
+    controlCenter.style.transform  = `translateY(${-h}px)`;
+    osEl.classList.add('cc-open');
+
+    try { osEl.setPointerCapture(e.pointerId); } catch {}
+  }
+}, { capture: true });
+
+osEl.addEventListener('pointerdown', e => {
+  if (S.power !== 'running') return;
+  if (ccDragState) return;
+  if (!ccOpen) return;
+
+  if (e.target.closest('.cc-slider-card')) return;
+
+  ccDragState = {
+    mode: 'close',
+    startY: e.clientY,
+    startPos: 0,
+    curPos: 0,
+    height: controlCenter.offsetHeight,
+    captured: false,
+  };
+});
+
+document.addEventListener('pointermove', e => {
+  if (!ccDragState) return;
+
+  const dy = e.clientY - ccDragState.startY;
+
+  if (ccDragState.mode === 'close' && !ccDragState.captured) {
+    if (Math.abs(dy) < 6) return;
+    ccDragState.captured = true;
+    controlCenter.style.transition = 'none';
+    try { osEl.setPointerCapture(e.pointerId); } catch {}
+  }
+
+  let pos = ccDragState.startPos + dy;
+  pos = Math.max(-ccDragState.height, Math.min(0, pos));
+  ccDragState.curPos = pos;
+  controlCenter.style.transform = `translateY(${pos}px)`;
+}, { passive: false });
+
+function endCCDrag() {
+  if (!ccDragState) return;
+
+  const state = ccDragState;
+  ccDragState = null;
+
+  if (!state.captured) return;
+
+  const shouldOpen = state.curPos > -state.height * 0.5;
+  setCCOpen(shouldOpen);
+}
+
+document.addEventListener('pointerup', endCCDrag);
+document.addEventListener('pointercancel', endCCDrag);
+
+/* =========================================================
+   与外壳通信
+   ========================================================= */
+window.addEventListener('message', e => {
+  const d = e.data;
+  if (!d || d.type !== 'iwuji:control') return;
+
+  switch (d.action) {
+    case 'power-on':  powerOn();  break;
+    case 'power-off': powerOff(); break;
+    case 'restart':   restart();  break;
+
+    case 'sleep':
+      if (S.power === 'running') {
+        S.viewBeforeLock = S.view === 'app' ? 'app' : 'home';
+        hidePasswordPanel();
+        closeControlCenter();
+        setView('locked');
+      }
+      break;
+
+    case 'wake':
+      if (S.power === 'running') setView('locked');
+      break;
+
+    case 'clear-data':
+      Store.reset();
+      if (S.power === 'off') powerOn();
+      else restart();
+      break;
+
+    case 'volume-change':
+      if (typeof d.payload?.volume === 'number') {
+        volume = Math.max(0, Math.min(100, d.payload.volume));
+        applyVolumeUI();
+      }
+      break;
+  }
+});
+
+/* =========================================================
+   鼠标拖动 = 触屏滑动
+   ========================================================= */
+(function enableMouseDragScroll() {
+  const THRESHOLD = 6;
+  const FRICTION  = 0.94;
+  const MIN_V     = 0.02;
+
+  let scroller = null;
+  let startX = 0, startY = 0;
+  let startScrollTop = 0, startScrollLeft = 0;
+  let dragging = false;
+  let lastY = 0, lastT = 0, velocityY = 0;
+  let momentumRAF = null;
+  let blockClickUntil = 0;
+
+  function findScroller(el) {
+    while (el && el !== document.body) {
+      const style = getComputedStyle(el);
+      const canY = /(auto|scroll)/.test(style.overflowY) && el.scrollHeight > el.clientHeight + 1;
+      const canX = /(auto|scroll)/.test(style.overflowX) && el.scrollWidth  > el.clientWidth  + 1;
+      if (canY || canX) return el;
+      el = el.parentElement;
+    }
+    return null;
+  }
+
+  document.addEventListener('pointerdown', e => {
+    if (e.pointerType !== 'mouse') return;
+    if (e.button !== 0) return;
+    if (e.target.closest('button, a, input, textarea, select, label, [contenteditable]')) return;
+
+    const sc = findScroller(e.target);
+    if (!sc) return;
+
+    if (momentumRAF) { cancelAnimationFrame(momentumRAF); momentumRAF = null; }
+
+    scroller        = sc;
+    startX          = e.clientX;
+    startY          = e.clientY;
+    startScrollTop  = sc.scrollTop;
+    startScrollLeft = sc.scrollLeft;
+    dragging        = false;
+    lastY           = e.clientY;
+    lastT           = performance.now();
+    velocityY       = 0;
+  });
+
+  document.addEventListener('pointermove', e => {
+    if (!scroller) return;
+    const dx = e.clientX - startX;
+    const dy = e.clientY - startY;
+
+    if (!dragging && Math.hypot(dx, dy) > THRESHOLD) {
+      dragging = true;
+      scroller.style.cursor = 'grabbing';
+    }
+    if (!dragging) return;
+
+    scroller.scrollTop  = startScrollTop  - dy;
+    scroller.scrollLeft = startScrollLeft - dx;
+
+    const now = performance.now();
+    const dt  = now - lastT;
+    if (dt > 0) {
+      velocityY = (e.clientY - lastY) / dt;
+      lastY = e.clientY;
+      lastT = now;
+    }
+
+    e.preventDefault();
+  }, { passive: false });
+
+  function endDrag() {
+    if (!scroller) return;
+    const sc = scroller;
+    const wasDragging = dragging;
+
+    sc.style.cursor = '';
+    scroller = null;
+    dragging = false;
+
+    if (wasDragging) blockClickUntil = performance.now() + 120;
+
+    if (wasDragging && Math.abs(velocityY) > MIN_V) {
+      let v = velocityY;
+      const step = () => {
+        v *= FRICTION;
+        sc.scrollTop -= v * 16;
+        if (Math.abs(v) > MIN_V) {
+          momentumRAF = requestAnimationFrame(step);
+        } else {
+          momentumRAF = null;
+        }
+      };
+      momentumRAF = requestAnimationFrame(step);
+    }
+  }
+
+  document.addEventListener('pointerup',     endDrag);
+  document.addEventListener('pointercancel', endDrag);
+
+  document.addEventListener('click', e => {
+    if (performance.now() < blockClickUntil) {
+      e.stopPropagation();
+      e.preventDefault();
+    }
+  }, true);
+})();
+
+notifyParent('statechange', { state: S.power });
+</script>
+
+</body>
+</html>
