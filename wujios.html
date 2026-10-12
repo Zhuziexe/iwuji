@@ -733,6 +733,7 @@
 <script src="apps/camera.js"></script>
 <script src="apps/settings.js"></script>
 <script src="apps/photos.js"></script>
+<script src="apps/wujigallery.js"></script>
 
 <script>
 /* =========================================================
@@ -1187,62 +1188,55 @@ function completeUnlock(target) {
   lockedView.addEventListener('pointercancel', endDrag);
 })();
 
+/* =========================================================
+   应用：从左往右滑返回
+   触屏走 touch 事件（稳定），鼠标走 pointer 事件（桌面）
+   ========================================================= */
 (function bindAppGesture() {
   let dragging = false;
   let startX = 0, startY = 0;
   let deltaX = 0;
   let dir = null;
   let navDragging = false;
-  let pointerId = null;
 
-  appScreen.addEventListener('pointerdown', e => {
-    if (S.view !== 'app') return;
-    if (e.pointerType === 'mouse' && e.button !== 0) return;
+  /* ---------- 通用逻辑 ---------- */
 
-    /* 顶部右半区留给控制中心 */
+  function beginGesture(x, y) {
+    if (S.view !== 'app') return false;
     const rect = osEl.getBoundingClientRect();
-    if ((e.clientY - rect.top) < 30 && (e.clientX - rect.left) / rect.width >= 0.5) return;
+    if ((y - rect.top) < 30 && (x - rect.left) / rect.width >= 0.5) return false;
 
     dragging = true;
     navDragging = false;
-    startX = e.clientX;
-    startY = e.clientY;
+    startX = x;
+    startY = y;
     deltaX = 0;
     dir = null;
-    pointerId = e.pointerId;
     appScreen.style.transition = 'none';
-    /* 注意：不 preventDefault，让按钮仍能点击 */
-  }, { passive: true });
+    return true;
+  }
 
-  appScreen.addEventListener('pointermove', e => {
+  function moveGesture(x, y, preventFn) {
     if (!dragging) return;
-    if (pointerId !== null && e.pointerId !== pointerId) return;
-
-    const dx = e.clientX - startX;
-    const dy = e.clientY - startY;
+    const dx = x - startX;
+    const dy = y - startY;
 
     if (!dir) {
       if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return;
       dir = Math.abs(dx) > Math.abs(dy) ? 'h' : 'v';
 
       if (dir === 'h') {
-        /* 确认横向 → 捕获指针、阻止浏览器默认手势 */
-        try { appScreen.setPointerCapture(e.pointerId); } catch {}
         if (currentNav && currentNav.depth > 1) {
           navDragging = currentNav.dragStart();
         }
       } else {
-        /* 纵向 → 放弃手势，交给原生滚动 */
         dragging = false;
-        pointerId = null;
-        appScreen.style.transition = 'none';
         return;
       }
     }
-
     if (dir !== 'h') return;
 
-    if (e.cancelable) e.preventDefault();
+    if (preventFn) preventFn();
 
     if (dx <= 0) {
       deltaX = 0;
@@ -1259,13 +1253,11 @@ function completeUnlock(target) {
     } else {
       appScreen.style.transform = `translateX(${dx}px)`;
     }
-  }, { passive: false });
+  }
 
-  function endGesture(e) {
+  function endGesture() {
     if (!dragging) return;
-    if (e && pointerId !== null && e.pointerId !== pointerId) return;
     dragging = false;
-    pointerId = null;
 
     if (deltaX === 0) {
       appScreen.style.transition = 'none';
@@ -1301,8 +1293,45 @@ function completeUnlock(target) {
     dir = null;
   }
 
-  appScreen.addEventListener('pointerup', endGesture);
-  appScreen.addEventListener('pointercancel', endGesture);
+  /* ---------- 触摸 ---------- */
+  appScreen.addEventListener('touchstart', e => {
+    const t = e.touches[0];
+    if (!t) return;
+    beginGesture(t.clientX, t.clientY);
+  }, { passive: true });
+
+  appScreen.addEventListener('touchmove', e => {
+    const t = e.touches[0];
+    if (!t) return;
+    moveGesture(t.clientX, t.clientY, () => {
+      if (e.cancelable) e.preventDefault();
+    });
+  }, { passive: false });
+
+  appScreen.addEventListener('touchend', endGesture);
+  appScreen.addEventListener('touchcancel', endGesture);
+
+  /* ---------- 鼠标 ---------- */
+  appScreen.addEventListener('pointerdown', e => {
+    if (e.pointerType !== 'mouse') return;
+    if (e.button !== 0) return;
+    beginGesture(e.clientX, e.clientY);
+  });
+
+  appScreen.addEventListener('pointermove', e => {
+    if (e.pointerType !== 'mouse') return;
+    moveGesture(e.clientX, e.clientY, null);
+  });
+
+  appScreen.addEventListener('pointerup', e => {
+    if (e.pointerType !== 'mouse') return;
+    endGesture();
+  });
+
+  appScreen.addEventListener('pointercancel', e => {
+    if (e.pointerType !== 'mouse') return;
+    endGesture();
+  });
 })();
 
 async function playBootAnimation() {
@@ -1482,7 +1511,98 @@ function closeControlCenter() {
   osEl.classList.remove('cc-open');
 }
 
+/* ---------- 通用逻辑 ---------- */
+function ccBeginOpen(y) {
+  const h = controlCenter.offsetHeight;
+  ccDragState = {
+    mode: 'open',
+    startY: y,
+    startPos: -h,
+    curPos: -h,
+    height: h,
+    captured: true,
+  };
+  controlCenter.style.transition = 'none';
+  controlCenter.style.transform  = `translateY(${-h}px)`;
+  osEl.classList.add('cc-open');
+}
+
+function ccBeginClose(y) {
+  ccDragState = {
+    mode: 'close',
+    startY: y,
+    startPos: 0,
+    curPos: 0,
+    height: controlCenter.offsetHeight,
+    captured: false,
+  };
+}
+
+function ccMove(y, preventFn) {
+  if (!ccDragState) return;
+  const dy = y - ccDragState.startY;
+
+  if (ccDragState.mode === 'close' && !ccDragState.captured) {
+    if (Math.abs(dy) < 6) return;
+    ccDragState.captured = true;
+    controlCenter.style.transition = 'none';
+  }
+
+  if (preventFn) preventFn();
+
+  let pos = ccDragState.startPos + dy;
+  pos = Math.max(-ccDragState.height, Math.min(0, pos));
+  ccDragState.curPos = pos;
+  controlCenter.style.transform = `translateY(${pos}px)`;
+}
+
+function ccEnd() {
+  if (!ccDragState) return;
+  const state = ccDragState;
+  ccDragState = null;
+  if (!state.captured) return;
+  const shouldOpen = state.curPos > -state.height * 0.5;
+  setCCOpen(shouldOpen);
+}
+
+/* ---------- 触摸 ---------- */
+osEl.addEventListener('touchstart', e => {
+  if (S.power !== 'running') return;
+  if (ccDragState) return;
+  const t = e.touches[0];
+  if (!t) return;
+
+  const rect   = osEl.getBoundingClientRect();
+  const localY = t.clientY - rect.top;
+  const relX   = (t.clientX - rect.left) / rect.width;
+
+  if (!ccOpen && localY < 30 && relX >= 0.5) {
+    e.stopPropagation();
+    if (e.cancelable) e.preventDefault();
+    ccBeginOpen(t.clientY);
+    return;
+  }
+
+  if (ccOpen) {
+    if (e.target.closest('.cc-slider-card')) return;
+    ccBeginClose(t.clientY);
+  }
+}, { capture: true, passive: false });
+
+document.addEventListener('touchmove', e => {
+  if (!ccDragState) return;
+  const t = e.touches[0];
+  if (!t) return;
+  ccMove(t.clientY, () => { if (e.cancelable) e.preventDefault(); });
+}, { passive: false });
+
+document.addEventListener('touchend',    ccEnd);
+document.addEventListener('touchcancel', ccEnd);
+
+/* ---------- 鼠标 ---------- */
 osEl.addEventListener('pointerdown', e => {
+  if (e.pointerType !== 'mouse') return;
+  if (e.button !== 0) return;
   if (S.power !== 'running') return;
   if (ccDragState) return;
 
@@ -1493,74 +1613,31 @@ osEl.addEventListener('pointerdown', e => {
   if (!ccOpen && localY < 30 && relX >= 0.5) {
     e.stopPropagation();
     e.preventDefault();
+    ccBeginOpen(e.clientY);
+    return;
+  }
 
-    const h = controlCenter.offsetHeight;
-    ccDragState = {
-      mode: 'open',
-      startY: e.clientY,
-      startPos: -h,
-      curPos: -h,
-      height: h,
-      captured: true,
-    };
-
-    controlCenter.style.transition = 'none';
-    controlCenter.style.transform  = `translateY(${-h}px)`;
-    osEl.classList.add('cc-open');
-
-    try { osEl.setPointerCapture(e.pointerId); } catch {}
+  if (ccOpen) {
+    if (e.target.closest('.cc-slider-card')) return;
+    ccBeginClose(e.clientY);
   }
 }, { capture: true });
 
-osEl.addEventListener('pointerdown', e => {
-  if (S.power !== 'running') return;
-  if (ccDragState) return;
-  if (!ccOpen) return;
-
-  if (e.target.closest('.cc-slider-card')) return;
-
-  ccDragState = {
-    mode: 'close',
-    startY: e.clientY,
-    startPos: 0,
-    curPos: 0,
-    height: controlCenter.offsetHeight,
-    captured: false,
-  };
+document.addEventListener('pointermove', e => {
+  if (e.pointerType !== 'mouse') return;
+  if (!ccDragState) return;
+  ccMove(e.clientY, null);
 });
 
-document.addEventListener('pointermove', e => {
-  if (!ccDragState) return;
+document.addEventListener('pointerup', e => {
+  if (e.pointerType !== 'mouse') return;
+  ccEnd();
+});
 
-  const dy = e.clientY - ccDragState.startY;
-
-  if (ccDragState.mode === 'close' && !ccDragState.captured) {
-    if (Math.abs(dy) < 6) return;
-    ccDragState.captured = true;
-    controlCenter.style.transition = 'none';
-    try { osEl.setPointerCapture(e.pointerId); } catch {}
-  }
-
-  let pos = ccDragState.startPos + dy;
-  pos = Math.max(-ccDragState.height, Math.min(0, pos));
-  ccDragState.curPos = pos;
-  controlCenter.style.transform = `translateY(${pos}px)`;
-}, { passive: false });
-
-function endCCDrag() {
-  if (!ccDragState) return;
-
-  const state = ccDragState;
-  ccDragState = null;
-
-  if (!state.captured) return;
-
-  const shouldOpen = state.curPos > -state.height * 0.5;
-  setCCOpen(shouldOpen);
-}
-
-document.addEventListener('pointerup', endCCDrag);
-document.addEventListener('pointercancel', endCCDrag);
+document.addEventListener('pointercancel', e => {
+  if (e.pointerType !== 'mouse') return;
+  ccEnd();
+});
 
 /* =========================================================
    与外壳通信
