@@ -2,8 +2,7 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>WuJiOS</title>
+<title>WujiOS</title>
 <link rel="stylesheet" href="styles/tokens.css">
 <link rel="stylesheet" href="styles/components.css">
 <style>
@@ -16,12 +15,17 @@
   *::-webkit-scrollbar { display: none; }
 
   html, body {
-    width: 100%; height: 100%; overflow: hidden;
-    font-family: var(--wj-font);
-    -webkit-font-smoothing: antialiased;
-    -webkit-text-size-adjust: 100%;
-    background: #000; color: #fff;
-  }
+  width: 100%; height: 100%; overflow: hidden;
+  font-family: var(--wj-font);
+  -webkit-font-smoothing: antialiased;
+
+  /* 禁止浏览器对文本自动缩放 */
+  -webkit-text-size-adjust: none;
+     -moz-text-size-adjust: none;
+          text-size-adjust: none;
+
+  background: #000; color: #fff;
+}
 
   .os {
     position: relative;

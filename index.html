@@ -15,8 +15,15 @@
   }
 
   * { box-sizing: border-box; }
-  html, body { margin: 0; padding: 0; height: 100%; }
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
 
+  -webkit-text-size-adjust: none;
+     -moz-text-size-adjust: none;
+          text-size-adjust: none;
+}
   body {
     display: flex; flex-direction: column;
     height: 100vh; height: 100dvh;
@@ -74,13 +81,18 @@
     z-index: 1;
   }
   .screen iframe {
-    position: absolute; left: 50%; top: 50%;
-    width: var(--design-w); height: var(--design-h);
-    border: 0; display: block; background: #000;
-    transform-origin: center center;
-    transform: translate(-50%, -50%) scale(1);
-    will-change: transform;
-  }
+  position: absolute; left: 50%; top: 50%;
+  width: var(--design-w); height: var(--design-h);
+  border: 0; display: block; background: #000;
+  transform-origin: center center;
+  transform: translate(-50%, -50%) scale(1);
+  will-change: transform;
+
+  /* 禁止 iPad 对 iframe 内容做缩放 */
+  -webkit-text-size-adjust: none;
+     -moz-text-size-adjust: none;
+          text-size-adjust: none;
+}
 
   .camera-notch {
     position: absolute; top: 1.8%; right: 4%;

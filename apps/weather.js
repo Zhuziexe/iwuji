@@ -1,11 +1,9 @@
 /* =========================================================
    天气 —— Open-Meteo（无需 API Key）
-
    路由：
      home      → 当前天气
      forecast  → 未来 7 天
      city      → 选择城市
-
    缓存：30 分钟；手动刷新间隔 5 分钟；超过 5 分钟自动刷新
    ========================================================= */
 (() => {
@@ -13,7 +11,6 @@
   const REFRESH_GAP   = 5  * 60 * 1000;
   const FORECAST_DAYS = 7;
   const DEFAULT_CITY  = '杭州';
-
   const CITIES = [
     { name: '杭州', lat: 30.2741, lon: 120.1551 },
     { name: '北京', lat: 39.9042, lon: 116.4074 },
@@ -37,38 +34,36 @@
     { name: '纽约', lat: 40.7128, lon: -74.0060 },
     { name: '伦敦', lat: 51.5074, lon: -0.1278 },
   ];
-
   const WEATHER_MAP = {
-    0:  ['晴',             '☀️'],
-    1:  ['基本晴朗',       '🌤️'],
-    2:  ['局部多云',       '⛅'],
-    3:  ['阴',             '☁️'],
-    45: ['雾',             '🌫️'],
-    48: ['雾凇',           '🌫️'],
-    51: ['小毛毛雨',       '🌦️'],
-    53: ['毛毛雨',         '🌦️'],
-    55: ['大毛毛雨',       '🌧️'],
-    56: ['冻毛毛雨',       '🌧️'],
-    57: ['强冻毛毛雨',     '🌧️'],
-    61: ['小雨',           '🌧️'],
-    63: ['中雨',           '🌧️'],
-    65: ['大雨',           '⛈️'],
-    66: ['冻雨',           '🌧️'],
-    67: ['强冻雨',         '🌧️'],
-    71: ['小雪',           '🌨️'],
-    73: ['中雪',           '🌨️'],
-    75: ['大雪',           '❄️'],
-    77: ['雪粒',           '🌨️'],
-    80: ['阵雨',           '🌦️'],
-    81: ['中阵雨',         '🌧️'],
-    82: ['强阵雨',         '⛈️'],
-    85: ['阵雪',           '🌨️'],
-    86: ['强阵雪',         '❄️'],
-    95: ['雷阵雨',         '⛈️'],
-    96: ['雷阵雨伴冰雹',   '⛈️'],
+    0:  ['晴',               '☀️'],
+    1:  ['基本晴朗',         '🌤️'],
+    2:  ['局部多云',         '⛅'],
+    3:  ['阴',               '☁️'],
+    45: ['雾',               '🌫️'],
+    48: ['雾凇',             '🌫️'],
+    51: ['小毛毛雨',         '🌦️'],
+    53: ['毛毛雨',           '🌦️'],
+    55: ['大毛毛雨',         '🌧️'],
+    56: ['冻毛毛雨',         '🌧️'],
+    57: ['强冻毛毛雨',       '🌧️'],
+    61: ['小雨',             '🌧️'],
+    63: ['中雨',             '🌧️'],
+    65: ['大雨',             '⛈️'],
+    66: ['冻雨',             '🌧️'],
+    67: ['强冻雨',           '🌧️'],
+    71: ['小雪',             '🌨️'],
+    73: ['中雪',             '🌨️'],
+    75: ['大雪',             '❄️'],
+    77: ['雪粒',             '🌨️'],
+    80: ['阵雨',             '🌦️'],
+    81: ['中阵雨',           '🌧️'],
+    82: ['强阵雨',           '⛈️'],
+    85: ['阵雪',             '🌨️'],
+    86: ['强阵雪',           '❄️'],
+    95: ['雷阵雨',           '⛈️'],
+    96: ['雷阵雨伴冰雹',     '⛈️'],
     99: ['强雷阵雨伴冰雹', '⛈️'],
   };
-
   function heroGradient(code) {
     if (code === 0 || code === 1)
       return 'linear-gradient(165deg, #5b8dff 0%, #3a5fd0 100%)';
@@ -84,19 +79,16 @@
       return 'linear-gradient(165deg, #647096 0%, #333c58 100%)';
     return 'linear-gradient(165deg, #5b8dff 0%, #3a5fd0 100%)';
   }
-
   /* ---------- 模块状态 ---------- */
   let weatherData       = null;
   let cooldownTimer     = null;
   let autoRefreshTimer  = null;
   let loading           = false;
-
   /* ---------- 工具 ---------- */
   function weatherCode(code) {
     const [text, icon] = WEATHER_MAP[code] || ['未知', '❓'];
     return { text, icon };
   }
-
   function dayName(dateStr, i) {
     if (i === 0) return '今天';
     if (i === 1) return '明天';
@@ -104,16 +96,13 @@
     const d = new Date(dateStr + 'T00:00:00');
     return ['周日','周一','周二','周三','周四','周五','周六'][d.getDay()];
   }
-
   function fmtTime(iso) {
     if (!iso) return '';
     const d = new Date(iso);
     const p = n => String(n).padStart(2, '0');
     return `${p(d.getHours())}:${p(d.getMinutes())}`;
   }
-
   const cacheKey = city => `weather.cache.${city}`;
-
   async function fetchWeather(city) {
     const params = new URLSearchParams({
       latitude:  city.lat,
@@ -127,7 +116,6 @@
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     return res.json();
   }
-
   /* =========================================================
      注册应用
      ========================================================= */
@@ -136,7 +124,6 @@
     name: '天气',
     icon: './assets/weather.svg',
     initialRoute: 'home',
-
     styles: `
       .weather-page {
         position: absolute;
@@ -150,7 +137,6 @@
         flex-direction: column;
         gap: 14px;
       }
-
       .weather-topbar {
         flex: 0 0 auto;
         display: flex;
@@ -173,14 +159,12 @@
         cursor: pointer;
         transition: background .15s;
       }
-      .city-btn:hover { background: #e6ecf6; }
       .city-btn:active { transform: scale(.97); }
       .city-btn__arrow {
         font-size: 10px;
         color: var(--wj-text-dim);
         line-height: 1;
       }
-
       /* 刷新按钮：文字 + 倒计时 */
       .refresh-btn {
         padding: 8px 16px;
@@ -196,7 +180,6 @@
         white-space: nowrap;
         transition: background .15s, opacity .15s, transform .1s;
       }
-      .refresh-btn:hover:not(:disabled)  { background: #2d5fd6; }
       .refresh-btn:active:not(:disabled) { transform: scale(.96); }
       .refresh-btn:disabled {
         background: var(--wj-bg-alt);
@@ -207,14 +190,12 @@
         background: var(--wj-bg-alt);
         color: var(--wj-text-muted);
       }
-
       /* ==================== 主体 ==================== */
       .weather-body {
         display: flex;
         flex-direction: column;
         gap: 14px;
       }
-
       /* ==================== 主卡片 ==================== */
       .weather-hero {
         position: relative;
@@ -276,7 +257,6 @@
         gap: 8px;
       }
       .weather-hero__range .dot { opacity: .5; }
-
       /* ==================== 体感 / 湿度 ==================== */
       .weather-meta {
         flex: 0 0 auto;
@@ -302,7 +282,6 @@
         color: var(--wj-text);
         line-height: 1.1;
       }
-
       /* ==================== 未来 7 天入口 ==================== */
       .weather-more {
         flex: 0 0 auto;
@@ -321,7 +300,6 @@
         cursor: pointer;
         transition: background .15s, transform .1s;
       }
-      .weather-more:hover  { background: #e6ecf6; }
       .weather-more:active { transform: scale(.985); }
       .weather-more__arrow {
         font-size: 22px;
@@ -329,7 +307,6 @@
         color: var(--wj-text-dim);
         font-weight: 300;
       }
-
       .weather-updated {
         flex: 0 0 auto;
         text-align: center;
@@ -337,7 +314,6 @@
         color: var(--wj-text-dim);
         margin-top: -2px;
       }
-
       /* ==================== 加载 / 错误（全页状态） ==================== */
       .weather-state {
         flex: 1 1 auto;
@@ -359,7 +335,6 @@
         animation: wSpin .85s linear infinite;
       }
       @keyframes wSpin { to { transform: rotate(360deg); } }
-
       .weather-state__icon {
         font-size: 52px;
         line-height: 1;
@@ -383,9 +358,7 @@
         cursor: pointer;
         transition: background .15s, transform .1s;
       }
-      .weather-state__retry:hover  { background: #2d5fd6; }
       .weather-state__retry:active { transform: scale(.96); }
-
       /* ==================== 未来 7 天页 ==================== */
       .forecast-title {
         flex: 0 0 auto;
@@ -439,7 +412,6 @@
         font-weight: 400;
         margin-left: 6px;
       }
-
       /* ==================== 城市选择页 ==================== */
       .city-list {
         display: flex;
@@ -447,6 +419,7 @@
         gap: 8px;
       }
       .city-item {
+        touch-action: pan-y;
         display: flex;
         align-items: center;
         justify-content: space-between;
@@ -456,13 +429,10 @@
         color: var(--wj-text);
         font-size: 15px;
         cursor: pointer;
-        border: 0;
-        font: inherit;
         text-align: left;
-        transition: background .15s, transform .1s;
+        transition: background .15s;
       }
-      .city-item:hover  { background: #e6ecf6; }
-      .city-item:active { transform: scale(.985); }
+      .city-item:active { background:#dce3f0; }
       .city-item.is-active {
         background: var(--wj-primary);
         color: #fff;
@@ -472,7 +442,6 @@
         opacity: .75;
       }
     `,
-
     routes: {
       /* ===================================================
          home
@@ -493,17 +462,13 @@
             </div>
           `;
         },
-
         mount(root, ctx) {
           const weatherRoot = root.querySelector('#weatherRoot');
           const cityLabelEl = root.querySelector('#cityLabel');
           const cityBtn     = root.querySelector('#cityBtn');
           const refreshBtn  = root.querySelector('#refreshBtn');
-
           let currentCity = Store.get('weather.city', DEFAULT_CITY);
-
           /* ---------- 状态渲染 ---------- */
-
           /* 全页加载中：所有内容替换成"加载中" */
           function renderLoading() {
             weatherRoot.innerHTML = `
@@ -513,7 +478,6 @@
               </div>
             `;
           }
-
           /* 全页错误：所有内容替换成"网络异常，请重试" */
           function renderError() {
             weatherRoot.innerHTML = `
@@ -526,7 +490,6 @@
             const btn = weatherRoot.querySelector('#retryBtn');
             btn?.addEventListener('click', () => loadWeather({ force: true }));
           }
-
           /* 正常渲染：hero + meta + 未来 7 天入口 + 更新时间 */
           function renderWeather(data, fromCache) {
             const cur   = data.current;
@@ -537,7 +500,6 @@
             const temp  = Math.round(cur.temperature_2m);
             const feel  = Math.round(cur.apparent_temperature);
             const hum   = cur.relative_humidity_2m;
-
             weatherRoot.innerHTML = `
               <div class="weather-body">
                 <div class="weather-hero"
@@ -551,7 +513,6 @@
                     <span>最低 ${tMin}°</span>
                   </div>
                 </div>
-
                 <div class="weather-meta">
                   <div class="weather-meta__item">
                     <span class="weather-meta__label">体感温度</span>
@@ -562,49 +523,39 @@
                     <span class="weather-meta__value">${hum}%</span>
                   </div>
                 </div>
-
                 <button class="weather-more" id="moreBtn" type="button">
                   <span>未来 ${FORECAST_DAYS} 天</span>
                   <span class="weather-more__arrow">›</span>
                 </button>
-
                 <div class="weather-updated">
                   ${fromCache ? '缓存 · ' : ''}更新于 ${fmtTime(cur.time)}
                 </div>
               </div>
             `;
-
             weatherRoot.querySelector('#moreBtn')
               ?.addEventListener('click', () => ctx.push('forecast'));
           }
-
           /* ---------- 刷新按钮 ---------- */
           function setRefreshIdle() {
             refreshBtn.disabled = false;
             refreshBtn.classList.remove('is-loading');
             refreshBtn.textContent = '刷新';
           }
-
           function setRefreshLoading() {
             refreshBtn.disabled = true;
             refreshBtn.classList.add('is-loading');
             refreshBtn.textContent = '刷新中…';
           }
-
           function updateRefreshCooldown(timestamp) {
             const remain = REFRESH_GAP - (Date.now() - timestamp);
-
             if (cooldownTimer) { clearInterval(cooldownTimer); cooldownTimer = null; }
-
             if (remain <= 0) {
               setRefreshIdle();
               return;
             }
-
             refreshBtn.disabled = true;
             refreshBtn.classList.remove('is-loading');
             refreshBtn.textContent = `${Math.ceil(remain / 1000)}s 后可刷新`;
-
             cooldownTimer = setInterval(() => {
               const r = REFRESH_GAP - (Date.now() - timestamp);
               if (r <= 0) {
@@ -616,17 +567,13 @@
               }
             }, 1000);
           }
-
           /* ---------- 加载 ---------- */
           async function loadWeather({ force = false } = {}) {
             if (loading) return;
-
             const city = CITIES.find(c => c.name === currentCity);
             if (!city) { renderError(); return; }
-
             const cached = Store.get(cacheKey(currentCity));
             const now    = Date.now();
-
             /* 非强制 → 未过期缓存直接用 */
             if (!force && cached && now - cached.timestamp < CACHE_TTL) {
               weatherData = { city: currentCity, ...cached };
@@ -635,13 +582,10 @@
               scheduleAutoRefresh(cached.timestamp);
               return;
             }
-
             loading = true;
             setRefreshLoading();
-
             /* 无缓存时显示全页加载；有缓存时保留内容，不闪 */
             if (!cached) renderLoading();
-
             try {
               const data = await fetchWeather(city);
               const record = { data, timestamp: Date.now() };
@@ -665,35 +609,28 @@
               loading = false;
             }
           }
-
           /* ---------- 自动刷新：距上次数据超过 5 分钟重拉 ---------- */
           function scheduleAutoRefresh(timestamp) {
             if (autoRefreshTimer) { clearTimeout(autoRefreshTimer); autoRefreshTimer = null; }
-
             const remain = REFRESH_GAP - (Date.now() - timestamp);
             const delay  = Math.max(remain, 0) + 500;
-
             autoRefreshTimer = setTimeout(() => {
               autoRefreshTimer = null;
               loadWeather({ force: true });
             }, delay);
           }
-
           /* ---------- 事件 ---------- */
           cityBtn.addEventListener('click', () => {
             ctx.push('city');
           });
-
           refreshBtn.addEventListener('click', () => {
             if (refreshBtn.disabled || loading) return;
             loadWeather({ force: true });
           });
-
           /* 从城市页返回时，检查城市是否变了 */
           ctx.nav.onChange(() => {
             /* 只有当回到 home 时才处理 */
             if (ctx.nav.current?.route?.name !== 'home') return;
-
             const storedCity = Store.get('weather.city', DEFAULT_CITY);
             if (storedCity !== currentCity) {
               currentCity = storedCity;
@@ -701,21 +638,17 @@
               loadWeather();
             }
           });
-
           /* 首次加载 */
           cityLabelEl.textContent = currentCity;
           loadWeather();
         },
-
         unmount() {
           if (cooldownTimer)    { clearInterval(cooldownTimer);    cooldownTimer = null; }
           if (autoRefreshTimer) { clearTimeout(autoRefreshTimer);  autoRefreshTimer = null; }
           loading = false;
         },
-
         name: 'home',
       },
-
       /* ===================================================
          forecast
          =================================================== */
@@ -728,10 +661,8 @@
             </div>
           `;
         },
-
         mount(root) {
           const listEl = root.querySelector('#forecastList');
-
           if (!weatherData || !weatherData.data) {
             listEl.innerHTML = `
               <div class="weather-state">
@@ -741,7 +672,6 @@
             `;
             return;
           }
-
           const daily = weatherData.data.daily;
           listEl.innerHTML = daily.time.map((date, i) => {
             const w    = weatherCode(daily.weather_code[i]);
@@ -759,10 +689,8 @@
             `;
           }).join('');
         },
-
         name:'forecast'
       },
-
       /* ===================================================
          city —— 城市选择页
          =================================================== */
@@ -774,18 +702,17 @@
               <div class="forecast-title">选择城市</div>
               <div class="city-list" id="cityList">
                 ${CITIES.map(c => `
-                  <button class="city-item ${c.name === current ? 'is-active' : ''}"
-                          type="button"
-                          data-city="${c.name}">
+                  <div class="city-item ${c.name === current ? 'is-active' : ''}"
+                       role="button"
+                       tabindex="0"
+                       data-city="${c.name}">
                     <span>${c.name}</span>
                     <span class="city-item__hint">${c.name === current ? '当前' : ''}</span>
-                  </button>
+                  </div>
                 `).join('')}
               </div>
-            </div>
-          `;
+            </div>`;
         },
-
         mount(root, ctx) {
           root.querySelectorAll('.city-item').forEach(el => {
             el.addEventListener('click', () => {
@@ -793,11 +720,18 @@
               if (name) {
                 Store.set('weather.city', name);
               }
-              ctx.pop();   // 返回 home；home 的 onChange 会检测到城市变化
+              ctx.pop();
             });
+            el.addEventListener('keydown', e => {
+              if(e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                const name = el.dataset.city;
+                if (name) Store.set('weather.city', name);
+                ctx.pop();
+              }
+            })
           });
         },
-
         name: 'city'
       },
     },
