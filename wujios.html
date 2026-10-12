@@ -1088,16 +1088,20 @@ function completeUnlock(target) {
   let startY = 0;
   let deltaY = 0;
   let hasPassword = false;
+  let pointerId = null;
 
   lockedView.addEventListener('pointerdown', e => {
     if (S.view !== 'locked' || S.power !== 'running') return;
     if (passwordPanel.classList.contains('is-open')) return;
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+
     const rect = osEl.getBoundingClientRect();
     if ((e.clientY - rect.top) < 30 && (e.clientX - rect.left) / rect.width >= 0.5) return;
 
     dragging = true;
     startY = e.clientY;
     deltaY = 0;
+    pointerId = e.pointerId;
     hasPassword = !!Store.get('lock.password', '');
 
     const target = S.viewBeforeLock === 'app' && S.currentBundle ? 'app' : 'home';
@@ -1109,14 +1113,18 @@ function completeUnlock(target) {
     }
 
     lockedView.style.transition = 'none';
-
-    try { lockedView.setPointerCapture(e.pointerId); } catch {}
-  });
+  }, { passive: true });
 
   lockedView.addEventListener('pointermove', e => {
     if (!dragging) return;
+    if (pointerId !== null && e.pointerId !== pointerId) return;
+
     const dy = e.clientY - startY;
     if (dy >= 0) { deltaY = 0; return; }
+
+    /* 已经开始上滑 → 阻止浏览器默认行为 */
+    if (e.cancelable) e.preventDefault();
+
     deltaY = dy;
 
     if (hasPassword) {
@@ -1130,11 +1138,13 @@ function completeUnlock(target) {
       lockedView.style.opacity   = String(1 - p * 0.65);
       homeView.style.opacity     = String(p);
     }
-  });
+  }, { passive: false });
 
-  function endDrag() {
+  function endDrag(e) {
     if (!dragging) return;
+    if (e && pointerId !== null && e.pointerId !== pointerId) return;
     dragging = false;
+    pointerId = null;
 
     const target = S.viewBeforeLock === 'app' && S.currentBundle ? 'app' : 'home';
     const unlocked = -deltaY > 70;
@@ -1177,15 +1187,19 @@ function completeUnlock(target) {
   lockedView.addEventListener('pointercancel', endDrag);
 })();
 
-/* =========================================================
-   应用：从左往右滑返回
-   ========================================================= */
 (function bindAppGesture() {
-  let dragging = false, startX = 0, startY = 0, deltaX = 0, dir = null;
+  let dragging = false;
+  let startX = 0, startY = 0;
+  let deltaX = 0;
+  let dir = null;
   let navDragging = false;
+  let pointerId = null;
 
   appScreen.addEventListener('pointerdown', e => {
     if (S.view !== 'app') return;
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+
+    /* 顶部右半区留给控制中心 */
     const rect = osEl.getBoundingClientRect();
     if ((e.clientY - rect.top) < 30 && (e.clientX - rect.left) / rect.width >= 0.5) return;
 
@@ -1195,11 +1209,15 @@ function completeUnlock(target) {
     startY = e.clientY;
     deltaX = 0;
     dir = null;
+    pointerId = e.pointerId;
     appScreen.style.transition = 'none';
-  });
+    /* 注意：不 preventDefault，让按钮仍能点击 */
+  }, { passive: true });
 
   appScreen.addEventListener('pointermove', e => {
     if (!dragging) return;
+    if (pointerId !== null && e.pointerId !== pointerId) return;
+
     const dx = e.clientX - startX;
     const dy = e.clientY - startY;
 
@@ -1208,17 +1226,24 @@ function completeUnlock(target) {
       dir = Math.abs(dx) > Math.abs(dy) ? 'h' : 'v';
 
       if (dir === 'h') {
+        /* 确认横向 → 捕获指针、阻止浏览器默认手势 */
         try { appScreen.setPointerCapture(e.pointerId); } catch {}
         if (currentNav && currentNav.depth > 1) {
           navDragging = currentNav.dragStart();
         }
       } else {
+        /* 纵向 → 放弃手势，交给原生滚动 */
         dragging = false;
+        pointerId = null;
         appScreen.style.transition = 'none';
         return;
       }
     }
+
     if (dir !== 'h') return;
+
+    if (e.cancelable) e.preventDefault();
+
     if (dx <= 0) {
       deltaX = 0;
       if (navDragging) currentNav.dragMove(0);
@@ -1234,11 +1259,13 @@ function completeUnlock(target) {
     } else {
       appScreen.style.transform = `translateX(${dx}px)`;
     }
-  });
+  }, { passive: false });
 
-  function endGesture() {
+  function endGesture(e) {
     if (!dragging) return;
+    if (e && pointerId !== null && e.pointerId !== pointerId) return;
     dragging = false;
+    pointerId = null;
 
     if (deltaX === 0) {
       appScreen.style.transition = 'none';
@@ -1249,10 +1276,10 @@ function completeUnlock(target) {
     }
 
     const w = appView.offsetWidth;
-    const threshold = w * 0.32;
+    const threshold = w * 0.25;
 
     if (navDragging) {
-      currentNav.dragEnd(deltaX, 0.32);
+      currentNav.dragEnd(deltaX, 0.25);
       navDragging = false;
       appScreen.style.transition = 'none';
       appScreen.style.transform  = '';
@@ -1278,9 +1305,6 @@ function completeUnlock(target) {
   appScreen.addEventListener('pointercancel', endGesture);
 })();
 
-/* =========================================================
-   开机动画
-   ========================================================= */
 async function playBootAnimation() {
   const T = { show1: 950, fadeI: 500, expandOS: 400, hold: 1400 };
 
