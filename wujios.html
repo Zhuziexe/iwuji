@@ -32,12 +32,6 @@
       display: none;
     }
 
-    * {
-      -webkit-touch-callout: none !important;
-      -webkit-user-select: none;
-      user-select: none;
-    }
-
     html,
     body {
       width: 100%;
@@ -388,21 +382,11 @@
       right: 0;
       bottom: 28px;
       overflow: hidden;
-      touch-action: none;
+      touch-action: pan-y;
       -webkit-touch-callout: none;
       user-select: none;
       -webkit-user-select: none;
     }
-
-    .desktop-ghost,
-    .desktop-ghost * {
-      -webkit-touch-callout: none !important;
-      -webkit-user-select: none;
-      user-select: none;
-      -webkit-user-drag: none;
-      pointer-events: none !important;
-    }
-
 
     .desktop-track {
       display: flex;
@@ -458,7 +442,6 @@
       width: 100%;
       min-width: 0;
       max-width: 100%;
-      -webkit-touch-callout: none;
     }
 
     .app:active {
@@ -467,6 +450,31 @@
 
     .app[data-dragging="1"] {
       opacity: .25;
+    }
+
+    /* =========================================================
+       禁用移动端长按原生菜单 / 文本选择 / 原生拖拽
+       ========================================================= */
+    .app,
+    .app * {
+      -webkit-touch-callout: none;
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
+      -webkit-user-drag: none;
+      -khtml-user-drag: none;
+      -moz-user-drag: none;
+      -o-user-drag: none;
+    }
+
+    .desktop-ghost,
+    .desktop-ghost * {
+      -webkit-touch-callout: none;
+      -webkit-user-select: none;
+      user-select: none;
+      -webkit-user-drag: none;
+      pointer-events: none !important;
     }
 
     .desktop-ghost {
@@ -1138,7 +1146,6 @@
       return `<span>${icon}</span>`;
     }
 
-    /* —— 桌面分页圆点（与锁屏密码的 updatePasswordDots 分开命名） —— */
     function updatePageDots() {
       const total = Math.max(1, DesktopLayout.pageCount());
       if (currentPage >= total) currentPage = total - 1;
@@ -1186,6 +1193,53 @@
       desktopTrackEl.style.transform = `translateX(${-currentPage * w}px)`;
 
       updatePageDots();
+      bindAppGuards();
+    }
+
+    /* =========================================================
+       华为/安卓浏览器：阻止长按原生菜单 + 用 pointerup 打开应用
+       （touchstart 的 preventDefault 会吃掉 click，所以点击走 pointerup）
+       ========================================================= */
+    let _lastPointerOpenAt = 0;
+
+    function bindAppGuards() {
+      desktopViewportEl.querySelectorAll('.app').forEach(appEl => {
+        if (appEl._guarded) return;
+        appEl._guarded = true;
+
+        /* 1) touchstart 阶段直接阻止默认行为——掐断华为长按识别 */
+        appEl.addEventListener('touchstart', e => {
+          if (e.cancelable) e.preventDefault();
+        }, { passive: false });
+
+        /* 2) contextmenu 绑在元素自身，不依赖 document 委托
+              （华为 WebView 中 contextmenu 不冒泡到 document） */
+        appEl.addEventListener('contextmenu', e => {
+          e.preventDefault();
+          return false;
+        });
+
+        /* 3) 记录按下坐标，用于区分"点击"和"滑动" */
+        appEl.addEventListener('pointerdown', e => {
+          appEl._px = e.clientX;
+          appEl._py = e.clientY;
+        }, { passive: true });
+
+        /* 4) 用 pointerup 替代 click 打开应用
+              （因为 touchstart 的 preventDefault 会吞掉 click） */
+        appEl.addEventListener('pointerup', e => {
+          if (e.pointerType === 'mouse' && e.button !== 0) return;
+          if (DesktopDrag.state === 'dragging') return;
+          if (performance.now() < DesktopDrag.suppressClickUntil) return;
+
+          const dx = Math.abs(e.clientX - (appEl._px ?? 0));
+          const dy = Math.abs(e.clientY - (appEl._py ?? 0));
+          if (dx > 12 || dy > 12) return;
+
+          _lastPointerOpenAt = performance.now();
+          openApp(appEl.dataset.bundle, appEl);
+        });
+      });
     }
 
     function goToPage(index, animate = true) {
@@ -1214,8 +1268,8 @@
     });
 
     /* =========================================================
-   横滑手势
-   ========================================================= */
+       横滑手势
+       ========================================================= */
     (function bindPageSwipe() {
       let pointerState = null;
 
@@ -1233,7 +1287,6 @@
           captured: false,
         };
         desktopTrackEl.style.transition = 'none';
-        /* 不在这里 setPointerCapture，避免吞掉 click */
       });
 
       desktopViewportEl.addEventListener('pointermove', e => {
@@ -1253,7 +1306,6 @@
           pointerState.locked = Math.abs(dx) > Math.abs(dy) ? 'h' : 'v';
           if (pointerState.locked === 'v') return;
 
-          /* 确认横滑才捕获 */
           if (!pointerState.captured) {
             try {
               desktopViewportEl.setPointerCapture(e.pointerId);
@@ -1304,12 +1356,16 @@
       });
     })();
 
+    /* =========================================================
+       拖拽排序（含移动端长按菜单屏蔽 + 卡死修复）
+       ========================================================= */
     const DesktopDrag = (() => {
-      const HOLD_MS = 320;
+      const HOLD_MS = 300;          // 抢在华为长按识别（约 400ms）之前
       const MOVE_CANCEL = 14;
       const EDGE_ZONE = 44;
       const EDGE_HOLD_MS = 480;
       const SUPPRESS_MS = 300;
+      const WATCHDOG_MS = 20000;    // 兜底：20s 后强制结束拖拽
 
       let state = 'idle';
       let pressTimer = null;
@@ -1320,9 +1376,27 @@
       let sourceEl = null;
       let edgeTimer = null;
       let edgeDir = 0;
+      let shieldEl = null;
+      let activePointerId = null;
+      let watchdogTimer = null;
 
-      /* 时间戳：在此之前到达的 click 一律忽略 */
       let suppressClickUntil = 0;
+
+      /* ---------- 遮罩：拖拽期间吸收所有触摸事件 ---------- */
+      function createShield() {
+        shieldEl = document.createElement('div');
+        shieldEl.style.cssText =
+          'position:fixed;inset:0;z-index:9999;background:transparent;touch-action:none;';
+        const stop = ev => { if (ev.cancelable) ev.preventDefault(); };
+        shieldEl.addEventListener('touchstart', stop, { passive: false });
+        shieldEl.addEventListener('touchmove', stop, { passive: false });
+        shieldEl.addEventListener('contextmenu', stop);
+        document.body.appendChild(shieldEl);
+      }
+
+      function destroyShield() {
+        if (shieldEl) { shieldEl.remove(); shieldEl = null; }
+      }
 
       function startDrag(x, y, appEl) {
         state = 'dragging';
@@ -1330,6 +1404,12 @@
         draggedFrom = DesktopLayout.findBundle(draggedBundle);
         sourceEl = appEl;
         appEl.dataset.dragging = '1';
+
+        /* 关键：把指针捕获到 desktopViewportEl（稳定祖先元素），
+           这样即使 renderHome 重建内部 DOM，pointerup 也一定会派发到这里 */
+        if (activePointerId !== null) {
+          try { desktopViewportEl.setPointerCapture(activePointerId); } catch { }
+        }
 
         const rect = appEl.getBoundingClientRect();
         ghostEl = appEl.cloneNode(true);
@@ -1343,6 +1423,14 @@
 
         moveGhost(x, y);
         suppressClickUntil = performance.now() + SUPPRESS_MS;
+
+        createShield();
+
+        /* 看门狗：pointerup 若丢失，超时强制结束 */
+        clearTimeout(watchdogTimer);
+        watchdogTimer = setTimeout(() => {
+          if (state === 'dragging') finishDrag(x, y);
+        }, WATCHDOG_MS);
       }
 
       function moveGhost(x, y) {
@@ -1391,8 +1479,8 @@
           if (DesktopLayout.isPageEmpty(total - 1)) return;
 
           DesktopLayout.addPage();
+          currentPage = total;
           renderHome();
-          goToPage(total);
           return;
         }
 
@@ -1410,15 +1498,39 @@
         }
       }
 
+      /* ---------- 统一清理 ---------- */
+      function releasePointer() {
+        if (activePointerId !== null) {
+          try { desktopViewportEl.releasePointerCapture(activePointerId); } catch { }
+        }
+        activePointerId = null;
+      }
+
+      function clearEdge() {
+        if (edgeTimer) { clearTimeout(edgeTimer); edgeTimer = null; }
+        edgeDir = 0;
+      }
+
+      function clearWatchdog() {
+        clearTimeout(watchdogTimer);
+        watchdogTimer = null;
+      }
+
+      /* ---------- 结束拖拽：落点 + 移动 ---------- */
       function finishDrag(x, y) {
+        if (state !== 'dragging') return;
+
+        /* 关键顺序：先移除遮罩，否则 elementFromPoint 只能命中遮罩 */
+        destroyShield();
+
         if (ghostEl) { ghostEl.remove(); ghostEl = null; }
-        if (sourceEl) { delete sourceEl.dataset.dragging; }
+        if (sourceEl) { try { delete sourceEl.dataset.dragging; } catch { } }
         sourceEl = null;
 
         desktopViewportEl.querySelectorAll('.is-drop-target')
           .forEach(el => el.classList.remove('is-drop-target'));
 
-        /* ---------- 决定落点 ---------- */
+        /* 决定落点 */
         let toPageIndex = currentPage;
         let toSlotIndex = 0;
         let located = false;
@@ -1454,7 +1566,6 @@
           }
         }
 
-        /* ---------- 执行移动 ---------- */
         const samePos =
           draggedFrom &&
           toPageIndex === draggedFrom.pageIndex &&
@@ -1476,13 +1587,40 @@
         draggedBundle = null;
         draggedFrom = null;
 
+        clearEdge();
+        clearWatchdog();
+        releasePointer();
+
         renderHome();
         state = 'idle';
 
-        /* 松手后抑制 click 一段时间 */
         suppressClickUntil = performance.now() + SUPPRESS_MS;
       }
 
+      /* ---------- 取消拖拽：任何异常路径都走这里 ---------- */
+      function cancelDrag() {
+        if (state !== 'dragging') return;
+
+        destroyShield();
+        if (ghostEl) { ghostEl.remove(); ghostEl = null; }
+        if (sourceEl) { try { delete sourceEl.dataset.dragging; } catch { } }
+        sourceEl = null;
+        draggedBundle = null;
+        draggedFrom = null;
+
+        desktopViewportEl.querySelectorAll('.is-drop-target')
+          .forEach(el => el.classList.remove('is-drop-target'));
+
+        clearEdge();
+        clearWatchdog();
+        releasePointer();
+
+        renderHome();
+        state = 'idle';
+        suppressClickUntil = performance.now() + SUPPRESS_MS;
+      }
+
+      /* ---------- 事件绑定 ---------- */
       desktopViewportEl.addEventListener('pointerdown', e => {
         if (state !== 'idle') return;
         if (e.pointerType === 'mouse' && e.button !== 0) return;
@@ -1490,6 +1628,7 @@
         const appEl = e.target.closest('.app');
         if (!appEl) return;
 
+        activePointerId = e.pointerId;
         pressStart = { x: e.clientX, y: e.clientY };
         const px = e.clientX, py = e.clientY;
         const targetApp = appEl;
@@ -1501,6 +1640,7 @@
       }, { passive: true });
 
       document.addEventListener('pointermove', e => {
+        /* 长按计时器期间移动 → 取消拖拽启动 */
         if (pressTimer && pressStart) {
           const dx = e.clientX - pressStart.x;
           const dy = e.clientY - pressStart.y;
@@ -1508,17 +1648,17 @@
             clearTimeout(pressTimer);
             pressTimer = null;
             pressStart = null;
-            /* 用户明显移动 → 后续 click 也忽略 */
+            activePointerId = null;
             suppressClickUntil = performance.now() + SUPPRESS_MS;
           }
         }
 
         if (state !== 'dragging') return;
+        if (activePointerId !== null && e.pointerId !== activePointerId) return;
 
         moveGhost(e.clientX, e.clientY);
         checkEdge(e.clientX);
 
-        /* 拖动期间持续推迟抑制时间 */
         suppressClickUntil = performance.now() + SUPPRESS_MS;
 
         const el = document.elementFromPoint(e.clientX, e.clientY);
@@ -1531,28 +1671,42 @@
       }, { passive: false });
 
       document.addEventListener('touchmove', e => {
-        if (state === 'dragging') e.preventDefault();
+        if (state === 'dragging' && e.cancelable) e.preventDefault();
       }, { passive: false });
 
       document.addEventListener('pointerup', e => {
-        if (pressTimer) { clearTimeout(pressTimer); pressTimer = null; pressStart = null; }
-        if (state === 'dragging') finishDrag(e.clientX, e.clientY);
+        if (pressTimer) {
+          clearTimeout(pressTimer);
+          pressTimer = null;
+          pressStart = null;
+          activePointerId = null;
+        }
+        if (state !== 'dragging') return;
+        if (activePointerId !== null && e.pointerId !== activePointerId) return;
+        finishDrag(e.clientX, e.clientY);
       });
 
       document.addEventListener('pointercancel', () => {
-        if (pressTimer) { clearTimeout(pressTimer); pressTimer = null; pressStart = null; }
-        if (state === 'dragging') {
-          if (ghostEl) { ghostEl.remove(); ghostEl = null; }
-          if (sourceEl) { delete sourceEl.dataset.dragging; }
-          sourceEl = null;
-          draggedBundle = null;
-          draggedFrom = null;
-          desktopViewportEl.querySelectorAll('.is-drop-target')
-            .forEach(x => x.classList.remove('is-drop-target'));
-          renderHome();
-          state = 'idle';
-          suppressClickUntil = performance.now() + SUPPRESS_MS;
+        if (pressTimer) {
+          clearTimeout(pressTimer);
+          pressTimer = null;
+          pressStart = null;
+          activePointerId = null;
         }
+        cancelDrag();
+      });
+
+      /* ---------- 多重兜底：防止 state 卡在 dragging ---------- */
+      document.addEventListener('touchcancel', () => {
+        cancelDrag();
+      }, { passive: true });
+
+      window.addEventListener('blur', () => {
+        cancelDrag();
+      });
+
+      document.addEventListener('visibilitychange', () => {
+        if (document.hidden) cancelDrag();
       });
 
       return {
@@ -1563,8 +1717,10 @@
 
     desktopViewportEl.addEventListener('click', e => {
       if (DesktopDrag.state === 'dragging') return;
-
       if (performance.now() < DesktopDrag.suppressClickUntil) return;
+
+      /* pointerup 已经打开过就不重复打开 */
+      if (performance.now() - _lastPointerOpenAt < 500) return;
 
       let appEl = e.target.closest('.app');
       if (!appEl) {
@@ -1802,7 +1958,6 @@
     let pinChecking = false;
     let errorTimer = null;
 
-    /* —— 锁屏密码圆点（与桌面的 updatePageDots 分开命名） —— */
     function updatePasswordDots() {
       const dots = passwordDots.querySelectorAll('.password-dot');
       dots.forEach((dot, i) => {
@@ -2621,17 +2776,23 @@
       }, true);
     })();
 
+    /* =========================================================
+       全局拦截：原生菜单 / 原生拖拽 / 文本选择
+       ========================================================= */
     (function disableContextMenu() {
+      /* contextmenu 全局拦，不判断 .os */
       document.addEventListener('contextmenu', e => {
         e.preventDefault();
         return false;
       }, { capture: true });
 
+      /* 原生 HTML5 拖拽 */
       document.addEventListener('dragstart', e => {
         e.preventDefault();
         return false;
       }, { capture: true });
 
+      /* 文本选择 */
       document.addEventListener('selectstart', e => {
         e.preventDefault();
         return false;
