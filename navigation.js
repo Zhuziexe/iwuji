@@ -42,7 +42,7 @@ window.WujiNavigation = class WujiNavigation {
     }
 
     const el = document.createElement('div');
-    el.className = 'wj-route';
+    el.className = 'wj-route app-page';
     el.dataset.route = route.name || '';
     el.style.cssText = `
       position: absolute;
@@ -52,6 +52,7 @@ window.WujiNavigation = class WujiNavigation {
       flex-direction: column;
       overflow: hidden;
       will-change: transform;
+      touch-action: auto;
     `;
 
     const routeCtx = {

@@ -535,7 +535,6 @@
             weatherRoot.querySelector('#moreBtn')
               ?.addEventListener('click', () => ctx.push('forecast'));
           }
-          /* ---------- 刷新按钮 ---------- */
           function setRefreshIdle() {
             refreshBtn.disabled = false;
             refreshBtn.classList.remove('is-loading');

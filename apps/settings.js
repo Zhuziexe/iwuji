@@ -1,11 +1,4 @@
-/* =========================================================
-   设置 —— 系统信息 + 生物识别和密码
-   ========================================================= */
 (() => {
-
-  /* =========================================================
-     公用：PIN 组件
-     ========================================================= */
   function pinDotsHtml() {
     return `
       <div class="pin-dots" data-pin-dots>
@@ -127,7 +120,6 @@
     initialRoute: 'home',
 
     styles: `
-      /* ==================== 主页 ==================== */
       .settings-page {
         position: absolute;
         inset: 0;
@@ -289,47 +281,23 @@
     `,
 
     routes: {
-
-      /* ===================================================
-         home
-         =================================================== */
       home: {
         name: 'home',
 
         render() {
-          const bootCount = Store.get('bootCount', 0);
-          const lastBoot  = Store.get('lastBootAt', 0);
-          const fmt = ts => ts
-            ? new Date(ts).toLocaleString('zh-CN', { hour12: false })
-            : '—';
-
           return `
             <div class="settings-page">
               <div class="settings-title">设置</div>
 
               <div class="settings-section">
                 <div class="settings-info">
-                  <span>开机次数</span><strong>${bootCount}</strong>
-                </div>
-                <div class="settings-info">
-                  <span>上次开机</span><strong>${fmt(lastBoot)}</strong>
-                </div>
-                <div class="settings-info">
-                  <span>存储模式</span><strong>${Store.isMemoryOnly ? '内存' : '本地'}</strong>
+                  <span>存储模式</span><strong>${Store.isMemoryOnly ? '无法存储' : '正常'}</strong>
                 </div>
               </div>
 
               <div class="settings-section" style="margin-top:8px">
                 <button class="settings-item" data-act="biometric" type="button">
                   <span>生物识别和密码</span>
-                  <span class="settings-item__arrow">›</span>
-                </button>
-              </div>
-
-              <div class="settings-section" style="margin-top:8px">
-                <button class="settings-item settings-item--danger"
-                        data-act="reset" type="button">
-                  <span>清除所有数据</span>
                   <span class="settings-item__arrow">›</span>
                 </button>
               </div>
@@ -340,21 +308,9 @@
         mount(root, ctx) {
           root.querySelector('[data-act="biometric"]')
             ?.addEventListener('click', () => ctx.push('biometric'));
-
-          root.querySelector('[data-act="reset"]')
-            ?.addEventListener('click', () => {
-              if (confirm('确定清除所有数据？\n设置、笔记、密码都会被重置。')) {
-                Store.reset();
-                alert('已清除所有数据');
-                ctx.close();
-              }
-            });
         },
       },
 
-      /* ===================================================
-         biometric —— 生物识别和密码
-         =================================================== */
       biometric: {
         name: 'biometric',
 
@@ -362,7 +318,6 @@
           return `
             <div class="settings-page">
               <div class="settings-title">生物识别和密码</div>
-              <div class="settings-subtitle">锁屏保护</div>
               <div class="settings-section" id="bioList"></div>
             </div>
           `;
@@ -410,7 +365,6 @@
 
           renderList();
 
-          /* 从子页返回时刷新状态 */
           ctx.nav.onChange(() => {
             if (ctx.nav.current?.route?.name === 'biometric') {
               renderList();
@@ -419,10 +373,6 @@
         },
       },
 
-      /* ===================================================
-         pin-set —— 设置 / 更改密码
-         data: { requireOld: boolean }
-         =================================================== */
       'pin-set': {
         name: 'pin-set',
 
@@ -510,9 +460,6 @@
         },
       },
 
-      /* ===================================================
-         pin-verify —— 验证当前密码（关闭密码用）
-         =================================================== */
       'pin-verify': {
         name: 'pin-verify',
 

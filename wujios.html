@@ -2,6 +2,8 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover, user-scalable=no">
 <title>WujiOS</title>
 <link rel="stylesheet" href="styles/tokens.css">
 <link rel="stylesheet" href="styles/components.css">
@@ -33,7 +35,7 @@
     overflow: hidden;
     user-select: none; -webkit-user-select: none;
     -webkit-tap-highlight-color: transparent;
-    touch-action: manipulation;
+    touch-action: auto;
     background: url('./themes/sea.png') center center / cover no-repeat;
   }
 
@@ -289,9 +291,6 @@
   .lock-pin-key--empty  { visibility: hidden; pointer-events: none; }
   .lock-pin-key--action { font-size: 22px; }
 
-  /* =========================================================
-     桌面
-     ========================================================= */
   .view--home {
     background: transparent;
     will-change: transform, opacity;
@@ -305,9 +304,9 @@
   }
   .apps {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    row-gap: 20px;
-    column-gap: 6px;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    row-gap: 8px;
+    column-gap: 2px;
   }
   .app {
     display: flex; flex-direction: column; align-items: center; gap: 8px;
@@ -319,12 +318,9 @@
 
   .app__icon {
     width: 52px; height: 52px;
-    border-radius: 14px;
+    border-radius: 12px;
     display: flex; align-items: center; justify-content: center;
     font-size: 26px; line-height: 1;
-    box-shadow:
-      0 4px 10px rgba(15,20,45,.35),
-      inset 0 1px 0 rgba(255,255,255,.12);
     background: var(--wj-icon-bg, transparent);
     overflow: hidden;
   }
@@ -347,20 +343,19 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    padding: 0 2px;
+    padding: 0;
   }
 
-  /* =========================================================
-     应用视图
-     ========================================================= */
   .app-screen {
     position: absolute; inset: 0;
     display: flex; flex-direction: column;
     background: var(--wj-bg); color: var(--wj-text);
-    box-shadow: -14px 0 36px rgba(0,0,0,.3);
     will-change: transform;
     transition: none;
-    touch-action: pan-y;
+    touch-action: auto;
+  }
+  .app-page {
+    box-shadow: -14px 0 36px rgba(0, 0, 0, .3);
   }
   .app-body {
     flex: 1 1 auto;
@@ -720,10 +715,8 @@
   </div>
 
   <div class="power-overlay power-overlay--shutdown">
-    <div class="spinner"></div>
     <div class="shutdown-text">正在关机…</div>
   </div>
-
 </div>
 
 <script src="navigation.js"></script>
@@ -734,6 +727,7 @@
 <script src="apps/settings.js"></script>
 <script src="apps/photos.js"></script>
 <script src="apps/wujigallery.js"></script>
+<script src="apps/wmall.js"></script>
 
 <script>
 /* =========================================================
@@ -1199,7 +1193,6 @@ function completeUnlock(target) {
   let dir = null;
   let navDragging = false;
 
-  /* ---------- 通用逻辑 ---------- */
 
   function beginGesture(x, y) {
     if (S.view !== 'app') return false;
@@ -1295,12 +1288,14 @@ function completeUnlock(target) {
 
   /* ---------- 触摸 ---------- */
   appScreen.addEventListener('touchstart', e => {
+    if (e.target.tagName === 'IFRAME') return;
     const t = e.touches[0];
     if (!t) return;
     beginGesture(t.clientX, t.clientY);
   }, { passive: true });
 
   appScreen.addEventListener('touchmove', e => {
+    if (e.target.tagName === 'IFRAME') return;
     const t = e.touches[0];
     if (!t) return;
     moveGesture(t.clientX, t.clientY, () => {
@@ -1315,11 +1310,13 @@ function completeUnlock(target) {
   appScreen.addEventListener('pointerdown', e => {
     if (e.pointerType !== 'mouse') return;
     if (e.button !== 0) return;
+    if (e.target.tagName === 'IFRAME') return;
     beginGesture(e.clientX, e.clientY);
   });
 
   appScreen.addEventListener('pointermove', e => {
     if (e.pointerType !== 'mouse') return;
+    if (e.target.tagName === 'IFRAME') return;
     moveGesture(e.clientX, e.clientY, null);
   });
 
@@ -1359,9 +1356,6 @@ async function playBootAnimation() {
 async function powerOn() {
   if (S.power !== 'off') return;
   setPower('booting');
-
-  Store.set('bootCount', Store.get('bootCount', 0) + 1);
-  Store.set('lastBootAt', Date.now());
 
   await playBootAnimation();
 
@@ -1710,6 +1704,7 @@ window.addEventListener('message', e => {
     if (e.pointerType !== 'mouse') return;
     if (e.button !== 0) return;
     if (e.target.closest('button, a, input, textarea, select, label, [contenteditable]')) return;
+    if (e.target.tagName === 'IFRAME') return;
 
     const sc = findScroller(e.target);
     if (!sc) return;
