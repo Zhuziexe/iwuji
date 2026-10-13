@@ -2607,7 +2607,6 @@
 
     (function disableContextMenu() {
       const block = e => {
-        /* 只在 OS 内部拦截，别影响浏览器的正常右键 */
         if (e.target.closest && e.target.closest('.os')) {
           e.preventDefault();
           return false;
@@ -2616,7 +2615,6 @@
 
       document.addEventListener('contextmenu', block, { capture: true });
 
-      /* 安卓长按有时触发 selectstart，也一并禁 */
       document.addEventListener('selectstart', e => {
         if (e.target.closest && e.target.closest('.desktop-viewport')) {
           e.preventDefault();
