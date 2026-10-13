@@ -489,7 +489,7 @@ WujiApps.register({
                     <div class="wmall-specs__title">参数</div>
 
                     <div class="wmall-specs__row">
-                      <span>机身内存(RAM)</span><strong>4GB</strong>
+                      <span>运行内存(RAM)</span><strong>4GB</strong>
                     </div>
                     <div class="wmall-specs__row">
                       <span>机身内存(ROM)</span><strong>64GB</strong>
@@ -520,7 +520,6 @@ WujiApps.register({
           `;
         }
 
-        /* ---------- 其他商品 ---------- */
         const map = {
           charger: {
             img: './assets/com.wujinb.wmall/iwuji_charger.png',
@@ -561,7 +560,6 @@ WujiApps.register({
       mount(root, ctx) {
         const id = ctx.data?.id;
 
-        /* ---------- iWuji：chip 切换 ---------- */
         if (id === 'iWuji') {
           const chips = root.querySelectorAll('.wmall-chip');
           const imgEl = root.querySelector('#wjPhoneImg');
@@ -601,7 +599,6 @@ WujiApps.register({
           return;
         }
 
-        /* ---------- 其他商品：购买 ---------- */
         const buyBtn = root.querySelector('.wmall-buy-btn');
         buyBtn?.addEventListener('click', () => {
           if (navigator.vibrate) { try { navigator.vibrate(10); } catch { } }

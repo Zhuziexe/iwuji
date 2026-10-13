@@ -1,41 +1,34 @@
 (() => {
   function pinDotsHtml() {
     return `
-      <div class="pin-dots" data-pin-dots>
-        <span class="pin-dot"></span>
-        <span class="pin-dot"></span>
-        <span class="pin-dot"></span>
-        <span class="pin-dot"></span>
+      <div class="settings-pin-dots" data-pin-dots>
+        <span class="settings-pin-dot"></span>
+        <span class="settings-pin-dot"></span>
+        <span class="settings-pin-dot"></span>
+        <span class="settings-pin-dot"></span>
       </div>
     `;
   }
 
   function pinPadHtml() {
     return `
-      <div class="pin-pad" data-pin-pad>
-        <button class="pin-key" data-digit="1">1</button>
-        <button class="pin-key" data-digit="2">2</button>
-        <button class="pin-key" data-digit="3">3</button>
-        <button class="pin-key" data-digit="4">4</button>
-        <button class="pin-key" data-digit="5">5</button>
-        <button class="pin-key" data-digit="6">6</button>
-        <button class="pin-key" data-digit="7">7</button>
-        <button class="pin-key" data-digit="8">8</button>
-        <button class="pin-key" data-digit="9">9</button>
-        <button class="pin-key pin-key--empty" disabled></button>
-        <button class="pin-key" data-digit="0">0</button>
-        <button class="pin-key pin-key--action" data-action="backspace">⌫</button>
+      <div class="settings-pin-pad" data-pin-pad>
+        <button class="settings-pin-key" data-digit="1">1</button>
+        <button class="settings-pin-key" data-digit="2">2</button>
+        <button class="settings-pin-key" data-digit="3">3</button>
+        <button class="settings-pin-key" data-digit="4">4</button>
+        <button class="settings-pin-key" data-digit="5">5</button>
+        <button class="settings-pin-key" data-digit="6">6</button>
+        <button class="settings-pin-key" data-digit="7">7</button>
+        <button class="settings-pin-key" data-digit="8">8</button>
+        <button class="settings-pin-key" data-digit="9">9</button>
+        <button class="settings-pin-key settings-pin-key--empty" disabled></button>
+        <button class="settings-pin-key" data-digit="0">0</button>
+        <button class="settings-pin-key settings-pin-key--action" data-action="backspace">⌫</button>
       </div>
     `;
   }
 
-  /**
-   * 绑定 PIN 输入逻辑
-   * @param {HTMLElement} root
-   * @param {Object} opts
-   * @param {Function} opts.onComplete - (pin) => void  输入满 4 位时回调
-   * @returns {Object} { clear, destroy, shake }
-   */
   function bindPinPad(root, { onComplete } = {}) {
     const padEl  = root.querySelector('[data-pin-pad]');
     const dotsEl = root.querySelector('[data-pin-dots]');
@@ -44,13 +37,13 @@
     let locked = false;
 
     function updateDots() {
-      dotsEl.querySelectorAll('.pin-dot').forEach((dot, i) => {
+      dotsEl.querySelectorAll('.settings-pin-dot').forEach((dot, i) => {
         dot.classList.toggle('is-filled', i < current.length);
       });
     }
 
     padEl.addEventListener('click', e => {
-      const key = e.target.closest('.pin-key');
+      const key = e.target.closest('.settings-pin-key');
       if (!key || key.disabled || locked) return;
 
       const digit  = key.dataset.digit;
@@ -74,7 +67,6 @@
       }
     });
 
-    /* 键盘辅助：桌面调试时可物理键盘输入 */
     const onKey = e => {
       if (!root.isConnected || locked) return;
 
@@ -110,6 +102,50 @@
     };
   }
 
+  /**
+   * 通用 toggle 开关
+   */
+  function bindToggle(root, key) {
+    const el = root.querySelector(`[data-toggle="${key}"]`);
+    if (!el) return;
+
+    function readState() {
+      if (window.WujiControlCenter && typeof WujiControlCenter.getToggle === 'function') {
+        return WujiControlCenter.getToggle(key);
+      }
+      return !!Store.get('control.' + key, false);
+    }
+
+    function writeState(v) {
+      if (window.WujiControlCenter && typeof WujiControlCenter.setToggle === 'function') {
+        WujiControlCenter.setToggle(key, v);
+        return;
+      }
+      Store.set('control.' + key, v);
+      const ccToggle = document.querySelector(`.cc-toggle[data-key="${key}"]`);
+      if (ccToggle) ccToggle.classList.toggle('is-on', v);
+    }
+
+    function onCCChange(e) {
+      if (!el.isConnected) {
+        window.removeEventListener('wuji:cc-toggle-change', onCCChange);
+        return;
+      }
+      if (!e.detail || e.detail.key !== key) return;
+      el.classList.toggle('is-on', !!e.detail.value);
+    }
+    window.addEventListener('wuji:cc-toggle-change', onCCChange);
+
+    el.classList.toggle('is-on', readState());
+
+    el.addEventListener('click', () => {
+      const next = !el.classList.contains('is-on');
+      el.classList.toggle('is-on', next);
+      writeState(next);
+      if (navigator.vibrate) { try { navigator.vibrate(8); } catch {} }
+    });
+  }
+
   /* =========================================================
      注册应用
      ========================================================= */
@@ -126,31 +162,31 @@
         overflow-y: auto;
         -webkit-overflow-scrolling: touch;
         overscroll-behavior: contain;
-        padding: 18px 16px 24px;
+        touch-action: pan-y;
+        padding: 18px 16px 28px;
         padding-top: calc(18px + var(--statusbar-h));
         background: var(--wj-bg);
         display: flex;
         flex-direction: column;
-        gap: 10px;
+        gap: 12px;
       }
 
       .settings-title {
         font-size: 22px;
         font-weight: 700;
         color: var(--wj-text);
-        margin-bottom: 6px;
-      }
-      .settings-subtitle {
-        font-size: 12px;
-        color: var(--wj-text-dim);
-        letter-spacing: .5px;
-        margin-bottom: 6px;
+        margin-bottom: 2px;
+        flex: 0 0 auto;
       }
 
+      /* ============ 列表卡片 ============ */
       .settings-section {
+        flex: 0 0 auto;
+        border-radius: 14px;
+        background: var(--wj-bg-alt);
+        overflow: hidden;
         display: flex;
         flex-direction: column;
-        gap: 8px;
       }
 
       .settings-item {
@@ -160,44 +196,122 @@
         width: 100%;
         padding: 16px 18px;
         border: 0;
-        border-radius: 14px;
-        background: var(--wj-bg-alt);
+        background: transparent;
         color: var(--wj-text);
         font: inherit;
         font-size: 15px;
         cursor: pointer;
         text-align: left;
-        transition: background .12s, transform .08s;
+        transition: background .12s;
         -webkit-tap-highlight-color: transparent;
+        user-select: none;
+        -webkit-user-select: none;
       }
-      .settings-item:active { transform: scale(.985); background: #dae2f0; }
-      .settings-item__arrow {
-        color: var(--wj-text-dim);
-        font-size: 20px;
-        font-weight: 300;
-        line-height: 1;
+      .settings-item + .settings-item {
+        border-top: 1px solid rgba(0, 0, 0, .07);
       }
-      .settings-item--danger {
-        color: var(--wj-danger);
-        background: var(--wj-danger-bg);
+      .settings-item:active {
+        background: rgba(0, 0, 0, .06);
       }
-      .settings-item--danger:active { background: #ffd0d8; }
 
-      .settings-info {
+      /* ============ 信息行 ============ */
+      .settings-row {
         display: flex;
+        align-items: center;
         justify-content: space-between;
         padding: 14px 18px;
-        border-radius: 14px;
-        background: var(--wj-bg-alt);
-        font-size: 14px;
-        color: var(--wj-text-muted);
-      }
-      .settings-info strong {
+        font-size: 15px;
         color: var(--wj-text);
-        font-weight: 600;
+        gap: 12px;
+      }
+      .settings-row + .settings-row {
+        border-top: 1px solid rgba(0, 0, 0, .07);
+      }
+      .settings-row__value {
+        color: var(--wj-text-dim);
+        text-align: right;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
       }
 
-      .pin-page {
+      /* ============ Toggle 开关 ============ */
+      .settings-toggle {
+        position: relative;
+        width: 51px;
+        height: 31px;
+        border-radius: 15.5px;
+        background: #c8c8cc;
+        transition: background .25s ease;
+        flex: 0 0 auto;
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+      }
+      .settings-toggle.is-on {
+        background: #34c759;
+      }
+      .settings-toggle::after {
+        content: "";
+        position: absolute;
+        top: 2px;
+        left: 2px;
+        width: 27px;
+        height: 27px;
+        border-radius: 50%;
+        background: #fff;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, .2), 0 0 1px rgba(0, 0, 0, .1);
+        transition: transform .25s cubic-bezier(.2, .7, .3, 1);
+      }
+      .settings-toggle.is-on::after {
+        transform: translateX(20px);
+      }
+
+      /* ============ 关于本机卡片 ============ */
+      .settings-about-card {
+        flex: 0 0 auto;
+        padding: 28px 18px 24px;
+        border-radius: 18px;
+        background: var(--wj-bg-alt);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 4px;
+      }
+      .settings-about-card__title {
+        font-size: 32px;
+        font-weight: 700;
+        color: var(--wj-text);
+        letter-spacing: -.5px;
+      }
+      .settings-about-card__version {
+        font-size: 13px;
+        color: var(--wj-text-dim);
+        letter-spacing: .3px;
+      }
+      .settings-about-card__btn {
+        margin-top: 16px;
+        padding: 10px 22px;
+        border-radius: 999px;
+        background: #3a6ff0;
+        color: #fff;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        text-align: center;
+        transition: opacity .2s ease, transform .08s ease;
+        -webkit-tap-highlight-color: transparent;
+        user-select: none;
+        -webkit-user-select: none;
+        min-width: 128px;
+      }
+      .settings-about-card__btn:active { transform: scale(.97); }
+      .settings-about-card__btn.is-disabled {
+        opacity: .55;
+        cursor: default;
+      }
+
+      /* ============ PIN 页 ============ */
+      .settings-pin-page {
         position: absolute;
         inset: 0;
         padding: 0 4% 3%;
@@ -208,7 +322,7 @@
         align-items: stretch;
       }
 
-      .pin-header {
+      .settings-pin-header {
         flex: 0 0 auto;
         display: flex;
         flex-direction: column;
@@ -218,7 +332,7 @@
         margin-bottom: 14px;
       }
 
-      .pin-heading {
+      .settings-pin-heading {
         font-size: 15px;
         font-weight: 600;
         color: var(--wj-text);
@@ -226,15 +340,10 @@
         min-height: 20px;
         transition: color .2s ease;
       }
-      .pin-heading.is-error {
-        color: var(--wj-danger);
-      }
+      .settings-pin-heading.is-error { color: var(--wj-danger); }
 
-      .pin-dots {
-        display: flex;
-        gap: 18px;
-      }
-      .pin-dot {
+      .settings-pin-dots { display: flex; gap: 18px; }
+      .settings-pin-dot {
         width: 16px;
         height: 16px;
         border-radius: 50%;
@@ -242,14 +351,13 @@
         background: transparent;
         transition: background .12s, transform .12s, border-color .12s;
       }
-      .pin-dot.is-filled {
+      .settings-pin-dot.is-filled {
         background: var(--wj-text);
         border-color: var(--wj-text);
         transform: scale(1.12);
       }
 
-      /* 键盘放大：200px 宽，每格 ~61px */
-      .pin-pad {
+      .settings-pin-pad {
         flex: 0 0 auto;
         display: grid;
         grid-template-columns: repeat(3, 1fr);
@@ -258,7 +366,7 @@
         max-width: 200px;
         margin: auto auto 0;
       }
-      .pin-key {
+      .settings-pin-key {
         aspect-ratio: 1;
         width: 100%;
         border: 0;
@@ -275,9 +383,9 @@
         transition: background .12s, transform .08s;
         -webkit-tap-highlight-color: transparent;
       }
-      .pin-key:active { transform: scale(.94); background: #dae2f0; }
-      .pin-key--empty  { visibility: hidden; pointer-events: none; }
-      .pin-key--action { font-size: 22px; }
+      .settings-pin-key:active { transform: scale(.94); background: #dae2f0; }
+      .settings-pin-key--empty  { visibility: hidden; pointer-events: none; }
+      .settings-pin-key--action { font-size: 22px; }
     `,
 
     routes: {
@@ -290,24 +398,160 @@
               <div class="settings-title">设置</div>
 
               <div class="settings-section">
-                <div class="settings-info">
-                  <span>存储模式</span><strong>${Store.isMemoryOnly ? '无法存储' : '正常'}</strong>
+                <div class="settings-item" data-act="about">
+                  <span>这台iWuji</span>
                 </div>
               </div>
 
-              <div class="settings-section" style="margin-top:8px">
-                <button class="settings-item" data-act="biometric" type="button">
+              <div class="settings-section">
+                <div class="settings-item" data-act="wlan">
+                  <span>WLAN</span>
+                </div>
+                <div class="settings-item" data-act="bluetooth">
+                  <span>蓝牙</span>
+                </div>
+              </div>
+
+              <div class="settings-section">
+                <div class="settings-item" data-act="biometric">
                   <span>生物识别和密码</span>
-                  <span class="settings-item__arrow">›</span>
-                </button>
+                </div>
               </div>
             </div>
           `;
         },
 
         mount(root, ctx) {
+          root.querySelector('[data-act="about"]')
+            ?.addEventListener('click', () => ctx.push('about'));
+          root.querySelector('[data-act="wlan"]')
+            ?.addEventListener('click', () => ctx.push('wlan'));
+          root.querySelector('[data-act="bluetooth"]')
+            ?.addEventListener('click', () => ctx.push('bluetooth'));
           root.querySelector('[data-act="biometric"]')
             ?.addEventListener('click', () => ctx.push('biometric'));
+        },
+      },
+
+      about: {
+        name: 'about',
+
+        render() {
+          return `
+            <div class="settings-page">
+              <div class="settings-title">关于本机</div>
+
+              <div class="settings-about-card">
+                <div class="settings-about-card__title">WujiOS</div>
+                <div class="settings-about-card__version">1.0.103</div>
+                <div class="settings-about-card__btn" id="checkUpdateBtn">检查更新</div>
+              </div>
+
+              <div class="settings-section">
+                <div class="settings-row">
+                  <span>设备名称</span>
+                  <span class="settings-row__value">iWuji</span>
+                </div>
+                <div class="settings-row">
+                  <span>型号</span>
+                  <span class="settings-row__value">IWUJI-1</span>
+                </div>
+                <div class="settings-row">
+                  <span>WujiOS版本</span>
+                  <span class="settings-row__value">1.0.103</span>
+                </div>
+              </div>
+
+              <div class="settings-section">
+                <div class="settings-row">
+                  <span>运行内存(RAM)</span>
+                  <span class="settings-row__value">4GB</span>
+                </div>
+                <div class="settings-row">
+                  <span>机身内存(ROM)</span>
+                  <span class="settings-row__value">64GB</span>
+                </div>
+              </div>
+            </div>
+          `;
+        },
+
+        mount(root) {
+          const btn = root.querySelector('#checkUpdateBtn');
+          if (!btn) return;
+
+          let t1 = null, t2 = null;
+          let destroyed = false;
+
+          btn.addEventListener('click', () => {
+            if (btn.classList.contains('is-disabled') || destroyed) return;
+
+            btn.classList.add('is-disabled');
+            btn.textContent = '检查更新中';
+
+            t1 = setTimeout(() => {
+              if (destroyed) return;
+              btn.textContent = '已是最新版本';
+
+              t2 = setTimeout(() => {
+                if (destroyed) return;
+                btn.classList.remove('is-disabled');
+                btn.textContent = '检查更新';
+              }, 2000);
+            }, 3000);
+          });
+
+          return () => {
+            destroyed = true;
+            clearTimeout(t1);
+            clearTimeout(t2);
+          };
+        },
+      },
+
+      wlan: {
+        name: 'wlan',
+
+        render() {
+          return `
+            <div class="settings-page">
+              <div class="settings-title">WLAN</div>
+
+              <div class="settings-section">
+                <div class="settings-row">
+                  <span>WLAN</span>
+                  <div class="settings-toggle" data-toggle="wifi" role="switch"></div>
+                </div>
+              </div>
+            </div>
+          `;
+        },
+
+        mount(root) {
+          bindToggle(root, 'wifi');
+        },
+      },
+
+      bluetooth: {
+        name: 'bluetooth',
+
+        render() {
+          return `
+            <div class="settings-page">
+              <div class="settings-title">蓝牙</div>
+
+              <div class="settings-section">
+                <div class="settings-row">
+                  <span>蓝牙</span>
+                  <div class="settings-toggle" data-toggle="bluetooth" role="switch"></div>
+                </div>
+              </div>
+            </div>
+          `;
+        },
+
+        mount(root) {
+          bindToggle(root, 'bluetooth');
         },
       },
 
@@ -331,21 +575,18 @@
 
             if (hasPwd) {
               listEl.innerHTML = `
-                <button class="settings-item" data-act="change" type="button">
+                <div class="settings-item" data-act="change">
                   <span>更改锁屏密码</span>
-                  <span class="settings-item__arrow">›</span>
-                </button>
-                <button class="settings-item" data-act="remove" type="button">
+                </div>
+                <div class="settings-item" data-act="remove">
                   <span>关闭锁屏密码</span>
-                  <span class="settings-item__arrow">›</span>
-                </button>
+                </div>
               `;
             } else {
               listEl.innerHTML = `
-                <button class="settings-item" data-act="add" type="button">
+                <div class="settings-item" data-act="add">
                   <span>添加锁屏密码</span>
-                  <span class="settings-item__arrow">›</span>
-                </button>
+                </div>
               `;
             }
 
@@ -378,9 +619,9 @@
 
         render() {
           return `
-            <div class="pin-page" id="pinSetPage">
-              <div class="pin-header">
-                <div class="pin-heading" id="pinSetHeading">设置锁屏密码</div>
+            <div class="settings-pin-page" id="pinSetPage">
+              <div class="settings-pin-header">
+                <div class="settings-pin-heading" id="pinSetHeading">设置锁屏密码</div>
                 ${pinDotsHtml()}
               </div>
               ${pinPadHtml()}
@@ -465,9 +706,9 @@
 
         render() {
           return `
-            <div class="pin-page" id="pinVerifyPage">
-              <div class="pin-header">
-                <div class="pin-heading" id="pinVerifyHeading">输入当前密码</div>
+            <div class="settings-pin-page" id="pinVerifyPage">
+              <div class="settings-pin-header">
+                <div class="settings-pin-heading" id="pinVerifyHeading">输入当前密码</div>
                 ${pinDotsHtml()}
               </div>
               ${pinPadHtml()}
