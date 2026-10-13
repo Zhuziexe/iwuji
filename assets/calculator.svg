@@ -1,0 +1,22 @@
+<svg width="256" height="256" viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg">
+  <!-- 白色背景 -->
+  <rect width="256" height="256" fill="#ffffff"/>
+
+  <!-- 加号 -->
+  <line x1="44" y1="70" x2="96" y2="70" stroke="#16243d" stroke-width="12" stroke-linecap="round"/>
+  <line x1="70" y1="44" x2="70" y2="96" stroke="#16243d" stroke-width="12" stroke-linecap="round"/>
+
+  <!-- 减号 -->
+  <line x1="160" y1="70" x2="212" y2="70" stroke="#16243d" stroke-width="12" stroke-linecap="round"/>
+
+  <!-- 乘号 -->
+  <line x1="52" y1="168" x2="88" y2="204" stroke="#16243d" stroke-width="11" stroke-linecap="round"/>
+  <line x1="88" y1="168" x2="52" y2="204" stroke="#16243d" stroke-width="11" stroke-linecap="round"/>
+
+  <!-- 蓝色圆角正方形 -->
+  <rect x="136" y="136" width="100" height="100" rx="25" fill="#3a6ff0"/>
+
+  <!-- 等于号 -->
+  <line x1="160" y1="174" x2="212" y2="174" stroke="#ffffff" stroke-width="10" stroke-linecap="round"/>
+  <line x1="160" y1="198" x2="212" y2="198" stroke="#ffffff" stroke-width="10" stroke-linecap="round"/>
+</svg>
