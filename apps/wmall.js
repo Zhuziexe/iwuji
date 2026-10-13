@@ -24,7 +24,6 @@ WujiApps.register({
     flex-shrink: 0;
     overflow: hidden;
     background: var(--wj-bg-alt);
-    cursor: pointer;
     position: relative;
     transition: transform .12s;
   }
@@ -52,7 +51,6 @@ WujiApps.register({
     padding: 14px 10px 12px;
     border-radius: 16px;
     background: var(--wj-bg-alt);
-    cursor: pointer;
     text-align: center;
     transition: transform .12s, background .15s;
     -webkit-tap-highlight-color: transparent;
@@ -204,7 +202,6 @@ WujiApps.register({
     font: inherit;
     font-size: 13px;
     font-weight: 500;
-    cursor: pointer;
     white-space: nowrap;
     transition: border-color .15s, background .15s, color .15s, transform .1s;
     -webkit-tap-highlight-color: transparent;
@@ -293,7 +290,6 @@ WujiApps.register({
     font: inherit;
     font-size: 16px;
     font-weight: 600;
-    cursor: pointer;
     transition: transform .1s, background .15s, opacity .15s;
     -webkit-tap-highlight-color: transparent;
   }
@@ -311,7 +307,7 @@ WujiApps.register({
   .wmall-checkout {
     position: absolute;
     inset: 0;
-    padding: calc(var(--wj-pad) + var(--statusbar-h)) 20px 28px;
+    padding: calc(var(--wj-pad) + var(--statusbar-h)) 20px 0;
     background: var(--wj-bg);
     display: flex;
     flex-direction: column;
@@ -341,12 +337,71 @@ WujiApps.register({
     font-weight: 500;
     margin-right: 4px;
   }
-
   .wmall-checkout__error {
+  font-size: 15px;
+  font-weight: 600;
+  color: #e0356b;
+  letter-spacing: .5px;
+}
+
+/* 气人模式：出现时抖动 + 放大 */
+.wmall-checkout__error.is-angry {
+  animation: wmall-angry .5s cubic-bezier(.36,.07,.19,.97) both;
+}
+
+@keyframes wmall-angry {
+  0%   { transform: translateX(0)    scale(1);   opacity: 0; }
+  10%  { transform: translateX(-6px) scale(1.15); opacity: 1; }
+  20%  { transform: translateX(6px)  scale(1.15); }
+  30%  { transform: translateX(-6px) scale(1.15); }
+  40%  { transform: translateX(6px)  scale(1.15); }
+  50%  { transform: translateX(-4px) scale(1.1); }
+  60%  { transform: translateX(4px)  scale(1.1); }
+  100% { transform: translateX(0)    scale(1); }
+}
+  .wmall-checkout__ad {
+    margin-top: auto;
+    width: calc(100% + 40px);
+    margin-left: -20px;
+    margin-right: -20px;
+    display: block;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .wmall-checkout__ad img {
+    display: block;
+    width: 100%;
+    height: auto;
+    pointer-events: none;
+    user-select: none;
+    -webkit-user-drag: none;
+  }
+  .wmall-checkout__loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
     font-size: 15px;
-    font-weight: 600;
-    color: #e0356b;
+    color: var(--wj-text-muted);
     letter-spacing: .5px;
+  }
+  .wmall-spinner {
+    width: 34px;
+    height: 34px;
+    box-sizing: border-box;
+    border: 3px solid rgba(58, 111, 240, .18);
+    border-top-color: #3a6ff0;
+    border-radius: 50%;
+    animation: wmall-spin .8s linear infinite;
+  }
+
+  @keyframes wmall-spin {
+    to { transform: rotate(360deg); }
+  }
+
+  /* hidden 时强制隐藏，避免 display:flex 覆盖 hidden */
+  .wmall-checkout__loading[hidden],
+  .wmall-checkout__error[hidden] {
+    display: none !important;
   }
 `,
 
@@ -357,7 +412,7 @@ WujiApps.register({
       render() {
         const products = [
           { id: 'charger', icon: './assets/com.wujinb.wmall/iwuji_charger.png', name: 'iWuji快充充电器', price: 79 },
-          { id: 'case',    icon: './assets/com.wujinb.wmall/iwuji_baohuke.png', name: 'iWuji透明保护壳', price: 39 },
+          { id: 'case', icon: './assets/com.wujinb.wmall/iwuji_baohuke.png', name: 'iWuji透明保护壳', price: 39 },
         ];
 
         return `
@@ -393,16 +448,11 @@ WujiApps.register({
       },
     },
 
-    /* ===================================================
-       detail
-       =================================================== */
     detail: {
       name: 'detail',
 
       render(routeCtx) {
         const id = routeCtx.data?.id;
-
-        /* ---------- iWuji ---------- */
         if (id === 'iWuji') {
           return `
             <div class="wmall-detail">
@@ -513,12 +563,12 @@ WujiApps.register({
 
         /* ---------- iWuji：chip 切换 ---------- */
         if (id === 'iWuji') {
-          const chips  = root.querySelectorAll('.wmall-chip');
-          const imgEl  = root.querySelector('#wjPhoneImg');
+          const chips = root.querySelectorAll('.wmall-chip');
+          const imgEl = root.querySelector('#wjPhoneImg');
           const buyBtn = root.querySelector('#wjBuyBtn');
 
           const imgMap = {
-            blue:  './assets/com.wujinb.wmall/iwuji_blue.png',
+            blue: './assets/com.wujinb.wmall/iwuji_blue.png',
             white: './assets/com.wujinb.wmall/iwuji_white.png',
             black: './assets/com.wujinb.wmall/iwuji_black.png',
           };
@@ -534,10 +584,10 @@ WujiApps.register({
               imgEl.src = imgMap[color];
 
               if (color === 'white') {
-                buyBtn.disabled    = true;
+                buyBtn.disabled = true;
                 buyBtn.textContent = '暂时缺货';
               } else {
-                buyBtn.disabled    = false;
+                buyBtn.disabled = false;
                 buyBtn.textContent = '立即购买';
               }
             });
@@ -545,7 +595,7 @@ WujiApps.register({
 
           buyBtn.addEventListener('click', () => {
             if (buyBtn.disabled) return;
-            if (navigator.vibrate) { try { navigator.vibrate(10); } catch {} }
+            if (navigator.vibrate) { try { navigator.vibrate(10); } catch { } }
             ctx.push('checkout', { price: 2999, name: 'iWuji' });
           });
           return;
@@ -554,20 +604,19 @@ WujiApps.register({
         /* ---------- 其他商品：购买 ---------- */
         const buyBtn = root.querySelector('.wmall-buy-btn');
         buyBtn?.addEventListener('click', () => {
-          if (navigator.vibrate) { try { navigator.vibrate(10); } catch {} }
+          if (navigator.vibrate) { try { navigator.vibrate(10); } catch { } }
           ctx.push('checkout', {
             price: +buyBtn.dataset.price,
-            name:  buyBtn.dataset.name,
+            name: buyBtn.dataset.name,
           });
         });
       },
     },
 
-    /* ===================================================
-       checkout
-       =================================================== */
     checkout: {
       name: 'checkout',
+      _timer: null,
+      _token: 0,
 
       render(routeCtx) {
         const price = routeCtx.data?.price ?? 0;
@@ -575,9 +624,53 @@ WujiApps.register({
           <div class="wmall-checkout">
             <div class="wmall-checkout__title">吴际支付</div>
             <div class="wmall-checkout__amount">${price}</div>
-            <div class="wmall-checkout__error">余额不足</div>
+
+            <div class="wmall-checkout__loading" id="wjPayLoading">
+              <div class="wmall-spinner"></div>
+              <div>加载中...</div>
+            </div>
+
+            <div class="wmall-checkout__error" id="wjPayError" hidden>余额不足</div>
+
+            <div class="wmall-checkout__ad">
+              <img src="./assets/com.wujinb.wmall/ad_bar.png" alt="">
+            </div>
           </div>
         `;
+      },
+
+      mount(root) {
+        if (this._timer) { clearTimeout(this._timer); this._timer = null; }
+
+        const token = ++this._token;
+        const loading = root.querySelector('#wjPayLoading');
+        const error = root.querySelector('#wjPayError');
+        const amount = root.querySelector('.wmall-checkout__amount');
+
+        this._timer = setTimeout(() => {
+          this._timer = null;
+          if (token !== this._token) return;
+          if (!loading?.isConnected || !error?.isConnected) return;
+
+          if (navigator.vibrate) { try { navigator.vibrate([40, 60, 120]); } catch { } }
+
+          loading.hidden = true;
+          error.hidden = false;
+          error.classList.add('is-angry');
+
+          if (navigator.vibrate) {
+            try { navigator.vibrate([80, 40, 80, 40, 200]); } catch (e) {}
+          }
+        }, 3000);
+      },
+
+      unmount() {
+        this._token++;
+
+        if (this._timer) {
+          clearTimeout(this._timer);
+          this._timer = null;
+        }
       },
     },
   },

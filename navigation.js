@@ -1,8 +1,3 @@
-/* =========================================================
-   navigation.js —— 应用内路由栈
-
-   新增：onChange 改为监听器集合，多次调用不会互相覆盖
-   ========================================================= */
 window.WujiNavigation = class WujiNavigation {
   constructor({ host, routes, onChange } = {}) {
     this.host     = host;
