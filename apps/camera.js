@@ -8,6 +8,7 @@ WujiApps.register({
 
   render() {
     return `
-      <h2 class="wj-title">相机</h2>`;
+      <h2 class="wj-title">相机</h2>
+      这里是空的`;
   },
 });

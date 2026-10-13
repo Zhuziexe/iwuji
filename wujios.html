@@ -32,6 +32,12 @@
       display: none;
     }
 
+    * {
+      -webkit-touch-callout: none !important;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+
     html,
     body {
       width: 100%;
@@ -382,11 +388,21 @@
       right: 0;
       bottom: 28px;
       overflow: hidden;
-      touch-action: pan-y;
+      touch-action: none;
       -webkit-touch-callout: none;
       user-select: none;
       -webkit-user-select: none;
     }
+
+    .desktop-ghost,
+    .desktop-ghost * {
+      -webkit-touch-callout: none !important;
+      -webkit-user-select: none;
+      user-select: none;
+      -webkit-user-drag: none;
+      pointer-events: none !important;
+    }
+
 
     .desktop-track {
       display: flex;
@@ -1289,11 +1305,11 @@
     })();
 
     const DesktopDrag = (() => {
-      const HOLD_MS = 480;
+      const HOLD_MS = 320;
       const MOVE_CANCEL = 14;
       const EDGE_ZONE = 44;
       const EDGE_HOLD_MS = 480;
-      const SUPPRESS_MS = 300;   // 拖拽结束后多久内忽略 click
+      const SUPPRESS_MS = 300;
 
       let state = 'idle';
       let pressTimer = null;
@@ -2606,19 +2622,19 @@
     })();
 
     (function disableContextMenu() {
-      const block = e => {
-        if (e.target.closest && e.target.closest('.os')) {
-          e.preventDefault();
-          return false;
-        }
-      };
+      document.addEventListener('contextmenu', e => {
+        e.preventDefault();
+        return false;
+      }, { capture: true });
 
-      document.addEventListener('contextmenu', block, { capture: true });
+      document.addEventListener('dragstart', e => {
+        e.preventDefault();
+        return false;
+      }, { capture: true });
 
       document.addEventListener('selectstart', e => {
-        if (e.target.closest && e.target.closest('.desktop-viewport')) {
-          e.preventDefault();
-        }
+        e.preventDefault();
+        return false;
       }, { capture: true });
     })();
 
