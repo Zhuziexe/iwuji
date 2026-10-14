@@ -354,7 +354,6 @@ window.addEventListener('message', e => {
     if (osState !== 'running' && isMenuOpen) hidePowerMenu();
   }
 
-  /* 物理键：更新音量并显示侧边 HUD */
   if (d.event === 'volume-change') {
     volume = Math.max(0, Math.min(100, d.payload?.volume ?? 60));
     volumeBar.style.height = volume + '%';

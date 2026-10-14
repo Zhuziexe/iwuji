@@ -1,4 +1,14 @@
 (() => {
+  /* ---------------- 图标常量 ---------------- */
+  const ICON = {
+    wifi: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>`,
+    bluetooth: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 6.5l11 11L12 23V1l5.5 5.5-11 11"/></svg>`,
+    cellular: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 22h.01"/><path d="M7 22v-4"/><path d="M12 22V12"/><path d="M17 22V6"/><path d="M22 22V2"/></svg>`,
+    grid: `<svg viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="3" width="7.5" height="7.5" rx="1.6"/><rect x="13.5" y="3" width="7.5" height="7.5" rx="1.6"/><rect x="3" y="13.5" width="7.5" height="7.5" rx="1.6"/><rect x="13.5" y="13.5" width="7.5" height="7.5" rx="1.6"/></svg>`,
+    key: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="15" r="4"/><path d="M10.85 12.15 19 4"/><path d="M18 5l2 2"/><path d="M15 8l2 2"/></svg>`,
+    storage: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="6" rx="8" ry="2.6"/><path d="M4 6v5c0 1.44 3.58 2.6 8 2.6s8-1.16 8-2.6V6"/><path d="M4 12v5c0 1.44 3.58 2.6 8 2.6s8-1.16 8-2.6v-5"/></svg>`,
+  };
+
   function formatBytes(n) {
     if (!n || n < 0) return '0 B';
     if (n < 1024) return n + ' B';
@@ -196,8 +206,9 @@
         flex-direction: row;
         justify-content: flex-start;
         flex-wrap: nowrap;
+        gap: 12px;
         width: 100%;
-        padding: 16px 18px;
+        padding: 8px 14px;
         border: 0;
         background: transparent;
         color: var(--wj-text);
@@ -215,6 +226,32 @@
       }
       .settings-item:active {
         background: rgba(0, 0, 0, .06);
+      }
+
+      /* ---------- 设置项圆形图标 ---------- */
+      .settings-item__icon {
+        width: 36px;
+        height: 36px;
+        flex: 0 0 36px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #ffffff;
+        overflow: hidden;
+        box-sizing: border-box;
+      }
+      .settings-item__icon svg {
+        width: 21px;
+        height: 21px;
+        display: block;
+      }
+      .settings-item__icon img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+        background: #ccc;
       }
 
       .settings-row {
@@ -389,6 +426,47 @@
       .settings-pin-key--empty  { visibility: hidden; pointer-events: none; }
       .settings-pin-key--action { font-size: 22px; }
 
+      /* ============ 存储页 ============ */
+      .storage-card {
+        padding: 20px 18px 16px;
+        border-radius: 14px;
+        background: var(--wj-bg-alt);
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .storage-percent {
+        font-size: 34px;
+        font-weight: 700;
+        color: var(--wj-text);
+        line-height: 1;
+        letter-spacing: -.5px;
+      }
+
+      .storage-bar {
+        height: 10px;
+        border-radius: 5px;
+        background: rgba(0, 0, 0, .08);
+        overflow: hidden;
+      }
+
+      .storage-bar__fill {
+        height: 100%;
+        width: 0;
+        border-radius: 5px;
+        background: #5856d6;
+        transition: width .5s cubic-bezier(.2, .7, .3, 1);
+      }
+
+      .storage-legend {
+        display: flex;
+        justify-content: space-between;
+        font-size: 13px;
+        color: var(--wj-text-dim);
+        letter-spacing: .2px;
+      }
+
       /* ============ 应用管理 ============ */
       .app-item {
         gap: 12px;
@@ -463,29 +541,29 @@
       }
 
       .app-uninstall-btn {
-  display: block;
-  width: 100%;
-  padding: 14px 20px;
-  border: 0;
-  border-radius: 999px;
-  background: var(--wj-bg-alt, #f2f5fa);
-  color: var(--wj-danger, #e0356b);
-  font: inherit;
-  font-size: 16px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background .12s ease, opacity .15s ease;
-  -webkit-tap-highlight-color: transparent;
-}
+        display: block;
+        width: 100%;
+        padding: 14px 20px;
+        border: 0;
+        border-radius: 999px;
+        background: var(--wj-bg-alt, #f2f5fa);
+        color: var(--wj-danger, #e0356b);
+        font: inherit;
+        font-size: 16px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: background .12s ease, opacity .15s ease;
+        -webkit-tap-highlight-color: transparent;
+      }
 
-.app-uninstall-btn:active:not(:disabled) {
-  background: #dde3ec;
-}
+      .app-uninstall-btn:active:not(:disabled) {
+        background: #dde3ec;
+      }
 
-.app-uninstall-btn:disabled {
-  opacity: .5;
-  cursor: default;
-}
+      .app-uninstall-btn:disabled {
+        opacity: .5;
+        cursor: default;
+      }
     `,
 
     routes: {
@@ -499,24 +577,39 @@
 
               <div class="settings-section">
                 <div class="settings-item" data-act="about">
+                  <div class="settings-item__icon">
+                    <img src="./assets/com.wujios.settings/iwuji.png" alt="">
+                  </div>
                   <span>这台iWuji</span>
                 </div>
               </div>
 
               <div class="settings-section">
                 <div class="settings-item" data-act="wlan">
+                  <div class="settings-item__icon" style="background:#3a6ff0">${ICON.wifi}</div>
                   <span>WLAN</span>
                 </div>
                 <div class="settings-item" data-act="bluetooth">
+                  <div class="settings-item__icon" style="background:#3a6ff0">${ICON.bluetooth}</div>
                   <span>蓝牙</span>
+                </div>
+                <div class="settings-item" data-act="cellular">
+                  <div class="settings-item__icon" style="background:#34c759">${ICON.cellular}</div>
+                  <span>移动数据</span>
                 </div>
               </div>
 
               <div class="settings-section">
+                <div class="settings-item" data-act="storage">
+                  <div class="settings-item__icon" style="background:#5856d6">${ICON.storage}</div>
+                  <span>存储</span>
+                </div>
                 <div class="settings-item" data-act="app-manage">
+                  <div class="settings-item__icon" style="background:#ffb800">${ICON.grid}</div>
                   <span>应用管理</span>
                 </div>
                 <div class="settings-item" data-act="biometric">
+                  <div class="settings-item__icon" style="background:#00c7be">${ICON.key}</div>
                   <span>生物识别和密码</span>
                 </div>
               </div>
@@ -531,6 +624,10 @@
             ?.addEventListener('click', () => ctx.push('wlan'));
           root.querySelector('[data-act="bluetooth"]')
             ?.addEventListener('click', () => ctx.push('bluetooth'));
+          root.querySelector('[data-act="cellular"]')
+            ?.addEventListener('click', () => ctx.push('cellular'));
+          root.querySelector('[data-act="storage"]')
+            ?.addEventListener('click', () => ctx.push('storage'));
           root.querySelector('[data-act="app-manage"]')
             ?.addEventListener('click', () => ctx.push('app-manage'));
           root.querySelector('[data-act="biometric"]')
@@ -661,6 +758,101 @@
 
         mount(root) {
           bindToggle(root, 'bluetooth');
+        },
+      },
+
+      /* ==================== 移动数据 ==================== */
+      cellular: {
+        name: 'cellular',
+
+        render() {
+          return `
+            <div class="settings-page">
+              <div class="settings-title">移动数据</div>
+
+              <div class="settings-section">
+                <div class="settings-row">
+                  <span>移动数据</span>
+                  <div class="settings-toggle" data-toggle="cellular" role="switch"></div>
+                </div>
+              </div>
+            </div>
+          `;
+        },
+
+        mount(root) {
+          bindToggle(root, 'cellular');
+        },
+      },
+
+      /* ==================== 存储 ==================== */
+      storage: {
+        name: 'storage',
+
+        render() {
+          return `
+            <div class="settings-page">
+              <div class="settings-title">存储</div>
+
+              <div class="storage-card">
+                <div class="storage-percent" id="storagePercent">--%</div>
+                <div class="storage-bar">
+                  <div class="storage-bar__fill" id="storageFill"></div>
+                </div>
+                <div class="storage-legend">
+                  <span id="storageUsed">已使用 --</span>
+                  <span id="storageFree">可用 --</span>
+                </div>
+              </div>
+
+              <div class="settings-section">
+                <div class="settings-row">
+                  <span>应用和数据</span>
+                  <span class="settings-row__value" id="storageAppData">计算中...</span>
+                </div>
+                <div class="settings-row">
+                  <span>WujiOS</span>
+                  <span class="settings-row__value">4.3 GB</span>
+                </div>
+              </div>
+            </div>
+          `;
+        },
+
+        mount(root) {
+          const percentEl = root.querySelector('#storagePercent');
+          const fillEl    = root.querySelector('#storageFill');
+          const usedEl    = root.querySelector('#storageUsed');
+          const freeEl    = root.querySelector('#storageFree');
+          const appDataEl = root.querySelector('#storageAppData');
+
+          const TOTAL_BYTES  = 64  * 1024 * 1024 * 1024;   // 64 GB
+          const SYSTEM_BYTES = 4.3 * 1024 * 1024 * 1024;   // WujiOS 固定占用
+
+          async function update() {
+            let appBytes = 0;
+            try {
+              const usage = await AppStorage.usageAll();
+              for (const k in usage) {
+                appBytes += (usage[k] && usage[k].bytes) || 0;
+              }
+            } catch (e) {
+              console.warn('[storage] usageAll failed', e);
+            }
+
+            const used  = SYSTEM_BYTES + appBytes;
+            const free  = Math.max(0, TOTAL_BYTES - used);
+            const pct   = Math.min(100, (used / TOTAL_BYTES) * 100);
+
+            percentEl.textContent = pct.toFixed(1) + '%';
+            fillEl.style.width = pct + '%';
+            usedEl.textContent = '已使用 ' + formatBytes(used);
+            freeEl.textContent = '可用 '   + formatBytes(free);
+
+            appDataEl.textContent = formatBytes(appBytes);
+          }
+
+          update();
         },
       },
 
@@ -802,7 +994,7 @@
             AppStorage.for(bundle).size()
               .then(bytes => {
                 if (!usageEl.isConnected) return;
-                usageEl.textContent = '已使用 '+formatBytes(bytes);
+                usageEl.textContent = '已使用 ' + formatBytes(bytes);
               })
               .catch(err => {
                 console.warn('[settings] 读取存储失败', bundle, err);
@@ -811,7 +1003,6 @@
           }
         },
       },
-
 
       biometric: {
         name: 'biometric',

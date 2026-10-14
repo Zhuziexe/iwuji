@@ -20,4 +20,14 @@ window.WUJI_MARKET_APPS = [
     longdescription: '点一下图标切换心情',
     src:         './store-apps/mood.js',
   },
+  {
+    bundle:      'com.wujinb.metro',
+    name:        '开地铁游戏',
+    icon:        './assets/metro.png',
+    version:     '1.0.1',
+    author:      'Wuji',
+    description: '弱智吧开地铁游戏',
+    longdescription: '非常弱智的开地铁游戏。',
+    src:         './store-apps/metro.js',
+  },
 ];
