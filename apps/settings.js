@@ -1,4 +1,12 @@
 (() => {
+  function formatBytes(n) {
+    if (!n || n < 0) return '0 B';
+    if (n < 1024) return n + ' B';
+    if (n < 1024 * 1024) return (n / 1024).toFixed(1) + ' KB';
+    if (n < 1024 * 1024 * 1024) return (n / 1024 / 1024).toFixed(2) + ' MB';
+    return (n / 1024 / 1024 / 1024).toFixed(2) + ' GB';
+  }
+
   function pinDotsHtml() {
     return `
       <div class="settings-pin-dots" data-pin-dots>
@@ -30,7 +38,7 @@
   }
 
   function bindPinPad(root, { onComplete } = {}) {
-    const padEl  = root.querySelector('[data-pin-pad]');
+    const padEl = root.querySelector('[data-pin-pad]');
     const dotsEl = root.querySelector('[data-pin-dots]');
 
     let current = '';
@@ -46,7 +54,7 @@
       const key = e.target.closest('.settings-pin-key');
       if (!key || key.disabled || locked) return;
 
-      const digit  = key.dataset.digit;
+      const digit = key.dataset.digit;
       const action = key.dataset.action;
 
       if (action === 'backspace') {
@@ -93,7 +101,7 @@
       },
       shake() {
         if (navigator.vibrate) {
-          try { navigator.vibrate([30, 40, 30]); } catch {}
+          try { navigator.vibrate([30, 40, 30]); } catch { }
         }
       },
       destroy() {
@@ -102,9 +110,6 @@
     };
   }
 
-  /**
-   * 通用 toggle 开关
-   */
   function bindToggle(root, key) {
     const el = root.querySelector(`[data-toggle="${key}"]`);
     if (!el) return;
@@ -142,13 +147,10 @@
       const next = !el.classList.contains('is-on');
       el.classList.toggle('is-on', next);
       writeState(next);
-      if (navigator.vibrate) { try { navigator.vibrate(8); } catch {} }
+      if (navigator.vibrate) { try { navigator.vibrate(8); } catch { } }
     });
   }
 
-  /* =========================================================
-     注册应用
-     ========================================================= */
   WujiApps.register({
     bundlename: 'com.wujios.settings',
     name: '设置',
@@ -179,7 +181,6 @@
         flex: 0 0 auto;
       }
 
-      /* ============ 列表卡片 ============ */
       .settings-section {
         flex: 0 0 auto;
         border-radius: 14px;
@@ -192,7 +193,9 @@
       .settings-item {
         display: flex;
         align-items: center;
-        justify-content: space-between;
+        flex-direction: row;
+        justify-content: flex-start;
+        flex-wrap: nowrap;
         width: 100%;
         padding: 16px 18px;
         border: 0;
@@ -214,7 +217,6 @@
         background: rgba(0, 0, 0, .06);
       }
 
-      /* ============ 信息行 ============ */
       .settings-row {
         display: flex;
         align-items: center;
@@ -235,7 +237,6 @@
         text-overflow: ellipsis;
       }
 
-      /* ============ Toggle 开关 ============ */
       .settings-toggle {
         position: relative;
         width: 51px;
@@ -266,7 +267,6 @@
         transform: translateX(20px);
       }
 
-      /* ============ 关于本机卡片 ============ */
       .settings-about-card {
         flex: 0 0 auto;
         padding: 28px 18px 24px;
@@ -291,9 +291,11 @@
       .settings-about-card__btn {
         margin-top: 16px;
         padding: 10px 22px;
+        border: 0;
         border-radius: 999px;
         background: #3a6ff0;
         color: #fff;
+        font: inherit;
         font-size: 14px;
         font-weight: 500;
         cursor: pointer;
@@ -304,13 +306,13 @@
         -webkit-user-select: none;
         min-width: 128px;
       }
-      .settings-about-card__btn:active { transform: scale(.97); }
-      .settings-about-card__btn.is-disabled {
+      .settings-about-card__btn:active:not(:disabled) { transform: scale(.97); }
+      .settings-about-card__btn.is-disabled,
+      .settings-about-card__btn:disabled {
         opacity: .55;
         cursor: default;
       }
 
-      /* ============ PIN 页 ============ */
       .settings-pin-page {
         position: absolute;
         inset: 0;
@@ -386,6 +388,104 @@
       .settings-pin-key:active { transform: scale(.94); background: #dae2f0; }
       .settings-pin-key--empty  { visibility: hidden; pointer-events: none; }
       .settings-pin-key--action { font-size: 22px; }
+
+      /* ============ 应用管理 ============ */
+      .app-item {
+        gap: 12px;
+      }
+      .app-item__icon {
+        width: 40px;
+        height: 40px;
+        flex: 0 0 40px;
+        border-radius: 10px;
+        object-fit: cover;
+        background: var(--wj-bg);
+        display: block;
+      }
+      .app-item__info {
+        flex: 1 1 auto;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+      .app-item__name {
+        font-size: 15px;
+        color: var(--wj-text);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .app-item__version {
+        font-size: 12px;
+        color: var(--wj-text-dim);
+      }
+
+      .app-detail {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        padding: 10px 8px;
+      }
+
+      .app-detail__icon {
+        width: 64px;
+        height: 64px;
+        flex: 0 0 64px;
+        border-radius: 16px;
+        object-fit: cover;
+        background: var(--wj-bg);
+        display: block;
+      }
+
+      .app-detail__info {
+        flex: 1 1 auto;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      .app-detail__name {
+        font-size: 18px;
+        font-weight: 600;
+        color: var(--wj-text);
+        letter-spacing: .2px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .app-detail__version {
+        font-size: 13px;
+        color: var(--wj-text-dim);
+        letter-spacing: .3px;
+      }
+
+      .app-uninstall-btn {
+  display: block;
+  width: 100%;
+  padding: 14px 20px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--wj-bg-alt, #f2f5fa);
+  color: var(--wj-danger, #e0356b);
+  font: inherit;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background .12s ease, opacity .15s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.app-uninstall-btn:active:not(:disabled) {
+  background: #dde3ec;
+}
+
+.app-uninstall-btn:disabled {
+  opacity: .5;
+  cursor: default;
+}
     `,
 
     routes: {
@@ -413,6 +513,9 @@
               </div>
 
               <div class="settings-section">
+                <div class="settings-item" data-act="app-manage">
+                  <span>应用管理</span>
+                </div>
                 <div class="settings-item" data-act="biometric">
                   <span>生物识别和密码</span>
                 </div>
@@ -428,6 +531,8 @@
             ?.addEventListener('click', () => ctx.push('wlan'));
           root.querySelector('[data-act="bluetooth"]')
             ?.addEventListener('click', () => ctx.push('bluetooth'));
+          root.querySelector('[data-act="app-manage"]')
+            ?.addEventListener('click', () => ctx.push('app-manage'));
           root.querySelector('[data-act="biometric"]')
             ?.addEventListener('click', () => ctx.push('biometric'));
         },
@@ -443,7 +548,7 @@
 
               <div class="settings-about-card">
                 <div class="settings-about-card__title">WujiOS</div>
-                <div class="settings-about-card__version">1.0.103</div>
+                <div class="settings-about-card__version">1.0.104</div>
                 <div class="settings-about-card__btn" id="checkUpdateBtn">检查更新</div>
               </div>
 
@@ -458,7 +563,11 @@
                 </div>
                 <div class="settings-row">
                   <span>WujiOS版本</span>
-                  <span class="settings-row__value">1.0.103</span>
+                  <span class="settings-row__value">1.0.104</span>
+                </div>
+                <div class="settings-row">
+                  <span>OpenWuji版本</span>
+                  <span class="settings-row__value">1.0 Release</span>
                 </div>
               </div>
 
@@ -555,6 +664,155 @@
         },
       },
 
+      'app-manage': {
+        name: 'app-manage',
+
+        render() {
+          return `
+            <div class="settings-page">
+              <div class="settings-title">应用管理</div>
+              <div class="settings-section" id="appManageList"></div>
+            </div>
+          `;
+        },
+
+        mount(root, ctx) {
+          const listEl = root.querySelector('#appManageList');
+
+          function renderList() {
+            const apps = WujiApps.all().slice().sort((a, b) => {
+              const an = a.name || a.bundlename;
+              const bn = b.name || b.bundlename;
+              return an.localeCompare(bn, 'zh-Hans-CN');
+            });
+            if (!apps.length) {
+              listEl.innerHTML = `
+                <div class="settings-row"><span>没有应用</span></div>
+              `;
+              return;
+            }
+
+            listEl.innerHTML = apps.map(app => `
+              <div class="settings-item app-item" data-bundle="${escapeHtml(app.bundlename)}">
+                <img class="app-item__icon"
+                     src="${escapeHtml(app.icon || '')}"
+                     alt="">
+                <div class="app-item__info">
+                  <div class="app-item__name">${escapeHtml(app.name || app.bundlename)}</div>
+                  <div class="app-item__version">${escapeHtml(app.version || '1.0.0')}</div>
+                </div>
+              </div>
+            `).join('');
+
+            listEl.querySelectorAll('.app-item').forEach(el => {
+              el.addEventListener('click', () => {
+                const bundle = el.dataset.bundle;
+                if (!WujiApps.get(bundle)) return;
+                ctx.push('app-manage-detail', { bundle });
+              });
+            });
+          }
+
+          renderList();
+
+          ctx.nav.onChange(() => {
+            if (ctx.nav.current?.route?.name === 'app-manage') {
+              renderList();
+            }
+          });
+        },
+      },
+
+      'app-manage-detail': {
+        name: 'app-manage-detail',
+
+        render(routeCtx) {
+          const bundle = routeCtx.data?.bundle;
+          const app = bundle ? WujiApps.get(bundle) : null;
+
+          if (!app) {
+            return `
+              <div class="settings-page">
+                <div class="settings-section">
+                  <div class="settings-row"><span>应用不存在</span></div>
+                </div>
+              </div>
+            `;
+          }
+
+          const isSystem = !WujiApps.isInstalled(app.bundlename);
+
+          return `
+            <div class="settings-page">
+              <div class="app-detail">
+                <img class="app-detail__icon"
+                     src="${escapeHtml(app.icon || '')}"
+                     alt="">
+                <div class="app-detail__info">
+                  <div class="app-detail__name">${escapeHtml(app.name || app.bundlename)}</div>
+                  <div class="app-detail__version">${escapeHtml(app.version || '1.0.0')}</div>
+                </div>
+              </div>
+
+              <button class="app-uninstall-btn"
+                      id="appUninstallBtn"
+                      type="button"
+                      ${isSystem ? 'disabled' : ''}>
+                卸载
+              </button>
+
+              <div class="settings-section">
+                <div class="settings-row">
+                  <span>存储</span>
+                  <span class="settings-row__value" id="appStorageUsage">计算中...</span>
+                </div>
+              </div>
+            </div>
+          `;
+        },
+
+        mount(root, ctx) {
+          const bundle = ctx.data?.bundle;
+          const btn = root.querySelector('#appUninstallBtn');
+          const usageEl = root.querySelector('#appStorageUsage');
+
+          if (bundle && btn && !btn.disabled) {
+            let busy = false;
+
+            btn.addEventListener('click', async () => {
+              if (busy) return;
+              busy = true;
+
+              btn.textContent = '卸载中...';
+              btn.disabled = true;
+
+              try {
+                await WujiAppInstaller.uninstall(bundle);
+                ctx.pop();
+              } catch (err) {
+                console.error('[settings] 卸载失败', err);
+                btn.textContent = '卸载';
+                btn.disabled = false;
+                busy = false;
+              }
+            });
+          }
+
+          if (bundle && usageEl) {
+            AppStorage.for(bundle).size()
+              .then(bytes => {
+                if (!usageEl.isConnected) return;
+                usageEl.textContent = '已使用 '+formatBytes(bytes);
+              })
+              .catch(err => {
+                console.warn('[settings] 读取存储失败', bundle, err);
+                if (usageEl.isConnected) usageEl.textContent = '—';
+              });
+          }
+        },
+      },
+
+
       biometric: {
         name: 'biometric',
 
@@ -638,8 +896,8 @@
           let newPin = '';
 
           function setHeading() {
-            if (stage === 'verify')  headingEl.textContent = '输入当前密码';
-            if (stage === 'new')     headingEl.textContent = requireOld ? '输入新密码' : '设置锁屏密码';
+            if (stage === 'verify') headingEl.textContent = '输入当前密码';
+            if (stage === 'new') headingEl.textContent = requireOld ? '输入新密码' : '设置锁屏密码';
             if (stage === 'confirm') headingEl.textContent = '再次输入以确认';
             headingEl.classList.remove('is-error');
           }
@@ -648,7 +906,7 @@
             headingEl.textContent = text;
             headingEl.classList.add('is-error');
             if (navigator.vibrate) {
-              try { navigator.vibrate([30, 40, 30]); } catch {}
+              try { navigator.vibrate([30, 40, 30]); } catch { }
             }
             setTimeout(() => {
               headingEl.classList.remove('is-error');
@@ -723,7 +981,7 @@
             headingEl.textContent = text;
             headingEl.classList.add('is-error');
             if (navigator.vibrate) {
-              try { navigator.vibrate([30, 40, 30]); } catch {}
+              try { navigator.vibrate([30, 40, 30]); } catch { }
             }
             setTimeout(() => {
               headingEl.classList.remove('is-error');

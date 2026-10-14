@@ -5,12 +5,14 @@
   <meta charset="UTF-8">
   <meta name="viewport"
     content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover, user-scalable=no">
+  <meta name="color-scheme" content="only light">
   <title>WujiOS</title>
   <link rel="stylesheet" href="styles/tokens.css">
   <link rel="stylesheet" href="styles/components.css">
   <style>
     :root {
       --statusbar-h: 26px;
+      color-scheme: only light;
     }
 
     html {
@@ -178,6 +180,7 @@
       opacity: 1;
       visibility: visible;
     }
+
     .view--locked {
       background: transparent;
       display: flex;
@@ -418,10 +421,6 @@
       min-height: 0;
     }
 
-    .slot.is-drop-target {
-      background: rgba(255, 255, 255, .15);
-    }
-
     .app {
       display: flex;
       flex-direction: column;
@@ -437,12 +436,8 @@
       max-width: 100%;
     }
 
-    .app:active {
-      background: rgba(0, 0, 0, .08);
-    }
-
     .app[data-dragging="1"] {
-      opacity: .25;
+      opacity: 0;
     }
 
     .app,
@@ -475,6 +470,88 @@
       filter: drop-shadow(0 12px 24px rgba(0, 0, 0, .35));
       opacity: .95;
       will-change: left, top;
+    }
+
+    .desktop-drag-preview {
+      position: fixed;
+      pointer-events: none;
+      z-index: 850;
+      opacity: .38;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      padding: 4px 0;
+      border-radius: 14px;
+      will-change: left, top, width, height;
+      filter: drop-shadow(0 4px 12px rgba(0, 0, 0, .2));
+    }
+
+    .desktop-drag-preview .app__icon {
+      max-width: 52px;
+    }
+
+       .app-menu {
+      position: fixed;
+      z-index: 1000;
+      background: rgba(255, 255, 255, .72);
+      backdrop-filter: blur(24px) saturate(180%);
+      -webkit-backdrop-filter: blur(24px) saturate(180%);
+      border: .5px solid rgba(255, 255, 255, .55);
+      border-radius: 14px;
+      box-shadow:
+        0 12px 40px rgba(0, 0, 0, .16),
+        0 2px 8px rgba(0, 0, 0, .06);
+      padding: 6px;
+      min-width: 140px;
+      animation: appMenuIn .16s cubic-bezier(.2, .7, .3, 1);
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    .app-menu__item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      width: 100%;
+      padding: 12px 14px;
+      border: 0;
+      border-radius: 10px;
+      background: transparent;
+      color: #e0356b;
+      font: inherit;
+      font-size: 15px;
+      font-weight: 500;
+      cursor: pointer;
+      text-align: left;
+      transition: background .12s;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .app-menu__item:active {
+      background: rgba(224, 53, 107, .12);
+    }
+
+    .app-menu__icon {
+      flex: 0 0 18px;
+      width: 18px;
+      height: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #e0356b;
+    }
+
+    .app-menu__icon svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    @keyframes appMenuIn {
+      from { opacity: 0; transform: scale(.9); }
+      to   { opacity: 1; transform: scale(1); }
     }
 
     .page-dots {
@@ -535,9 +612,7 @@
       font-size: var(--wj-fs-xs);
       color: #ffffff;
       letter-spacing: .2px;
-      text-shadow:
-        0 1px 2px rgba(40, 60, 90, 0.55),
-        0 2px 6px rgba(40, 60, 90, 0.35);
+      text-shadow: 0 1px 2px rgba(40, 60, 90, 0.55);
       max-width: 100%;
       white-space: nowrap;
       overflow: hidden;
@@ -664,6 +739,7 @@
       font-size: 10px;
       font-weight: 400;
       line-height: 1.1;
+      letter-spacing: 0.5px;
       text-align: center;
       color: #ffffff;
       white-space: nowrap;
@@ -707,6 +783,7 @@
       color: rgba(255, 255, 255, .35);
       letter-spacing: 2.5px;
     }
+
     .cc-backdrop {
       position: absolute;
       inset: 0;
@@ -973,7 +1050,6 @@
       <div class="app-screen" id="appScreen"></div>
     </div>
 
-    <!-- 控制中心独立 backdrop（模糊层） -->
     <div class="cc-backdrop" id="ccBackdrop"></div>
 
     <div class="control-center" id="controlCenter">
@@ -1019,7 +1095,8 @@
           <span class="boot-wuji">Wuji</span>
           <span class="boot-os">OS</span>
         </div>
-        <div class="boot-powered">—Powered by—<br /><span style="font-weight: 500;font-size: 16px;">OpenWuji</span>
+        <div class="boot-powered">—Powered by—<br /><span
+            style="font-weight: 500;font-size: 16px;letter-spacing: 0.2px;">OpenWuji</span>
         </div>
       </div>
     </div>
@@ -1033,17 +1110,18 @@
   <script src="navigation.js"></script>
   <script src="core.js"></script>
   <script src="app-storage.js"></script>
+  <script src="app-loader.js"></script>
+  <script src="installer.js"></script>
   <script src="desktop-layout.js"></script>
   <script src="apps/phone.js"></script>
   <script src="apps/weather.js"></script>
   <script src="apps/camera.js"></script>
   <script src="apps/settings.js"></script>
   <script src="apps/photos.js"></script>
+  <script src="store/apps.js"></script>
   <script src="apps/wujigallery.js"></script>
-  <script src="apps/wmall.js"></script>
   <script src="apps/calculator.js"></script>
 
-  <!-- 控制中心模块（依赖 Store，需在 app-storage.js 之后加载） -->
   <script src="control-center.js"></script>
 
   <script>
@@ -1363,6 +1441,7 @@
 
     const DesktopDrag = (() => {
       const HOLD_MS = 300;
+      const UNINSTALL_HOLD_MS = 700;     /* 长按弹菜单的总时长 */
       const MOVE_CANCEL = 14;
       const EDGE_ZONE = 44;
       const EDGE_HOLD_MS = 600;
@@ -1381,8 +1460,10 @@
       let edgeDir = 0;
       let edgeFirstFired = false;
       let shieldEl = null;
+      let previewEl = null;
       let activePointerId = null;
       let watchdogTimer = null;
+      let longPressMenuTimer = null;     /* 长按菜单计时器 */
 
       let suppressClickUntil = 0;
 
@@ -1424,7 +1505,7 @@
 
         moveGhost(x, y);
         suppressClickUntil = performance.now() + SUPPRESS_MS;
-
+        createPreview(appEl);
         createShield();
 
         clearTimeout(watchdogTimer);
@@ -1439,6 +1520,48 @@
         const h = ghostEl.offsetHeight;
         ghostEl.style.left = (x - w / 2) + 'px';
         ghostEl.style.top = (y - h / 2) + 'px';
+      }
+
+      function createPreview(appEl) {
+        destroyPreview();
+        previewEl = appEl.cloneNode(true);
+        previewEl.classList.add('desktop-drag-preview');
+        previewEl.removeAttribute('data-dragging');
+        previewEl.removeAttribute('data-bundle');
+        previewEl.style.display = 'none';
+        document.body.appendChild(previewEl);
+      }
+
+      function destroyPreview() {
+        if (previewEl) {
+          previewEl.remove();
+          previewEl = null;
+        }
+      }
+
+      function updatePreview(slotEl) {
+        if (!previewEl) return;
+        if (!slotEl) {
+          previewEl.style.display = 'none';
+          return;
+        }
+        const r = slotEl.getBoundingClientRect();
+        previewEl.style.display = '';
+        previewEl.style.left = r.left + 'px';
+        previewEl.style.top = r.top + 'px';
+        previewEl.style.width = r.width + 'px';
+        previewEl.style.height = r.height + 'px';
+      }
+
+      function pickSlotAt(x, y) {
+        const stack = document.elementsFromPoint(x, y);
+        for (let i = 0; i < stack.length; i++) {
+          const el = stack[i];
+          if (el === shieldEl || el === previewEl || el === ghostEl) continue;
+          const slot = el.closest ? el.closest('.slot') : null;
+          if (slot) return slot;
+        }
+        return null;
       }
 
       function checkEdge(x) {
@@ -1490,8 +1613,15 @@
           if (DesktopLayout.isPageEmpty(total - 1)) return false;
 
           DesktopLayout.addPage();
-          currentPage = total;
+          const newIndex = total;
+
+          currentPage = total - 1;
           renderHome();
+          syncDragSource();
+
+          requestAnimationFrame(() => {
+            goToPage(newIndex);
+          });
           return true;
         }
 
@@ -1505,7 +1635,11 @@
           DesktopLayout.addPageAt(0);
           currentPage = 1;
           renderHome();
-          goToPage(0);
+          syncDragSource();
+
+          requestAnimationFrame(() => {
+            goToPage(0);
+          });
           return true;
         }
 
@@ -1519,6 +1653,19 @@
         activePointerId = null;
       }
 
+      function syncDragSource() {
+        if (state !== 'dragging' || !draggedBundle) return;
+        const el = desktopViewportEl.querySelector(
+          `.app[data-bundle="${draggedBundle}"]`
+        );
+        if (el) {
+          el.dataset.dragging = '1';
+          sourceEl = el;
+        } else {
+          sourceEl = null;
+        }
+      }
+
       function clearEdge() {
         if (edgeTimer) { clearTimeout(edgeTimer); edgeTimer = null; }
         edgeDir = 0;
@@ -1529,10 +1676,21 @@
         watchdogTimer = null;
       }
 
+      function clearLongPressTimer() {
+        if (longPressMenuTimer) {
+          clearTimeout(longPressMenuTimer);
+          longPressMenuTimer = null;
+        }
+      }
+
       function finishDrag(x, y) {
         if (state !== 'dragging') return;
 
+        clearLongPressTimer();
+        hideAppMenu();
+
         destroyShield();
+        destroyPreview();
 
         if (ghostEl) { ghostEl.remove(); ghostEl = null; }
         if (sourceEl) { try { delete sourceEl.dataset.dragging; } catch { } }
@@ -1583,14 +1741,20 @@
 
         if (!samePos) {
           const pagesBefore = DesktopLayout.snapshot();
-          const focusPageId = pagesBefore[toPageIndex]?.pageId;
+          const targetPage = pagesBefore[toPageIndex];
+          const targetSlot = targetPage?.slots?.[toSlotIndex];
+          const targetFilled = !!(targetSlot && targetSlot.bundle);
 
-          DesktopLayout.move(draggedBundle, toPageIndex, toSlotIndex);
+          if (!targetFilled) {
+            const focusPageId = targetPage?.pageId;
 
-          if (focusPageId) {
-            const pagesAfter = DesktopLayout.snapshot();
-            const newIndex = pagesAfter.findIndex(p => p.pageId === focusPageId);
-            if (newIndex >= 0) currentPage = newIndex;
+            DesktopLayout.move(draggedBundle, toPageIndex, toSlotIndex);
+
+            if (focusPageId) {
+              const pagesAfter = DesktopLayout.snapshot();
+              const newIndex = pagesAfter.findIndex(p => p.pageId === focusPageId);
+              if (newIndex >= 0) currentPage = newIndex;
+            }
           }
         }
 
@@ -1610,7 +1774,11 @@
       function cancelDrag() {
         if (state !== 'dragging') return;
 
+        clearLongPressTimer();
+        hideAppMenu();
+
         destroyShield();
+        destroyPreview();
         if (ghostEl) { ghostEl.remove(); ghostEl = null; }
         if (sourceEl) { try { delete sourceEl.dataset.dragging; } catch { } }
         sourceEl = null;
@@ -1630,12 +1798,14 @@
         suppressClickUntil = performance.now() + SUPPRESS_MS;
       }
 
-      desktopViewportEl.addEventListener('pointerdown', e => {
+            desktopViewportEl.addEventListener('pointerdown', e => {
         if (state !== 'idle') return;
         if (e.pointerType === 'mouse' && e.button !== 0) return;
 
         const appEl = e.target.closest('.app');
         if (!appEl) return;
+
+        hideAppMenu();
 
         activePointerId = e.pointerId;
         pressStart = { x: e.clientX, y: e.clientY };
@@ -1645,6 +1815,26 @@
         pressTimer = setTimeout(() => {
           pressTimer = null;
           startDrag(px, py, targetApp);
+
+          clearLongPressTimer();
+          longPressMenuTimer = setTimeout(() => {
+            longPressMenuTimer = null;
+            if (state !== 'dragging') return;
+
+            const bundle = targetApp.dataset.bundle;
+            if (!bundle || !WujiApps.isInstalled(bundle)) return;
+
+            /* 取消拖动前先抓位置 */
+            const el = desktopViewportEl.querySelector(
+              `.app[data-bundle="${bundle}"]`
+            );
+            const anchorRect = el
+              ? el.getBoundingClientRect()
+              : targetApp.getBoundingClientRect();
+
+            cancelDrag();
+            showUninstallMenu(bundle, anchorRect);
+          }, Math.max(0, UNINSTALL_HOLD_MS - HOLD_MS));
         }, HOLD_MS);
       }, { passive: true });
 
@@ -1664,16 +1854,38 @@
         if (state !== 'dragging') return;
         if (activePointerId !== null && e.pointerId !== activePointerId) return;
 
+        /* 移动超过阈值 → 取消长按菜单计时 */
+        if (longPressMenuTimer && pressStart) {
+          const mdx = e.clientX - pressStart.x;
+          const mdy = e.clientY - pressStart.y;
+          if (Math.hypot(mdx, mdy) > MOVE_CANCEL) {
+            clearLongPressTimer();
+          }
+        }
+
         moveGhost(e.clientX, e.clientY);
         checkEdge(e.clientX);
 
         suppressClickUntil = performance.now() + SUPPRESS_MS;
 
-        const el = document.elementFromPoint(e.clientX, e.clientY);
-        const slotEl = el?.closest('.slot');
+        const slotEl = pickSlotAt(e.clientX, e.clientY);
+
         desktopViewportEl.querySelectorAll('.is-drop-target')
           .forEach(x => x.classList.remove('is-drop-target'));
-        if (slotEl) slotEl.classList.add('is-drop-target');
+
+        if (slotEl) {
+          slotEl.classList.add('is-drop-target');
+
+          const pi = +slotEl.dataset.pageIndex;
+          const si = +slotEl.dataset.slotIndex;
+          const pages = DesktopLayout.snapshot();
+          const targetSlot = pages[pi]?.slots?.[si];
+          const targetFilled = !!(targetSlot && targetSlot.bundle);
+
+          updatePreview(targetFilled ? null : slotEl);
+        } else {
+          updatePreview(null);
+        }
 
         if (e.cancelable) e.preventDefault();
       }, { passive: false });
@@ -1689,6 +1901,8 @@
           pressStart = null;
           activePointerId = null;
         }
+        clearLongPressTimer();
+
         if (state !== 'dragging') return;
         if (activePointerId !== null && e.pointerId !== activePointerId) return;
         finishDrag(e.clientX, e.clientY);
@@ -1701,19 +1915,25 @@
           pressStart = null;
           activePointerId = null;
         }
+        clearLongPressTimer();
         cancelDrag();
       });
 
       document.addEventListener('touchcancel', () => {
+        clearLongPressTimer();
         cancelDrag();
       }, { passive: true });
 
       window.addEventListener('blur', () => {
+        clearLongPressTimer();
         cancelDrag();
       });
 
       document.addEventListener('visibilitychange', () => {
-        if (document.hidden) cancelDrag();
+        if (document.hidden) {
+          clearLongPressTimer();
+          cancelDrag();
+        }
       });
 
       return {
@@ -1721,6 +1941,107 @@
         get suppressClickUntil() { return suppressClickUntil; },
       };
     })();
+
+    /* =========================================================
+       应用长按菜单（卸载）
+       ========================================================= */
+    let appMenuEl = null;
+    let appMenuCloseHandler = null;
+
+    function hideAppMenu() {
+      if (appMenuCloseHandler) {
+        document.removeEventListener('pointerdown', appMenuCloseHandler, true);
+        appMenuCloseHandler = null;
+      }
+      if (appMenuEl) {
+        appMenuEl.remove();
+        appMenuEl = null;
+      }
+    }
+
+    function showUninstallMenu(bundle, anchorRect) {
+      hideAppMenu();
+
+      if (!bundle || !WujiApps.isInstalled(bundle)) return;
+      if (!anchorRect) return;
+
+      const menu = document.createElement('div');
+      menu.className = 'app-menu';
+      menu.innerHTML = `
+        <button class="app-menu__item" type="button">
+          <span class="app-menu__icon">
+            <svg viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="1.8"
+                 stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 6h18"/>
+              <path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2"/>
+              <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+              <path d="M10 11v6"/>
+              <path d="M14 11v6"/>
+            </svg>
+          </span>
+          <span>卸载</span>
+        </button>
+      `;
+
+      document.body.appendChild(menu);
+      appMenuEl = menu;
+
+      const menuRect = menu.getBoundingClientRect();
+      const GAP = 8;
+      const EDGE = 8;
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+
+      let left = anchorRect.right + GAP;
+      if (left + menuRect.width > vw - EDGE) {
+        left = anchorRect.left - menuRect.width - GAP;
+      }
+      if (left < EDGE) left = EDGE;
+      if (left + menuRect.width > vw - EDGE) {
+        left = vw - EDGE - menuRect.width;
+      }
+
+      let top = anchorRect.top + anchorRect.height / 2 - menuRect.height / 2;
+      top = Math.max(EDGE, Math.min(top, vh - menuRect.height - EDGE));
+
+      menu.style.left = left + 'px';
+      menu.style.top  = top  + 'px';
+
+      /* ---------- 卸载 ---------- */
+      menu.querySelector('.app-menu__item').addEventListener('click', async () => {
+        hideAppMenu();
+
+        /* 重新查图标（当前 DOM 里那份），做淡出动画 */
+        const liveEl = desktopViewportEl.querySelector(
+          `.app[data-bundle="${bundle}"]`
+        );
+        if (liveEl) {
+          liveEl.style.transition = 'opacity .18s ease, transform .18s ease';
+          liveEl.style.opacity = '0';
+          liveEl.style.transform = 'scale(.8)';
+        }
+
+        setTimeout(async () => {
+          try {
+            await WujiAppInstaller.uninstall(bundle);
+          } catch (err) {
+            console.error('[uninstall]', err);
+          }
+        }, 180);
+      });
+
+      /* ---------- 点其他地方关闭 ---------- */
+      appMenuCloseHandler = ev => {
+        if (menu.contains(ev.target)) return;
+        hideAppMenu();
+      };
+      requestAnimationFrame(() => {
+        if (appMenuEl === menu && appMenuCloseHandler) {
+          document.addEventListener('pointerdown', appMenuCloseHandler, true);
+        }
+      });
+    }
 
     desktopViewportEl.addEventListener('click', e => {
       if (DesktopDrag.state === 'dragging') return;
@@ -1738,17 +2059,245 @@
       openApp(appEl.dataset.bundle, appEl);
     });
 
-    function openApp(bundle, sourceEl) {
-      const app = WujiApps.get(bundle);
+    async function openApp(bundle, sourceEl) {
+      let app = WujiApps.get(bundle);
       if (!app) return;
 
+      /* =========================================================
+         1) 抓取图标信息（趁桌面还可见）
+         ========================================================= */
+      const iconEl = sourceEl?.querySelector('.app__icon');
+      const iconInfo = (iconEl && iconEl.offsetWidth > 0) ? {
+        size: iconEl.offsetWidth,
+        br: getComputedStyle(iconEl).borderRadius,
+        styleAttr: iconEl.getAttribute('style') || '',
+        html: iconEl.innerHTML,
+        rect: iconEl.getBoundingClientRect(),
+      } : null;
+
+      /* =========================================================
+         2) 立刻切视图 + 创建 Shadow DOM
+         ========================================================= */
       S.currentBundle = bundle;
       currentBackHandler = null;
 
-      appScreen.innerHTML = `<div id="navHost"
-    style="position:absolute;inset:0;overflow:hidden;"></div>`;
-      const navHost = document.getElementById('navHost');
+      appScreen.innerHTML = '';
 
+      const shadowHost = document.createElement('div');
+      shadowHost.style.cssText = 'position:absolute;inset:0;overflow:hidden;';
+      appScreen.appendChild(shadowHost);
+
+      const shadow = shadowHost.attachShadow({ mode: 'open' });
+
+      /* ---- 基础骨架 ---- */
+      const baseStyle = document.createElement('style');
+      baseStyle.textContent = `
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :host {
+      position: absolute;
+      inset: 0;
+      display: block;
+      font-family: var(--wj-font);
+      color: var(--wj-text);
+      font-size: 16px;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+      -webkit-text-size-adjust: none;
+      -moz-text-size-adjust: none;
+      text-size-adjust: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    * { scrollbar-width: none; -ms-overflow-style: none; }
+    *::-webkit-scrollbar { display: none; }
+
+    .app-page { box-shadow: -14px 0 36px rgba(0, 0, 0, .3); }
+
+    .app-body {
+      flex: 1 1 auto;
+      padding: var(--wj-pad);
+      padding-top: calc(var(--wj-pad) + var(--statusbar-h));
+      overflow-y: auto;
+      font-size: var(--wj-fs-md);
+      line-height: 1.65;
+      color: var(--wj-text-muted);
+      height: 100%;
+    }
+  `;
+      shadow.appendChild(baseStyle);
+
+      /* ---- 公共组件样式 ---- */
+      const compLink = document.createElement('link');
+      compLink.rel = 'stylesheet';
+      compLink.href = 'styles/components.css';
+      shadow.appendChild(compLink);
+
+      /* ---- 应用私有样式：占位 <style>，脚本就绪后再填 ---- */
+      const appStyleEl = document.createElement('style');
+      shadow.appendChild(appStyleEl);
+
+      /* ---- navHost ---- */
+      const navHost = document.createElement('div');
+      navHost.id = 'navHost';
+      navHost.style.cssText = 'position:absolute;inset:0;overflow:hidden;';
+      shadow.appendChild(navHost);
+
+      /* =========================================================
+         3) 立刻播图标飞行动画
+         ========================================================= */
+      setView('app');
+      appScreen.style.transition = 'none';
+      appScreen.style.transform = '';
+      appScreen.style.opacity = '0';
+
+      if (iconInfo) {
+        const { size, br, styleAttr, html, rect } = iconInfo;
+
+        const cx = rect.left + rect.width / 2;
+        const cy = rect.top + rect.height / 2;
+
+        const startLeft = Math.round(cx - size / 2);
+        const startTop = Math.round(cy - size / 2);
+        const targetLeft = Math.round((window.innerWidth - size) / 2);
+        const targetTop = Math.round((window.innerHeight - size) / 2);
+
+        const HOLD = 60;
+        const GROW = 520;
+        const FADE = 280;
+        const EASE = 'cubic-bezier(.4, 0, .2, 1)';
+
+        const mask = document.createElement('div');
+        mask.style.cssText = `
+      position: fixed;
+      left: ${startLeft}px;
+      top: ${startTop}px;
+      width: ${size}px;
+      height: ${size}px;
+      border-radius: ${br};
+      background: #fff;
+      z-index: 40;
+      pointer-events: none;
+      will-change: left, top, width, height, border-radius;
+    `;
+
+        const flyingIcon = document.createElement('div');
+        flyingIcon.innerHTML = html;
+        flyingIcon.style.cssText = `
+      position: fixed;
+      left: ${startLeft}px;
+      top: ${startTop}px;
+      width: ${size}px;
+      height: ${size}px;
+      border-radius: ${br};
+      overflow: hidden;
+      z-index: 45;
+      pointer-events: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 26px;
+      line-height: 1;
+      ${styleAttr}
+      will-change: left, top, opacity;
+    `;
+        flyingIcon.querySelectorAll('img').forEach(img => {
+          img.style.cssText = `
+        width: 100%; height: 100%;
+        object-fit: cover; display: block;
+        pointer-events: none;
+        user-select: none;
+        -webkit-user-drag: none;
+      `;
+        });
+
+        document.body.appendChild(mask);
+        document.body.appendChild(flyingIcon);
+
+        setTimeout(() => {
+          mask.style.transition = `
+        left          ${GROW}ms ${EASE},
+        top           ${GROW}ms ${EASE},
+        width         ${GROW}ms ${EASE},
+        height        ${GROW}ms ${EASE},
+        border-radius ${GROW}ms ${EASE}
+      `;
+          flyingIcon.style.transition = `
+        left ${GROW}ms ${EASE},
+        top  ${GROW}ms ${EASE}
+      `;
+
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              mask.style.left = '0';
+              mask.style.top = '0';
+              mask.style.width = window.innerWidth + 'px';
+              mask.style.height = window.innerHeight + 'px';
+              mask.style.borderRadius = '0';
+
+              flyingIcon.style.left = targetLeft + 'px';
+              flyingIcon.style.top = targetTop + 'px';
+            });
+          });
+
+          setTimeout(() => {
+            appScreen.style.transition = 'none';
+            appScreen.style.opacity = '1';
+
+            flyingIcon.style.transition = `opacity ${FADE}ms ease`;
+            flyingIcon.style.opacity = '0';
+
+            mask.style.transition = `opacity ${FADE}ms ease`;
+            mask.style.opacity = '0';
+
+            setTimeout(() => {
+              mask.remove();
+              flyingIcon.remove();
+              appScreen.style.opacity = '';
+            }, FADE + 30);
+          }, GROW);
+        }, HOLD);
+      } else {
+        /* 无图标信息：直接淡入 */
+        requestAnimationFrame(() => {
+          appScreen.style.transition = 'opacity .25s ease';
+          appScreen.style.opacity = '1';
+          setTimeout(() => {
+            appScreen.style.transition = 'none';
+            appScreen.style.opacity = '';
+          }, 280);
+        });
+      }
+
+      /* =========================================================
+         4) 与动画并行等待脚本加载（仅市场应用需要）
+         ========================================================= */
+      if (app._metaOnly) {
+        if (!app._src) {
+          console.error('[openApp] 缺少 src:', bundle);
+          setView('home');
+          return;
+        }
+        try {
+          await WujiAppLoader.load(app._src, app.version);
+        } catch (e) {
+          console.error('[openApp] 加载失败', bundle, e);
+          setView('home');
+          return;
+        }
+        app = WujiApps.get(bundle);
+        if (!app || app._metaOnly) {
+          setView('home');
+          return;
+        }
+      }
+
+      /* ★ 脚本就绪后：把应用私有样式填进占位 <style> */
+      appStyleEl.textContent = app.styles || '';
+
+      /* =========================================================
+         5) 建导航、推首屏
+         ========================================================= */
       const nav = new WujiNavigation({
         host: navHost,
         routes: app.routes || {},
@@ -1778,151 +2327,6 @@
           unmount: () => app.unmount?.(),
         }, {}, { animate: false });
       }
-
-      const iconEl = sourceEl?.querySelector('.app__icon');
-
-      if (!iconEl) {
-        appScreen.style.transition = 'none';
-        appScreen.style.transform = '';
-        appScreen.style.opacity = '0';
-        setView('app');
-        requestAnimationFrame(() => {
-          appScreen.style.transition = 'opacity .25s ease';
-          appScreen.style.opacity = '1';
-          setTimeout(() => {
-            appScreen.style.transition = 'none';
-            appScreen.style.opacity = '';
-          }, 280);
-        });
-        return;
-      }
-
-      const rect = iconEl.getBoundingClientRect();
-      const size = iconEl.offsetWidth;
-      const cx = rect.left + rect.width / 2;
-      const cy = rect.top + rect.height / 2;
-
-      const startLeft = Math.round(cx - size / 2);
-      const startTop = Math.round(cy - size / 2);
-
-      if (size === 0) {
-        appScreen.style.transition = 'none';
-        appScreen.style.opacity = '0';
-        setView('app');
-        requestAnimationFrame(() => {
-          appScreen.style.transition = 'opacity .25s ease';
-          appScreen.style.opacity = '1';
-        });
-        return;
-      }
-
-      appScreen.style.transition = 'none';
-      appScreen.style.transform = '';
-      appScreen.style.opacity = '0';
-      setView('app');
-
-      const br = getComputedStyle(iconEl).borderRadius;
-      const iconStyleAttr = iconEl.getAttribute('style') || '';
-
-      const targetLeft = Math.round((window.innerWidth - size) / 2);
-      const targetTop = Math.round((window.innerHeight - size) / 2);
-
-      const HOLD = 60;
-      const GROW = 520;
-      const FADE = 280;
-
-      const EASE = 'cubic-bezier(.4, 0, .2, 1)';
-
-      const mask = document.createElement('div');
-      mask.style.cssText = `
-    position: fixed;
-    left: ${startLeft}px;
-    top: ${startTop}px;
-    width: ${size}px;
-    height: ${size}px;
-    border-radius: ${br};
-    background: #fff;
-    z-index: 40;
-    pointer-events: none;
-    will-change: left, top, width, height, border-radius;
-  `;
-
-      const flyingIcon = document.createElement('div');
-      flyingIcon.innerHTML = iconEl.innerHTML;
-      flyingIcon.style.cssText = `
-    position: fixed;
-    left: ${startLeft}px;
-    top: ${startTop}px;
-    width: ${size}px;
-    height: ${size}px;
-    border-radius: ${br};
-    overflow: hidden;
-    z-index: 45;
-    pointer-events: none;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 26px;
-    line-height: 1;
-    ${iconStyleAttr}
-    will-change: left, top, opacity;
-  `;
-      flyingIcon.querySelectorAll('img').forEach(img => {
-        img.style.cssText = `
-      width: 100%; height: 100%;
-      object-fit: cover; display: block;
-      pointer-events: none;
-      user-select: none;
-      -webkit-user-drag: none;
-    `;
-      });
-
-      document.body.appendChild(mask);
-      document.body.appendChild(flyingIcon);
-
-      setTimeout(() => {
-        mask.style.transition = `
-      left          ${GROW}ms ${EASE},
-      top           ${GROW}ms ${EASE},
-      width         ${GROW}ms ${EASE},
-      height        ${GROW}ms ${EASE},
-      border-radius ${GROW}ms ${EASE}
-    `;
-        flyingIcon.style.transition = `
-      left ${GROW}ms ${EASE},
-      top  ${GROW}ms ${EASE}
-    `;
-
-        requestAnimationFrame(() => {
-          requestAnimationFrame(() => {
-            mask.style.left = '0';
-            mask.style.top = '0';
-            mask.style.width = window.innerWidth + 'px';
-            mask.style.height = window.innerHeight + 'px';
-            mask.style.borderRadius = '0';
-
-            flyingIcon.style.left = targetLeft + 'px';
-            flyingIcon.style.top = targetTop + 'px';
-          });
-        });
-
-        setTimeout(() => {
-          appScreen.style.transition = 'none';
-          appScreen.style.opacity = '1';
-
-          flyingIcon.style.transition = `opacity ${FADE}ms ease`;
-          flyingIcon.style.opacity = '0';
-
-          mask.style.transition = `opacity ${FADE}ms ease`;
-          mask.style.opacity = '0';
-
-          setTimeout(() => {
-            mask.remove();
-            flyingIcon.remove();
-            appScreen.style.opacity = '';
-          }, FADE + 30);
-        }, GROW);
-      }, HOLD);
     }
 
     function finishCloseApp() {
@@ -2437,23 +2841,47 @@
 
       function findScroller(el) {
         while (el && el !== document.body) {
-          const style = getComputedStyle(el);
-          const canY = /(auto|scroll)/.test(style.overflowY) && el.scrollHeight > el.clientHeight + 1;
-          const canX = /(auto|scroll)/.test(style.overflowX) && el.scrollWidth > el.clientWidth + 1;
-          if (canY || canX) return el;
-          el = el.parentElement;
+          if (el.nodeType === 1) {
+            const style = getComputedStyle(el);
+            const canY = /(auto|scroll)/.test(style.overflowY)
+              && el.scrollHeight > el.clientHeight + 1;
+            const canX = /(auto|scroll)/.test(style.overflowX)
+              && el.scrollWidth > el.clientWidth + 1;
+            if (canY || canX) return el;
+          }
+
+          if (el.parentElement) {
+            el = el.parentElement;
+          } else {
+            const root = el.getRootNode?.();
+            el = (root && root.host) ? root.host : null;
+          }
         }
         return null;
+      }
+
+      function realTargetOf(e) {
+        if (typeof e.composedPath === 'function') {
+          const path = e.composedPath();
+          for (let i = 0; i < path.length; i++) {
+            if (path[i] && path[i].nodeType === 1) return path[i];
+          }
+        }
+        return e.target;
       }
 
       document.addEventListener('pointerdown', e => {
         if (e.pointerType !== 'mouse') return;
         if (e.button !== 0) return;
-        if (e.target.closest('button, a, input, textarea, select, label, [contenteditable]')) return;
-        if (e.target.tagName === 'IFRAME') return;
         if (DesktopDrag.state === 'dragging') return;
 
-        const sc = findScroller(e.target);
+        const real = realTargetOf(e);
+        if (!real || real.nodeType !== 1) return;
+
+        if (real.tagName === 'IFRAME') return;
+        if (real.closest('button, a, input, textarea, select, label, [contenteditable]')) return;
+
+        const sc = findScroller(real);
         if (!sc) return;
 
         if (momentumRAF) { cancelAnimationFrame(momentumRAF); momentumRAF = null; }
@@ -2553,6 +2981,7 @@
       notifyParent,
     });
 
+    WujiAppInstaller.restore();
     DesktopLayout.seedFromRegistry();
     renderHome();
 

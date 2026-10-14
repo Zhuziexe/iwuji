@@ -5,14 +5,16 @@
      forecast  → 未来 7 天
      city      → 选择城市
    缓存：30 分钟；手动刷新间隔 5 分钟；超过 5 分钟自动刷新
+        最多保留 3 个城市的缓存（LRU + TTL）
    数据存储：AppStorage（IndexedDB），按包名隔离
    ========================================================= */
 (() => {
-  const CACHE_TTL     = 30 * 60 * 1000;
-  const REFRESH_GAP   = 5  * 60 * 1000;
-  const FORECAST_DAYS = 7;
-  const DEFAULT_CITY  = '杭州';
-  const BUNDLE        = 'com.wujios.weather';
+  const CACHE_TTL         = 30 * 60 * 1000;
+  const REFRESH_GAP       = 5  * 60 * 1000;
+  const FORECAST_DAYS     = 7;
+  const DEFAULT_CITY      = '杭州';
+  const BUNDLE            = 'com.wujios.weather';
+  const MAX_CACHED_CITIES = 3;
 
   const CITIES = [
     { name: '杭州', lat: 30.2741, lon: 120.1551 },
@@ -90,7 +92,7 @@
   let cooldownTimer     = null;
   let autoRefreshTimer  = null;
   let loading           = false;
-  let lastKnownCity     = DEFAULT_CITY;   // 用于 city 路由 render 同步展示
+  let lastKnownCity     = DEFAULT_CITY;
 
   /* ---------- 工具 ---------- */
   function weatherCode(code) {
@@ -123,6 +125,49 @@
     const res = await fetch(`https://api.open-meteo.com/v1/forecast?${params}`);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     return res.json();
+  }
+
+  /* ---------------------------------------------------------
+     缓存清理：保证 cache.* 条目数 <= MAX_CACHED_CITIES
+       - 当前城市一定保留
+       - 其余优先保留"未过期且最近更新"的
+       - 过期 / 超量的删掉
+     --------------------------------------------------------- */
+  async function cleanupCache(db, keepKey) {
+    let keys;
+    try { keys = await db.keys(); }
+    catch { return; }
+
+    const cacheKeys = keys.filter(k => k.startsWith('cache.'));
+    if (cacheKeys.length <= MAX_CACHED_CITIES) return;
+
+    const now = Date.now();
+
+    const entries = await Promise.all(cacheKeys.map(async k => {
+      let at = 0;
+      try { at = (await db.get(k))?.timestamp || 0; }
+      catch {}
+      return { key: k, at };
+    }));
+
+    const others = entries.filter(e => e.key !== keepKey);
+
+    /* 其它城市里，未过期 + 最新的放前面 */
+    const fresh = others
+      .filter(e => now - e.at < CACHE_TTL)
+      .sort((a, b) => b.at - a.at);
+
+    /* 保留：当前城市 + 前 (MAX-1) 个未过期的其它城市 */
+    const keep = new Set([
+      keepKey,
+      ...fresh.slice(0, Math.max(0, MAX_CACHED_CITIES - 1)).map(e => e.key),
+    ]);
+
+    for (const e of entries) {
+      if (!keep.has(e.key)) {
+        try { await db.remove(e.key); } catch {}
+      }
+    }
   }
 
   /* =========================================================
@@ -453,8 +498,6 @@
         name: 'home',
 
         render() {
-          /* AppStorage 是异步的，render 同步返回。
-             先用 lastKnownCity 占位，mount 里立即异步读出真实值。 */
           return `
             <div class="weather-page" id="weatherHome">
               <div class="weather-topbar">
@@ -583,7 +626,6 @@
             const city = CITIES.find(c => c.name === currentCity);
             if (!city) { renderError(); return; }
 
-            /* 缓存 key：按城市分开存 */
             const cached = await db.get('cache.' + currentCity, null);
             if (disposed) return;
 
@@ -607,6 +649,9 @@
               const record = { data, timestamp: Date.now() };
               await db.set('cache.' + currentCity, record);
               if (disposed) return;
+
+              /* 写完新缓存后清理旧的（不阻塞渲染） */
+              cleanupCache(db, 'cache.' + currentCity).catch(() => {});
 
               weatherData = { city: currentCity, ...record };
               renderWeather(data, false);
@@ -669,10 +714,16 @@
             lastKnownCity = storedCity;
             cityLabelEl.textContent = storedCity;
             loadWeather();
+
+            /* 空闲时清一次历史遗留的缓存 */
+            const purge = () => cleanupCache(db, 'cache.' + currentCity).catch(() => {});
+            if ('requestIdleCallback' in window) {
+              requestIdleCallback(purge, { timeout: 4000 });
+            } else {
+              setTimeout(purge, 3000);
+            }
           })();
 
-          /* ---------- 清理 ---------- */
-          /* 保存到闭包，unmount 里清 */
           root._wjWeatherCleanup = () => {
             disposed = true;
             if (cooldownTimer)    { clearInterval(cooldownTimer);   cooldownTimer = null; }
@@ -682,8 +733,6 @@
         },
 
         unmount() {
-          /* navigation.js 会把 root 从 DOM 移除，root 引用可能在闭包里丢失。
-             用更通用的方式：模块级的定时器清理（保底）。 */
           if (cooldownTimer)    { clearInterval(cooldownTimer);   cooldownTimer = null; }
           if (autoRefreshTimer) { clearTimeout(autoRefreshTimer); autoRefreshTimer = null; }
           loading = false;
@@ -742,8 +791,6 @@
         name: 'city',
 
         render() {
-          /* 同步渲染，用 lastKnownCity 打底；
-             mount 里异步读出真实值再修正 active 状态。 */
           return `
             <div class="weather-page">
               <div class="forecast-title">选择城市</div>
@@ -765,7 +812,6 @@
           const db = AppStorage.for(BUNDLE);
           const listEl = root.querySelector('#cityList');
 
-          /* 异步拉一次真实城市，纠正 active */
           (async () => {
             const stored = await db.get('city', DEFAULT_CITY);
             lastKnownCity = stored;

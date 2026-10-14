@@ -101,14 +101,23 @@ window.DesktopLayout = (() => {
 
     seedFromRegistry() {
       const d = ensureData();
+      let dirty = false;
+
+      d.pages.forEach(p => {
+        p.slots.forEach((b, i) => {
+          if (b && !WujiApps.get(b)) {
+            p.slots[i] = '';
+            dirty = true;
+          }
+        });
+      });
+
       const onDesktop = new Set();
       d.pages.forEach(p => p.slots.forEach(s => { if (s) onDesktop.add(s); }));
 
       const missing = WujiApps.all()
         .map(a => a.bundlename)
         .filter(b => !onDesktop.has(b));
-
-      if (!missing.length) return;
 
       for (const b of missing) {
         let pos = findEmptySlot();
@@ -117,8 +126,10 @@ window.DesktopLayout = (() => {
           pos = { pageIndex: d.pages.length - 1, slotIndex: 0 };
         }
         d.pages[pos.pageIndex].slots[pos.slotIndex] = b;
+        dirty = true;
       }
-      persist();
+
+      if (dirty) persist();
     },
 
     snapshot() {
@@ -137,7 +148,12 @@ window.DesktopLayout = (() => {
         }
         return {
           pageId: p.id,
-          slots: slots.map(b => b ? { bundle: b, meta: WujiApps.get(b) } : null),
+          slots: slots.map(b => {
+            if (!b) return null;
+            const meta = WujiApps.get(b);
+            if (!meta) return null;
+            return { bundle: b, meta };
+          }),
         };
       });
     },

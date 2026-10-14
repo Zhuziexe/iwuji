@@ -2,21 +2,19 @@
    core.js —— 应用注册表 + 系统级存储
 
    WujiApps：
-     - 内置应用与已安装应用分桶，卸载时只清"已安装"桶
-     - register / registerInstalled 两个入口，语义清晰
-     - 提供 on() 事件订阅，桌面布局可以在应用增删时自动重绘
-     - 元数据规范化：name/icon/version/author 等
+     - 内置应用 / 已安装应用分桶
+     - register / registerInstalled / registerMeta
+     - meta 条目（占位）与完整条目可互相升级
+     - on() 事件订阅：桌面布局在增删时自动重绘
 
    Store：
-     - 系统级小数据（锁屏密码、控制中心开关、桌面布局…）
-     - 同步、小体积、必须立即可读
-     - 应用私有数据请走 AppStorage（IndexedDB）
+     - 系统级小数据（localStorage），同步、必须立即可读
+     - 应用私有大数据请走 AppStorage（IndexedDB）
    ========================================================= */
 
 window.WujiApps = (() => {
   const builtin   = new Map();
   const installed = new Map();
-  const injected  = new Set();
   const listeners = new Set();
 
   function emit(evt) {
@@ -25,50 +23,90 @@ window.WujiApps = (() => {
     });
   }
 
-  function injectStyles(app) {
-    if (!app.styles || injected.has(app.bundlename)) return;
-    injected.add(app.bundlename);
-    const tag = document.createElement('style');
-    tag.dataset.wjApp = app.bundlename;
-    tag.textContent = app.styles;
-    document.head.appendChild(tag);
-  }
-
   function normalize(app) {
     return {
-      bundlename:  app.bundlename,
-      name:        app.name || app.bundlename,
-      icon:        app.icon || '',
-      iconStyle:   app.iconStyle || '',
-      version:     app.version || '1.0.0',
-      author:      app.author || '',
-      description: app.description || '',
+      bundlename:   app.bundlename || app.bundle,
+      name:         app.name || app.bundlename,
+      icon:         app.icon || '',
+      iconStyle:    app.iconStyle || '',
+      version:      app.version || '1.0.0',
+      author:       app.author || '',
+      description:  app.description || '',
       initialRoute: app.initialRoute || null,
-      routes:      app.routes || null,
-      render:      app.render || null,
-      mount:       app.mount || null,
-      unmount:     app.unmount || null,
-      styles:      app.styles || '',
+      routes:       app.routes || null,
+      render:       app.render || null,
+      mount:        app.mount || null,
+      unmount:      app.unmount || null,
+      styles:       app.styles || '',
+      _src:         app.src || app._src || '',
+      _metaOnly:    false,
     };
   }
 
+  /* ---------------------------------------------------------
+     完整注册
+     --------------------------------------------------------- */
   function register(app, source) {
     if (!app || !app.bundlename) {
       console.error('[WujiApps] 应用必须有 bundlename');
       return false;
     }
-    if (builtin.has(app.bundlename) || installed.has(app.bundlename)) {
+
+    const isInstalled = source === 'installed';
+    const bucket = isInstalled ? installed : builtin;
+    const other  = isInstalled ? builtin   : installed;
+
+    const existingSelf  = bucket.get(app.bundlename);
+    const existingOther = other.get(app.bundlename);
+
+    /* 已经完整注册过 → 忽略 */
+    if (existingSelf && !existingSelf._metaOnly) {
       console.warn(`[WujiApps] 应用 ${app.bundlename} 已注册，忽略`);
       return false;
     }
+    /* 另一桶里有完整版 → 忽略（内置优先，避免把系统应用注册成已安装） */
+    if (existingOther && !existingOther._metaOnly) {
+      console.warn(`[WujiApps] 应用 ${app.bundlename} 已在另一桶完整注册，忽略`);
+      return false;
+    }
+
     const norm = normalize(app);
     norm._source = source;
+    norm._metaOnly = false;
     norm._registeredAt = Date.now();
 
-    const bucket = source === 'installed' ? installed : builtin;
     bucket.set(norm.bundlename, norm);
-    injectStyles(norm);
+    /* 清掉另一桶里的 meta 残留 */
+    if (existingOther) other.delete(norm.bundlename);
+
     emit({ type: 'registered', bundle: norm.bundlename, source, app: norm });
+    return true;
+  }
+
+  /* ---------------------------------------------------------
+     只注册元数据（占位），等脚本加载后升级为完整定义
+     --------------------------------------------------------- */
+  function registerMeta(meta, source = 'installed') {
+    if (!meta) return false;
+    const bundle = meta.bundlename || meta.bundle;
+    if (!bundle) return false;
+
+    /* 系统内置里已有同名 → 不允许 meta 覆盖 */
+    if (builtin.has(bundle)) return false;
+
+    const existing = installed.get(bundle);
+    if (existing && !existing._metaOnly) return false;   // 已完整，忽略
+
+    const norm = {
+      ...normalize({ ...meta, bundlename: bundle }),
+      _metaOnly: true,
+      _src: meta.src || meta._src || '',
+      _source: source,
+      _registeredAt: Date.now(),
+    };
+
+    installed.set(bundle, norm);
+    emit({ type: 'registered', bundle, source, app: norm });
     return true;
   }
 
@@ -79,7 +117,10 @@ window.WujiApps = (() => {
     /* 应用市场 / 侧载：安装时调用 */
     registerInstalled(app) { return register(app, 'installed'); },
 
-    /* 卸载：只能卸已安装的应用，内置应用返回 false */
+    /* 只登记元数据（占位） */
+    registerMeta,
+
+    /* 卸载：只能卸已安装的应用 */
     unregister(bundle) {
       if (!installed.has(bundle)) return false;
       installed.delete(bundle);
@@ -101,7 +142,6 @@ window.WujiApps = (() => {
     has(bundle)  { return builtin.has(bundle) || installed.has(bundle); },
     isInstalled(bundle) { return installed.has(bundle); },
 
-    /* 订阅注册表变化：{ type: 'registered' | 'unregistered', bundle, source?, app? } */
     on(fn) {
       listeners.add(fn);
       return () => listeners.delete(fn);

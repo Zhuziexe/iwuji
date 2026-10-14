@@ -1,4 +1,4 @@
-WujiApps.register({
+WujiApps.registerInstalled({
   bundlename: 'com.wujinb.wmall',
   name: '吴际商城',
   icon: './assets/wmall.svg',
