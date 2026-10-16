@@ -4,19 +4,20 @@
   const CITIES = [
     { id: 'shanghai', name: '上海', map: './assets/com.wujinb.metromap/shanghai.png' },
     { id: 'beijing', name: '北京', map: './assets/com.wujinb.metromap/beijing.png' },
+    { id: 'hangzhou', name: '青岛', map: './assets/com.wujinb.metromap/qingdao.jpg' },
   ];
 
   const SVG_ARROW = `<svg class="mm-item__arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg>`;
   const SVG_BACK  = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>`;
 
-  const DEFAULT_ZOOM = 4;
+  const DEFAULT_ZOOM = 6;
 
   WujiApps.registerInstalled({
     bundlename: BUNDLE,
     name: '地铁图',
     icon: './assets/metromap.svg',
     initialRoute: 'home',
-    version: '1.0.2',
+    version: '1.0.3',
     styles: `
       .mm-page {
         position: absolute;
@@ -315,7 +316,7 @@
 
           let vw = 0, vh = 0;
           let iw = 0, ih = 0;
-          let minScale = 1, maxScale = 4;
+          let minScale = 1, maxScale = 6;
           let scale = 1, tx = 0, ty = 0;
           let ready = false;
           let destroyed = false;

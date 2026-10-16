@@ -34,11 +34,11 @@ window.WUJI_MARKET_APPS = [
     bundle:      'com.wujinb.metromap',
     name:        '地铁图',
     icon:        './assets/metromap.svg',
-    version:     '1.0.2',
+    version:     '1.0.3',
     author:      'Wuji',
     description: '地铁图',
-    longdescription: `查看上海和北京的地铁线网图。
-    想要更多城市?快去给竹子购买Pura 90 Pro!`,
+    longdescription: `查看上海、北京等城市的地铁线网图。
+    想要更多城市？快去给竹子购买Pura 90 Pro！`,
     src:         './store-apps/metromap.js',
   },
   {
