@@ -15,27 +15,13 @@
       color-scheme: only light;
     }
 
-    html {
-      font-size: 16px;
-    }
+    html { font-size: 16px; }
 
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    * { scrollbar-width: none; -ms-overflow-style: none; }
+    *::-webkit-scrollbar { display: none; }
 
-    * {
-      scrollbar-width: none;
-      -ms-overflow-style: none;
-    }
-
-    *::-webkit-scrollbar {
-      display: none;
-    }
-
-    html,
-    body {
+    html, body {
       width: 100%;
       height: 100%;
       overflow: hidden;
@@ -46,6 +32,22 @@
       text-size-adjust: none;
       background: #000;
       color: #fff;
+    }
+
+    /* ================= 禁用长按图片菜单（普通场景） =================
+       注意：不设置 pointer-events，避免影响应用里图片的交互。
+       真正需要"彻底阻止华为长按菜单"的场景，走 Shadow DOM 里的
+       img { pointer-events: none }，由 data-interactive 白名单恢复。 */
+    img {
+      -webkit-touch-callout: none;
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
+      -webkit-user-drag: none;
+      -khtml-user-drag: none;
+      -moz-user-drag: none;
+      -o-user-drag: none;
     }
 
     .os {
@@ -61,11 +63,10 @@
       background: url('./themes/sea.png') center center / cover no-repeat;
     }
 
+    /* ================= 状态栏 ================= */
     .statusbar {
       position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
+      top: 0; left: 0; right: 0;
       height: var(--statusbar-h);
       display: flex;
       align-items: center;
@@ -87,45 +88,85 @@
     }
 
     .os[data-view="locked"] .statusbar,
-    .os:not([data-power="running"]) .statusbar {
-      opacity: 0;
-    }
+    .os:not([data-power="running"]) .statusbar { opacity: 0; }
 
-    .os.cc-open .statusbar {
+    /* 面板打开：状态栏文字变白、透明背景 */
+    .os.panel-open .statusbar {
       background: transparent;
       color: #fff;
       text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
     }
 
-    .statusbar .right {
-      display: flex;
+    /* 左侧组：时间 + 通知图标 */
+    .statusbar__left {
+      display: inline-flex;
       align-items: center;
-      gap: 7px;
+      gap: 6px;
+      min-width: 0;
+      transition: opacity .2s ease;
     }
+
+    /* ★ 只有通知中心隐藏左侧（时间 + 图标）；控制中心保留 */
+    .os.nc-open .statusbar__left { opacity: 0; }
+
+    /* 通知图标组 */
+    .statusbar-notif-icons {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      line-height: 1;
+    }
+    .statusbar-notif-icons[hidden] { display: none; }
+
+    .statusbar-notif-icon {
+      width: 14px;
+      height: 14px;
+      border-radius: 4px;
+      overflow: hidden;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      line-height: 1;
+    }
+    .statusbar-notif-icon img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      pointer-events: none;
+      -webkit-user-drag: none;
+    }
+
+    .statusbar-notif-more {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .5px;
+      opacity: .8;
+      color: currentColor;
+    }
+
+    .statusbar .right { display: flex; align-items: center; gap: 7px; }
 
     .battery {
       position: relative;
-      width: 22px;
-      height: 11px;
+      width: 22px; height: 11px;
       padding: 1px;
       border: 1px solid currentColor;
       border-radius: 3px;
       color: inherit;
       opacity: .9;
     }
-
     .battery::after {
       content: "";
       position: absolute;
       right: -3.5px;
       top: 50%;
       transform: translateY(-50%);
-      width: 2px;
-      height: 5px;
+      width: 2px; height: 5px;
       background: currentColor;
       border-radius: 0 2px 2px 0;
     }
-
     .battery i {
       display: block;
       height: 100%;
@@ -134,53 +175,29 @@
       border-radius: 1.5px;
     }
 
+    /* ================= 视图容器 ================= */
     .view {
       position: absolute;
-      left: 0;
-      right: 0;
-      bottom: 0;
+      left: 0; right: 0; bottom: 0;
       opacity: 0;
       visibility: hidden;
       transition: none;
     }
-
-    .view--locked {
-      top: 0;
-      z-index: 5;
-    }
-
-    .view--home {
-      top: var(--statusbar-h);
-      z-index: 1;
-    }
-
-    .view--app {
-      top: 0;
-      z-index: 10;
-    }
+    .view--locked { top: 0; z-index: 5; }
+    .view--home   { top: var(--statusbar-h); z-index: 1; }
+    .view--app    { top: 0; z-index: 10; }
 
     .os:not([data-power="running"]) .view {
       opacity: 0 !important;
       visibility: hidden !important;
       pointer-events: none !important;
     }
-
-    .os[data-view="locked"] .view--locked {
-      opacity: 1;
-      visibility: visible;
-    }
-
+    .os[data-view="locked"] .view--locked { opacity: 1; visibility: visible; }
     .os[data-view="home"] .view--home,
-    .os[data-view="app"] .view--home {
-      visibility: visible;
-      opacity: 1;
-    }
+    .os[data-view="app"]  .view--home { visibility: visible; opacity: 1; }
+    .os[data-view="app"]  .view--app  { opacity: 1; visibility: visible; }
 
-    .os[data-view="app"] .view--app {
-      opacity: 1;
-      visibility: visible;
-    }
-
+    /* ================= 锁屏 ================= */
     .view--locked {
       background: transparent;
       display: flex;
@@ -201,7 +218,6 @@
       align-items: center;
       transition: opacity .25s ease, transform .25s ease;
     }
-
     .lock-content.is-hidden {
       opacity: 0;
       transform: scale(.96);
@@ -216,7 +232,6 @@
       line-height: 1;
       font-variant-numeric: tabular-nums;
     }
-
     .lock-time__hour,
     .lock-time__min {
       display: block;
@@ -243,11 +258,7 @@
       filter:
         drop-shadow(0 -1px 0.5px rgba(255, 255, 255, 1)) drop-shadow(0 1px 0.5px rgba(30, 50, 80, 0.55)) drop-shadow(0 2px 1px rgba(30, 50, 80, 0.35)) drop-shadow(0 6px 14px rgba(30, 50, 80, 0.35)) drop-shadow(0 14px 32px rgba(30, 50, 80, 0.22));
     }
-
-    .lock-time__min {
-      margin-top: 8px;
-      opacity: .98;
-    }
+    .lock-time__min { margin-top: 8px; opacity: .98; }
 
     .lock-date {
       margin-top: 26px;
@@ -274,11 +285,7 @@
       transition: opacity .28s ease, visibility .28s ease;
       z-index: 10;
     }
-
-    .password-panel.is-open {
-      opacity: 1;
-      visibility: visible;
-    }
+    .password-panel.is-open { opacity: 1; visibility: visible; }
 
     .password-header {
       flex: 0 0 auto;
@@ -298,25 +305,16 @@
       transition: color .2s ease;
       min-height: 20px;
     }
+    .password-title.is-error { color: #ffb8c6; }
 
-    .password-title.is-error {
-      color: #ffb8c6;
-    }
-
-    .password-dots {
-      display: flex;
-      gap: 18px;
-    }
-
+    .password-dots { display: flex; gap: 18px; }
     .password-dot {
-      width: 14px;
-      height: 14px;
+      width: 14px; height: 14px;
       border-radius: 50%;
       border: 2px solid rgba(255, 255, 255, 0.9);
       background: transparent;
       transition: background .15s ease, transform .15s ease;
     }
-
     .password-dot.is-filled {
       background: #fff;
       transform: scale(1.15);
@@ -331,7 +329,6 @@
       max-width: 200px;
       margin: auto auto 0;
     }
-
     .lock-pin-key {
       aspect-ratio: 1;
       width: 100%;
@@ -351,21 +348,14 @@
       backdrop-filter: blur(8px);
       -webkit-backdrop-filter: blur(8px);
     }
-
     .lock-pin-key:active {
       transform: scale(.94);
       background: rgba(255, 255, 255, 0.42);
     }
+    .lock-pin-key--empty { visibility: hidden; pointer-events: none; }
+    .lock-pin-key--action { font-size: 22px; }
 
-    .lock-pin-key--empty {
-      visibility: hidden;
-      pointer-events: none;
-    }
-
-    .lock-pin-key--action {
-      font-size: 22px;
-    }
-
+    /* ================= 桌面 ================= */
     .view--home {
       background: transparent;
       will-change: transform, opacity;
@@ -373,23 +363,14 @@
 
     .desktop-viewport {
       position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 28px;
+      top: 0; left: 0; right: 0; bottom: 28px;
       overflow: hidden;
       touch-action: pan-y;
       -webkit-touch-callout: none;
       user-select: none;
       -webkit-user-select: none;
     }
-
-    .desktop-track {
-      display: flex;
-      height: 100%;
-      will-change: transform;
-    }
-
+    .desktop-track { display: flex; height: 100%; will-change: transform; }
     .desktop-page {
       flex: 0 0 100%;
       height: 100%;
@@ -400,7 +381,6 @@
       user-select: none;
       -webkit-user-select: none;
     }
-
     .desktop-grid {
       display: grid;
       grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -410,17 +390,14 @@
       height: 100%;
       min-width: 0;
     }
-
     .slot {
       display: flex;
       align-items: center;
       justify-content: center;
       border-radius: 14px;
       transition: background .15s;
-      min-width: 0;
-      min-height: 0;
+      min-width: 0; min-height: 0;
     }
-
     .app {
       display: flex;
       flex-direction: column;
@@ -435,13 +412,8 @@
       min-width: 0;
       max-width: 100%;
     }
-
-    .app[data-dragging="1"] {
-      opacity: 0;
-    }
-
-    .app,
-    .app * {
+    .app[data-dragging="1"] { opacity: 0; }
+    .app, .app * {
       -webkit-touch-callout: none;
       -webkit-user-select: none;
       -moz-user-select: none;
@@ -452,16 +424,13 @@
       -moz-user-drag: none;
       -o-user-drag: none;
     }
-
-    .desktop-ghost,
-    .desktop-ghost * {
+    .desktop-ghost, .desktop-ghost * {
       -webkit-touch-callout: none;
       -webkit-user-select: none;
       user-select: none;
       -webkit-user-drag: none;
       pointer-events: none !important;
     }
-
     .desktop-ghost {
       position: fixed;
       pointer-events: none;
@@ -471,7 +440,6 @@
       opacity: .95;
       will-change: left, top;
     }
-
     .desktop-drag-preview {
       position: fixed;
       pointer-events: none;
@@ -487,12 +455,9 @@
       will-change: left, top, width, height;
       filter: drop-shadow(0 4px 12px rgba(0, 0, 0, .2));
     }
+    .desktop-drag-preview .app__icon { max-width: 52px; }
 
-    .desktop-drag-preview .app__icon {
-      max-width: 52px;
-    }
-
-       .app-menu {
+    .app-menu {
       position: fixed;
       z-index: 1000;
       background: rgba(255, 255, 255, .72);
@@ -509,7 +474,6 @@
       user-select: none;
       -webkit-user-select: none;
     }
-
     .app-menu__item {
       display: flex;
       align-items: center;
@@ -528,26 +492,16 @@
       transition: background .12s;
       -webkit-tap-highlight-color: transparent;
     }
-
-    .app-menu__item:active {
-      background: rgba(224, 53, 107, .12);
-    }
-
+    .app-menu__item:active { background: rgba(224, 53, 107, .12); }
     .app-menu__icon {
       flex: 0 0 18px;
-      width: 18px;
-      height: 18px;
+      width: 18px; height: 18px;
       display: flex;
       align-items: center;
       justify-content: center;
       color: #e0356b;
     }
-
-    .app-menu__icon svg {
-      width: 100%;
-      height: 100%;
-      display: block;
-    }
+    .app-menu__icon svg { width: 100%; height: 100%; display: block; }
 
     @keyframes appMenuIn {
       from { opacity: 0; transform: scale(.9); }
@@ -565,17 +519,14 @@
       z-index: 5;
       pointer-events: auto;
     }
-
     .page-dot {
-      width: 8px;
-      height: 8px;
+      width: 8px; height: 8px;
       border-radius: 50%;
       background: rgba(255, 255, 255, .5);
       box-shadow: 0 1px 2px rgba(0, 0, 0, .35);
       cursor: pointer;
       transition: background .2s, transform .2s;
     }
-
     .page-dot.is-active {
       background: #fff;
       transform: scale(1.4);
@@ -595,10 +546,8 @@
       background: var(--wj-icon-bg, transparent);
       overflow: hidden;
     }
-
     .app__icon img {
-      width: 100%;
-      height: 100%;
+      width: 100%; height: 100%;
       object-fit: cover;
       display: block;
       pointer-events: none;
@@ -607,7 +556,6 @@
       -webkit-touch-callout: none;
       -webkit-user-drag: none;
     }
-
     .app__name {
       font-size: var(--wj-fs-xs);
       color: #ffffff;
@@ -623,6 +571,7 @@
       -webkit-touch-callout: none;
     }
 
+    /* ================= 应用页 ================= */
     .app-screen {
       position: absolute;
       inset: 0;
@@ -634,11 +583,7 @@
       transition: none;
       touch-action: auto;
     }
-
-    .app-page {
-      box-shadow: -14px 0 36px rgba(0, 0, 0, .3);
-    }
-
+    .app-page { box-shadow: -14px 0 36px rgba(0, 0, 0, .3); }
     .app-body {
       flex: 1 1 auto;
       padding: var(--wj-pad);
@@ -650,6 +595,7 @@
       height: 100%;
     }
 
+    /* ================= 电源浮层 ================= */
     .power-overlay {
       position: absolute;
       inset: 0;
@@ -664,19 +610,16 @@
       visibility: hidden;
       transition: opacity .35s, visibility .35s;
     }
-
     .os[data-power="off"] .power-overlay--off,
     .os[data-power="booting"] .power-overlay--boot,
     .os[data-power="shuttingdown"] .power-overlay--shutdown {
       opacity: 1;
       visibility: visible;
     }
-
     .os[data-power="booting"] .power-overlay--boot,
     .os[data-power="shuttingdown"] .power-overlay--shutdown {
       transition: none;
     }
-
     .boot-stage {
       display: flex;
       flex-direction: column;
@@ -685,12 +628,8 @@
       text-align: center;
       position: relative;
     }
-
     .boot-stage.no-anim,
-    .boot-stage.no-anim * {
-      transition: none !important;
-    }
-
+    .boot-stage.no-anim * { transition: none !important; }
     .boot-mark {
       display: inline-flex;
       align-items: baseline;
@@ -701,23 +640,14 @@
       color: #fff;
       white-space: nowrap;
     }
-
     .boot-i {
       display: inline-block;
       width: .28em;
       overflow: hidden;
       transition: width .55s cubic-bezier(.2, .7, .3, 1), opacity .35s ease;
     }
-
-    .boot-mark.stage-2 .boot-i {
-      opacity: 0;
-    }
-
-    .boot-mark.stage-3 .boot-i {
-      width: 0;
-      opacity: 0;
-    }
-
+    .boot-mark.stage-2 .boot-i { opacity: 0; }
+    .boot-mark.stage-3 .boot-i { width: 0; opacity: 0; }
     .boot-os {
       display: inline-block;
       width: 0;
@@ -725,12 +655,7 @@
       opacity: 0;
       transition: width .55s cubic-bezier(.2, .7, .3, 1), opacity .4s ease .15s;
     }
-
-    .boot-mark.stage-3 .boot-os {
-      width: 1.55em;
-      opacity: 1;
-    }
-
+    .boot-mark.stage-3 .boot-os { width: 1.55em; opacity: 1; }
     .boot-powered {
       position: absolute;
       left: 50%;
@@ -748,75 +673,77 @@
       pointer-events: none;
       user-select: none;
     }
-
-    .boot-mark.stage-3~.boot-powered {
-      opacity: 1;
-    }
-
-    .boot-stage.no-anim .boot-powered {
-      transition: none !important;
-      opacity: 0;
-    }
+    .boot-mark.stage-3~.boot-powered { opacity: 1; }
+    .boot-stage.no-anim .boot-powered { transition: none !important; opacity: 0; }
 
     .spinner {
-      width: 36px;
-      height: 36px;
+      width: 36px; height: 36px;
       border-radius: 50%;
       border: 3px solid rgba(255, 255, 255, .15);
       border-top-color: #8ad4ff;
       animation: spin .8s linear infinite;
     }
-
-    @keyframes spin {
-      to {
-        transform: rotate(360deg);
-      }
-    }
-
-    .shutdown-text {
-      font-size: var(--wj-fs-md);
-      color: rgba(255, 255, 255, .5);
-    }
-
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .shutdown-text { font-size: var(--wj-fs-md); color: rgba(255, 255, 255, .5); }
     .off-hint {
       font-size: var(--wj-fs-md);
       color: rgba(255, 255, 255, .35);
       letter-spacing: 2.5px;
     }
 
-    .cc-backdrop {
+    .panel-backdrop {
       position: absolute;
       inset: 0;
       z-index: 49;
-      background: rgba(12, 18, 36, 0.28);
-      backdrop-filter: blur(4px) saturate(140%);
-      -webkit-backdrop-filter: blur(4px) saturate(140%);
+      background: rgba(12, 18, 36, 0.42);
       opacity: 0;
-      transition: opacity .35s cubic-bezier(.2, .7, .3, 1);
+      transition:
+        opacity .35s cubic-bezier(.2, .7, .3, 1),
+        backdrop-filter .28s ease,
+        -webkit-backdrop-filter .28s ease;
       pointer-events: none;
       will-change: opacity;
-      transform: translateZ(0);
     }
 
-    .os.cc-open .cc-backdrop {
-      opacity: 1;
+    .panel-backdrop.has-blur {
+      backdrop-filter: blur(6px) saturate(140%);
+      -webkit-backdrop-filter: blur(6px) saturate(140%);
     }
 
-    .control-center {
+    .panel-system {
       position: absolute;
       inset: 0;
-      padding: 44px 14px 34px;
-      box-sizing: border-box;
-      background: transparent;
-      transform: translateY(-100%);
-      transition: transform .35s cubic-bezier(.2, .7, .3, 1);
       z-index: 50;
       overflow: hidden;
+      pointer-events: none;
+      will-change: transform;
       touch-action: none;
+      transform: translateY(-100%);   /* JS 执行前也保持收起 */
+    }
+    .panel-system.is-active { pointer-events: auto; }
+
+    .panel-track {
+      position: absolute;
+      top: 0; left: 0;
+      width: 200%;
+      height: 100%;
+      display: flex;
       will-change: transform;
     }
 
-    .control-center::before {
+    .panel-pane {
+      flex: 0 0 50%;
+      position: relative;
+      width: 100vw;
+      height: 100%;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      padding: 44px 14px 0;
+      box-sizing: border-box;
+      touch-action: none;
+    }
+    .panel-pane::before {
       content: "";
       position: absolute;
       inset: 0;
@@ -828,18 +755,30 @@
       z-index: 0;
     }
 
-    .cc-handle {
-      position: absolute;
-      bottom: 12px;
-      left: 50%;
-      transform: translateX(-50%);
+    /* ---------- 底部手柄 ---------- */
+    .panel-handle {
+      position: relative;
+      z-index: 1;
+      flex: 0 0 auto;
+      margin-top: auto;              /* 无论 pane 里内容多少，都贴在底部 */
+      height: 34px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+    }
+    .panel-handle::after {
+      content: '';
       width: 40px;
       height: 4px;
       border-radius: 2px;
       background: rgba(255, 255, 255, 0.42);
-      z-index: 2;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, .25);
     }
 
+    /* =========================================================
+       控制中心（pane）
+       ========================================================= */
     .cc-grid {
       position: relative;
       z-index: 1;
@@ -868,42 +807,29 @@
         inset 0 1px 0 rgba(255, 255, 255, 0.14),
         0 6px 18px rgba(0, 0, 0, 0.18);
     }
-
     .cc-slider-fill {
       position: absolute;
-      left: 0;
-      right: 0;
-      bottom: 0;
+      left: 0; right: 0; bottom: 0;
       height: 60%;
       background: #ffffff;
       transition: height .06s linear;
       z-index: 0;
     }
-
     .cc-slider-icon {
       position: relative;
       z-index: 1;
-      width: 20px;
-      height: 20px;
+      width: 20px; height: 20px;
       color: #ffffff;
       mix-blend-mode: difference;
       pointer-events: none;
     }
-
-    .cc-slider-icon svg {
-      width: 100%;
-      height: 100%;
-      display: block;
-    }
+    .cc-slider-icon svg { width: 100%; height: 100%; display: block; }
 
     .cc-slider-card[data-slider="volume"] {
-      grid-column: 1;
-      grid-row: 1 / span 2;
+      grid-column: 1; grid-row: 1 / span 2;
     }
-
     .cc-slider-card[data-slider="brightness"] {
-      grid-column: 2;
-      grid-row: 1 / span 2;
+      grid-column: 2; grid-row: 1 / span 2;
     }
 
     .cc-toggle {
@@ -927,14 +853,9 @@
         inset 0 1px 0 rgba(255, 255, 255, 0.10),
         0 6px 18px rgba(0, 0, 0, 0.14);
     }
-
-    .cc-toggle:active {
-      transform: scale(.96);
-    }
-
+    .cc-toggle:active { transform: scale(.96); }
     .cc-toggle .cc-icon {
-      width: 40px;
-      height: 40px;
+      width: 40px; height: 40px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -944,13 +865,7 @@
       transition: background .25s ease, transform .2s ease;
       flex: 0 0 40px;
     }
-
-    .cc-toggle .cc-icon svg {
-      width: 22px;
-      height: 22px;
-      display: block;
-    }
-
+    .cc-toggle .cc-icon svg { width: 22px; height: 22px; display: block; }
     .cc-toggle .cc-label {
       font-size: 12px;
       font-weight: 500;
@@ -961,31 +876,299 @@
       line-height: 1.1;
       color: #fff;
     }
-
     .cc-toggle.is-on .cc-icon {
       background: #3a6ff0;
       transform: scale(1.04);
       box-shadow: 0 4px 12px rgba(58, 111, 240, 0.45);
     }
+    .cc-toggle[data-key="wifi"]      { grid-column: 3 / span 2; grid-row: 1; }
+    .cc-toggle[data-key="bluetooth"] { grid-column: 3 / span 2; grid-row: 2; }
+    .cc-toggle[data-key="soundmode"] { grid-column: 1 / span 2; grid-row: 3; }
+    .cc-toggle[data-key="cellular"]  { grid-column: 3 / span 2; grid-row: 3; }
 
-    .cc-toggle[data-key="wifi"] {
-      grid-column: 3 / span 2;
-      grid-row: 1;
+    /* =========================================================
+       通知中心（pane）
+       ========================================================= */
+    .nc-head {
+      position: relative;
+      z-index: 1;
+      flex: 0 0 auto;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 2px 6px 18px;
+    }
+    .nc-clock-block {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      min-width: 0;
+    }
+    .nc-clock {
+      font-size: 52px;
+      font-weight: 700;
+      line-height: 1;
+      color: #fff;
+      letter-spacing: -1px;
+      font-variant-numeric: tabular-nums;
+      text-shadow: 0 2px 14px rgba(0, 0, 0, .38);
+      transform-origin: left top;
+      will-change: transform;
+    }
+    .nc-date {
+      font-size: 15px;
+      font-weight: 500;
+      color: rgba(255, 255, 255, .9);
+      letter-spacing: .5px;
+      text-shadow: 0 1px 8px rgba(0, 0, 0, .3);
+      will-change: opacity;
     }
 
-    .cc-toggle[data-key="bluetooth"] {
-      grid-column: 3 / span 2;
-      grid-row: 2;
+    .nc-clear {
+      flex: 0 0 auto;
+      width: 42px; height: 42px;
+      border: 1px solid rgba(255, 255, 255, .18);
+      border-radius: 50%;
+      background: rgba(255, 255, 255, .16);
+      backdrop-filter: blur(18px) saturate(170%);
+      -webkit-backdrop-filter: blur(18px) saturate(170%);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      padding: 0;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, .16), 0 6px 18px rgba(0, 0, 0, .16);
+      transition: background .15s, transform .1s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .nc-clear:active { transform: scale(.92); background: rgba(255, 255, 255, .3); }
+    .nc-clear[hidden] { display: none; }
+    .nc-clear svg { width: 20px; height: 20px; display: block; }
+
+    /* 可滚动列表，遮罩按需动态添加（滚动到顶/底时那一侧不再淡化） */
+    .nc-list {
+      position: relative;
+      z-index: 1;
+      flex: 1 1 auto;
+      min-height: 0;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior: contain;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding: 0 2px;
+      touch-action: pan-y;
+      background: transparent;
+      --nc-fade: 22px;
+      -webkit-mask-image: none;
+      mask-image: none;
+    }
+    .nc-list[hidden] { display: none; }
+
+    .nc-list.has-top-mask {
+      -webkit-mask-image: linear-gradient(to bottom,
+        transparent 0,
+        #000 var(--nc-fade),
+        #000 100%);
+      mask-image: linear-gradient(to bottom,
+        transparent 0,
+        #000 var(--nc-fade),
+        #000 100%);
+    }
+    .nc-list.has-bottom-mask {
+      -webkit-mask-image: linear-gradient(to bottom,
+        #000 0,
+        #000 calc(100% - var(--nc-fade)),
+        transparent 100%);
+      mask-image: linear-gradient(to bottom,
+        #000 0,
+        #000 calc(100% - var(--nc-fade)),
+        transparent 100%);
+    }
+    .nc-list.has-top-mask.has-bottom-mask {
+      -webkit-mask-image: linear-gradient(to bottom,
+        transparent 0,
+        #000 var(--nc-fade),
+        #000 calc(100% - var(--nc-fade)),
+        transparent 100%);
+      mask-image: linear-gradient(to bottom,
+        transparent 0,
+        #000 var(--nc-fade),
+        #000 calc(100% - var(--nc-fade)),
+        transparent 100%);
     }
 
-    .cc-toggle[data-key="nb"] {
-      grid-column: 1 / span 2;
-      grid-row: 3;
+    .nc-empty {
+      position: relative;
+      z-index: 1;
+      flex: 1 1 auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: rgba(255, 255, 255, .62);
+      font-size: 15px;
+      letter-spacing: 2px;
+      text-shadow: 0 1px 8px rgba(0, 0, 0, .35);
+    }
+    .nc-empty[hidden] { display: none; }
+
+    .nc-item {
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 11px 14px;
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.22);
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      color: #fff;
+      box-shadow:
+        0 6px 22px rgba(0, 0, 0, .18),
+        inset 0 1px 0 rgba(255, 255, 255, .14);
+      will-change: transform, opacity;
+      touch-action: pan-y;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-tap-highlight-color: transparent;
+      transition: transform .22s cubic-bezier(.2,.7,.3,1);
     }
 
-    .cc-toggle[data-key="cellular"] {
-      grid-column: 3 / span 2;
-      grid-row: 3;
+    .nc-item__icon {
+      flex: 0 0 38px;
+      width: 38px; height: 38px;
+      border-radius: 9px;            /* 方形圆角，不裁圆 */
+      overflow: hidden;
+      background: rgba(255, 255, 255, .92);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      line-height: 1;
+      color: #1c2536;
+    }
+    .nc-item__icon img {
+      width: 100%; height: 100%;
+      object-fit: cover;
+      display: block;
+      pointer-events: none;
+      user-select: none;
+      -webkit-user-drag: none;
+    }
+
+    .nc-item__body {
+      flex: 1 1 auto;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+    .nc-item__head {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .nc-item__title {
+      font-size: 14px;
+      font-weight: 600;
+      letter-spacing: .2px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      text-shadow: 0 1px 5px rgba(0, 0, 0, .3);
+    }
+    .nc-item__time {
+      flex: 0 0 auto;
+      font-size: 11px;
+      color: rgba(255, 255, 255, .72);
+      font-variant-numeric: tabular-nums;
+    }
+    .nc-item__time[hidden] { display: none; }
+    .nc-item__content {
+      font-size: 13px;
+      color: rgba(255, 255, 255, .88);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      text-shadow: 0 1px 5px rgba(0, 0, 0, .25);
+    }
+
+    /* ================= 横幅通知 ================= */
+    .wj-banner {
+      position: absolute;
+      top: 34px;
+      left: 10px;
+      right: 10px;
+      z-index: 70;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 11px 14px;
+      border-radius: 20px;
+      background: rgba(255, 255, 255, .72);
+      backdrop-filter: blur(26px) saturate(180%);
+      -webkit-backdrop-filter: blur(26px) saturate(180%);
+      border: .5px solid rgba(255, 255, 255, .6);
+      box-shadow: 0 12px 34px rgba(0, 0, 0, .2), 0 2px 8px rgba(0, 0, 0, .06);
+      color: #101828;
+      transform: translateY(-160%);
+      opacity: 0;
+      transition: transform .38s cubic-bezier(.2, .7, .3, 1), opacity .3s ease;
+      pointer-events: none;
+      cursor: pointer;
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: none;
+      will-change: transform, opacity;
+    }
+    .wj-banner.is-show {
+      transform: translateY(0);
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .wj-banner__icon {
+      flex: 0 0 36px;
+      width: 36px; height: 36px;
+      border-radius: 9px;            /* 方形圆角 */
+      overflow: hidden;
+      background: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      line-height: 1;
+    }
+    .wj-banner__icon img {
+      width: 100%; height: 100%;
+      object-fit: cover;
+      display: block;
+      pointer-events: none;
+    }
+
+    .wj-banner__body {
+      flex: 1 1 auto;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .wj-banner__title {
+      font-size: 14px;
+      font-weight: 600;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .wj-banner__content {
+      font-size: 13px;
+      color: #4a5568;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
   </style>
 </head>
@@ -995,7 +1178,10 @@
   <div class="os" id="os" data-view="locked" data-power="off">
 
     <div class="statusbar">
-      <span id="clock">9:41</span>
+      <span class="statusbar__left">
+        <span id="clock">9:41</span>
+        <span class="statusbar-notif-icons" id="statusbarNotifIcons" hidden></span>
+      </span>
       <span class="right">
         <span>5G</span>
         <span class="battery"><i></i></span>
@@ -1050,38 +1236,72 @@
       <div class="app-screen" id="appScreen"></div>
     </div>
 
-    <div class="cc-backdrop" id="ccBackdrop"></div>
+    <!-- ============ PanelSystem ============ -->
+    <div class="panel-backdrop" id="panelBackdrop"></div>
+    <div class="panel-system" id="panelSystem">
+      <div class="panel-track" id="panelTrack">
 
-    <div class="control-center" id="controlCenter">
-      <div class="cc-grid">
-        <div class="cc-slider-card" data-slider="volume">
-          <div class="cc-slider-fill" id="ccVolumeFill"></div>
-          <div class="cc-slider-icon" data-icon="volume"></div>
-        </div>
-        <div class="cc-slider-card" data-slider="brightness">
-          <div class="cc-slider-fill" id="ccBrightnessFill"></div>
-          <div class="cc-slider-icon" data-icon="brightness"></div>
+        <!-- 通知中心 -->
+        <div class="panel-pane panel-pane--nc" id="panelNC">
+          <div class="nc-head">
+            <div class="nc-clock-block">
+              <div class="nc-clock" id="ncClock">9:41</div>
+              <div class="nc-date" id="ncDate">10月12日 星期一</div>
+            </div>
+
+            <button class="nc-clear" id="ncClearBtn" type="button" hidden aria-label="清除全部">
+              <svg viewBox="0 0 24 24" fill="none"
+                   stroke="currentColor" stroke-width="1.9"
+                   stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 6h18"/>
+                <path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2"/>
+                <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+                <path d="M10 11v6"/>
+                <path d="M14 11v6"/>
+              </svg>
+            </button>
+          </div>
+
+          <div class="nc-list" id="ncList"></div>
+          <div class="nc-empty" id="ncEmpty">无通知</div>
+
+          <div class="panel-handle" aria-hidden="true"></div>
         </div>
 
-        <button class="cc-toggle" data-key="wifi" type="button">
-          <span class="cc-icon" data-icon="wifi"></span>
-          <span class="cc-label">WLAN</span>
-        </button>
-        <button class="cc-toggle" data-key="bluetooth" type="button">
-          <span class="cc-icon" data-icon="bluetooth"></span>
-          <span class="cc-label">蓝牙</span>
-        </button>
-        <button class="cc-toggle" data-key="nb" type="button">
-          <span class="cc-icon" data-icon="rocket"></span>
-          <span class="cc-label">牛逼模式</span>
-        </button>
-        <button class="cc-toggle" data-key="cellular" type="button">
-          <span class="cc-icon" data-icon="cellular"></span>
-          <span class="cc-label">移动数据</span>
-        </button>
+        <!-- 控制中心 -->
+        <div class="panel-pane panel-pane--cc" id="panelCC">
+          <div class="cc-grid">
+            <div class="cc-slider-card" data-slider="volume">
+              <div class="cc-slider-fill" id="ccVolumeFill"></div>
+              <div class="cc-slider-icon" data-icon="volume"></div>
+            </div>
+            <div class="cc-slider-card" data-slider="brightness">
+              <div class="cc-slider-fill" id="ccBrightnessFill"></div>
+              <div class="cc-slider-icon" data-icon="brightness"></div>
+            </div>
+
+            <button class="cc-toggle" data-key="wifi" type="button">
+              <span class="cc-icon" data-icon="wifi"></span>
+              <span class="cc-label">WLAN</span>
+            </button>
+            <button class="cc-toggle" data-key="bluetooth" type="button">
+              <span class="cc-icon" data-icon="bluetooth"></span>
+              <span class="cc-label">蓝牙</span>
+            </button>
+            <button class="cc-toggle" data-key="soundmode" type="button">
+              <span class="cc-icon" data-icon="ring"></span>
+              <span class="cc-label">响铃</span>
+            </button>
+            <button class="cc-toggle" data-key="cellular" type="button">
+              <span class="cc-icon" data-icon="cellular"></span>
+              <span class="cc-label">移动数据</span>
+            </button>
+          </div>
+
+          <div class="panel-handle" aria-hidden="true"></div>
+        </div>
+
       </div>
-
-      <div class="cc-handle" aria-hidden="true"></div>
     </div>
 
     <div class="power-overlay power-overlay--off">
@@ -1113,62 +1333,66 @@
   <script src="app-loader.js"></script>
   <script src="installer.js"></script>
   <script src="desktop-layout.js"></script>
-  <script src="apps/phone.js"></script>
-  <script src="apps/weather.js"></script>
-  <script src="apps/camera.js"></script>
-  <script src="apps/clock.js"></script>
-  <script src="apps/settings.js"></script>
-  <script src="apps/photos.js"></script>
-  <script src="store/apps.js"></script>
-  <script src="apps/wujigallery.js"></script>
-  <script src="apps/calculator.js"></script>
-
+  <script src="overlay.js"></script>
+  <script src="notification.js"></script>
   <script src="control-center.js"></script>
+  <script src="panelsystem.js"></script>
+
+  <!-- 内置应用清单（提供 BUILTIN_APPS / PRELOAD_SCRIPTS），必须在主脚本之前 -->
+  <script src="builtin-apps.js"></script>
 
   <script>
+    /* =========================================================
+       控制中心图标（DOM 里 [data-icon] 填充）
+       ========================================================= */
     const ICONS = {
-      volume: `
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      volume: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
          stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
       <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
       <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
     </svg>`,
-      brightness: `
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      brightness: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
          stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <circle cx="12" cy="12" r="4"/>
       <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/>
     </svg>`,
-      wifi: `
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      wifi: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
          stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <path d="M5 12.55a11 11 0 0 1 14.08 0"/>
       <path d="M1.42 9a16 16 0 0 1 21.16 0"/>
       <path d="M8.53 16.11a6 6 0 0 1 6.95 0"/>
       <line x1="12" y1="20" x2="12.01" y2="20"/>
     </svg>`,
-      bluetooth: `
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      bluetooth: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
          stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <path d="M6.5 6.5l11 11L12 23V1l5.5 5.5-11 11"/>
     </svg>`,
-      rocket: `
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      rocket: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
          stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/>
       <path d="M12 15l-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/>
       <path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/>
       <path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/>
     </svg>`,
-      cellular: `
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      cellular: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
          stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <path d="M2 22h.01"/>
       <path d="M7 22v-4"/>
       <path d="M12 22V12"/>
       <path d="M17 22V6"/>
       <path d="M22 22V2"/>
+    </svg>`,
+      ring: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/>
+      <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>
+    </svg>`,
+      mute: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/>
+      <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>
+      <line x1="2" y1="2" x2="22" y2="22"/>
     </svg>`,
     };
 
@@ -1177,6 +1401,9 @@
       if (ICONS[name]) el.innerHTML = ICONS[name];
     });
 
+    /* =========================================================
+       OS 基础状态
+       ========================================================= */
     const osEl = document.getElementById('os');
     const lockedView = document.getElementById('lockedView');
     const homeView = document.getElementById('homeView');
@@ -1227,6 +1454,9 @@
       setInterval(tick, 15000);
     })();
 
+    /* =========================================================
+       桌面渲染
+       ========================================================= */
     const desktopViewportEl = document.getElementById('desktopViewport');
     const desktopTrackEl = document.getElementById('desktopTrack');
     const pageDotsEl = document.getElementById('pageDots');
@@ -1324,7 +1554,7 @@
           if (dx > 12 || dy > 12) return;
 
           _lastPointerOpenAt = performance.now();
-          openApp(appEl.dataset.bundle, appEl);
+          openApp(appEl.dataset.bundle, appEl, null);
         });
       });
     }
@@ -1440,9 +1670,12 @@
       });
     })();
 
+    /* =========================================================
+       桌面拖拽 / 长按
+       ========================================================= */
     const DesktopDrag = (() => {
       const HOLD_MS = 300;
-      const UNINSTALL_HOLD_MS = 700;     /* 长按弹菜单的总时长 */
+      const UNINSTALL_HOLD_MS = 700;
       const MOVE_CANCEL = 14;
       const EDGE_ZONE = 44;
       const EDGE_HOLD_MS = 600;
@@ -1464,7 +1697,7 @@
       let previewEl = null;
       let activePointerId = null;
       let watchdogTimer = null;
-      let longPressMenuTimer = null;     /* 长按菜单计时器 */
+      let longPressMenuTimer = null;
 
       let suppressClickUntil = 0;
 
@@ -1597,9 +1830,7 @@
           const flipped = doPageFlip(dir);
           edgeFirstFired = true;
 
-          if (flipped) {
-            scheduleEdgeFlip(dir);
-          }
+          if (flipped) scheduleEdgeFlip(dir);
         }, delay);
       }
 
@@ -1607,40 +1838,27 @@
         const total = DesktopLayout.pageCount();
 
         if (dir === 1) {
-          if (currentPage < total - 1) {
-            goToPage(currentPage + 1);
-            return true;
-          }
+          if (currentPage < total - 1) { goToPage(currentPage + 1); return true; }
           if (DesktopLayout.isPageEmpty(total - 1)) return false;
 
           DesktopLayout.addPage();
           const newIndex = total;
-
           currentPage = total - 1;
           renderHome();
           syncDragSource();
-
-          requestAnimationFrame(() => {
-            goToPage(newIndex);
-          });
+          requestAnimationFrame(() => goToPage(newIndex));
           return true;
         }
 
         if (dir === -1) {
-          if (currentPage > 0) {
-            goToPage(currentPage - 1);
-            return true;
-          }
+          if (currentPage > 0) { goToPage(currentPage - 1); return true; }
           if (DesktopLayout.isPageEmpty(0)) return false;
 
           DesktopLayout.addPageAt(0);
           currentPage = 1;
           renderHome();
           syncDragSource();
-
-          requestAnimationFrame(() => {
-            goToPage(0);
-          });
+          requestAnimationFrame(() => goToPage(0));
           return true;
         }
 
@@ -1768,7 +1986,6 @@
 
         renderHome();
         state = 'idle';
-
         suppressClickUntil = performance.now() + SUPPRESS_MS;
       }
 
@@ -1799,7 +2016,7 @@
         suppressClickUntil = performance.now() + SUPPRESS_MS;
       }
 
-            desktopViewportEl.addEventListener('pointerdown', e => {
+      desktopViewportEl.addEventListener('pointerdown', e => {
         if (state !== 'idle') return;
         if (e.pointerType === 'mouse' && e.button !== 0) return;
 
@@ -1825,7 +2042,6 @@
             const bundle = targetApp.dataset.bundle;
             if (!bundle || !WujiApps.isInstalled(bundle)) return;
 
-            /* 取消拖动前先抓位置 */
             const el = desktopViewportEl.querySelector(
               `.app[data-bundle="${bundle}"]`
             );
@@ -1855,7 +2071,6 @@
         if (state !== 'dragging') return;
         if (activePointerId !== null && e.pointerId !== activePointerId) return;
 
-        /* 移动超过阈值 → 取消长按菜单计时 */
         if (longPressMenuTimer && pressStart) {
           const mdx = e.clientX - pressStart.x;
           const mdy = e.clientY - pressStart.y;
@@ -1944,7 +2159,7 @@
     })();
 
     /* =========================================================
-       应用长按菜单（卸载）
+       卸载菜单
        ========================================================= */
     let appMenuEl = null;
     let appMenuCloseHandler = null;
@@ -2009,11 +2224,9 @@
       menu.style.left = left + 'px';
       menu.style.top  = top  + 'px';
 
-      /* ---------- 卸载 ---------- */
       menu.querySelector('.app-menu__item').addEventListener('click', async () => {
         hideAppMenu();
 
-        /* 重新查图标（当前 DOM 里那份），做淡出动画 */
         const liveEl = desktopViewportEl.querySelector(
           `.app[data-bundle="${bundle}"]`
         );
@@ -2032,7 +2245,6 @@
         }, 180);
       });
 
-      /* ---------- 点其他地方关闭 ---------- */
       appMenuCloseHandler = ev => {
         if (menu.contains(ev.target)) return;
         hideAppMenu();
@@ -2047,7 +2259,6 @@
     desktopViewportEl.addEventListener('click', e => {
       if (DesktopDrag.state === 'dragging') return;
       if (performance.now() < DesktopDrag.suppressClickUntil) return;
-
       if (performance.now() - _lastPointerOpenAt < 500) return;
 
       let appEl = e.target.closest('.app');
@@ -2057,159 +2268,69 @@
       }
 
       if (!appEl) return;
-      openApp(appEl.dataset.bundle, appEl);
+      openApp(appEl.dataset.bundle, appEl, null);
     });
 
-    async function openApp(bundle, sourceEl) {
-      let app = WujiApps.get(bundle);
-      if (!app) return;
-
-      /* =========================================================
-         1) 抓取图标信息（趁桌面还可见）
-         ========================================================= */
-      const iconEl = sourceEl?.querySelector('.app__icon');
-      const iconInfo = (iconEl && iconEl.offsetWidth > 0) ? {
-        size: iconEl.offsetWidth,
-        br: getComputedStyle(iconEl).borderRadius,
-        styleAttr: iconEl.getAttribute('style') || '',
-        html: iconEl.innerHTML,
-        rect: iconEl.getBoundingClientRect(),
-      } : null;
-
-      /* =========================================================
-         2) 立刻切视图 + 创建 Shadow DOM
-         ========================================================= */
-      S.currentBundle = bundle;
-      currentBackHandler = null;
-
-      appScreen.innerHTML = '';
-
-      const shadowHost = document.createElement('div');
-      shadowHost.style.cssText = 'position:absolute;inset:0;overflow:hidden;';
-      appScreen.appendChild(shadowHost);
-
-      const shadow = shadowHost.attachShadow({ mode: 'open' });
-
-      /* ---- 基础骨架 ---- */
-      const baseStyle = document.createElement('style');
-      baseStyle.textContent = `
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-    :host {
-      position: absolute;
-      inset: 0;
-      display: block;
-      font-family: var(--wj-font);
-      color: var(--wj-text);
-      font-size: 16px;
-      line-height: 1.5;
-      -webkit-font-smoothing: antialiased;
-      -webkit-text-size-adjust: none;
-      -moz-text-size-adjust: none;
-      text-size-adjust: none;
-      -webkit-tap-highlight-color: transparent;
-    }
-
-    * { scrollbar-width: none; -ms-overflow-style: none; }
-    *::-webkit-scrollbar { display: none; }
-
-    .app-page { box-shadow: -14px 0 36px rgba(0, 0, 0, .3); }
-
-    .app-body {
-      flex: 1 1 auto;
-      padding: var(--wj-pad);
-      padding-top: calc(var(--wj-pad) + var(--statusbar-h));
-      overflow-y: auto;
-      font-size: var(--wj-fs-md);
-      line-height: 1.65;
-      color: var(--wj-text-muted);
-      height: 100%;
-    }
-  `;
-      shadow.appendChild(baseStyle);
-
-      /* ---- 公共组件样式 ---- */
-      const compLink = document.createElement('link');
-      compLink.rel = 'stylesheet';
-      compLink.href = 'styles/components.css';
-      shadow.appendChild(compLink);
-
-      /* ---- 应用私有样式：占位 <style>，脚本就绪后再填 ---- */
-      const appStyleEl = document.createElement('style');
-      shadow.appendChild(appStyleEl);
-
-      /* ---- navHost ---- */
-      const navHost = document.createElement('div');
-      navHost.id = 'navHost';
-      navHost.style.cssText = 'position:absolute;inset:0;overflow:hidden;';
-      shadow.appendChild(navHost);
-
-      /* =========================================================
-         3) 立刻播图标飞行动画
-         ========================================================= */
-      setView('app');
-      appScreen.style.transition = 'none';
-      appScreen.style.transform = '';
-      appScreen.style.opacity = '0';
-
-      if (iconInfo) {
+    /* =========================================================
+       打开动画 1：桌面图标飞到中心 + 白色遮罩扩散
+       ========================================================= */
+    function playIconFlyEnter(iconInfo, contentReady) {
+      return new Promise(resolve => {
         const { size, br, styleAttr, html, rect } = iconInfo;
 
         const cx = rect.left + rect.width / 2;
         const cy = rect.top + rect.height / 2;
 
-        const startLeft = Math.round(cx - size / 2);
-        const startTop = Math.round(cy - size / 2);
-        const targetLeft = Math.round((window.innerWidth - size) / 2);
-        const targetTop = Math.round((window.innerHeight - size) / 2);
+        const startLeft  = Math.round(cx - size / 2);
+        const startTop   = Math.round(cy - size / 2);
+        const targetLeft = Math.round((window.innerWidth  - size) / 2);
+        const targetTop  = Math.round((window.innerHeight - size) / 2);
 
-        const HOLD = 60;
-        const GROW = 520;
-        const FADE = 280;
+        const HOLD = 60, GROW = 520, FADE = 280;
         const EASE = 'cubic-bezier(.4, 0, .2, 1)';
 
         const mask = document.createElement('div');
         mask.style.cssText = `
-      position: fixed;
-      left: ${startLeft}px;
-      top: ${startTop}px;
-      width: ${size}px;
-      height: ${size}px;
-      border-radius: ${br};
-      background: #fff;
-      z-index: 40;
-      pointer-events: none;
-      will-change: left, top, width, height, border-radius;
-    `;
+          position: fixed;
+          left: ${startLeft}px;
+          top: ${startTop}px;
+          width: ${size}px;
+          height: ${size}px;
+          border-radius: ${br};
+          background: #fff;
+          z-index: 40;
+          pointer-events: none;
+          will-change: left, top, width, height, border-radius;
+        `;
 
         const flyingIcon = document.createElement('div');
         flyingIcon.innerHTML = html;
         flyingIcon.style.cssText = `
-      position: fixed;
-      left: ${startLeft}px;
-      top: ${startTop}px;
-      width: ${size}px;
-      height: ${size}px;
-      border-radius: ${br};
-      overflow: hidden;
-      z-index: 45;
-      pointer-events: none;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 26px;
-      line-height: 1;
-      ${styleAttr}
-      will-change: left, top, opacity;
-    `;
+          position: fixed;
+          left: ${startLeft}px;
+          top: ${startTop}px;
+          width: ${size}px;
+          height: ${size}px;
+          border-radius: ${br};
+          overflow: hidden;
+          z-index: 45;
+          pointer-events: none;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 26px;
+          line-height: 1;
+          ${styleAttr}
+          will-change: left, top, opacity;
+        `;
         flyingIcon.querySelectorAll('img').forEach(img => {
           img.style.cssText = `
-        width: 100%; height: 100%;
-        object-fit: cover; display: block;
-        pointer-events: none;
-        user-select: none;
-        -webkit-user-drag: none;
-      `;
+            width: 100%; height: 100%;
+            object-fit: cover; display: block;
+            pointer-events: none;
+            user-select: none;
+            -webkit-user-drag: none;
+          `;
         });
 
         document.body.appendChild(mask);
@@ -2217,16 +2338,13 @@
 
         setTimeout(() => {
           mask.style.transition = `
-        left          ${GROW}ms ${EASE},
-        top           ${GROW}ms ${EASE},
-        width         ${GROW}ms ${EASE},
-        height        ${GROW}ms ${EASE},
-        border-radius ${GROW}ms ${EASE}
-      `;
+            left ${GROW}ms ${EASE}, top ${GROW}ms ${EASE},
+            width ${GROW}ms ${EASE}, height ${GROW}ms ${EASE},
+            border-radius ${GROW}ms ${EASE}
+          `;
           flyingIcon.style.transition = `
-        left ${GROW}ms ${EASE},
-        top  ${GROW}ms ${EASE}
-      `;
+            left ${GROW}ms ${EASE}, top ${GROW}ms ${EASE}
+          `;
 
           requestAnimationFrame(() => {
             requestAnimationFrame(() => {
@@ -2237,11 +2355,13 @@
               mask.style.borderRadius = '0';
 
               flyingIcon.style.left = targetLeft + 'px';
-              flyingIcon.style.top = targetTop + 'px';
+              flyingIcon.style.top  = targetTop  + 'px';
             });
           });
 
-          setTimeout(() => {
+          setTimeout(async () => {
+            try { await contentReady; } catch { }
+
             appScreen.style.transition = 'none';
             appScreen.style.opacity = '1';
 
@@ -2255,27 +2375,270 @@
               mask.remove();
               flyingIcon.remove();
               appScreen.style.opacity = '';
+              resolve();
             }, FADE + 30);
           }, GROW);
         }, HOLD);
-      } else {
-        /* 无图标信息：直接淡入 */
+      });
+    }
+
+    /* =========================================================
+       打开动画 2/3：白色遮罩从下方滑上来，中间带应用图标
+         oldGhost 非空时（第三种）同时把旧应用上移顶出去
+       ========================================================= */
+    function playSlideUpEnter(app, oldGhost, contentReady) {
+      return new Promise(resolve => {
+        const DUR  = 460, FADE = 220;
+        const EASE = 'cubic-bezier(.2,.7,.3,1)';
+
+        const mask = document.createElement('div');
+        mask.style.cssText = `
+          position: fixed;
+          inset: 0;
+          background: #fff;
+          z-index: 40;
+          pointer-events: none;
+          will-change: transform, opacity;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transform: translateY(100%);
+        `;
+
+        const SZ = 76;
+        const iconBox = document.createElement('div');
+        iconBox.style.cssText = `
+          width: ${SZ}px;
+          height: ${SZ}px;
+          border-radius: 16px;
+          overflow: hidden;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 40px;
+          line-height: 1;
+          ${app.iconStyle || ''}
+          will-change: opacity;
+        `;
+
+        const icon = app.icon || '';
+        if (/^(https?:|data:|\.{1,2}\/|\/)/.test(icon)) {
+          iconBox.innerHTML = `<img src="${icon}" alt="" draggable="false">`;
+          const img = iconBox.querySelector('img');
+          if (img) {
+            img.style.cssText = `
+              width: 100%; height: 100%;
+              object-fit: cover; display: block;
+              pointer-events: none;
+              user-select: none;
+              -webkit-user-drag: none;
+            `;
+          }
+        } else {
+          iconBox.innerHTML = `<span>${icon}</span>`;
+        }
+
+        mask.appendChild(iconBox);
+        document.body.appendChild(mask);
+
+        /* 第三种：旧应用同时上移 */
+        if (oldGhost) {
+          oldGhost.style.transition = `transform ${DUR}ms ${EASE}`;
+        }
+
         requestAnimationFrame(() => {
-          appScreen.style.transition = 'opacity .25s ease';
-          appScreen.style.opacity = '1';
-          setTimeout(() => {
-            appScreen.style.transition = 'none';
-            appScreen.style.opacity = '';
-          }, 280);
+          mask.style.transition = `transform ${DUR}ms ${EASE}`;
+          mask.style.transform  = 'translateY(0)';
+          if (oldGhost) oldGhost.style.transform = 'translateY(-100%)';
         });
+
+        setTimeout(async () => {
+          try { await contentReady; } catch { }
+
+          appScreen.style.transition = 'none';
+          appScreen.style.opacity = '1';
+
+          iconBox.style.transition = `opacity ${FADE}ms ease`;
+          iconBox.style.opacity = '0';
+
+          mask.style.transition = `transform ${DUR}ms ${EASE}, opacity ${FADE}ms ease`;
+          mask.style.opacity = '0';
+
+          setTimeout(() => {
+            mask.remove();
+            appScreen.style.opacity = '';
+            resolve();
+          }, FADE + 30);
+        }, DUR + 30);
+      });
+    }
+
+    /* =========================================================
+       openApp —— 支持 params / 动画类型
+         animType 可选，缺省自动判定：
+           sourceEl 有 → 'icon-fly'
+           有旧应用   → 'push-up'
+           无         → 'slide-up'
+       ========================================================= */
+    async function openApp(bundle, sourceEl, params, animType) {
+      let app = WujiApps.get(bundle);
+      if (!app) return;
+
+      /* 同一应用已打开 → 只投递参数 */
+      if (S.view === 'app' && S.currentBundle === bundle && currentNav) {
+        try {
+          window.dispatchEvent(new CustomEvent('wuji:app-params', {
+            detail: { bundle, params: params || {} },
+          }));
+        } catch { }
+        return;
       }
 
-      /* =========================================================
-         4) 与动画并行等待脚本加载（仅市场应用需要）
-         ========================================================= */
+      /* ---------- 自动判定动画类型 ---------- */
+      if (!animType) {
+        if (sourceEl) animType = 'icon-fly';
+        else if (S.view === 'app' && S.currentBundle) animType = 'push-up';
+        else animType = 'slide-up';
+      }
+
+      /* ---------- icon-fly 需要桌面图标信息 ---------- */
+      let iconInfo = null;
+      if (animType === 'icon-fly') {
+        const iconEl = sourceEl?.querySelector('.app__icon');
+        if (iconEl && iconEl.offsetWidth > 0) {
+          iconInfo = {
+            size: iconEl.offsetWidth,
+            br: getComputedStyle(iconEl).borderRadius,
+            styleAttr: iconEl.getAttribute('style') || '',
+            html: iconEl.innerHTML,
+            rect: iconEl.getBoundingClientRect(),
+          };
+        } else {
+          animType = 'slide-up';
+        }
+      }
+
+      /* ---------- 处理旧应用 ---------- */
+      let oldGhost = null;
+      let oldNav   = null;
+
+      if (S.view === 'app' && S.currentBundle) {
+        if (animType === 'push-up') {
+          /* 把旧应用 DOM 搬到 ghost，让它能被上移顶出去 */
+          oldNav = currentNav;
+          currentNav = null;
+
+          oldGhost = document.createElement('div');
+          oldGhost.style.cssText = `
+            position: absolute;
+            inset: 0;
+            z-index: 20;
+            will-change: transform;
+            transform: translateY(0);
+            background: var(--wj-bg, #fff);
+          `;
+          while (appScreen.firstChild) oldGhost.appendChild(appScreen.firstChild);
+          appView.appendChild(oldGhost);
+        } else {
+          /* 其他动画：直接关闭旧应用 */
+          if (currentNav) { currentNav.destroy(); currentNav = null; }
+          else {
+            const oldApp = WujiApps.get(S.currentBundle);
+            try { oldApp?.unmount?.(); } catch { }
+          }
+        }
+      }
+
+      /* ---------- 状态 ---------- */
+      S.currentBundle = bundle;
+      currentBackHandler = null;
+
+      /* ---------- 立即切视图 ---------- */
+      setView('app');
+      appScreen.style.transition = 'none';
+      appScreen.style.transform  = '';
+      appScreen.style.opacity    = '0';
+
+      /* ---------- 重建 shadow DOM 骨架 ---------- */
+      appScreen.innerHTML = '';
+
+      const shadowHost = document.createElement('div');
+      shadowHost.style.cssText = 'position:absolute;inset:0;overflow:hidden;';
+      appScreen.appendChild(shadowHost);
+
+      const shadow = shadowHost.attachShadow({ mode: 'open' });
+
+      const baseStyle = document.createElement('style');
+      baseStyle.textContent = `
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :host {
+      position: absolute; inset: 0; display: block;
+      font-family: var(--wj-font); color: var(--wj-text);
+      font-size: 16px; line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+      -webkit-text-size-adjust: none; text-size-adjust: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    * { scrollbar-width: none; -ms-overflow-style: none; }
+    *::-webkit-scrollbar { display: none; }
+
+    /* ★ 应用内图片默认不响应指针：彻底阻止华为等浏览器的长按图片菜单。
+       如某张图片确实需要响应事件，加 data-interactive 即可恢复。 */
+    img {
+      -webkit-touch-callout: none;
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
+      -webkit-user-drag: none;
+      pointer-events: none;
+    }
+    img[data-interactive] { pointer-events: auto; }
+
+    .app-page { box-shadow: -14px 0 36px rgba(0, 0, 0, .3); }
+    .app-body {
+      flex: 1 1 auto;
+      padding: var(--wj-pad);
+      padding-top: calc(var(--wj-pad) + var(--statusbar-h));
+      overflow-y: auto;
+      font-size: var(--wj-fs-md);
+      line-height: 1.65;
+      color: var(--wj-text-muted);
+      height: 100%;
+    }
+  `;
+      shadow.appendChild(baseStyle);
+
+      const compLink = document.createElement('link');
+      compLink.rel = 'stylesheet';
+      compLink.href = 'styles/components.css';
+      shadow.appendChild(compLink);
+
+      const appStyleEl = document.createElement('style');
+      shadow.appendChild(appStyleEl);
+
+      const navHost = document.createElement('div');
+      navHost.id = 'navHost';
+      navHost.style.cssText = 'position:absolute;inset:0;overflow:hidden;';
+      shadow.appendChild(navHost);
+
+      /* ---------- content-ready ---------- */
+      let _resolveContentReady = null;
+      const contentReady = new Promise(r => { _resolveContentReady = r; });
+
+      /* ---------- 启动动画 ---------- */
+      let animPromise;
+      if (animType === 'icon-fly') {
+        animPromise = playIconFlyEnter(iconInfo, contentReady);
+      } else {
+        animPromise = playSlideUpEnter(app, oldGhost, contentReady);
+      }
+
+      /* ---------- 等待脚本（仅市场应用） ---------- */
       if (app._metaOnly) {
         if (!app._src) {
           console.error('[openApp] 缺少 src:', bundle);
+          try { _resolveContentReady?.(); } catch { }
           setView('home');
           return;
         }
@@ -2283,22 +2646,21 @@
           await WujiAppLoader.load(app._src, app.version);
         } catch (e) {
           console.error('[openApp] 加载失败', bundle, e);
+          try { _resolveContentReady?.(); } catch { }
           setView('home');
           return;
         }
         app = WujiApps.get(bundle);
         if (!app || app._metaOnly) {
+          try { _resolveContentReady?.(); } catch { }
           setView('home');
           return;
         }
       }
 
-      /* ★ 脚本就绪后：把应用私有样式填进占位 <style> */
       appStyleEl.textContent = app.styles || '';
 
-      /* =========================================================
-         5) 建导航、推首屏
-         ========================================================= */
+      /* ---------- 建 nav + push 首屏 ---------- */
       const nav = new WujiNavigation({
         host: navHost,
         routes: app.routes || {},
@@ -2311,11 +2673,14 @@
         nav,
         push(name, data) { nav.push(name, data); },
         pop() { return nav.pop(); },
+        params: params || {},
       };
+
+      const initialData = params ? { ...params } : {};
 
       if (app.routes) {
         const initial = app.initialRoute || Object.keys(app.routes)[0];
-        nav.push(app.routes[initial], {}, { animate: false });
+        nav.push(app.routes[initial], initialData, { animate: false });
       } else {
         nav.push({
           name: app.bundlename,
@@ -2328,6 +2693,16 @@
           unmount: () => app.unmount?.(),
         }, {}, { animate: false });
       }
+
+      /* ---------- 内容就绪 → 让动画揭晓 ---------- */
+      try { _resolveContentReady?.(); } catch { }
+
+      /* ---------- 等动画结束 ---------- */
+      try { await animPromise; } catch { }
+
+      /* ---------- 收尾 ---------- */
+      if (oldNav) { try { oldNav.destroy(); } catch { } }
+      if (oldGhost) { oldGhost.remove(); }
     }
 
     function finishCloseApp() {
@@ -2355,6 +2730,9 @@
       setTimeout(finishCloseApp, 260);
     }
 
+    /* =========================================================
+       锁屏 PIN
+       ========================================================= */
     const passwordPanel = document.getElementById('passwordPanel');
     const passwordDots = document.getElementById('passwordDots');
     const passwordTitle = document.getElementById('passwordTitle');
@@ -2614,6 +2992,12 @@
           dir = Math.abs(dx) > Math.abs(dy) ? 'h' : 'v';
 
           if (dir === 'h') {
+            /* 当前路由禁用返回手势 → 忽略本次滑动 */
+            if (currentNav && currentNav.isGestureBlocked?.()) {
+              dragging = false;
+              dir = null;
+              return;
+            }
             if (currentNav && currentNav.depth > 1) {
               navDragging = currentNav.dragStart();
             }
@@ -2664,7 +3048,12 @@
           appScreen.style.transition = 'none';
           appScreen.style.transform = '';
         } else if (deltaX > threshold) {
-          if (currentBackHandler && currentBackHandler()) {
+          /* 二次兜底：当前路由禁用返回手势 */
+          if (currentNav && currentNav.isGestureBlocked?.()) {
+            appScreen.style.transition = 'transform .24s ease';
+            appScreen.style.transform = '';
+            setTimeout(() => { appScreen.style.transition = 'none'; }, 240);
+          } else if (currentBackHandler && currentBackHandler()) {
             appScreen.style.transition = 'transform .26s cubic-bezier(.4,0,.6,1)';
             appScreen.style.transform = '';
           } else {
@@ -2724,6 +3113,9 @@
       });
     })();
 
+    /* =========================================================
+       开关机
+       ========================================================= */
     async function playBootAnimation() {
       const T = { show1: 2000, fadeI: 500, expandOS: 400, hold: 2200 };
 
@@ -2750,7 +3142,11 @@
       await playBootAnimation();
 
       hidePasswordPanel();
-      WujiControlCenter.close();
+      PanelSystem.close();
+      WujiNotification.hideBanner?.();
+
+      /* ★ 开机清空所有通知（内存态，重启后不残留） */
+      try { WujiNotification.clearAll?.(); } catch { }
 
       lockedView.style.transition = '';
       lockedView.style.transform = '';
@@ -2766,6 +3162,9 @@
       S.viewBeforeLock = 'home';
       setView('locked');
       setPower('running');
+
+      /* ★ 开机完成后，后台预加载内置 + 已安装应用脚本 */
+      scheduleBuiltinPreload();
     }
 
     async function powerOff() {
@@ -2775,7 +3174,8 @@
       await sleep(800);
 
       hidePasswordPanel();
-      WujiControlCenter.close();
+      PanelSystem.close();
+      WujiNotification.hideBanner?.();
       S.viewBeforeLock = 'home';
       setView('locked');
       setPower('off');
@@ -2800,7 +3200,8 @@
           if (S.power === 'running') {
             S.viewBeforeLock = S.view === 'app' ? 'app' : 'home';
             hidePasswordPanel();
-            WujiControlCenter.close();
+            PanelSystem.close();
+            WujiNotification.hideBanner?.();
             setView('locked');
           }
           break;
@@ -2827,6 +3228,9 @@
       }
     });
 
+    /* =========================================================
+       鼠标滚轮滚动惯性
+       ========================================================= */
     (function enableMouseDragScroll() {
       const THRESHOLD = 6;
       const FRICTION = 0.94;
@@ -2850,7 +3254,6 @@
               && el.scrollWidth > el.clientWidth + 1;
             if (canY || canX) return el;
           }
-
           if (el.parentElement) {
             el = el.parentElement;
           } else {
@@ -2878,7 +3281,6 @@
 
         const real = realTargetOf(e);
         if (!real || real.nodeType !== 1) return;
-
         if (real.tagName === 'IFRAME') return;
         if (real.closest('button, a, input, textarea, select, label, [contenteditable]')) return;
 
@@ -2962,6 +3364,13 @@
 
     (function disableContextMenu() {
       document.addEventListener('contextmenu', e => {
+        const t = e.target;
+        /* 图片 → 直接吞掉，避免华为等浏览器的图片菜单 */
+        if (t && t.tagName === 'IMG') {
+          e.preventDefault();
+          e.stopImmediatePropagation();
+          return false;
+        }
         e.preventDefault();
         return false;
       }, { capture: true });
@@ -2977,10 +3386,74 @@
       }, { capture: true });
     })();
 
-    WujiControlCenter.init({
+    /* =========================================================
+       预加载
+       ========================================================= */
+    let _builtinPreloadScheduled = false;
+    function scheduleBuiltinPreload() {
+      if (_builtinPreloadScheduled) return;
+      _builtinPreloadScheduled = true;
+
+      const run = async () => {
+        /* 1) 串行前置脚本 */
+        for (const src of PRELOAD_SCRIPTS) {
+          try {
+            await WujiAppLoader.load(src);
+          } catch (err) {
+            console.warn('[preload script]', src, err);
+          }
+        }
+
+        /* 2) 清理不在市场清单里的已安装应用 */
+        try {
+          const n = await WujiAppInstaller.pruneMissing?.();
+          if (n) console.log('[prune] removed', n);
+        } catch (e) {
+          console.warn('[prune] 失败', e);
+        }
+
+        /* 3) 并行内置应用 */
+        BUILTIN_APPS.forEach(m => {
+          if (!m.src) return;
+          WujiAppLoader.load(m.src, m.version).catch(err => {
+            console.warn('[preload builtin]', m.bundlename, err);
+          });
+        });
+
+        /* 4) 并行已安装的市场应用 */
+        WujiApps.installeds().forEach(app => {
+          if (!app._src) return;
+          WujiAppLoader.load(app._src, app.version).catch(err => {
+            console.warn('[preload installed]', app.bundlename, err);
+          });
+        });
+      };
+
+      if ('requestIdleCallback' in window) {
+        requestIdleCallback(() => run(), { timeout: 4000 });
+      } else {
+        setTimeout(run, 1500);
+      }
+    }
+
+    /* =========================================================
+       初始化
+       ========================================================= */
+    PanelSystem.init();
+    WujiControlCenter.init({ osEl, notifyParent });
+
+    function launchAppFromNotification(bundle, params) {
+      PanelSystem.close();
+      openApp(bundle, null, params);
+    }
+
+    WujiNotification.init({
       osEl,
-      notifyParent,
+      openApp: launchAppFromNotification,
     });
+
+    /* 内置应用：先登记元数据，桌面图标立刻可见 */
+    BUILTIN_APPS.forEach(meta => WujiApps.registerMeta(meta, 'builtin'));
 
     WujiAppInstaller.restore();
     DesktopLayout.seedFromRegistry();

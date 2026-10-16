@@ -1,34 +1,56 @@
+/* =========================================================
+   control-center.js —— 控制中心（内容 + 状态）
+
+   面板的位置 / 手势 / 层级 全部由 PanelSystem 负责。
+   本模块只关心：
+     - toggle 状态
+     - volume / brightness 滑块
+     - 与系统其他部分的通信（notifyParent / CustomEvent）
+   ========================================================= */
 window.WujiControlCenter = (() => {
-  const CC_KEYS = ['wifi', 'bluetooth', 'nb', 'cellular'];
+  const CC_KEYS = ['wifi', 'bluetooth', 'soundmode', 'cellular'];
+  
+  const ICON_RING = `<svg viewBox="0 0 24 24" fill="none"
+       stroke="currentColor" stroke-width="2"
+       stroke-linecap="round" stroke-linejoin="round">
+    <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/>
+    <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>
+  </svg>`;
+
+  const ICON_MUTE = `<svg viewBox="0 0 24 24" fill="none"
+       stroke="currentColor" stroke-width="2"
+       stroke-linecap="round" stroke-linejoin="round">
+    <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/>
+    <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>
+    <line x1="2" y1="2" x2="22" y2="22"/>
+  </svg>`;
 
   let osEl = null;
   let notifyParent = () => { };
 
-  let controlCenter = null;
-  let ccBackdropEl = null;
   let ccVolumeFill = null;
   let ccBrightnessFill = null;
 
   const ccState = {};
   let volume = 60;
   let brightness = 80;
-  let ccOpen = false;
-  let ccDragState = null;
   let bound = false;
 
   function applyToggleUI() {
     CC_KEYS.forEach(k => {
       const el = document.querySelector(`.cc-toggle[data-key="${k}"]`);
-      if (el) el.classList.toggle('is-on', !!ccState[k]);
-    });
-  }
+      if (!el) return;
 
-  function emitToggleChange(key, value) {
-    try {
-      window.dispatchEvent(new CustomEvent('wuji:cc-toggle-change', {
-        detail: { key, value: !!value },
-      }));
-    } catch { }
+      const on = !!ccState[k];
+      el.classList.toggle('is-on', on);
+
+      if (k === 'soundmode') {
+        const labelEl = el.querySelector('.cc-label');
+        const iconEl  = el.querySelector('.cc-icon');
+        if (labelEl) labelEl.textContent = on ? '静音' : '响铃';
+        if (iconEl)  iconEl.innerHTML    = on ? ICON_MUTE : ICON_RING;
+      }
+    });
   }
 
   function applyVolumeUI() {
@@ -39,125 +61,15 @@ window.WujiControlCenter = (() => {
     if (ccBrightnessFill) ccBrightnessFill.style.height = brightness + '%';
   }
 
-  function setCCOpen(open) {
-    ccOpen = open;
-
-    controlCenter.style.transition = 'transform .35s cubic-bezier(.2,.7,.3,1)';
-    controlCenter.style.transform = open ? 'translateY(0)' : 'translateY(-100%)';
-
-    ccBackdropEl.style.transition = 'opacity .35s cubic-bezier(.2,.7,.3,1)';
-    ccBackdropEl.style.opacity = open ? '1' : '0';
-
-    osEl.classList.toggle('cc-open', open);
+  function emitToggleChange(key, value) {
+    try {
+      window.dispatchEvent(new CustomEvent('wuji:cc-toggle-change', {
+        detail: { key, value: !!value },
+      }));
+    } catch { }
   }
 
-  function close() {
-    ccDragState = null;
-    ccOpen = false;
-    if (!controlCenter) return;
-
-    controlCenter.style.transition = 'transform .35s cubic-bezier(.2,.7,.3,1)';
-    controlCenter.style.transform = 'translateY(-100%)';
-
-    ccBackdropEl.style.transition = 'opacity .35s cubic-bezier(.2,.7,.3,1)';
-    ccBackdropEl.style.opacity = '0';
-
-    osEl.classList.remove('cc-open');
-  }
-
-  function ccBeginOpen(y) {
-    const h = controlCenter.offsetHeight;
-    ccDragState = {
-      mode: 'open',
-      startY: y,
-      startPos: -h,
-      curPos: -h,
-      height: h,
-      captured: true,
-      lastY: y,
-      lastT: performance.now(),
-      velocity: 0,
-    };
-    controlCenter.style.transition = 'none';
-    controlCenter.style.transform = `translateY(${-h}px)`;
-
-    ccBackdropEl.style.transition = 'none';
-    ccBackdropEl.style.opacity = '0';
-
-    osEl.classList.add('cc-open');
-  }
-
-  function ccBeginClose(y) {
-    ccDragState = {
-      mode: 'close',
-      startY: y,
-      startPos: 0,
-      curPos: 0,
-      height: controlCenter.offsetHeight,
-      captured: false,
-      lastY: y,
-      lastT: performance.now(),
-      velocity: 0,
-    };
-  }
-
-  /* ---------- 拖动中 ---------- */
-  function ccMove(y, preventFn) {
-    if (!ccDragState) return;
-    const dy = y - ccDragState.startY;
-
-    if (ccDragState.mode === 'close' && !ccDragState.captured) {
-      if (Math.abs(dy) < 6) return;
-      ccDragState.captured = true;
-      controlCenter.style.transition = 'none';
-      ccBackdropEl.style.transition = 'none';
-    }
-
-    if (preventFn) preventFn();
-
-    let pos = ccDragState.startPos + dy;
-    pos = Math.max(-ccDragState.height, Math.min(0, pos));
-    ccDragState.curPos = pos;
-    controlCenter.style.transform = `translateY(${pos}px)`;
-
-    const now = performance.now();
-    const dt = now - ccDragState.lastT;
-    if (dt > 0) {
-      const instant = (y - ccDragState.lastY) / dt;
-      ccDragState.velocity = ccDragState.velocity * 0.6 + instant * 0.4;
-      ccDragState.lastY = y;
-      ccDragState.lastT = now;
-    }
-
-    const p = 1 - (-pos / ccDragState.height);
-    ccBackdropEl.style.opacity = String(Math.max(0, Math.min(1, p)));
-  }
-
-  function ccEnd() {
-    if (!ccDragState) return;
-    const state = ccDragState;
-    ccDragState = null;
-    if (!state.captured) return;
-
-    const VELOCITY = 0.35;
-    let shouldOpen;
-
-    if (state.mode === 'close') {
-      const movedEnough = state.curPos < -state.height * 0.15;
-      const fastEnough = state.velocity < -VELOCITY;
-      shouldOpen = !(movedEnough || fastEnough);
-    } else {
-      const movedEnough = state.curPos > -state.height * 0.4;
-      const fastEnough = state.velocity > VELOCITY;
-      shouldOpen = movedEnough || fastEnough;
-    }
-
-    ccBackdropEl.style.transition = 'opacity .35s cubic-bezier(.2,.7,.3,1)';
-    ccBackdropEl.style.opacity = shouldOpen ? '1' : '0';
-
-    setCCOpen(shouldOpen);
-  }
-
+  /* ---------------- 滑块 ---------------- */
   function bindSlider(el, { setValue }) {
     if (!el) return;
 
@@ -186,20 +98,34 @@ window.WujiControlCenter = (() => {
     });
   }
 
+  function bindToggleEvents() {
+    document.querySelectorAll('.cc-toggle').forEach(el => {
+      if (el._bound) return;
+      el._bound = true;
+
+      el.addEventListener('click', () => {
+        const key = el.dataset.key;
+        if (!CC_KEYS.includes(key)) return;
+
+        ccState[key] = !ccState[key];
+        Store.set('control.' + key, ccState[key]);
+
+        /* ★ 整体重绘，会一并更新 nb 的文字和图标 */
+        applyToggleUI();
+
+        emitToggleChange(key, ccState[key]);
+
+        if (navigator.vibrate) { try { navigator.vibrate(8); } catch { } }
+      });
+    });
+  }
+
+  /* ---------------- 一次性绑定 ---------------- */
   function bindEvents() {
     if (bound) return;
     bound = true;
 
-    document.querySelectorAll('.cc-toggle').forEach(el => {
-      el.addEventListener('click', () => {
-        const key = el.dataset.key;
-        ccState[key] = !ccState[key];
-        Store.set('control.' + key, ccState[key]);
-        el.classList.toggle('is-on', ccState[key]);
-        emitToggleChange(key, ccState[key]);          /* 新增 */
-        if (navigator.vibrate) { try { navigator.vibrate(8); } catch { } }
-      });
-    });
+    bindToggleEvents();
 
     bindSlider(document.querySelector('[data-slider="volume"]'), {
       setValue: v => {
@@ -217,94 +143,21 @@ window.WujiControlCenter = (() => {
         applyBrightnessUI();
       },
     });
-
-    osEl.addEventListener('touchstart', e => {
-      if (osEl.dataset.power !== 'running') return;
-      if (osEl.dataset.view === 'locked') return;
-      if (ccDragState) return;
-      const t = e.touches[0];
-      if (!t) return;
-
-      const rect = osEl.getBoundingClientRect();
-      const localY = t.clientY - rect.top;
-      const relX = (t.clientX - rect.left) / rect.width;
-
-      if (!ccOpen && localY < 30 && relX >= 0.5) {
-        e.stopPropagation();
-        if (e.cancelable) e.preventDefault();
-        ccBeginOpen(t.clientY);
-        return;
-      }
-
-      if (ccOpen) {
-        if (e.target.closest('.cc-slider-card')) return;
-        ccBeginClose(t.clientY);
-      }
-    }, { capture: true, passive: false });
-
-    document.addEventListener('touchmove', e => {
-      if (!ccDragState) return;
-      const t = e.touches[0];
-      if (!t) return;
-      ccMove(t.clientY, () => { if (e.cancelable) e.preventDefault(); });
-    }, { passive: false });
-
-    document.addEventListener('touchend', ccEnd);
-    document.addEventListener('touchcancel', ccEnd);
-
-    osEl.addEventListener('pointerdown', e => {
-      if (e.pointerType !== 'mouse') return;
-      if (e.button !== 0) return;
-      if (osEl.dataset.power !== 'running') return;
-      if (osEl.dataset.view === 'locked') return;
-      if (ccDragState) return;
-
-      const rect = osEl.getBoundingClientRect();
-      const localY = e.clientY - rect.top;
-      const relX = (e.clientX - rect.left) / rect.width;
-
-      if (!ccOpen && localY < 30 && relX >= 0.5) {
-        e.stopPropagation();
-        e.preventDefault();
-        ccBeginOpen(e.clientY);
-        return;
-      }
-
-      if (ccOpen) {
-        if (e.target.closest('.cc-slider-card')) return;
-        ccBeginClose(e.clientY);
-      }
-    }, { capture: true });
-
-    document.addEventListener('pointermove', e => {
-      if (e.pointerType !== 'mouse') return;
-      if (!ccDragState) return;
-      ccMove(e.clientY, null);
-    });
-
-    document.addEventListener('pointerup', e => {
-      if (e.pointerType !== 'mouse') return;
-      ccEnd();
-    });
-
-    document.addEventListener('pointercancel', e => {
-      if (e.pointerType !== 'mouse') return;
-      ccEnd();
-    });
   }
 
+  /* ---------------- 初始化 ---------------- */
   function init(options) {
     osEl = options.osEl;
     notifyParent = options.notifyParent || (() => { });
 
-    controlCenter = document.getElementById('controlCenter');
-    ccBackdropEl = document.getElementById('ccBackdrop');
-    ccVolumeFill = document.getElementById('ccVolumeFill');
+    ccVolumeFill     = document.getElementById('ccVolumeFill');
     ccBrightnessFill = document.getElementById('ccBrightnessFill');
 
     CC_KEYS.forEach(k => { ccState[k] = !!Store.get('control.' + k, false); });
-    volume = Store.get('control.volume', 60);
+    volume     = Store.get('control.volume', 60);
     brightness = Store.get('control.brightness', 80);
+
+    try { Store.remove('control.nb'); } catch { }
 
     applyToggleUI();
     applyVolumeUI();
@@ -313,20 +166,32 @@ window.WujiControlCenter = (() => {
     bindEvents();
   }
 
+  /* ---------------- 导出 ---------------- */
   return {
     init,
-    close,
-    isOpen() { return ccOpen; },
+
+    /* 打开 / 关闭 / 判断 全部委托给 PanelSystem */
+    close()   { window.PanelSystem?.close(); },
+    isOpen()  {
+      return !!window.PanelSystem?.isOpen && window.PanelSystem.panel === 'cc';
+    },
+    openFromRight() { window.PanelSystem?.open('cc'); },
+    switchToNotificationCenter() { window.PanelSystem?.setPanel('nc'); },
+
+    /* 音量 / 亮度 */
     setVolume(v) {
       volume = Math.max(0, Math.min(100, v));
       applyVolumeUI();
     },
     getVolume() { return volume; },
+
     setBrightness(v) {
       brightness = Math.max(0, Math.min(100, v));
       applyBrightnessUI();
     },
     getBrightness() { return brightness; },
+
+    /* toggle */
     setToggle(key, value) {
       if (!CC_KEYS.includes(key)) return;
       ccState[key] = !!value;

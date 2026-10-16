@@ -122,6 +122,12 @@ window.WujiAppInstaller = (() => {
       }
       WujiApps.registerMeta(metaFromRecord(record), 'installed');
 
+      if (window.WujiAppLoader?.load) {
+        WujiAppLoader.load(src, record.version).catch(err => {
+          console.warn('[installer] 预加载失败', bundle, err);
+        });
+      }
+
       return {
         ok: true,
         action: existing ? 'replaced' : 'installed',
@@ -144,6 +150,14 @@ window.WujiAppInstaller = (() => {
       try { await AppStorage.uninstall(bundle); }
       catch (e) { console.warn('[installer] AppStorage.uninstall failed', bundle, e); }
 
+      try {
+        if (window.WujiNotification?.clearByBundle) {
+          WujiNotification.clearByBundle(bundle);
+        }
+      } catch (e) {
+        console.warn('[installer] 清理通知失败', bundle, e);
+      }
+
       /* 主动清桌面，不依赖监听器 */
       if (window.DesktopLayout?.removeApp) {
         DesktopLayout.removeApp(bundle);
@@ -165,6 +179,34 @@ window.WujiAppInstaller = (() => {
         if (!rec?.bundle || !rec?.src) return;
         WujiApps.registerMeta(metaFromRecord(rec), 'installed');
       });
+    },
+
+        /* ---------- ★ 清理：store/apps.js 里已经没有的已安装应用 ---------- */
+    async pruneMissing() {
+      const market = window.WUJI_MARKET_APPS;
+      if (!Array.isArray(market)) return 0;
+
+      const valid = new Set(
+        market.map(m => m.bundle || m.bundlename).filter(Boolean)
+      );
+      if (!valid.size) return 0;
+
+      const list = readAll();
+      const stale = list.filter(rec => rec?.bundle && !valid.has(rec.bundle));
+
+      if (!stale.length) return 0;
+
+      console.warn('[installer] 清理已下架应用:',
+        stale.map(a => a.bundle));
+
+      for (const rec of stale) {
+        try {
+          await this.uninstall(rec.bundle);
+        } catch (e) {
+          console.warn('[installer] prune 卸载失败', rec.bundle, e);
+        }
+      }
+      return stale.length;
     },
   };
 })();

@@ -445,6 +445,18 @@ WujiApps.registerInstalled({
             ctx.push('detail', { id: el.dataset.detail });
           });
         });
+
+        (async () => {
+          WujiNotification.publish({
+            bundlename: 'com.wujinb.wmall',
+            id: 1001,
+            title: '吴际商城',
+            content: '快去购买iWuji!',
+            showtime: true,
+            notifyuser: true,
+            clickparams: {},
+          });
+        })()
       },
     },
 
@@ -656,7 +668,7 @@ WujiApps.registerInstalled({
           error.classList.add('is-angry');
 
           if (navigator.vibrate) {
-            try { navigator.vibrate([80, 40, 80, 40, 200]); } catch (e) {}
+            try { navigator.vibrate([80, 40, 80, 40, 200]); } catch (e) { }
           }
         }, 3000);
       },

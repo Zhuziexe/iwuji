@@ -23,7 +23,7 @@ window.WujiApps = (() => {
     });
   }
 
-  function normalize(app) {
+   function normalize(app) {
     return {
       bundlename:   app.bundlename || app.bundle,
       name:         app.name || app.bundlename,
@@ -34,6 +34,7 @@ window.WujiApps = (() => {
       description:  app.description || '',
       initialRoute: app.initialRoute || null,
       routes:       app.routes || null,
+      overlays:     app.overlays || null,        // ★ 新增
       render:       app.render || null,
       mount:        app.mount || null,
       unmount:      app.unmount || null,
@@ -75,27 +76,38 @@ window.WujiApps = (() => {
     norm._metaOnly = false;
     norm._registeredAt = Date.now();
 
+    if (!norm._src && existingSelf?._src) {
+      norm._src = existingSelf._src;
+    }
+
     bucket.set(norm.bundlename, norm);
-    /* 清掉另一桶里的 meta 残留 */
     if (existingOther) other.delete(norm.bundlename);
 
     emit({ type: 'registered', bundle: norm.bundlename, source, app: norm });
     return true;
   }
 
-  /* ---------------------------------------------------------
+    /* ---------------------------------------------------------
      只注册元数据（占位），等脚本加载后升级为完整定义
+     source = 'builtin'  → 占位放进 builtin 桶
+     source = 'installed'→ 占位放进 installed 桶（默认）
      --------------------------------------------------------- */
   function registerMeta(meta, source = 'installed') {
     if (!meta) return false;
     const bundle = meta.bundlename || meta.bundle;
     if (!bundle) return false;
 
-    /* 系统内置里已有同名 → 不允许 meta 覆盖 */
-    if (builtin.has(bundle)) return false;
+    const isBuiltin = source === 'builtin';
+    const bucket    = isBuiltin ? builtin   : installed;
+    const other     = isBuiltin ? installed : builtin;
 
-    const existing = installed.get(bundle);
-    if (existing && !existing._metaOnly) return false;   // 已完整，忽略
+    /* 目标桶里已有完整定义 → 忽略 */
+    const existingSelf = bucket.get(bundle);
+    if (existingSelf && !existingSelf._metaOnly) return false;
+
+    /* 另一个桶里已有完整定义 → 忽略 */
+    const existingOther = other.get(bundle);
+    if (existingOther && !existingOther._metaOnly) return false;
 
     const norm = {
       ...normalize({ ...meta, bundlename: bundle }),
@@ -105,7 +117,7 @@ window.WujiApps = (() => {
       _registeredAt: Date.now(),
     };
 
-    installed.set(bundle, norm);
+    bucket.set(bundle, norm);
     emit({ type: 'registered', bundle, source, app: norm });
     return true;
   }
