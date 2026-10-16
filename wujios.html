@@ -92,9 +92,17 @@
       -ms-user-select: none;
       -webkit-touch-callout: none;
       -webkit-user-drag: none;
-      -khtml-user-drag: none;
-      -moz-user-drag: none;
-      -o-user-drag: none;
+    }
+
+    .os-wallpaper-shield {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      background: transparent;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
+      -webkit-user-drag: none;
     }
 
     .statusbar {
@@ -1458,6 +1466,7 @@
 
   <div class="os" id="os" data-view="locked" data-power="off">
     <img class="os-wallpaper" id="osWallpaper" src="./themes/sea.png" alt="" draggable="false">
+    <div class="os-wallpaper-shield" aria-hidden="true"></div>
     <div class="statusbar">
       <span class="statusbar__left">
         <span id="clock">9:41</span>
@@ -1685,6 +1694,8 @@
     const homeView = document.getElementById('homeView');
     const appView = document.getElementById('appView');
     const appScreen = document.getElementById('appScreen');
+
+    let _suppressClicksUntil = 0;
 
     const S = {
       view: 'locked',
@@ -2756,6 +2767,10 @@
         return;
       }
 
+      if (!sourceEl) {
+        _suppressClicksUntil = performance.now() + 450;
+      }
+
       if (!animType) {
         if (sourceEl) animType = 'icon-fly';
         else if (S.view === 'app' && S.currentBundle) animType = 'push-up';
@@ -3623,6 +3638,14 @@
         }
       }, true);
     })();
+
+    document.addEventListener('click', e => {
+      if (performance.now() < _suppressClicksUntil) {
+        e.stopPropagation();
+        e.stopImmediatePropagation();
+        e.preventDefault();
+      }
+    }, true);
 
     (function disableContextMenu() {
       document.addEventListener('contextmenu', e => {
