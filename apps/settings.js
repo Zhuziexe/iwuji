@@ -660,7 +660,7 @@
                 </div>
                 <div class="settings-row">
                   <span>WujiOS版本</span>
-                  <span class="settings-row__value">1.0.104</span>
+                  <span class="settings-row__value">1.0.105</span>
                 </div>
                 <div class="settings-row">
                   <span>OpenWuji版本</span>
