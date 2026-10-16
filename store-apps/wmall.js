@@ -3,7 +3,7 @@ WujiApps.registerInstalled({
   name: '吴际商城',
   icon: './assets/wmall.svg',
   initialRoute: 'home',
-
+  version: '1.0.4',
   styles: `
   .wmall-page {
     position: absolute;

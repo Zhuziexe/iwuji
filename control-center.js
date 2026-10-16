@@ -1,27 +1,20 @@
-/* =========================================================
-   control-center.js —— 控制中心（内容 + 状态）
-
-   面板的位置 / 手势 / 层级 全部由 PanelSystem 负责。
-   本模块只关心：
-     - toggle 状态
-     - volume / brightness 滑块
-     - 与系统其他部分的通信（notifyParent / CustomEvent）
-   ========================================================= */
 window.WujiControlCenter = (() => {
   const CC_KEYS = ['wifi', 'bluetooth', 'soundmode', 'cellular'];
   
   const ICON_RING = `<svg viewBox="0 0 24 24" fill="none"
        stroke="currentColor" stroke-width="2"
        stroke-linecap="round" stroke-linejoin="round">
-    <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/>
-    <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>
+    <path d="M12 2v2"/>
+    <path d="M18 8.5A6 6 0 0 0 6 8.5c0 7-3 9-3 9h18s-3-2-3-9"/>
+    <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
   </svg>`;
 
   const ICON_MUTE = `<svg viewBox="0 0 24 24" fill="none"
        stroke="currentColor" stroke-width="2"
        stroke-linecap="round" stroke-linejoin="round">
-    <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/>
-    <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>
+    <path d="M12 2v2"/>
+    <path d="M18 8.5A6 6 0 0 0 6 8.5c0 7-3 9-3 9h18s-3-2-3-9"/>
+    <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
     <line x1="2" y1="2" x2="22" y2="22"/>
   </svg>`;
 

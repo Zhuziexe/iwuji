@@ -3,9 +3,6 @@
   const NOTIF_ID = 1001;
   const pad2 = n => String(n).padStart(2, '0');
 
-  /* =========================================================
-     计时器引擎（模块级，独立于应用生命周期）
-     ========================================================= */
   const Timer = (() => {
     let total = 5 * 60;
     let remaining = total;
@@ -146,14 +143,12 @@
     };
   })();
 
-  /* =========================================================
-     注册应用
-     ========================================================= */
   WujiApps.register({
     bundlename: BUNDLE,
     name: '时钟',
     icon: './assets/clock.svg',
     initialRoute: 'home',
+    version: '1.1.3',
 
     styles: `
       .clock-page {
@@ -169,7 +164,7 @@
       }
 
       .clock-tabview {
-        position: relative;      /* ★ 关键：让 .clock-tab 相对它定位，不再覆盖 Tab 栏 */
+        position: relative;
         flex: 1 1 auto;
         min-height: 0;
         overflow: hidden;
@@ -390,7 +385,6 @@
       .timer-round-btn--primary { background: #3a6ff0; color: #fff; }
       .timer-round-btn svg { width: 24px; height: 24px; display: block; }
 
-      /* ============ 底部 Tab ============ */
       .clock-tabs {
         position: relative;
         z-index: 2;
@@ -419,10 +413,20 @@
         transition: color .15s ease;
         -webkit-tap-highlight-color: transparent;
       }
-      .clock-tab-btn__icon { font-size: 22px; line-height: 1; }
+      .clock-tab-btn__icon {
+        width: 22px;
+        height: 22px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .clock-tab-btn__icon svg {
+        width: 100%;
+        height: 100%;
+        display: block;
+      }
       .clock-tab-btn.is-active { color: #3a6ff0; }
 
-      /* ============ 超时 Overlay ============ */
       .ov-timeout {
         position: absolute;
         inset: 0;
@@ -513,9 +517,6 @@
       .ov-slider__knob svg { width: 24px; height: 24px; display: block; }
     `,
 
-    /* =========================================================
-       Overlays
-       ========================================================= */
     overlays: [
       {
         name: 'timeoutoverlay',
@@ -625,9 +626,6 @@
       },
     ],
 
-    /* =========================================================
-       Routes
-       ========================================================= */
     routes: {
       home: {
         name: 'home',
@@ -639,7 +637,6 @@
             <div class="clock-page">
               <div class="clock-tabview">
 
-                <!-- ================= 时钟 Tab ================= -->
                 <div class="clock-tab ${startTab === 'clock' ? 'is-active' : ''}"
                      data-tab="clock">
                   <div class="clock-title">时钟</div>
@@ -675,7 +672,6 @@
                   <div class="clock-time" id="clockTime">00:00:00</div>
                 </div>
 
-                <!-- ================= 计时器 Tab ================= -->
                 <div class="clock-tab ${startTab === 'timer' ? 'is-active' : ''}"
                      data-tab="timer">
                   <div class="clock-title">计时器</div>
@@ -686,13 +682,21 @@
 
               <div class="clock-tabs">
                 <button class="clock-tab-btn ${startTab === 'clock' ? 'is-active' : ''}"
-                        data-goto="clock" type="button">
-                  <span class="clock-tab-btn__icon">🕑</span>
+                  data-goto="clock" type="button">
+                  <span class="clock-tab-btn__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="9"/>
+    <path d="M12 7v5l3 2"/>
+  </svg></span>
                   <span>时钟</span>
                 </button>
-                <button class="clock-tab-btn ${startTab === 'timer' ? 'is-active' : ''}"
-                        data-goto="timer" type="button">
-                  <span class="clock-tab-btn__icon">⏲️</span>
+                <button class="clock-tab-btn ${startTab === 'timer' ? 'is-active' : ''}" 
+                  data-goto="timer" type="button">
+                  <span class="clock-tab-btn__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="13" r="8"/>
+    <path d="M12 9v4l2.5 2"/>
+    <path d="M9 2h6"/>
+    <path d="M12 2v3"/>
+  </svg></span>
                   <span>计时器</span>
                 </button>
               </div>

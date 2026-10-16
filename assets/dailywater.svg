@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256" role="img" aria-label="每日喝水">
+  <defs>
+    <!-- 杯身形状，用作水面的裁剪路径 -->
+    <clipPath id="dwCupClip">
+      <path d="M80 70 L176 70 L164 210 Q162 222 150 222 L106 222 Q94 222 92 210 Z"/>
+    </clipPath>
+  </defs>
+
+  <!-- 浅蓝背景铺满 -->
+  <rect width="256" height="256" fill="#7EC3FF"/>
+
+  <!-- 水：白色实心矩形，用裁剪路径限制在杯身内 -->
+  <rect x="0" y="128" width="256" height="200"
+        fill="#ffffff" clip-path="url(#dwCupClip)"/>
+
+  <!-- 玻璃杯：白色描边，不填充 -->
+  <path d="M80 70 L176 70 L164 210 Q162 222 150 222 L106 222 Q94 222 92 210 Z"
+        fill="none"
+        stroke="#ffffff"
+        stroke-width="8"
+        stroke-linejoin="round"
+        stroke-linecap="round"/>
+</svg>

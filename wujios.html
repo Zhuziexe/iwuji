@@ -15,13 +15,27 @@
       color-scheme: only light;
     }
 
-    html { font-size: 16px; }
+    html {
+      font-size: 16px;
+    }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    * { scrollbar-width: none; -ms-overflow-style: none; }
-    *::-webkit-scrollbar { display: none; }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
 
-    html, body {
+    * {
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+    }
+
+    *::-webkit-scrollbar {
+      display: none;
+    }
+
+    html,
+    body {
       width: 100%;
       height: 100%;
       overflow: hidden;
@@ -60,13 +74,34 @@
       -webkit-touch-callout: none;
       -webkit-tap-highlight-color: transparent;
       touch-action: auto;
-      background: url('./themes/sea.png') center center / cover no-repeat;
     }
 
-    /* ================= 状态栏 ================= */
+    .os-wallpaper {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center center;
+      display: block;
+      z-index: 0;
+      pointer-events: none;
+      user-select: none;
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      -webkit-touch-callout: none;
+      -webkit-user-drag: none;
+      -khtml-user-drag: none;
+      -moz-user-drag: none;
+      -o-user-drag: none;
+    }
+
     .statusbar {
       position: absolute;
-      top: 0; left: 0; right: 0;
+      top: 0;
+      left: 0;
+      right: 0;
       height: var(--statusbar-h);
       display: flex;
       align-items: center;
@@ -88,7 +123,9 @@
     }
 
     .os[data-view="locked"] .statusbar,
-    .os:not([data-power="running"]) .statusbar { opacity: 0; }
+    .os:not([data-power="running"]) .statusbar {
+      opacity: 0;
+    }
 
     /* 面板打开：状态栏文字变白、透明背景 */
     .os.panel-open .statusbar {
@@ -107,7 +144,9 @@
     }
 
     /* ★ 只有通知中心隐藏左侧（时间 + 图标）；控制中心保留 */
-    .os.nc-open .statusbar__left { opacity: 0; }
+    .os.nc-open .statusbar__left {
+      opacity: 0;
+    }
 
     /* 通知图标组 */
     .statusbar-notif-icons {
@@ -116,7 +155,10 @@
       gap: 3px;
       line-height: 1;
     }
-    .statusbar-notif-icons[hidden] { display: none; }
+
+    .statusbar-notif-icons[hidden] {
+      display: none;
+    }
 
     .statusbar-notif-icon {
       width: 14px;
@@ -129,6 +171,7 @@
       font-size: 11px;
       line-height: 1;
     }
+
     .statusbar-notif-icon img {
       width: 100%;
       height: 100%;
@@ -146,27 +189,35 @@
       color: currentColor;
     }
 
-    .statusbar .right { display: flex; align-items: center; gap: 7px; }
+    .statusbar .right {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
 
     .battery {
       position: relative;
-      width: 22px; height: 11px;
+      width: 22px;
+      height: 11px;
       padding: 1px;
       border: 1px solid currentColor;
       border-radius: 3px;
       color: inherit;
       opacity: .9;
     }
+
     .battery::after {
       content: "";
       position: absolute;
       right: -3.5px;
       top: 50%;
       transform: translateY(-50%);
-      width: 2px; height: 5px;
+      width: 2px;
+      height: 5px;
       background: currentColor;
       border-radius: 0 2px 2px 0;
     }
+
     .battery i {
       display: block;
       height: 100%;
@@ -178,24 +229,50 @@
     /* ================= 视图容器 ================= */
     .view {
       position: absolute;
-      left: 0; right: 0; bottom: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
       opacity: 0;
       visibility: hidden;
       transition: none;
     }
-    .view--locked { top: 0; z-index: 5; }
-    .view--home   { top: var(--statusbar-h); z-index: 1; }
-    .view--app    { top: 0; z-index: 10; }
+
+    .view--locked {
+      top: 0;
+      z-index: 5;
+    }
+
+    .view--home {
+      top: var(--statusbar-h);
+      z-index: 1;
+    }
+
+    .view--app {
+      top: 0;
+      z-index: 10;
+    }
 
     .os:not([data-power="running"]) .view {
       opacity: 0 !important;
       visibility: hidden !important;
       pointer-events: none !important;
     }
-    .os[data-view="locked"] .view--locked { opacity: 1; visibility: visible; }
+
+    .os[data-view="locked"] .view--locked {
+      opacity: 1;
+      visibility: visible;
+    }
+
     .os[data-view="home"] .view--home,
-    .os[data-view="app"]  .view--home { visibility: visible; opacity: 1; }
-    .os[data-view="app"]  .view--app  { opacity: 1; visibility: visible; }
+    .os[data-view="app"] .view--home {
+      visibility: visible;
+      opacity: 1;
+    }
+
+    .os[data-view="app"] .view--app {
+      opacity: 1;
+      visibility: visible;
+    }
 
     /* ================= 锁屏 ================= */
     .view--locked {
@@ -218,6 +295,7 @@
       align-items: center;
       transition: opacity .25s ease, transform .25s ease;
     }
+
     .lock-content.is-hidden {
       opacity: 0;
       transform: scale(.96);
@@ -232,6 +310,7 @@
       line-height: 1;
       font-variant-numeric: tabular-nums;
     }
+
     .lock-time__hour,
     .lock-time__min {
       display: block;
@@ -258,7 +337,11 @@
       filter:
         drop-shadow(0 -1px 0.5px rgba(255, 255, 255, 1)) drop-shadow(0 1px 0.5px rgba(30, 50, 80, 0.55)) drop-shadow(0 2px 1px rgba(30, 50, 80, 0.35)) drop-shadow(0 6px 14px rgba(30, 50, 80, 0.35)) drop-shadow(0 14px 32px rgba(30, 50, 80, 0.22));
     }
-    .lock-time__min { margin-top: 8px; opacity: .98; }
+
+    .lock-time__min {
+      margin-top: 8px;
+      opacity: .98;
+    }
 
     .lock-date {
       margin-top: 26px;
@@ -285,7 +368,11 @@
       transition: opacity .28s ease, visibility .28s ease;
       z-index: 10;
     }
-    .password-panel.is-open { opacity: 1; visibility: visible; }
+
+    .password-panel.is-open {
+      opacity: 1;
+      visibility: visible;
+    }
 
     .password-header {
       flex: 0 0 auto;
@@ -305,16 +392,25 @@
       transition: color .2s ease;
       min-height: 20px;
     }
-    .password-title.is-error { color: #ffb8c6; }
 
-    .password-dots { display: flex; gap: 18px; }
+    .password-title.is-error {
+      color: #ffb8c6;
+    }
+
+    .password-dots {
+      display: flex;
+      gap: 18px;
+    }
+
     .password-dot {
-      width: 14px; height: 14px;
+      width: 14px;
+      height: 14px;
       border-radius: 50%;
       border: 2px solid rgba(255, 255, 255, 0.9);
       background: transparent;
       transition: background .15s ease, transform .15s ease;
     }
+
     .password-dot.is-filled {
       background: #fff;
       transform: scale(1.15);
@@ -329,6 +425,7 @@
       max-width: 200px;
       margin: auto auto 0;
     }
+
     .lock-pin-key {
       aspect-ratio: 1;
       width: 100%;
@@ -348,12 +445,20 @@
       backdrop-filter: blur(8px);
       -webkit-backdrop-filter: blur(8px);
     }
+
     .lock-pin-key:active {
       transform: scale(.94);
       background: rgba(255, 255, 255, 0.42);
     }
-    .lock-pin-key--empty { visibility: hidden; pointer-events: none; }
-    .lock-pin-key--action { font-size: 22px; }
+
+    .lock-pin-key--empty {
+      visibility: hidden;
+      pointer-events: none;
+    }
+
+    .lock-pin-key--action {
+      font-size: 22px;
+    }
 
     /* ================= 桌面 ================= */
     .view--home {
@@ -363,14 +468,23 @@
 
     .desktop-viewport {
       position: absolute;
-      top: 0; left: 0; right: 0; bottom: 28px;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 28px;
       overflow: hidden;
       touch-action: pan-y;
       -webkit-touch-callout: none;
       user-select: none;
       -webkit-user-select: none;
     }
-    .desktop-track { display: flex; height: 100%; will-change: transform; }
+
+    .desktop-track {
+      display: flex;
+      height: 100%;
+      will-change: transform;
+    }
+
     .desktop-page {
       flex: 0 0 100%;
       height: 100%;
@@ -381,6 +495,7 @@
       user-select: none;
       -webkit-user-select: none;
     }
+
     .desktop-grid {
       display: grid;
       grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -390,14 +505,17 @@
       height: 100%;
       min-width: 0;
     }
+
     .slot {
       display: flex;
       align-items: center;
       justify-content: center;
       border-radius: 14px;
       transition: background .15s;
-      min-width: 0; min-height: 0;
+      min-width: 0;
+      min-height: 0;
     }
+
     .app {
       display: flex;
       flex-direction: column;
@@ -412,8 +530,13 @@
       min-width: 0;
       max-width: 100%;
     }
-    .app[data-dragging="1"] { opacity: 0; }
-    .app, .app * {
+
+    .app[data-dragging="1"] {
+      opacity: 0;
+    }
+
+    .app,
+    .app * {
       -webkit-touch-callout: none;
       -webkit-user-select: none;
       -moz-user-select: none;
@@ -424,13 +547,16 @@
       -moz-user-drag: none;
       -o-user-drag: none;
     }
-    .desktop-ghost, .desktop-ghost * {
+
+    .desktop-ghost,
+    .desktop-ghost * {
       -webkit-touch-callout: none;
       -webkit-user-select: none;
       user-select: none;
       -webkit-user-drag: none;
       pointer-events: none !important;
     }
+
     .desktop-ghost {
       position: fixed;
       pointer-events: none;
@@ -440,6 +566,7 @@
       opacity: .95;
       will-change: left, top;
     }
+
     .desktop-drag-preview {
       position: fixed;
       pointer-events: none;
@@ -455,7 +582,10 @@
       will-change: left, top, width, height;
       filter: drop-shadow(0 4px 12px rgba(0, 0, 0, .2));
     }
-    .desktop-drag-preview .app__icon { max-width: 52px; }
+
+    .desktop-drag-preview .app__icon {
+      max-width: 52px;
+    }
 
     .app-menu {
       position: fixed;
@@ -474,6 +604,7 @@
       user-select: none;
       -webkit-user-select: none;
     }
+
     .app-menu__item {
       display: flex;
       align-items: center;
@@ -492,20 +623,37 @@
       transition: background .12s;
       -webkit-tap-highlight-color: transparent;
     }
-    .app-menu__item:active { background: rgba(224, 53, 107, .12); }
+
+    .app-menu__item:active {
+      background: rgba(224, 53, 107, .12);
+    }
+
     .app-menu__icon {
       flex: 0 0 18px;
-      width: 18px; height: 18px;
+      width: 18px;
+      height: 18px;
       display: flex;
       align-items: center;
       justify-content: center;
       color: #e0356b;
     }
-    .app-menu__icon svg { width: 100%; height: 100%; display: block; }
+
+    .app-menu__icon svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
 
     @keyframes appMenuIn {
-      from { opacity: 0; transform: scale(.9); }
-      to   { opacity: 1; transform: scale(1); }
+      from {
+        opacity: 0;
+        transform: scale(.9);
+      }
+
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
     }
 
     .page-dots {
@@ -519,14 +667,17 @@
       z-index: 5;
       pointer-events: auto;
     }
+
     .page-dot {
-      width: 8px; height: 8px;
+      width: 8px;
+      height: 8px;
       border-radius: 50%;
       background: rgba(255, 255, 255, .5);
       box-shadow: 0 1px 2px rgba(0, 0, 0, .35);
       cursor: pointer;
       transition: background .2s, transform .2s;
     }
+
     .page-dot.is-active {
       background: #fff;
       transform: scale(1.4);
@@ -546,8 +697,10 @@
       background: var(--wj-icon-bg, transparent);
       overflow: hidden;
     }
+
     .app__icon img {
-      width: 100%; height: 100%;
+      width: 100%;
+      height: 100%;
       object-fit: cover;
       display: block;
       pointer-events: none;
@@ -556,6 +709,7 @@
       -webkit-touch-callout: none;
       -webkit-user-drag: none;
     }
+
     .app__name {
       font-size: var(--wj-fs-xs);
       color: #ffffff;
@@ -583,7 +737,11 @@
       transition: none;
       touch-action: auto;
     }
-    .app-page { box-shadow: -14px 0 36px rgba(0, 0, 0, .3); }
+
+    .app-page {
+      box-shadow: -14px 0 36px rgba(0, 0, 0, .3);
+    }
+
     .app-body {
       flex: 1 1 auto;
       padding: var(--wj-pad);
@@ -610,16 +768,19 @@
       visibility: hidden;
       transition: opacity .35s, visibility .35s;
     }
+
     .os[data-power="off"] .power-overlay--off,
     .os[data-power="booting"] .power-overlay--boot,
     .os[data-power="shuttingdown"] .power-overlay--shutdown {
       opacity: 1;
       visibility: visible;
     }
+
     .os[data-power="booting"] .power-overlay--boot,
     .os[data-power="shuttingdown"] .power-overlay--shutdown {
       transition: none;
     }
+
     .boot-stage {
       display: flex;
       flex-direction: column;
@@ -628,8 +789,12 @@
       text-align: center;
       position: relative;
     }
+
     .boot-stage.no-anim,
-    .boot-stage.no-anim * { transition: none !important; }
+    .boot-stage.no-anim * {
+      transition: none !important;
+    }
+
     .boot-mark {
       display: inline-flex;
       align-items: baseline;
@@ -640,14 +805,23 @@
       color: #fff;
       white-space: nowrap;
     }
+
     .boot-i {
       display: inline-block;
       width: .28em;
       overflow: hidden;
       transition: width .55s cubic-bezier(.2, .7, .3, 1), opacity .35s ease;
     }
-    .boot-mark.stage-2 .boot-i { opacity: 0; }
-    .boot-mark.stage-3 .boot-i { width: 0; opacity: 0; }
+
+    .boot-mark.stage-2 .boot-i {
+      opacity: 0;
+    }
+
+    .boot-mark.stage-3 .boot-i {
+      width: 0;
+      opacity: 0;
+    }
+
     .boot-os {
       display: inline-block;
       width: 0;
@@ -655,7 +829,12 @@
       opacity: 0;
       transition: width .55s cubic-bezier(.2, .7, .3, 1), opacity .4s ease .15s;
     }
-    .boot-mark.stage-3 .boot-os { width: 1.55em; opacity: 1; }
+
+    .boot-mark.stage-3 .boot-os {
+      width: 1.55em;
+      opacity: 1;
+    }
+
     .boot-powered {
       position: absolute;
       left: 50%;
@@ -673,18 +852,36 @@
       pointer-events: none;
       user-select: none;
     }
-    .boot-mark.stage-3~.boot-powered { opacity: 1; }
-    .boot-stage.no-anim .boot-powered { transition: none !important; opacity: 0; }
+
+    .boot-mark.stage-3~.boot-powered {
+      opacity: 1;
+    }
+
+    .boot-stage.no-anim .boot-powered {
+      transition: none !important;
+      opacity: 0;
+    }
 
     .spinner {
-      width: 36px; height: 36px;
+      width: 36px;
+      height: 36px;
       border-radius: 50%;
       border: 3px solid rgba(255, 255, 255, .15);
       border-top-color: #8ad4ff;
       animation: spin .8s linear infinite;
     }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    .shutdown-text { font-size: var(--wj-fs-md); color: rgba(255, 255, 255, .5); }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    .shutdown-text {
+      font-size: var(--wj-fs-md);
+      color: rgba(255, 255, 255, .5);
+    }
+
     .off-hint {
       font-size: var(--wj-fs-md);
       color: rgba(255, 255, 255, .35);
@@ -695,19 +892,13 @@
       position: absolute;
       inset: 0;
       z-index: 49;
-      background: rgba(12, 18, 36, 0.42);
+
+      background: rgba(0, 0, 0, 0.55);
+
       opacity: 0;
-      transition:
-        opacity .35s cubic-bezier(.2, .7, .3, 1),
-        backdrop-filter .28s ease,
-        -webkit-backdrop-filter .28s ease;
+      transition: opacity .35s cubic-bezier(.2, .7, .3, 1);
       pointer-events: none;
       will-change: opacity;
-    }
-
-    .panel-backdrop.has-blur {
-      backdrop-filter: blur(6px) saturate(140%);
-      -webkit-backdrop-filter: blur(6px) saturate(140%);
     }
 
     .panel-system {
@@ -718,13 +909,17 @@
       pointer-events: none;
       will-change: transform;
       touch-action: none;
-      transform: translateY(-100%);   /* JS 执行前也保持收起 */
+      transform: translateY(-100%);
     }
-    .panel-system.is-active { pointer-events: auto; }
+
+    .panel-system.is-active {
+      pointer-events: auto;
+    }
 
     .panel-track {
       position: absolute;
-      top: 0; left: 0;
+      top: 0;
+      left: 0;
       width: 200%;
       height: 100%;
       display: flex;
@@ -743,6 +938,7 @@
       box-sizing: border-box;
       touch-action: none;
     }
+
     .panel-pane::before {
       content: "";
       position: absolute;
@@ -755,18 +951,18 @@
       z-index: 0;
     }
 
-    /* ---------- 底部手柄 ---------- */
     .panel-handle {
       position: relative;
       z-index: 1;
       flex: 0 0 auto;
-      margin-top: auto;              /* 无论 pane 里内容多少，都贴在底部 */
+      margin-top: auto;
       height: 34px;
       display: flex;
       align-items: center;
       justify-content: center;
       padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
     }
+
     .panel-handle::after {
       content: '';
       width: 40px;
@@ -807,29 +1003,42 @@
         inset 0 1px 0 rgba(255, 255, 255, 0.14),
         0 6px 18px rgba(0, 0, 0, 0.18);
     }
+
     .cc-slider-fill {
       position: absolute;
-      left: 0; right: 0; bottom: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
       height: 60%;
       background: #ffffff;
       transition: height .06s linear;
       z-index: 0;
     }
+
     .cc-slider-icon {
       position: relative;
       z-index: 1;
-      width: 20px; height: 20px;
+      width: 20px;
+      height: 20px;
       color: #ffffff;
       mix-blend-mode: difference;
       pointer-events: none;
     }
-    .cc-slider-icon svg { width: 100%; height: 100%; display: block; }
+
+    .cc-slider-icon svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
 
     .cc-slider-card[data-slider="volume"] {
-      grid-column: 1; grid-row: 1 / span 2;
+      grid-column: 1;
+      grid-row: 1 / span 2;
     }
+
     .cc-slider-card[data-slider="brightness"] {
-      grid-column: 2; grid-row: 1 / span 2;
+      grid-column: 2;
+      grid-row: 1 / span 2;
     }
 
     .cc-toggle {
@@ -853,9 +1062,14 @@
         inset 0 1px 0 rgba(255, 255, 255, 0.10),
         0 6px 18px rgba(0, 0, 0, 0.14);
     }
-    .cc-toggle:active { transform: scale(.96); }
+
+    .cc-toggle:active {
+      transform: scale(.96);
+    }
+
     .cc-toggle .cc-icon {
-      width: 40px; height: 40px;
+      width: 40px;
+      height: 40px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -865,7 +1079,13 @@
       transition: background .25s ease, transform .2s ease;
       flex: 0 0 40px;
     }
-    .cc-toggle .cc-icon svg { width: 22px; height: 22px; display: block; }
+
+    .cc-toggle .cc-icon svg {
+      width: 22px;
+      height: 22px;
+      display: block;
+    }
+
     .cc-toggle .cc-label {
       font-size: 12px;
       font-weight: 500;
@@ -876,19 +1096,38 @@
       line-height: 1.1;
       color: #fff;
     }
+
     .cc-toggle.is-on .cc-icon {
       background: #3a6ff0;
       transform: scale(1.04);
       box-shadow: 0 4px 12px rgba(58, 111, 240, 0.45);
     }
-    .cc-toggle[data-key="wifi"]      { grid-column: 3 / span 2; grid-row: 1; }
-    .cc-toggle[data-key="bluetooth"] { grid-column: 3 / span 2; grid-row: 2; }
-    .cc-toggle[data-key="soundmode"] { grid-column: 1 / span 2; grid-row: 3; }
-    .cc-toggle[data-key="cellular"]  { grid-column: 3 / span 2; grid-row: 3; }
 
-    /* =========================================================
-       通知中心（pane）
-       ========================================================= */
+    .cc-toggle[data-key="soundmode"] .cc-icon {
+      background: #3a6ff0;
+      box-shadow: 0 4px 12px rgba(58, 111, 240, 0.45);
+    }
+
+    .cc-toggle[data-key="wifi"] {
+      grid-column: 3 / span 2;
+      grid-row: 1;
+    }
+
+    .cc-toggle[data-key="bluetooth"] {
+      grid-column: 3 / span 2;
+      grid-row: 2;
+    }
+
+    .cc-toggle[data-key="soundmode"] {
+      grid-column: 1 / span 2;
+      grid-row: 3;
+    }
+
+    .cc-toggle[data-key="cellular"] {
+      grid-column: 3 / span 2;
+      grid-row: 3;
+    }
+
     .nc-head {
       position: relative;
       z-index: 1;
@@ -899,12 +1138,14 @@
       gap: 12px;
       padding: 2px 6px 18px;
     }
+
     .nc-clock-block {
       display: flex;
       flex-direction: column;
       gap: 6px;
       min-width: 0;
     }
+
     .nc-clock {
       font-size: 52px;
       font-weight: 700;
@@ -916,6 +1157,7 @@
       transform-origin: left top;
       will-change: transform;
     }
+
     .nc-date {
       font-size: 15px;
       font-weight: 500;
@@ -927,7 +1169,8 @@
 
     .nc-clear {
       flex: 0 0 auto;
-      width: 42px; height: 42px;
+      width: 42px;
+      height: 42px;
       border: 1px solid rgba(255, 255, 255, .18);
       border-radius: 50%;
       background: rgba(255, 255, 255, .16);
@@ -943,9 +1186,21 @@
       transition: background .15s, transform .1s;
       -webkit-tap-highlight-color: transparent;
     }
-    .nc-clear:active { transform: scale(.92); background: rgba(255, 255, 255, .3); }
-    .nc-clear[hidden] { display: none; }
-    .nc-clear svg { width: 20px; height: 20px; display: block; }
+
+    .nc-clear:active {
+      transform: scale(.92);
+      background: rgba(255, 255, 255, .3);
+    }
+
+    .nc-clear[hidden] {
+      display: none;
+    }
+
+    .nc-clear svg {
+      width: 20px;
+      height: 20px;
+      display: block;
+    }
 
     /* 可滚动列表，遮罩按需动态添加（滚动到顶/底时那一侧不再淡化） */
     .nc-list {
@@ -966,39 +1221,44 @@
       -webkit-mask-image: none;
       mask-image: none;
     }
-    .nc-list[hidden] { display: none; }
+
+    .nc-list[hidden] {
+      display: none;
+    }
 
     .nc-list.has-top-mask {
       -webkit-mask-image: linear-gradient(to bottom,
-        transparent 0,
-        #000 var(--nc-fade),
-        #000 100%);
+          transparent 0,
+          #000 var(--nc-fade),
+          #000 100%);
       mask-image: linear-gradient(to bottom,
-        transparent 0,
-        #000 var(--nc-fade),
-        #000 100%);
+          transparent 0,
+          #000 var(--nc-fade),
+          #000 100%);
     }
+
     .nc-list.has-bottom-mask {
       -webkit-mask-image: linear-gradient(to bottom,
-        #000 0,
-        #000 calc(100% - var(--nc-fade)),
-        transparent 100%);
+          #000 0,
+          #000 calc(100% - var(--nc-fade)),
+          transparent 100%);
       mask-image: linear-gradient(to bottom,
-        #000 0,
-        #000 calc(100% - var(--nc-fade)),
-        transparent 100%);
+          #000 0,
+          #000 calc(100% - var(--nc-fade)),
+          transparent 100%);
     }
+
     .nc-list.has-top-mask.has-bottom-mask {
       -webkit-mask-image: linear-gradient(to bottom,
-        transparent 0,
-        #000 var(--nc-fade),
-        #000 calc(100% - var(--nc-fade)),
-        transparent 100%);
+          transparent 0,
+          #000 var(--nc-fade),
+          #000 calc(100% - var(--nc-fade)),
+          transparent 100%);
       mask-image: linear-gradient(to bottom,
-        transparent 0,
-        #000 var(--nc-fade),
-        #000 calc(100% - var(--nc-fade)),
-        transparent 100%);
+          transparent 0,
+          #000 var(--nc-fade),
+          #000 calc(100% - var(--nc-fade)),
+          transparent 100%);
     }
 
     .nc-empty {
@@ -1013,7 +1273,10 @@
       letter-spacing: 2px;
       text-shadow: 0 1px 8px rgba(0, 0, 0, .35);
     }
-    .nc-empty[hidden] { display: none; }
+
+    .nc-empty[hidden] {
+      display: none;
+    }
 
     .nc-item {
       position: relative;
@@ -1033,13 +1296,15 @@
       user-select: none;
       -webkit-user-select: none;
       -webkit-tap-highlight-color: transparent;
-      transition: transform .22s cubic-bezier(.2,.7,.3,1);
+      transition: transform .22s cubic-bezier(.2, .7, .3, 1);
     }
 
     .nc-item__icon {
       flex: 0 0 38px;
-      width: 38px; height: 38px;
-      border-radius: 9px;            /* 方形圆角，不裁圆 */
+      width: 38px;
+      height: 38px;
+      border-radius: 9px;
+      /* 方形圆角，不裁圆 */
       overflow: hidden;
       background: rgba(255, 255, 255, .92);
       display: flex;
@@ -1049,8 +1314,10 @@
       line-height: 1;
       color: #1c2536;
     }
+
     .nc-item__icon img {
-      width: 100%; height: 100%;
+      width: 100%;
+      height: 100%;
       object-fit: cover;
       display: block;
       pointer-events: none;
@@ -1065,12 +1332,14 @@
       flex-direction: column;
       gap: 3px;
     }
+
     .nc-item__head {
       display: flex;
       align-items: baseline;
       justify-content: space-between;
       gap: 8px;
     }
+
     .nc-item__title {
       font-size: 14px;
       font-weight: 600;
@@ -1080,13 +1349,18 @@
       white-space: nowrap;
       text-shadow: 0 1px 5px rgba(0, 0, 0, .3);
     }
+
     .nc-item__time {
       flex: 0 0 auto;
       font-size: 11px;
       color: rgba(255, 255, 255, .72);
       font-variant-numeric: tabular-nums;
     }
-    .nc-item__time[hidden] { display: none; }
+
+    .nc-item__time[hidden] {
+      display: none;
+    }
+
     .nc-item__content {
       font-size: 13px;
       color: rgba(255, 255, 255, .88);
@@ -1124,6 +1398,7 @@
       touch-action: none;
       will-change: transform, opacity;
     }
+
     .wj-banner.is-show {
       transform: translateY(0);
       opacity: 1;
@@ -1132,8 +1407,10 @@
 
     .wj-banner__icon {
       flex: 0 0 36px;
-      width: 36px; height: 36px;
-      border-radius: 9px;            /* 方形圆角 */
+      width: 36px;
+      height: 36px;
+      border-radius: 9px;
+      /* 方形圆角 */
       overflow: hidden;
       background: #fff;
       display: flex;
@@ -1142,8 +1419,10 @@
       font-size: 20px;
       line-height: 1;
     }
+
     .wj-banner__icon img {
-      width: 100%; height: 100%;
+      width: 100%;
+      height: 100%;
       object-fit: cover;
       display: block;
       pointer-events: none;
@@ -1156,6 +1435,7 @@
       flex-direction: column;
       gap: 2px;
     }
+
     .wj-banner__title {
       font-size: 14px;
       font-weight: 600;
@@ -1163,6 +1443,7 @@
       text-overflow: ellipsis;
       white-space: nowrap;
     }
+
     .wj-banner__content {
       font-size: 13px;
       color: #4a5568;
@@ -1176,7 +1457,7 @@
 <body>
 
   <div class="os" id="os" data-view="locked" data-power="off">
-
+    <img class="os-wallpaper" id="osWallpaper" src="./themes/sea.png" alt="" draggable="false">
     <div class="statusbar">
       <span class="statusbar__left">
         <span id="clock">9:41</span>
@@ -1250,14 +1531,13 @@
             </div>
 
             <button class="nc-clear" id="ncClearBtn" type="button" hidden aria-label="清除全部">
-              <svg viewBox="0 0 24 24" fill="none"
-                   stroke="currentColor" stroke-width="1.9"
-                   stroke-linecap="round" stroke-linejoin="round">
-                <path d="M3 6h18"/>
-                <path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2"/>
-                <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
-                <path d="M10 11v6"/>
-                <path d="M14 11v6"/>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"
+                stroke-linejoin="round">
+                <path d="M3 6h18" />
+                <path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2" />
+                <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+                <path d="M10 11v6" />
+                <path d="M14 11v6" />
               </svg>
             </button>
           </div>
@@ -1342,9 +1622,6 @@
   <script src="builtin-apps.js"></script>
 
   <script>
-    /* =========================================================
-       控制中心图标（DOM 里 [data-icon] 填充）
-       ========================================================= */
     const ICONS = {
       volume: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
          stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -1385,13 +1662,15 @@
     </svg>`,
       ring: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
          stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/>
-      <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>
+      <path d="M12 2v2"/>
+      <path d="M18 8.5A6 6 0 0 0 6 8.5c0 7-3 9-3 9h18s-3-2-3-9"/>
+      <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
     </svg>`,
       mute: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
          stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/>
-      <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>
+      <path d="M12 2v2"/>
+      <path d="M18 8.5A6 6 0 0 0 6 8.5c0 7-3 9-3 9h18s-3-2-3-9"/>
+      <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
       <line x1="2" y1="2" x2="22" y2="22"/>
     </svg>`,
     };
@@ -1401,9 +1680,6 @@
       if (ICONS[name]) el.innerHTML = ICONS[name];
     });
 
-    /* =========================================================
-       OS 基础状态
-       ========================================================= */
     const osEl = document.getElementById('os');
     const lockedView = document.getElementById('lockedView');
     const homeView = document.getElementById('homeView');
@@ -1670,12 +1946,9 @@
       });
     })();
 
-    /* =========================================================
-       桌面拖拽 / 长按
-       ========================================================= */
     const DesktopDrag = (() => {
-      const HOLD_MS = 300;
-      const UNINSTALL_HOLD_MS = 700;
+      const HOLD_MS = 400;
+      const UNINSTALL_HOLD_MS = 800;
       const MOVE_CANCEL = 14;
       const EDGE_ZONE = 44;
       const EDGE_HOLD_MS = 600;
@@ -2158,9 +2431,6 @@
       };
     })();
 
-    /* =========================================================
-       卸载菜单
-       ========================================================= */
     let appMenuEl = null;
     let appMenuCloseHandler = null;
 
@@ -2222,7 +2492,7 @@
       top = Math.max(EDGE, Math.min(top, vh - menuRect.height - EDGE));
 
       menu.style.left = left + 'px';
-      menu.style.top  = top  + 'px';
+      menu.style.top = top + 'px';
 
       menu.querySelector('.app-menu__item').addEventListener('click', async () => {
         hideAppMenu();
@@ -2281,10 +2551,10 @@
         const cx = rect.left + rect.width / 2;
         const cy = rect.top + rect.height / 2;
 
-        const startLeft  = Math.round(cx - size / 2);
-        const startTop   = Math.round(cy - size / 2);
-        const targetLeft = Math.round((window.innerWidth  - size) / 2);
-        const targetTop  = Math.round((window.innerHeight - size) / 2);
+        const startLeft = Math.round(cx - size / 2);
+        const startTop = Math.round(cy - size / 2);
+        const targetLeft = Math.round((window.innerWidth - size) / 2);
+        const targetTop = Math.round((window.innerHeight - size) / 2);
 
         const HOLD = 60, GROW = 520, FADE = 280;
         const EASE = 'cubic-bezier(.4, 0, .2, 1)';
@@ -2355,7 +2625,7 @@
               mask.style.borderRadius = '0';
 
               flyingIcon.style.left = targetLeft + 'px';
-              flyingIcon.style.top  = targetTop  + 'px';
+              flyingIcon.style.top = targetTop + 'px';
             });
           });
 
@@ -2388,7 +2658,7 @@
        ========================================================= */
     function playSlideUpEnter(app, oldGhost, contentReady) {
       return new Promise(resolve => {
-        const DUR  = 460, FADE = 220;
+        const DUR = 460, FADE = 220;
         const EASE = 'cubic-bezier(.2,.7,.3,1)';
 
         const mask = document.createElement('div');
@@ -2448,7 +2718,7 @@
 
         requestAnimationFrame(() => {
           mask.style.transition = `transform ${DUR}ms ${EASE}`;
-          mask.style.transform  = 'translateY(0)';
+          mask.style.transform = 'translateY(0)';
           if (oldGhost) oldGhost.style.transform = 'translateY(-100%)';
         });
 
@@ -2473,18 +2743,10 @@
       });
     }
 
-    /* =========================================================
-       openApp —— 支持 params / 动画类型
-         animType 可选，缺省自动判定：
-           sourceEl 有 → 'icon-fly'
-           有旧应用   → 'push-up'
-           无         → 'slide-up'
-       ========================================================= */
     async function openApp(bundle, sourceEl, params, animType) {
       let app = WujiApps.get(bundle);
       if (!app) return;
 
-      /* 同一应用已打开 → 只投递参数 */
       if (S.view === 'app' && S.currentBundle === bundle && currentNav) {
         try {
           window.dispatchEvent(new CustomEvent('wuji:app-params', {
@@ -2494,14 +2756,12 @@
         return;
       }
 
-      /* ---------- 自动判定动画类型 ---------- */
       if (!animType) {
         if (sourceEl) animType = 'icon-fly';
         else if (S.view === 'app' && S.currentBundle) animType = 'push-up';
         else animType = 'slide-up';
       }
 
-      /* ---------- icon-fly 需要桌面图标信息 ---------- */
       let iconInfo = null;
       if (animType === 'icon-fly') {
         const iconEl = sourceEl?.querySelector('.app__icon');
@@ -2518,58 +2778,66 @@
         }
       }
 
-      /* ---------- 处理旧应用 ---------- */
       let oldGhost = null;
-      let oldNav   = null;
+      let oldNav = null;
+
+      const cleanupOld = () => {
+        if (oldNav) {
+          try { oldNav.destroy(); } catch { }
+          oldNav = null;
+        }
+        if (oldGhost) {
+          try { oldGhost.remove(); } catch { }
+          oldGhost = null;
+        }
+      };
 
       if (S.view === 'app' && S.currentBundle) {
         if (animType === 'push-up') {
-          /* 把旧应用 DOM 搬到 ghost，让它能被上移顶出去 */
           oldNav = currentNav;
           currentNav = null;
 
           oldGhost = document.createElement('div');
           oldGhost.style.cssText = `
-            position: absolute;
-            inset: 0;
-            z-index: 20;
-            will-change: transform;
-            transform: translateY(0);
-            background: var(--wj-bg, #fff);
-          `;
+        position: absolute;
+        inset: 0;
+        z-index: 20;
+        will-change: transform;
+        transform: translateY(0);
+        background: var(--wj-bg, #fff);
+      `;
           while (appScreen.firstChild) oldGhost.appendChild(appScreen.firstChild);
           appView.appendChild(oldGhost);
         } else {
-          /* 其他动画：直接关闭旧应用 */
-          if (currentNav) { currentNav.destroy(); currentNav = null; }
-          else {
+          if (currentNav) {
+            currentNav.destroy();
+            currentNav = null;
+          } else {
             const oldApp = WujiApps.get(S.currentBundle);
             try { oldApp?.unmount?.(); } catch { }
           }
         }
       }
 
-      /* ---------- 状态 ---------- */
-      S.currentBundle = bundle;
-      currentBackHandler = null;
+      try {
+        S.currentBundle = bundle;
+        currentBackHandler = null;
 
-      /* ---------- 立即切视图 ---------- */
-      setView('app');
-      appScreen.style.transition = 'none';
-      appScreen.style.transform  = '';
-      appScreen.style.opacity    = '0';
+        setView('app');
+        appScreen.style.transition = 'none';
+        appScreen.style.transform = '';
+        appScreen.style.opacity = '0';
 
-      /* ---------- 重建 shadow DOM 骨架 ---------- */
-      appScreen.innerHTML = '';
+        appScreen.innerHTML = '';
 
-      const shadowHost = document.createElement('div');
-      shadowHost.style.cssText = 'position:absolute;inset:0;overflow:hidden;';
-      appScreen.appendChild(shadowHost);
+        const shadowHost = document.createElement('div');
+        shadowHost.style.cssText = 'position:absolute;inset:0;overflow:hidden;';
+        appScreen.appendChild(shadowHost);
 
-      const shadow = shadowHost.attachShadow({ mode: 'open' });
+        const shadow = shadowHost.attachShadow({ mode: 'open' });
 
-      const baseStyle = document.createElement('style');
-      baseStyle.textContent = `
+        const baseStyle = document.createElement('style');
+        baseStyle.textContent = `
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :host {
       position: absolute; inset: 0; display: block;
@@ -2582,8 +2850,6 @@
     * { scrollbar-width: none; -ms-overflow-style: none; }
     *::-webkit-scrollbar { display: none; }
 
-    /* ★ 应用内图片默认不响应指针：彻底阻止华为等浏览器的长按图片菜单。
-       如某张图片确实需要响应事件，加 data-interactive 即可恢复。 */
     img {
       -webkit-touch-callout: none;
       -webkit-user-select: none;
@@ -2607,102 +2873,98 @@
       height: 100%;
     }
   `;
-      shadow.appendChild(baseStyle);
+        shadow.appendChild(baseStyle);
 
-      const compLink = document.createElement('link');
-      compLink.rel = 'stylesheet';
-      compLink.href = 'styles/components.css';
-      shadow.appendChild(compLink);
+        const compLink = document.createElement('link');
+        compLink.rel = 'stylesheet';
+        compLink.href = 'styles/components.css';
+        shadow.appendChild(compLink);
 
-      const appStyleEl = document.createElement('style');
-      shadow.appendChild(appStyleEl);
+        const appStyleEl = document.createElement('style');
+        shadow.appendChild(appStyleEl);
 
-      const navHost = document.createElement('div');
-      navHost.id = 'navHost';
-      navHost.style.cssText = 'position:absolute;inset:0;overflow:hidden;';
-      shadow.appendChild(navHost);
+        const navHost = document.createElement('div');
+        navHost.id = 'navHost';
+        navHost.style.cssText = 'position:absolute;inset:0;overflow:hidden;';
+        shadow.appendChild(navHost);
 
-      /* ---------- content-ready ---------- */
-      let _resolveContentReady = null;
-      const contentReady = new Promise(r => { _resolveContentReady = r; });
+        /* ---------- content-ready：让动画知道"内容什么时候就绪" ---------- */
+        let _resolveContentReady = null;
+        const contentReady = new Promise(r => { _resolveContentReady = r; });
 
-      /* ---------- 启动动画 ---------- */
-      let animPromise;
-      if (animType === 'icon-fly') {
-        animPromise = playIconFlyEnter(iconInfo, contentReady);
-      } else {
-        animPromise = playSlideUpEnter(app, oldGhost, contentReady);
-      }
+        /* ---------- 启动动画（与脚本加载并行） ---------- */
+        const animPromise = (animType === 'icon-fly')
+          ? playIconFlyEnter(iconInfo, contentReady)
+          : playSlideUpEnter(app, oldGhost, contentReady);
 
-      /* ---------- 等待脚本（仅市场应用） ---------- */
-      if (app._metaOnly) {
-        if (!app._src) {
-          console.error('[openApp] 缺少 src:', bundle);
-          try { _resolveContentReady?.(); } catch { }
-          setView('home');
-          return;
+        /* ---------- 等待脚本（仅市场应用需要） ---------- */
+        if (app._metaOnly) {
+          if (!app._src) {
+            console.error('[openApp] 缺少 src:', bundle);
+            try { _resolveContentReady?.(); } catch { }
+            setView('home');
+            return;                      /* ★ finally 兜底清理 oldNav / oldGhost */
+          }
+          try {
+            await WujiAppLoader.load(app._src, app.version);
+          } catch (e) {
+            console.error('[openApp] 加载失败', bundle, e);
+            try { _resolveContentReady?.(); } catch { }
+            setView('home');
+            return;                      /* ★ 同上 */
+          }
+          app = WujiApps.get(bundle);
+          if (!app || app._metaOnly) {
+            try { _resolveContentReady?.(); } catch { }
+            setView('home');
+            return;                      /* ★ 同上 */
+          }
         }
-        try {
-          await WujiAppLoader.load(app._src, app.version);
-        } catch (e) {
-          console.error('[openApp] 加载失败', bundle, e);
-          try { _resolveContentReady?.(); } catch { }
-          setView('home');
-          return;
+
+        /* ---------- 私有样式 ---------- */
+        appStyleEl.textContent = app.styles || '';
+
+        /* ---------- 建 nav + push 首屏 ---------- */
+        const nav = new WujiNavigation({
+          host: navHost,
+          routes: app.routes || {},
+        });
+        currentNav = nav;
+
+        const legacyCtx = {
+          closeApp,
+          onBack(fn) { currentBackHandler = fn; },
+          nav,
+          push(name, data) { nav.push(name, data); },
+          pop() { return nav.pop(); },
+          params: params || {},
+        };
+
+        const initialData = params ? { ...params } : {};
+
+        if (app.routes) {
+          const initial = app.initialRoute || Object.keys(app.routes)[0];
+          nav.push(app.routes[initial], initialData, { animate: false });
+        } else {
+          nav.push({
+            name: app.bundlename,
+            render: () => `<div class="app-body" id="legacyBody"></div>`,
+            mount: (el) => {
+              const body = el.querySelector('#legacyBody');
+              body.innerHTML = app.render ? app.render(legacyCtx) : '';
+              app.mount?.(body, legacyCtx);
+            },
+            unmount: () => app.unmount?.(),
+          }, {}, { animate: false });
         }
-        app = WujiApps.get(bundle);
-        if (!app || app._metaOnly) {
-          try { _resolveContentReady?.(); } catch { }
-          setView('home');
-          return;
-        }
+
+        try { _resolveContentReady?.(); } catch { }
+
+        try { await animPromise; } catch { }
+
+      } finally {
+        cleanupOld();
       }
-
-      appStyleEl.textContent = app.styles || '';
-
-      /* ---------- 建 nav + push 首屏 ---------- */
-      const nav = new WujiNavigation({
-        host: navHost,
-        routes: app.routes || {},
-      });
-      currentNav = nav;
-
-      const legacyCtx = {
-        closeApp,
-        onBack(fn) { currentBackHandler = fn; },
-        nav,
-        push(name, data) { nav.push(name, data); },
-        pop() { return nav.pop(); },
-        params: params || {},
-      };
-
-      const initialData = params ? { ...params } : {};
-
-      if (app.routes) {
-        const initial = app.initialRoute || Object.keys(app.routes)[0];
-        nav.push(app.routes[initial], initialData, { animate: false });
-      } else {
-        nav.push({
-          name: app.bundlename,
-          render: () => `<div class="app-body" id="legacyBody"></div>`,
-          mount: (el) => {
-            const body = el.querySelector('#legacyBody');
-            body.innerHTML = app.render ? app.render(legacyCtx) : '';
-            app.mount?.(body, legacyCtx);
-          },
-          unmount: () => app.unmount?.(),
-        }, {}, { animate: false });
-      }
-
-      /* ---------- 内容就绪 → 让动画揭晓 ---------- */
-      try { _resolveContentReady?.(); } catch { }
-
-      /* ---------- 等动画结束 ---------- */
-      try { await animPromise; } catch { }
-
-      /* ---------- 收尾 ---------- */
-      if (oldNav) { try { oldNav.destroy(); } catch { } }
-      if (oldGhost) { oldGhost.remove(); }
     }
 
     function finishCloseApp() {

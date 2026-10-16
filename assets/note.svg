@@ -1,0 +1,35 @@
+<svg width="256" height="256" viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg">
+  <!-- 黄色圆角背景 -->
+  <rect width="256" height="256" fill="#FFC107"/>
+  
+  <!-- 纸张主体（右下角切角） -->
+  <path d="M 76 48 
+           H 180 
+           Q 192 48 192 60 
+           V 145 
+           L 134 216 
+           H 76 
+           Q 64 216 64 204 
+           V 60 
+           Q 64 48 76 48 Z" 
+        fill="#FFFFFF"/>
+  
+  <!-- 翻折的纸角（带圆角） -->
+  <path d="M 187 146 
+           Q 192 145 189 149 
+           L 137 212 
+           Q 134 216 133 211 
+           L 124 165 
+           Q 123 159 128 158 
+           L 187 146 Z" 
+        fill="#FFF3C4"/>
+  
+  <!-- 折痕线 -->
+  <path d="M 192 145 L 134 216" 
+        fill="none" stroke="#FFC107" stroke-width="5" stroke-linecap="round"/>
+  
+  <!-- 备忘录横线 -->
+  <rect x="88" y="88" width="80" height="7" rx="3.5" fill="#FFC107"/>
+  <rect x="88" y="118" width="80" height="7" rx="3.5" fill="#FFC107"/>
+  <rect x="88" y="148" width="56" height="7" rx="3.5" fill="#FFC107"/>
+</svg>

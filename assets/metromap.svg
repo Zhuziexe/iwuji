@@ -1,0 +1,21 @@
+<svg width="256" height="256" viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg">
+  <!-- 白色圆角方形背景 -->
+  <rect width="256" height="256" fill="#FFFFFF" stroke="#E5E5EA" stroke-width="2"/>
+
+  <!-- 蓝色线路（垂直线 + 右上斜线） -->
+  <path d="M 128 224 L 128 128 L 176 64" fill="none" stroke="#0A84FF" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- 红色线路（水平线 + 右下斜线） -->
+  <path d="M 64 128 L 128 128 L 192 192" fill="none" stroke="#FF453A" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- 蓝色线路站点 -->
+  <circle cx="128" cy="224" r="12" fill="#FFFFFF" stroke="#0A84FF" stroke-width="6"/>
+  <circle cx="176" cy="64" r="12" fill="#FFFFFF" stroke="#0A84FF" stroke-width="6"/>
+
+  <!-- 红色线路站点 -->
+  <circle cx="64" cy="128" r="12" fill="#FFFFFF" stroke="#FF453A" stroke-width="6"/>
+  <circle cx="192" cy="192" r="12" fill="#FFFFFF" stroke="#FF453A" stroke-width="6"/>
+
+  <!-- 换乘枢纽站（中心交点） -->
+  <circle cx="128" cy="128" r="18" fill="#FFFFFF" stroke="#1C1C1E" stroke-width="6"/>
+</svg>

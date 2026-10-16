@@ -1,5 +1,4 @@
 (() => {
-  /* ---------------- 图标常量 ---------------- */
   const ICON = {
     wifi: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>`,
     bluetooth: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 6.5l11 11L12 23V1l5.5 5.5-11 11"/></svg>`,
@@ -166,7 +165,7 @@
     name: '设置',
     icon: './assets/settings.svg',
     initialRoute: 'home',
-
+    version: '1.0.7',
     styles: `
       .settings-page {
         position: absolute;
@@ -645,7 +644,7 @@
 
               <div class="settings-about-card">
                 <div class="settings-about-card__title">WujiOS</div>
-                <div class="settings-about-card__version">1.0.105</div>
+                <div class="settings-about-card__version">1.0.106</div>
                 <div class="settings-about-card__btn" id="checkUpdateBtn">检查更新</div>
               </div>
 
@@ -660,7 +659,7 @@
                 </div>
                 <div class="settings-row">
                   <span>WujiOS版本</span>
-                  <span class="settings-row__value">1.0.105</span>
+                  <span class="settings-row__value">1.0.106</span>
                 </div>
                 <div class="settings-row">
                   <span>OpenWuji版本</span>

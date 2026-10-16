@@ -1,12 +1,9 @@
-/* =========================================================
-   apps/wujigallery.js —— 应用市场
-   ========================================================= */
 WujiApps.register({
   bundlename: 'com.wujios.wujigallery',
   name: '应用市场',
   icon: './assets/wujigallery.svg',
   initialRoute: 'home',
-
+  version: '1.0.3',
   styles: `
     /* ---------------- 列表页 ---------------- */
     .market-page {
@@ -156,9 +153,9 @@ WujiApps.register({
       font-size: var(--wj-fs-sm);
       color: var(--wj-text-muted);
       line-height: 1.6;
+      white-space: pre-line;
     }
 
-    /* ---------------- 底部按钮 ---------------- */
     .market-detail__footer {
       flex: 0 0 auto;
       padding: 12px 18px calc(12px + env(safe-area-inset-bottom, 0px));

@@ -40,7 +40,7 @@
     name: '吴际心情',
     icon: './assets/mood.svg',
     initialRoute: 'home',
-
+    version:'1.0.2',
     styles: `
       .mood-page {
         position: absolute;

@@ -25,16 +25,14 @@ window.PanelSystem = (() => {
 
   let gesture = null;
   let ready = false;
-  let blurTimer = null; 
 
-    function apply(animate = true) {
+  function apply(animate = true) {
     if (!ready) return;
 
     if (animate) {
       root.style.transition     = `transform ${DUR}ms ${EASE}`;
       track.style.transition    = `transform ${DUR}ms ${EASE}`;
-      backdrop.style.transition =
-        `opacity ${DUR}ms ${EASE}, backdrop-filter .28s ease, -webkit-backdrop-filter .28s ease`;
+      backdrop.style.transition = `opacity ${DUR}ms ${EASE}`;
     } else {
       root.style.transition     = 'none';
       track.style.transition    = 'none';
@@ -44,7 +42,7 @@ window.PanelSystem = (() => {
     root.style.transform  = `translateY(${v}%)`;
     track.style.transform = `translateX(${h}%)`;
 
-    /* 按进度插值 opacity（0 → 1），不再用硬阈值 */
+    /* 按进度插值 opacity（0 → 1），拖动/展开/收起全程平滑 */
     const progress = Math.max(0, Math.min(1, (v + 100) / 100));
     backdrop.style.opacity = String(progress);
 
@@ -53,27 +51,6 @@ window.PanelSystem = (() => {
     osEl.classList.toggle('panel-open', open);
     osEl.classList.toggle('nc-open', open && panel === 'nc');
     osEl.classList.toggle('cc-open', open && panel === 'cc');
-
-    /* ★ 模糊控制：
-       - 面板不在完全打开位置 → 立刻去掉 blur（拖动中不开 blur，保证流畅）
-       - 面板完全打开且动画中 → 动画结束后再加 blur
-       - 面板完全打开且直接落位（animate=false） → 立即加 blur
-    */
-    if (v === 0 && open && animate) {
-      clearTimeout(blurTimer);
-      blurTimer = setTimeout(() => {
-        blurTimer = null;
-        if (v === 0 && open) backdrop.classList.add('has-blur');
-      }, DUR + 30);
-    } else if (v === 0 && open && !animate) {
-      clearTimeout(blurTimer);
-      blurTimer = null;
-      backdrop.classList.add('has-blur');
-    } else {
-      clearTimeout(blurTimer);
-      blurTimer = null;
-      backdrop.classList.remove('has-blur');
-    }
   }
 
   /* ---------------- 打开 / 关闭 / 切 pane ---------------- */

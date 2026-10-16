@@ -328,7 +328,7 @@
     name: '开地铁游戏',
     icon: './assets/metro.png',
     initialRoute: 'home',
-
+    version: '1.0.1',
     styles: `
       .metro-page {
         position: absolute;

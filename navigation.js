@@ -30,6 +30,34 @@ window.WujiNavigation = class WujiNavigation {
   }
 
   /* ---------------------------------------------------------
+     ★ 统一的「卸载一个栈项」入口
+        - 取消尚未执行的 mount
+        - 优先调用 mount 返回的清理函数
+        - 再调用 route.unmount
+     --------------------------------------------------------- */
+  _disposeItem(item) {
+    if (!item || item.disposed) return;
+    item.disposed = true;
+
+    /* mount 还没跑就别跑了 */
+    if (item._mountRaf) {
+      cancelAnimationFrame(item._mountRaf);
+      item._mountRaf = null;
+    }
+
+    /* mount 返回的清理函数 */
+    if (typeof item.dispose === 'function') {
+      try { item.dispose(); }
+      catch (e) { console.error('[WujiNavigation] dispose', e); }
+      item.dispose = null;
+    }
+
+    /* 路由级 unmount */
+    try { item.route.unmount?.(); }
+    catch (e) { console.error('[WujiNavigation] unmount', e); }
+  }
+
+  /* ---------------------------------------------------------
      push
      --------------------------------------------------------- */
   push(routeOrName, data = {}, { animate = true } = {}) {
@@ -78,10 +106,30 @@ window.WujiNavigation = class WujiNavigation {
       });
     }
 
-    this.stack.push({ route, element: el, data, ctx: routeCtx });
+    const item = {
+      route,
+      element: el,
+      data,
+      ctx: routeCtx,
+      dispose: null,       // ★ mount 的返回值放这
+      disposed: false,     // ★ 是否已经卸载
+      _mountRaf: 0,
+    };
+    this.stack.push(item);
 
-    requestAnimationFrame(() => {
-      route.mount?.(el, routeCtx);
+    item._mountRaf = requestAnimationFrame(() => {
+      item._mountRaf = 0;
+      /* ★ 排队期间已被 pop / reset / destroy → 不再 mount */
+      if (item.disposed) return;
+
+      const ret = route.mount?.(el, routeCtx);
+      if (typeof ret === 'function') item.dispose = ret;
+
+      /* ★ 极端情况：mount 执行过程中被卸载（比如 mount 里同步调用了 pop） */
+      if (item.disposed && item.dispose) {
+        try { item.dispose(); } catch (e) { console.error(e); }
+        item.dispose = null;
+      }
     });
 
     this._emitChange();
@@ -94,10 +142,10 @@ window.WujiNavigation = class WujiNavigation {
   pop() {
     if (this.stack.length <= 1) return false;
 
-    const cur = this.stack.pop();
+    const cur  = this.stack.pop();
     const prev = this.stack[this.stack.length - 1];
 
-    cur.route.unmount?.();
+    this._disposeItem(cur);   // ★ 统一卸载
 
     cur.element.style.transition = 'transform .28s cubic-bezier(.4,0,.6,1)';
     cur.element.style.transform = 'translateX(100%)';
@@ -115,7 +163,7 @@ window.WujiNavigation = class WujiNavigation {
   reset(routeOrName, data = {}) {
     while (this.stack.length) {
       const it = this.stack.pop();
-      it.route.unmount?.();
+      this._disposeItem(it);   // ★
       it.element.remove();
     }
     this.push(routeOrName, data, { animate: false });
@@ -124,7 +172,7 @@ window.WujiNavigation = class WujiNavigation {
   destroy() {
     while (this.stack.length) {
       const it = this.stack.pop();
-      it.route.unmount?.();
+      this._disposeItem(it);   // ★
       it.element.remove();
     }
     this._dragActive = false;
