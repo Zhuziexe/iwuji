@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+  <defs>
+    <filter id="diceShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="6" stdDeviation="8" flood-color="#2a1259" flood-opacity="0.35"/>
+    </filter>
+  </defs>
+
+  <!-- 紫色渐变圆角底 -->
+  <rect x="0" y="0" width="256" height="256" fill="#9b6bff"/>
+
+  <!-- 骰子主体 -->
+  <g filter="url(#diceShadow)">
+    <rect x="60" y="60" width="136" height="136" rx="30" ry="30"
+          fill="#ffffff"/>
+    <!-- 立体感：右下阴影 -->
+    <path d="M 60 166
+             Q 60 196 90 196
+             L 166 196
+             Q 196 196 196 166
+             L 196 172
+             Q 196 202 166 202
+             L 90 202
+             Q 60 202 60 172 Z"
+          fill="#000000" opacity="0.06"/>
+  </g>
+
+  <!-- 点数：5 点 -->
+  <g fill="#6a3fd6">
+    <circle cx="90"  cy="90"  r="11"/>
+    <circle cx="166" cy="90"  r="11"/>
+    <circle cx="128" cy="128" r="11"/>
+    <circle cx="90"  cy="166" r="11"/>
+    <circle cx="166" cy="166" r="11"/>
+  </g>
+</svg>

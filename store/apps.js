@@ -1,5 +1,15 @@
 window.WUJI_MARKET_APPS = [
   {
+    bundle:      'com.wujios.calendar',
+    name:        '日历',
+    icon:        './assets/calendar.svg',
+    version:     '1.0.0',
+    author:      'Wuji',
+    description: 'WujiOS日历',
+    longdescription: 'WujiOS系统日历',
+    src:         './store-apps/calendar.js',
+  },
+  {
     bundle:      'com.wujinb.wmall',
     name:        '吴际商城',
     icon:        './assets/wmall.svg',
@@ -60,5 +70,15 @@ window.WUJI_MARKET_APPS = [
     description: 'WujiOS备忘录',
     longdescription: 'WujiOS系统备忘录',
     src:         './store-apps/note.js',
+  },
+  {
+    bundle:      'com.wujinb.dice',
+    name:        '骰子',
+    icon:        './assets/dice.svg',
+    version:     '1.0.0',
+    author:      'Wuji',
+    description: '一个骰子',
+    longdescription: '一个骰子，生成1~6随机数',
+    src:         './store-apps/dice.js',
   },
 ];

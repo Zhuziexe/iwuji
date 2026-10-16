@@ -8,8 +8,8 @@
     let callStart = 0;
 
     return {
-      getNumber:    () => number,
-      getStatus:    () => status,
+      getNumber: () => number,
+      getStatus: () => status,
       getCallStart: () => callStart,
 
       start(num) {
@@ -234,20 +234,24 @@
       }
 
       .ov-call__hangup {
-        width: 72px;
-        height: 72px;
-        border-radius: 50%;
-        border: 0;
-        background: #ff3b30;
-        color: #fff;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        box-shadow: 0 8px 24px rgba(255, 59, 48, .45);
-        transition: transform .08s ease, filter .12s ease;
-        -webkit-tap-highlight-color: transparent;
-      }
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  border: 0;
+  background: #ff3b30;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 8px 24px rgba(255, 59, 48, .45);
+  transition: transform .08s ease, filter .12s ease;
+  -webkit-tap-highlight-color: transparent;
+
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+}
       .ov-call__hangup:active { transform: scale(.92); filter: brightness(.9); }
       .ov-call__hangup svg { width: 34px; height: 34px; display: block; }
     `,
@@ -275,10 +279,10 @@
         },
 
         mount(root) {
-          const statusEl  = root.querySelector('#ovCallStatus');
+          const statusEl = root.querySelector('#ovCallStatus');
           const hangupBtn = root.querySelector('#ovHangup');
 
-          if (navigator.vibrate) { try { navigator.vibrate(20); } catch {} }
+          if (navigator.vibrate) { try { navigator.vibrate(20); } catch { } }
 
           let tickTimer = null;
 
@@ -299,8 +303,14 @@
             }, 250);
           }, delay);
 
-          hangupBtn.addEventListener('click', () => {
-            if (navigator.vibrate) { try { navigator.vibrate(15); } catch {} }
+          hangupBtn.addEventListener('pointerup', e => {
+            if (e.pointerType === 'mouse' && e.button !== 0) return;
+
+            e.preventDefault();
+            e.stopPropagation();
+
+            if (navigator.vibrate) { try { navigator.vibrate(15); } catch { } }
+
             Call.end();
             WujiOverlay.close();
           });
@@ -368,9 +378,9 @@
 
         mount(root) {
           const numberEl = root.querySelector('#phoneNumber');
-          const backBtn  = root.querySelector('#phoneBack');
-          const dialBtn  = root.querySelector('#phoneDial');
-          const padEl    = root.querySelector('.phone-pad');
+          const backBtn = root.querySelector('#phoneBack');
+          const dialBtn = root.querySelector('#phoneDial');
+          const padEl = root.querySelector('.phone-pad');
 
           let number = '';
 
@@ -384,14 +394,14 @@
             if (number.length >= 20) return;
             number += d;
             updateNumber();
-            if (navigator.vibrate) { try { navigator.vibrate(6); } catch {} }
+            if (navigator.vibrate) { try { navigator.vibrate(6); } catch { } }
           }
 
           function backspace() {
             if (!number) return;
             number = number.slice(0, -1);
             updateNumber();
-            if (navigator.vibrate) { try { navigator.vibrate(6); } catch {} }
+            if (navigator.vibrate) { try { navigator.vibrate(6); } catch { } }
           }
 
           function onPadClick(e) {
@@ -402,7 +412,7 @@
 
           function onDial() {
             if (!number) return;
-            if (navigator.vibrate) { try { navigator.vibrate(20); } catch {} }
+            if (navigator.vibrate) { try { navigator.vibrate(20); } catch { } }
 
             Call.start(number);
             WujiOverlay.open({ bundlename: BUNDLE, name: 'calling' });
