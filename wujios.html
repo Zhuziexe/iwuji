@@ -634,9 +634,12 @@
       pointer-events: none;
       z-index: 900;
       transform: scale(1.12);
-      filter: drop-shadow(0 12px 24px rgba(0, 0, 0, .35));
       opacity: .95;
       will-change: left, top;
+    }
+
+    .desktop-ghost .app__icon {
+      filter: drop-shadow(0 12px 24px rgba(0, 0, 0, .35));
     }
 
     .desktop-drag-preview {
@@ -2172,8 +2175,7 @@
         ghostEl.style.top = rect.top + 'px';
         ghostEl.style.width = rect.width + 'px';
         ghostEl.style.height = rect.height + 'px';
-        document.body.appendChild(ghostEl);
-
+        (document.getElementById('os') || document.body).appendChild(ghostEl);
         moveGhost(x, y);
         suppressClickUntil = performance.now() + SUPPRESS_MS;
         createPreview(appEl);
@@ -2200,7 +2202,7 @@
         previewEl.removeAttribute('data-dragging');
         previewEl.removeAttribute('data-bundle');
         previewEl.style.display = 'none';
-        document.body.appendChild(previewEl);
+        (document.getElementById('os') || document.body).appendChild(ghostEl);
       }
 
       function destroyPreview() {

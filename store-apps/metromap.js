@@ -269,6 +269,20 @@
             });
           });
         },
+
+        unmount() {
+          (async () => {
+          WujiNotification.publish({
+            bundlename: 'com.wujinb.metromap',
+            id: 1001,
+            title: '地铁图',
+            content: '再看一会儿嘛~',
+            showtime: true,
+            notifyuser: true,
+            clickparams: {},
+          });
+        })()
+        }
       },
 
       /* ==================== 地图查看页 ==================== */

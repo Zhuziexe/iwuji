@@ -12,7 +12,7 @@
   const FALL_MIN      = 130;       // px/s
   const FALL_MAX      = 260;       // px/s
   const STAR_SCORE    = 10;
-  const POOP_SCORE    = -5;
+  const POOP_SCORE    = -10;
   const POOP_RATIO    = 0.25;      // 25% 掉落物是屎
 
   const EMOJI = {

@@ -168,6 +168,14 @@ window.WujiNotification = (() => {
   }
 
   function triggerLaunch(record) {
+    if (!record) return;
+
+    try {
+      unpublish({ bundlename: record.bundlename, id: record.id });
+    } catch (e) {
+      console.warn('[banner] unpublish on click failed', e);
+    }
+
     if (typeof launchApp !== 'function') return;
     launchApp(record.bundlename, record.clickparams || {});
   }
