@@ -1534,7 +1534,7 @@
             }, 0);
           }
 
-          /* ---------- 长按删除：不用 pointer capture ---------- */
+                    /* ---------- 长按删除 ---------- */
           function bindLongPressDelete(el, theme) {
             let lpTimer = null;
             let lpFired = false;
@@ -1543,23 +1543,39 @@
 
             el.addEventListener('pointerdown', e => {
               if (e.pointerType === 'mouse' && e.button !== 0) return;
-
-              /* 有菜单显示时点卡片 = 关闭菜单 */
-              if (menuEl) {
-                hideMenu();
-                return;
-              }
+              if (window.WujiDialog?.isOpen) return;
 
               lpFired = false;
               startX = e.clientX;
               startY = e.clientY;
 
-              lpTimer = setTimeout(() => {
+              lpTimer = setTimeout(async () => {
                 lpTimer = null;
                 lpFired = true;
                 if (navigator.vibrate) { try { navigator.vibrate(12); } catch { } }
-                const rect = el.getBoundingClientRect();
-                showDeleteMenu(theme, rect);
+
+                const res = await WujiDialog.show({
+                  bundlename: 'com.wujios.settings',
+                  title: '删除主题',
+                  content: `确定要删除主题「${theme.name || ''}」吗？`,
+                  buttons: [
+                    { value: '取消', color: 'var(--wj-primary, #3a6ff0)' },
+                    { value: '删除', color: 'var(--wj-danger, #e0356b)' },
+                  ],
+                });
+
+                if (res !== '删除') return;
+
+                const ok = await deleteTheme(theme.id);
+                if (!ok) return;
+
+                if (WujiTheme.current === theme.id) {
+                  const fallback = (SYS[0] && SYS[0].id) || 'sea';
+                  try { await WujiTheme.load(fallback); } catch (e) {
+                    console.warn('[themes] fallback load failed:', e);
+                  }
+                }
+                await renderMine();
               }, 600);
 
               const cleanup = () => {
@@ -1592,6 +1608,7 @@
               }
             }, true);
           }
+          
           /* ---------- 我的主题渲染 ---------- */
           async function renderMine() {
             const list = await readDownloaded();

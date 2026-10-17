@@ -308,9 +308,6 @@ window.WujiNotification = (() => {
 
       if (by < -UP_THRESH && Math.abs(by) > Math.abs(bx)) {
         slideOutTo(0);
-        setTimeout(() => {
-          try { window.PanelSystem?.open('nc'); } catch { }
-        }, 200);
         return;
       }
 
