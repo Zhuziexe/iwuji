@@ -738,7 +738,7 @@
           `;
         },
 
-        mount(root, ctx) {
+                mount(root, ctx) {
           root.querySelector('[data-act="about"]')
             ?.addEventListener('click', () => ctx.push('about'));
           root.querySelector('[data-act="wlan"]')
@@ -755,6 +755,13 @@
             ?.addEventListener('click', () => ctx.push('app-manage'));
           root.querySelector('[data-act="biometric"]')
             ?.addEventListener('click', () => ctx.push('biometric'));
+
+          const target = ctx.data && ctx.data.route;
+          if (target && ctx.nav && ctx.nav.routes && ctx.nav.routes[target]) {
+            requestAnimationFrame(() => {
+              ctx.nav.reset(target, {});
+            });
+          }
         },
       },
 
@@ -1465,6 +1472,7 @@
             if (menuEl) { menuEl.remove(); menuEl = null; }
           }
 
+          /* ---------- 菜单 ---------- */
           function showDeleteMenu(theme, rect) {
             hideMenu();
             menuEl = document.createElement('div');
@@ -1487,14 +1495,12 @@
             menuEl.style.left = left + 'px';
             menuEl.style.top  = top  + 'px';
 
-            /* ---- 菜单项：pointerup + click 双保险 ---- */
             const item = menuEl.querySelector('.theme-menu__item');
             let handled = false;
 
             const handleDelete = async ev => {
               if (handled) return;
               handled = true;
-
               try { ev.stopPropagation(); ev.preventDefault(); } catch { }
               hideMenu();
               console.log('[themes] delete clicked:', theme.id);
@@ -1511,6 +1517,7 @@
               await renderMine();
             };
 
+            /* pointerup + click 双保险 */
             item.addEventListener('pointerup', handleDelete);
             item.addEventListener('click', handleDelete);
 
@@ -1527,59 +1534,56 @@
             }, 0);
           }
 
-          /* ---------- 长按删除 ---------- */
+          /* ---------- 长按删除：不用 pointer capture ---------- */
           function bindLongPressDelete(el, theme) {
             let lpTimer = null;
             let lpFired = false;
-            let pid     = null;
             let startX  = 0, startY = 0;
             const MOVE_CANCEL = 10;
 
             el.addEventListener('pointerdown', e => {
               if (e.pointerType === 'mouse' && e.button !== 0) return;
+
+              /* 有菜单显示时点卡片 = 关闭菜单 */
+              if (menuEl) {
+                hideMenu();
+                return;
+              }
+
               lpFired = false;
-              pid = e.pointerId;
               startX = e.clientX;
               startY = e.clientY;
-              try { el.setPointerCapture(e.pointerId); } catch { }
 
               lpTimer = setTimeout(() => {
                 lpTimer = null;
                 lpFired = true;
-
-                /* ★ 长按触发时立刻释放 capture，
-                   否则后续 pointer 事件全被锁在卡片上，菜单按钮点不到 */
-                try { el.releasePointerCapture(pid); } catch { }
-                pid = null;
-
-                if (navigator.vibrate) { try { navigator.vibrate(12); } catch {} }
+                if (navigator.vibrate) { try { navigator.vibrate(12); } catch { } }
                 const rect = el.getBoundingClientRect();
                 showDeleteMenu(theme, rect);
               }, 600);
+
+              const cleanup = () => {
+                document.removeEventListener('pointermove', onMove);
+                document.removeEventListener('pointerup', onUp);
+              };
+              const onMove = ev => {
+                if (!lpTimer) return;
+                if (Math.abs(ev.clientX - startX) > MOVE_CANCEL ||
+                    Math.abs(ev.clientY - startY) > MOVE_CANCEL) {
+                  clearTimeout(lpTimer);
+                  lpTimer = null;
+                  cleanup();
+                }
+              };
+              const onUp = () => {
+                if (lpTimer) { clearTimeout(lpTimer); lpTimer = null; }
+                cleanup();
+              };
+              document.addEventListener('pointermove', onMove, { passive: true });
+              document.addEventListener('pointerup', onUp);
             });
 
-            el.addEventListener('pointermove', e => {
-              if (!lpTimer) return;
-              if (pid !== null && e.pointerId !== pid) return;
-              const dx = e.clientX - startX;
-              const dy = e.clientY - startY;
-              if (Math.hypot(dx, dy) > MOVE_CANCEL) {
-                clearTimeout(lpTimer);
-                lpTimer = null;
-              }
-            });
-
-            const stop = e => {
-              if (lpTimer) { clearTimeout(lpTimer); lpTimer = null; }
-              if (pid !== null) {
-                try { el.releasePointerCapture(pid); } catch { }
-                pid = null;
-              }
-            };
-            el.addEventListener('pointerup', stop);
-            el.addEventListener('pointercancel', stop);
-
-            /* 长按松手后的 click 在 capture 阶段吞掉 */
+            /* 长按后点卡片 = 取消，不打开详情页 */
             el.addEventListener('click', e => {
               if (lpFired) {
                 lpFired = false;
@@ -1588,7 +1592,6 @@
               }
             }, true);
           }
-
           /* ---------- 我的主题渲染 ---------- */
           async function renderMine() {
             const list = await readDownloaded();

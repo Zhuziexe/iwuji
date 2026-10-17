@@ -84,16 +84,8 @@
       overflow: hidden;
       background: #0b1b33;
     }
-    .os-wallpaper-frame {
-      width: 100%;
-      height: 100%;
-      border: 0;
-      display: block;
-      pointer-events: none;
-      background: transparent;
-    }
 
-    .statusbar {
+.statusbar {
       position: absolute;
       top: 0;
       left: 0;
@@ -106,16 +98,18 @@
       padding-right: 34px;
       font-size: var(--wj-fs-xs);
       font-weight: 600;
+
+      color: #fff;
       background: linear-gradient(to bottom,
-          rgba(255, 255, 255, .55) 0%,
-          rgba(255, 255, 255, .25) 60%,
-          rgba(255, 255, 255, 0) 100%);
-      color: #000;
+        rgba(0, 0, 0, .35) 0%,
+        rgba(0, 0, 0, .12) 55%,
+        rgba(0, 0, 0, 0) 100%);
+      text-shadow: 0 1px 2px rgba(0, 0, 0, .45);
+
       z-index: 60;
       pointer-events: none;
       opacity: 1;
       transition: opacity .25s, color .25s, background .25s, text-shadow .25s;
-      text-shadow: none;
     }
 
     .os[data-view="locked"] .statusbar,
@@ -123,11 +117,33 @@
       opacity: 0;
     }
 
-    /* 面板打开：状态栏文字变白、透明背景 */
-    .os.panel-open .statusbar {
-      background: transparent;
+    /* ★ 亮色主题：桌面状态下用黑字 + 浅色渐变（应用状态和面板不受此影响） */
+    .os[data-theme-tone="light"]:not([data-view="app"]) .statusbar {
+      color: #000;
+      background: linear-gradient(to bottom,
+        rgba(255, 255, 255, .48) 0%,
+        rgba(255, 255, 255, .18) 55%,
+        rgba(255, 255, 255, 0) 100%);
+      text-shadow: 0 1px 2px rgba(255, 255, 255, .55);
+    }
+
+    /* ★ 打开应用：黑字 + 浅色渐变（无论什么主题都一样） */
+    .os[data-view="app"] .statusbar {
+      color: #000;
+      background: linear-gradient(to bottom,
+        rgba(255, 255, 255, .55) 0%,
+        rgba(255, 255, 255, .25) 60%,
+        rgba(255, 255, 255, 0) 100%);
+      text-shadow: none;
+    }
+
+    /* ★ 面板打开：白字 + 透明背景（优先级最高，覆盖一切） */
+    .os.panel-open .statusbar,
+    .os.panel-open[data-theme-tone="light"] .statusbar,
+    .os.panel-open[data-view="app"] .statusbar {
       color: #fff;
-      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+      background: transparent;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, .35);
     }
 
     /* 左侧组：时间 + 通知图标 */
@@ -317,7 +333,10 @@
       letter-spacing: 0;
       line-height: 1;
       font-family: 'Consolas', monospace;
-      background: linear-gradient(180deg,
+
+      color: var(--wj-lock-time-color, transparent);
+      background: var(--wj-lock-time-bg,
+        linear-gradient(180deg,
           rgba(255, 255, 255, 0.7) 0%,
           rgba(255, 255, 255, 0.6) 6%,
           rgba(255, 255, 255, 0.58) 18%,
@@ -325,28 +344,85 @@
           rgba(255, 255, 255, 0.4) 62%,
           rgba(255, 255, 255, 0.55) 82%,
           rgba(255, 255, 255, 0.6) 96%,
-          rgba(255, 255, 255, 0.7) 100%);
+          rgba(255, 255, 255, 0.7) 100%));
       -webkit-background-clip: text;
       background-clip: text;
-      -webkit-text-fill-color: transparent;
-      color: transparent;
-      filter:
-        drop-shadow(0 -1px 0.5px rgba(255, 255, 255, 1)) drop-shadow(0 1px 0.5px rgba(30, 50, 80, 0.55)) drop-shadow(0 2px 1px rgba(30, 50, 80, 0.35)) drop-shadow(0 6px 14px rgba(30, 50, 80, 0.35)) drop-shadow(0 14px 32px rgba(30, 50, 80, 0.22));
+      -webkit-text-fill-color: var(--wj-lock-time-fill, transparent);
+
+      filter: var(--wj-lock-time-filter,
+        drop-shadow(0 -1px 0.5px rgba(255, 255, 255, 1))
+        drop-shadow(0 1px 0.5px rgba(30, 50, 80, 0.55))
+        drop-shadow(0 2px 1px rgba(30, 50, 80, 0.35))
+        drop-shadow(0 6px 14px rgba(30, 50, 80, 0.35))
+        drop-shadow(0 14px 32px rgba(30, 50, 80, 0.22)));
     }
 
-    .lock-time__min {
-      margin-top: 8px;
-      opacity: .98;
+    .lock-time__min { margin-top: 8px; opacity: .98; }
+
+.lock-time__sep {
+      display: none;
     }
 
+    .os[data-lock-style="small"] .lock-time {
+      flex-direction: row;
+      align-items: center;
+      justify-content: center;
+      gap: 0;
+    }
+
+    .os[data-lock-style="small"] .lock-time__hour,
+    .os[data-lock-style="small"] .lock-time__min {
+      margin: 0;      /* ★ 去掉 auto，避免 flex row 里被推到两侧 */
+      text-align: center;
+    }
+
+    .os[data-lock-style="small"] .lock-time__sep {
+      /* 保持原有样式不变 */
+      display: block;
+      font-size: 96px;
+      font-weight: 700;
+      letter-spacing: 0;
+      line-height: 1;
+      font-family: 'Consolas', monospace;
+      margin: 0;
+
+      color: var(--wj-lock-time-color, transparent);
+      background: var(--wj-lock-time-bg,
+        linear-gradient(180deg,
+          rgba(255, 255, 255, 0.7) 0%,
+          rgba(255, 255, 255, 0.6) 6%,
+          rgba(255, 255, 255, 0.58) 18%,
+          rgba(255, 255, 255, 0.55) 40%,
+          rgba(255, 255, 255, 0.4) 62%,
+          rgba(255, 255, 255, 0.55) 82%,
+          rgba(255, 255, 255, 0.6) 96%,
+          rgba(255, 255, 255, 0.7) 100%));
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: var(--wj-lock-time-fill, transparent);
+
+      filter: var(--wj-lock-time-filter,
+        drop-shadow(0 -1px 0.5px rgba(255, 255, 255, 1))
+        drop-shadow(0 1px 0.5px rgba(30, 50, 80, 0.55))
+        drop-shadow(0 2px 1px rgba(30, 50, 80, 0.35))
+        drop-shadow(0 6px 14px rgba(30, 50, 80, 0.35))
+        drop-shadow(0 14px 32px rgba(30, 50, 80, 0.22)));
+    }
+
+    .os[data-lock-style="small"] .lock-time__min {
+      margin-top: 0;
+    }
     .lock-date {
-      margin-top: 26px;
+      margin-top: 24px;
       font-size: var(--wj-fs-md);
-      color: #ffffff;
+      color: var(--wj-lock-date-color, #ffffff);
       letter-spacing: .5px;
-      text-shadow:
+      text-shadow: var(--wj-lock-date-shadow,
         0 1px 2px rgba(40, 60, 90, 0.55),
-        0 4px 12px rgba(40, 60, 90, 0.4);
+        0 4px 12px rgba(40, 60, 90, 0.4));
+    }
+    .os[data-lock-style="small"] .lock-date {
+      margin-top: 12px;
     }
 
     .password-panel {
@@ -719,6 +795,21 @@
       user-select: none;
       -webkit-user-select: none;
       -webkit-touch-callout: none;
+    }
+
+    .os[data-theme-tone="light"] .app__name {
+      color: #000;
+      text-shadow: 0 1px 2px rgba(255, 255, 255, .6);
+    }
+
+    /* ★ 亮色主题：分页点改为深色，避免看不见 */
+    .os[data-theme-tone="light"] .page-dot {
+      background: rgba(0, 0, 0, .35);
+      box-shadow: 0 1px 2px rgba(255, 255, 255, .4);
+    }
+    .os[data-theme-tone="light"] .page-dot.is-active {
+      background: #000;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, .4);
     }
 
     /* ================= 应用页 ================= */
@@ -1453,7 +1544,6 @@
 <body>
 
   <div class="os" id="os" data-view="locked" data-power="off">
-    <div class="os-wallpaper-host" id="wallpaperHost" aria-hidden="true"></div>
     <div class="statusbar">
       <span class="statusbar__left">
         <span id="clock">9:41</span>
@@ -1469,6 +1559,7 @@
       <div class="lock-content" id="lockContent">
         <div class="lock-time">
           <span class="lock-time__hour" id="lockHour">09</span>
+          <span class="lock-time__sep" aria-hidden="true">:</span>
           <span class="lock-time__min" id="lockMin">41</span>
         </div>
         <div class="lock-date" id="lockDate">10月12日 星期一</div>
@@ -1699,7 +1790,12 @@
     function setView(v) {
       S.view = v;
       osEl.dataset.view = v;
-      try { WujiTheme.post('view', { view: v }); } catch { }
+      try {
+        WujiTheme.post('view', { view: v });
+        if (v === 'locked') {
+          WujiTheme.post('lock-enter', {});
+        }
+      } catch { }
     }
     function setPower(p) {
       S.power = p;
@@ -3113,6 +3209,8 @@
     });
 
     function completeUnlock(target) {
+      try { WujiTheme.post('unlock-finish', {}); } catch { }
+
       lockedView.style.transition = 'transform .3s ease, opacity .3s ease';
       homeView.style.transition = 'opacity .3s ease';
       lockedView.style.transform = 'translateY(-100%)';
@@ -3213,7 +3311,6 @@
         }
 
         if (unlocked) {
-          WujiTheme.post('unlock-finish', {});
           completeUnlock(target);
         } else {
           WujiTheme.post('unlock-cancel', {});
@@ -3442,8 +3539,6 @@
       setPower('running');
 
       scheduleBuiltinPreload();
-
-      try { WujiTheme.post('lock-enter', {}); } catch { }
     }
 
     async function powerOff() {
