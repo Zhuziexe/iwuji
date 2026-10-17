@@ -282,7 +282,6 @@ window.WujiNotification = (() => {
 
       if (Math.abs(bx) > 6 || Math.abs(by) > 6) moved = true;
 
-      /* 上滑时跟随；下滑不跟随（保留在原位） */
       const useBy = by < 0 ? by : 0;
       bannerEl.style.transform = `translate(${bx}px, ${useBy}px)`;
 
@@ -299,7 +298,6 @@ window.WujiNotification = (() => {
       const W_THRESH  = 60;
       const UP_THRESH = 42;
 
-      /* 点击 → 关闭 + 拉起应用 */
       if (!moved) {
         hideBannerInstant();
         triggerLaunch(record);

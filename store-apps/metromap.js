@@ -6,6 +6,7 @@
     { id: 'beijing', name: '北京', map: './assets/com.wujinb.metromap/beijing.png' },
     { id: 'hangzhou', name: '青岛', map: './assets/com.wujinb.metromap/qingdao.jpg' },
     { id: 'chengdu', name: '成都', map: './assets/com.wujinb.metromap/chengdu.jpg' },
+    { id: 'shenzhen', name: '深圳', map: './assets/com.wujinb.metromap/shenzhen.jpg' },
   ];
 
   const SVG_ARROW = `<svg class="mm-item__arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg>`;
