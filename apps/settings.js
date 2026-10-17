@@ -6,6 +6,14 @@
     grid: `<svg viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="3" width="7.5" height="7.5" rx="1.6"/><rect x="13.5" y="3" width="7.5" height="7.5" rx="1.6"/><rect x="3" y="13.5" width="7.5" height="7.5" rx="1.6"/><rect x="13.5" y="13.5" width="7.5" height="7.5" rx="1.6"/></svg>`,
     key: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="15" r="4"/><path d="M10.85 12.15 19 4"/><path d="M18 5l2 2"/><path d="M15 8l2 2"/></svg>`,
     storage: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="6" rx="8" ry="2.6"/><path d="M4 6v5c0 1.44 3.58 2.6 8 2.6s8-1.16 8-2.6V6"/><path d="M4 12v5c0 1.44 3.58 2.6 8 2.6s8-1.16 8-2.6v-5"/></svg>`,
+    /* ★ 桌面和个性化：红色圆形底 + 白色刷子 */
+    paint: `<svg viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="128" cy="128" r="128" fill="#ff375f"/>
+      <rect x="112" y="32" width="32" height="96" rx="10" fill="#FFFFFF"/>
+      <rect x="94"  y="128" width="68" height="18" rx="4"  fill="#FFFFFF"/>
+      <rect x="44"  y="146" width="168" height="80" rx="10" fill="#FFFFFF"/>
+      <line x1="44" y1="146" x2="212" y2="146" stroke="#ff375f" stroke-opacity="0.25" stroke-width="2"/>
+    </svg>`,
   };
 
   function formatBytes(n) {
@@ -165,7 +173,7 @@
     name: '设置',
     icon: './assets/settings.svg',
     initialRoute: 'home',
-    version: '1.0.7',
+    version: '1.0.8',
     styles: `
       .settings-page {
         position: absolute;
@@ -563,6 +571,113 @@
         opacity: .5;
         cursor: default;
       }
+
+      /* ===== 主题网格 ===== */
+      .theme-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 10px;
+      }
+      .theme-card {
+        display: flex; flex-direction: column; gap: 6px;
+        cursor: pointer; -webkit-tap-highlight-color: transparent;
+        transition: transform .1s;
+      }
+      .theme-card:active { transform: scale(.96); }
+      .theme-card__thumb {
+        width: 100%; aspect-ratio: 3 / 4; border-radius: 12px; overflow: hidden;
+        background: var(--wj-bg-alt); box-shadow: 0 2px 8px rgba(0,0,0,.08);
+      }
+      .theme-card__thumb img {
+        width: 100%; height: 100%; object-fit: cover; display: block;
+        pointer-events: none; -webkit-user-drag: none;
+      }
+      .theme-card__name {
+        font-size: 12px; color: var(--wj-text); text-align: center;
+        overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+      }
+      .theme-end { text-align: center; font-size: 12px; color: var(--wj-text-dim); padding: 6px 0 2px; }
+
+      .theme-goto-market {
+        margin-top: 8px;
+        padding: 14px 20px;
+        border: 0;
+        border-radius: 999px;
+        background: #3a6ff0;
+        color: #fff;
+        font: inherit;
+        font-size: 15px;
+        font-weight: 600;
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+        transition: transform .08s;
+      }
+      .theme-goto-market:active { transform: scale(.98); }
+
+      /* ===== 长按菜单 ===== */
+      .theme-menu {
+        position: absolute;
+        z-index: 999;
+        background: rgba(255,255,255,.92);
+        backdrop-filter: blur(20px) saturate(180%);
+        -webkit-backdrop-filter: blur(20px) saturate(180%);
+        border-radius: 12px;
+        box-shadow: 0 12px 32px rgba(0,0,0,.18);
+        padding: 4px;
+        animation: themeMenuIn .14s cubic-bezier(.2,.7,.3,1);
+      }
+      @keyframes themeMenuIn {
+        from { opacity: 0; transform: scale(.92); }
+        to   { opacity: 1; transform: scale(1); }
+      }
+      .theme-menu__item {
+        padding: 10px 14px;
+        border: 0;
+        border-radius: 8px;
+        background: transparent;
+        color: #e0356b;
+        font: inherit;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        white-space: nowrap;
+        -webkit-tap-highlight-color: transparent;
+      }
+      .theme-menu__item:active { background: rgba(224,53,107,.1); }
+
+      /* ===== 主题详情页 ===== */
+      .theme-detail { position: absolute; inset: 0; display: flex; flex-direction: column; background: var(--wj-bg); }
+      .theme-detail__scroll {
+        flex: 1 1 auto; min-height: 0; overflow-y: auto;
+        -webkit-overflow-scrolling: touch; overscroll-behavior: contain;
+        padding-top: var(--statusbar-h); padding-bottom: 16px;
+      }
+      .theme-detail__name {
+        font-size: 22px; font-weight: 700; color: var(--wj-text);
+        padding: 22px 20px 8px;
+      }
+      .theme-detail__hero {
+        margin: 8px 20px 0; border-radius: 16px; overflow: hidden;
+        background: var(--wj-bg-alt); box-shadow: 0 4px 20px rgba(0,0,0,.1);
+      }
+      .theme-detail__hero img { width: 100%; display: block; pointer-events: none; }
+      .theme-detail__footer {
+        flex: 0 0 auto; padding: 12px 20px calc(12px + env(safe-area-inset-bottom, 0px));
+        border-top: .5px solid var(--wj-border); background: var(--wj-bg);
+      }
+      .theme-btn {
+        position: relative; display: block; width: 100%; height: 48px;
+        border: 0; border-radius: 999px;
+        background: #3a6ff0; color: #fff;
+        font: inherit; font-size: 16px; font-weight: 600;
+        cursor: pointer; -webkit-tap-highlight-color: transparent;
+        transition: transform .1s, background .2s;
+      }
+      .theme-btn:active:not(:disabled) { transform: scale(.98); }
+      .theme-btn:disabled { background: var(--wj-bg-alt); color: var(--wj-text-muted); }
+      .theme-btn__label {
+        display: flex; align-items: center; justify-content: center; height: 100%;
+      }
     `,
 
     routes: {
@@ -599,6 +714,13 @@
               </div>
 
               <div class="settings-section">
+                <div class="settings-item" data-act="personalize">
+                  <div class="settings-item__icon" style="background:#ff375f">${ICON.paint}</div>
+                  <span>桌面和个性化</span>
+                </div>
+              </div>
+
+              <div class="settings-section">
                 <div class="settings-item" data-act="storage">
                   <div class="settings-item__icon" style="background:#5856d6">${ICON.storage}</div>
                   <span>存储</span>
@@ -625,6 +747,8 @@
             ?.addEventListener('click', () => ctx.push('bluetooth'));
           root.querySelector('[data-act="cellular"]')
             ?.addEventListener('click', () => ctx.push('cellular'));
+          root.querySelector('[data-act="personalize"]')
+            ?.addEventListener('click', () => ctx.push('personalize'));
           root.querySelector('[data-act="storage"]')
             ?.addEventListener('click', () => ctx.push('storage'));
           root.querySelector('[data-act="app-manage"]')
@@ -644,7 +768,7 @@
 
               <div class="settings-about-card">
                 <div class="settings-about-card__title">WujiOS</div>
-                <div class="settings-about-card__version">1.0.106</div>
+                <div class="settings-about-card__version">1.0.107</div>
                 <div class="settings-about-card__btn" id="checkUpdateBtn">检查更新</div>
               </div>
 
@@ -659,7 +783,7 @@
                 </div>
                 <div class="settings-row">
                   <span>WujiOS版本</span>
-                  <span class="settings-row__value">1.0.106</span>
+                  <span class="settings-row__value">1.0.107</span>
                 </div>
                 <div class="settings-row">
                   <span>OpenWuji版本</span>
@@ -760,7 +884,6 @@
         },
       },
 
-      /* ==================== 移动数据 ==================== */
       cellular: {
         name: 'cellular',
 
@@ -784,7 +907,6 @@
         },
       },
 
-      /* ==================== 存储 ==================== */
       storage: {
         name: 'storage',
 
@@ -825,8 +947,8 @@
           const freeEl    = root.querySelector('#storageFree');
           const appDataEl = root.querySelector('#storageAppData');
 
-          const TOTAL_BYTES  = 64  * 1024 * 1024 * 1024;   // 64 GB
-          const SYSTEM_BYTES = 4.3 * 1024 * 1024 * 1024;   // WujiOS 固定占用
+          const TOTAL_BYTES  = 64  * 1024 * 1024 * 1024;
+          const SYSTEM_BYTES = 4.3 * 1024 * 1024 * 1024;
 
           async function update() {
             let appBytes = 0;
@@ -1195,6 +1317,371 @@
           const unbind = () => pad.destroy?.();
           ctx.nav.onChange(() => {
             if (ctx.nav.current?.route?.name !== 'pin-verify') unbind();
+          });
+        },
+      },
+
+      /* ==================== 桌面和个性化 ==================== */
+      personalize: {
+        name: 'personalize',
+
+        render() {
+          /* ★ 读取当前主题的 storeimg 作为左侧图标 */
+          const themeMeta = window.WujiTheme?.meta;
+          const storeImg  = themeMeta?.storeimg || '';
+          const iconHtml  = storeImg
+            ? `<img src="${escapeHtml(storeImg)}" alt="">`
+            : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                 <circle cx="12" cy="12" r="9"/>
+                 <path d="M12 3v18M3 12h18"/>
+               </svg>`;
+
+          return `
+            <div class="settings-page">
+              <div class="settings-title">桌面和个性化</div>
+
+              <div class="settings-section">
+                <div class="settings-item" data-act="themes">
+                  <div class="settings-item__icon" style="background:#ff375f">
+                    ${iconHtml}
+                  </div>
+                  <span>主题</span>
+                </div>
+              </div>
+            </div>
+          `;
+        },
+
+        mount(root, ctx) {
+          root.querySelector('[data-act="themes"]')
+            ?.addEventListener('click', () => ctx.push('themes'));
+        },
+      },
+
+      /* ==================== 主题列表 ==================== */
+      themes: {
+        name: 'themes',
+
+        render() {
+          const sys = Array.isArray(window.SYSTEM_THEMES) ? window.SYSTEM_THEMES : [];
+          return `
+            <div class="settings-page">
+              <div class="settings-title">主题</div>
+
+              <div style="font-size:15px;font-weight:600;color:var(--wj-text);">系统主题</div>
+              <div class="theme-grid" id="sysThemeGrid">
+                ${sys.map(t => `
+                  <div class="theme-card" data-id="${escapeHtml(t.id)}" data-sys="1">
+                    <div class="theme-card__thumb">
+                      <img src="${escapeHtml(t.storeimg || t.static || '')}" alt="">
+                    </div>
+                    <div class="theme-card__name">${escapeHtml(t.name)}</div>
+                  </div>
+                `).join('')}
+              </div>
+
+              <div style="font-size:15px;font-weight:600;color:var(--wj-text);margin-top:6px;">我的主题</div>
+              <div class="theme-grid" id="myThemeGrid"></div>
+              <div class="theme-end" id="myThemeEmpty" hidden>没有更多了</div>
+
+              <button class="theme-goto-market" id="gotoMarketBtn" type="button">
+                前往主题市场
+              </button>
+            </div>
+          `;
+        },
+
+        mount(root, ctx) {
+          const myGrid  = root.querySelector('#myThemeGrid');
+          const myEmpty = root.querySelector('#myThemeEmpty');
+          const gotoBtn = root.querySelector('#gotoMarketBtn');
+          const SYS     = Array.isArray(window.SYSTEM_THEMES) ? window.SYSTEM_THEMES : [];
+
+          /* ---------- 系统主题点击 ---------- */
+          root.querySelectorAll('#sysThemeGrid .theme-card').forEach(el => {
+            el.addEventListener('click', () => {
+              const t = SYS.find(x => x.id === el.dataset.id);
+              if (!t) return;
+              ctx.push('theme-detail', { theme: t, isSystem: true });
+            });
+          });
+
+          /* ---------- DB 读写 ---------- */
+          const DB = () => AppStorage.for('com.wujios.themes');
+
+          async function readDownloaded() {
+            try {
+              const list = await DB().get('downloaded_themes', []);
+              const arr = Array.isArray(list) ? list.slice() : [];
+              console.log('[themes] read:', arr.map(t => t && t.id));
+              return arr;
+            } catch (e) {
+              console.error('[themes] read failed:', e);
+              return [];
+            }
+          }
+
+          async function writeDownloaded(list) {
+            try {
+              await DB().set('downloaded_themes', list);
+              console.log('[themes] wrote:', list.map(t => t && t.id));
+              return true;
+            } catch (e) {
+              console.error('[themes] write failed:', e);
+              return false;
+            }
+          }
+
+          async function deleteTheme(themeId) {
+            if (themeId === undefined || themeId === null) {
+              console.warn('[themes] delete: themeId 为空，放弃');
+              return false;
+            }
+            const list = await readDownloaded();
+            const before = list.length;
+            const next = list.filter(t => String(t.id) !== String(themeId));
+            const after = next.length;
+            console.log('[themes] delete:', themeId,
+              'before:', before, 'after:', after, 'match:', before - after);
+
+            if (before === after) {
+              console.warn('[themes] 未匹配到要删除的主题，list ids =',
+                list.map(t => String(t.id)));
+              return false;
+            }
+            return await writeDownloaded(next);
+          }
+
+          /* ---------- 菜单 ---------- */
+          let menuEl = null;
+          let menuOffHandler = null;
+
+          function hideMenu() {
+            if (menuOffHandler) {
+              document.removeEventListener('pointerdown', menuOffHandler, true);
+              menuOffHandler = null;
+            }
+            if (menuEl) { menuEl.remove(); menuEl = null; }
+          }
+
+          function showDeleteMenu(theme, rect) {
+            hideMenu();
+            menuEl = document.createElement('div');
+            menuEl.className = 'theme-menu';
+            menuEl.innerHTML = `
+              <button class="theme-menu__item" type="button">
+                删除主题「${escapeHtml(theme.name || '')}」
+              </button>
+            `;
+            root.appendChild(menuEl);
+
+            const mr = menuEl.getBoundingClientRect();
+            const vw = window.innerWidth, vh = window.innerHeight;
+            const EDGE = 8;
+            let left = rect.left + rect.width / 2 - mr.width / 2;
+            left = Math.max(EDGE, Math.min(vw - mr.width - EDGE, left));
+            let top = rect.top - mr.height - 6;
+            if (top < EDGE) top = rect.bottom + 6;
+            if (top + mr.height > vh - EDGE) top = vh - EDGE - mr.height;
+            menuEl.style.left = left + 'px';
+            menuEl.style.top  = top  + 'px';
+
+            /* ---- 菜单项：pointerup + click 双保险 ---- */
+            const item = menuEl.querySelector('.theme-menu__item');
+            let handled = false;
+
+            const handleDelete = async ev => {
+              if (handled) return;
+              handled = true;
+
+              try { ev.stopPropagation(); ev.preventDefault(); } catch { }
+              hideMenu();
+              console.log('[themes] delete clicked:', theme.id);
+
+              const ok = await deleteTheme(theme.id);
+              if (!ok) { handled = false; return; }
+
+              if (WujiTheme.current === theme.id) {
+                const fallback = (SYS[0] && SYS[0].id) || 'sea';
+                try { await WujiTheme.load(fallback); } catch (e) {
+                  console.warn('[themes] fallback load failed:', e);
+                }
+              }
+              await renderMine();
+            };
+
+            item.addEventListener('pointerup', handleDelete);
+            item.addEventListener('click', handleDelete);
+
+            /* 点菜单外面关闭 */
+            menuOffHandler = ev => {
+              if (menuEl && !menuEl.contains(ev.target)) {
+                hideMenu();
+              }
+            };
+            setTimeout(() => {
+              if (menuEl && menuOffHandler) {
+                document.addEventListener('pointerdown', menuOffHandler, true);
+              }
+            }, 0);
+          }
+
+          /* ---------- 长按删除 ---------- */
+          function bindLongPressDelete(el, theme) {
+            let lpTimer = null;
+            let lpFired = false;
+            let pid     = null;
+            let startX  = 0, startY = 0;
+            const MOVE_CANCEL = 10;
+
+            el.addEventListener('pointerdown', e => {
+              if (e.pointerType === 'mouse' && e.button !== 0) return;
+              lpFired = false;
+              pid = e.pointerId;
+              startX = e.clientX;
+              startY = e.clientY;
+              try { el.setPointerCapture(e.pointerId); } catch { }
+
+              lpTimer = setTimeout(() => {
+                lpTimer = null;
+                lpFired = true;
+
+                /* ★ 长按触发时立刻释放 capture，
+                   否则后续 pointer 事件全被锁在卡片上，菜单按钮点不到 */
+                try { el.releasePointerCapture(pid); } catch { }
+                pid = null;
+
+                if (navigator.vibrate) { try { navigator.vibrate(12); } catch {} }
+                const rect = el.getBoundingClientRect();
+                showDeleteMenu(theme, rect);
+              }, 600);
+            });
+
+            el.addEventListener('pointermove', e => {
+              if (!lpTimer) return;
+              if (pid !== null && e.pointerId !== pid) return;
+              const dx = e.clientX - startX;
+              const dy = e.clientY - startY;
+              if (Math.hypot(dx, dy) > MOVE_CANCEL) {
+                clearTimeout(lpTimer);
+                lpTimer = null;
+              }
+            });
+
+            const stop = e => {
+              if (lpTimer) { clearTimeout(lpTimer); lpTimer = null; }
+              if (pid !== null) {
+                try { el.releasePointerCapture(pid); } catch { }
+                pid = null;
+              }
+            };
+            el.addEventListener('pointerup', stop);
+            el.addEventListener('pointercancel', stop);
+
+            /* 长按松手后的 click 在 capture 阶段吞掉 */
+            el.addEventListener('click', e => {
+              if (lpFired) {
+                lpFired = false;
+                e.preventDefault();
+                e.stopPropagation();
+              }
+            }, true);
+          }
+
+          /* ---------- 我的主题渲染 ---------- */
+          async function renderMine() {
+            const list = await readDownloaded();
+
+            if (!list.length) {
+              myGrid.innerHTML = '';
+              myEmpty.hidden = false;
+              return;
+            }
+            myEmpty.hidden = true;
+
+            myGrid.innerHTML = list.map(t => `
+              <div class="theme-card" data-id="${escapeHtml(String(t.id))}" data-mine="1">
+                <div class="theme-card__thumb">
+                  <img src="${escapeHtml(t.storeimg || t.static || '')}" alt="">
+                </div>
+                <div class="theme-card__name">${escapeHtml(t.name || '')}</div>
+              </div>
+            `).join('');
+
+            /* ★ 用索引绑定，避免 dataset.id 与 t.id 二次匹配失败 */
+            const cards = myGrid.querySelectorAll('.theme-card');
+            cards.forEach((el, i) => {
+              const theme = list[i];
+              if (!theme) return;
+              el.addEventListener('click', () => {
+                ctx.push('theme-detail', { theme, isSystem: false });
+              });
+              bindLongPressDelete(el, theme);
+            });
+          }
+
+          renderMine();
+
+          gotoBtn.addEventListener('click', () => {
+            try {
+              window.WujiAppLauncher?.open('com.wujios.themes', {});
+            } catch (e) { console.error(e); }
+          });
+        },
+      },
+
+      /* ==================== 主题详情（设置内） ==================== */
+      'theme-detail': {
+        name: 'theme-detail',
+
+        render(routeCtx) {
+          const theme = routeCtx.data?.theme;
+          if (!theme) return `<div class="settings-page"><div class="settings-row"><span>主题不存在</span></div></div>`;
+
+          return `
+            <div class="theme-detail">
+              <div class="theme-detail__scroll">
+                <div class="theme-detail__name">${escapeHtml(theme.name)}</div>
+                <div class="theme-detail__hero">
+                  <img src="${escapeHtml(theme.storeimg || theme.static || '')}" alt="">
+                </div>
+              </div>
+              <div class="theme-detail__footer">
+                <button class="theme-btn" id="setThemeBtn" type="button">
+                  <span class="theme-btn__label">应用</span>
+                </button>
+              </div>
+            </div>
+          `;
+        },
+
+        mount(root, ctx) {
+          const theme = ctx.data?.theme;
+          if (!theme) return;
+
+          const btn = root.querySelector('#setThemeBtn');
+          if (!btn) return;
+
+          async function refresh() {
+            const active = WujiTheme.current === theme.id;
+            if (active) {
+              btn.disabled = true;
+              btn.querySelector('.theme-btn__label').textContent = '使用中';
+            } else {
+              btn.disabled = false;
+              btn.querySelector('.theme-btn__label').textContent = '应用';
+            }
+          }
+          refresh();
+
+          btn.addEventListener('click', async () => {
+            if (btn.disabled) return;
+            try {
+              await WujiTheme.load(theme.id);
+              if (navigator.vibrate) { try { navigator.vibrate(10); } catch {} }
+              refresh();
+            } catch (e) { console.error('[theme] 应用失败', e); }
           });
         },
       },

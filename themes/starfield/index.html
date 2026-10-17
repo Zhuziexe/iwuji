@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Starfield</title>
+<style>
+  html, body {
+    margin: 0; height: 100%; overflow: hidden;
+    background:
+      radial-gradient(ellipse at 50% 120%,
+        #0d1733 0%, #050815 60%, #000 100%);
+  }
+
+  .stars {
+    position: absolute; inset: 0;
+    will-change: transform, opacity;
+  }
+
+  .star-layer {
+    position: absolute;
+    top: 0; left: 0;
+    width: 1px; height: 1px;
+    border-radius: 50%;
+    background: transparent;
+  }
+
+  .star-layer--small  { animation: twinkle 3.5s ease-in-out infinite; }
+  .star-layer--medium { animation: twinkle 4.2s ease-in-out infinite .5s; }
+  .star-layer--big    { animation: twinkle 5.0s ease-in-out infinite 1s; }
+
+  @keyframes twinkle {
+    0%, 100% { opacity: .95; }
+    50%      { opacity: .35; }
+  }
+
+  .glow {
+    position: absolute; inset: 0;
+    background: radial-gradient(circle at 82% 24%,
+      rgba(140, 170, 255, .12), transparent 60%);
+    pointer-events: none;
+  }
+
+  .moon {
+    position: absolute;
+    top: 18%;
+    right: 18%;
+    width: 58px; height: 58px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 32% 32%,
+      #fffbe8 0%, #ffe9a8 55%, #d4b672 100%);
+    box-shadow:
+      0 0 30px rgba(255, 236, 179, .55),
+      0 0 80px rgba(255, 226, 150, .25);
+    will-change: transform, filter;
+  }
+  .moon::before, .moon::after {
+    content: '';
+    position: absolute;
+    border-radius: 50%;
+    background: rgba(200, 180, 130, .35);
+  }
+  .moon::before { width: 13px; height: 13px; top: 22%; left: 46%; }
+  .moon::after  { width: 8px;  height: 8px;  top: 55%; left: 24%; }
+</style>
+</head>
+<body>
+<div class="stars" id="stars">
+  <div class="star-layer star-layer--small"  id="s1"></div>
+  <div class="star-layer star-layer--medium" id="s2"></div>
+  <div class="star-layer star-layer--big"    id="s3"></div>
+</div>
+<div class="glow"></div>
+<div class="moon" id="moon"></div>
+
+<script>
+(() => {
+  const starsEl = document.getElementById('stars');
+  const moonEl  = document.getElementById('moon');
+  const layers  = document.querySelectorAll('.star-layer');
+
+  function resize(w, h) {
+    W = w || innerWidth;
+    H = h || innerHeight;
+  }
+
+  let W = innerWidth;
+  let H = innerHeight;
+
+  function buildShadows(count, spread, colors) {
+    const out = [];
+    for (let i = 0; i < count; i++) {
+      const x = Math.round(Math.random() * W);
+      const y = Math.round(Math.random() * H);
+      const c = colors[(Math.random() * colors.length) | 0];
+      out.push(`${x}px ${y}px 0 ${spread}px ${c}`);
+    }
+    return out.join(',');
+  }
+
+  function renderStars() {
+    document.getElementById('s1').style.boxShadow = buildShadows(
+      120, 0,
+      ['rgba(255,255,255,.65)', 'rgba(200,215,255,.6)', 'rgba(255,240,200,.6)']
+    );
+    document.getElementById('s2').style.boxShadow = buildShadows(
+      50, 0.6,
+      ['rgba(255,255,255,.9)', 'rgba(180,210,255,.85)']
+    );
+    document.getElementById('s3').style.boxShadow = buildShadows(
+      16, 1.2,
+      ['#ffffff', 'rgba(255,230,190,1)']
+    );
+  }
+
+  let progress = 0;
+
+  function applyProgress() {
+    starsEl.style.transition = 'none';
+    starsEl.style.transform  = `translateY(${-progress * 14}px)`;
+    starsEl.style.opacity    = String(0.85 + progress * 0.15);
+
+    moonEl.style.transition = 'none';
+    moonEl.style.transform  = `translateY(${-progress * 22}px) scale(${1 + progress * 0.05})`;
+    moonEl.style.filter     = `brightness(${1 + progress * 0.25})`;
+  }
+
+  function smooth() {
+    starsEl.style.transition = 'transform .45s cubic-bezier(.2,.7,.3,1), opacity .45s ease';
+    moonEl.style.transition  = 'transform .45s cubic-bezier(.2,.7,.3,1), filter .45s ease';
+  }
+
+  function setPlayState(playing) {
+    const s = playing ? 'running' : 'paused';
+    layers.forEach(el => { el.style.animationPlayState = s; });
+  }
+
+  renderStars();
+  applyProgress();
+
+  addEventListener('resize', () => {
+    resize(innerWidth, innerHeight);
+    renderStars();
+    applyProgress();
+  });
+
+  addEventListener('message', e => {
+    const d = e.data;
+    if (!d || d.source !== 'wuji-os') return;
+    const { type, payload } = d;
+
+    switch (type) {
+      case 'init':
+        if (payload.size) resize(payload.size.w, payload.size.h);
+        renderStars();
+        applyProgress();
+        /* ★ init 不暂停 */
+        break;
+
+      case 'resize':
+        resize(payload.w, payload.h);
+        renderStars();
+        applyProgress();
+        break;
+
+      case 'power':
+        if (payload.state === 'off' || payload.state === 'shuttingdown') {
+          setPlayState(false);
+        } else if (payload.state === 'running') {
+          setPlayState(true);
+        }
+        /* booting 保持当前状态 */
+        break;
+
+      case 'view':
+        setPlayState(payload.view !== 'app');
+        break;
+
+      case 'unlock-progress':
+        progress = Math.max(0, Math.min(1, payload.p || 0));
+        applyProgress();
+        break;
+      case 'unlock-finish':
+        progress = 1; smooth(); applyProgress();
+        break;
+      case 'unlock-cancel':
+      case 'lock-enter':
+        progress = 0; smooth(); applyProgress();
+        break;
+
+      case 'app-enter': setPlayState(false); break;
+      case 'app-exit':  setPlayState(true);  break;
+    }
+  });
+
+  parent.postMessage({ source: 'wuji-theme', type: 'ready' }, '*');
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- 背景 -->
+  <rect width="256" height="256" fill="#11E8C5" />
+
+  <!-- 刷柄 -->
+  <rect x="112" y="32" width="32" height="96" rx="10" fill="#FFFFFF" />
+
+  <!-- 金属箍 -->
+  <rect x="94" y="128" width="68" height="18" rx="4" fill="#FFFFFF" />
+
+  <!-- 刷毛 -->
+  <rect x="44" y="146" width="168" height="80" rx="10" fill="#FFFFFF" />
+
+  <!-- 金属箍与刷毛之间的分隔线 -->
+  <line x1="44" y1="146" x2="212" y2="146" stroke="#11E8C5" stroke-opacity="0.25" stroke-width="2" />
+</svg>

@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Sea</title>
+<style>
+  html, body { margin: 0; height: 100%; overflow: hidden; background: #0b1b33; }
+  .wall {
+    position: absolute; inset: 0;
+    background: url('static.png') center center / cover no-repeat;
+    will-change: transform;
+  }
+</style>
+</head>
+<body>
+<div class="wall" id="wall"></div>
+<script>
+(() => {
+  const wall = document.getElementById('wall');
+
+  addEventListener('message', e => {
+    const d = e.data;
+    if (!d || d.source !== 'wuji-os') return;
+    const { type, payload } = d;
+
+    if (type === 'unlock-progress') {
+      const p = Math.max(0, Math.min(1, payload.p || 0));
+      wall.style.transition = 'none';
+      wall.style.transform = `scale(${1 + p * 0.06}) translateY(${-p * 8}px)`;
+    } else if (type === 'unlock-finish') {
+      wall.style.transition = 'transform .4s cubic-bezier(.2,.7,.3,1)';
+      wall.style.transform = 'scale(1.06) translateY(-8px)';
+    } else if (type === 'unlock-cancel' || type === 'lock-enter') {
+      wall.style.transition = 'transform .4s cubic-bezier(.2,.7,.3,1)';
+      wall.style.transform = '';
+    }
+  });
+
+  parent.postMessage({ source: 'wuji-theme', type: 'ready' }, '*');
+})();
+</script>
+</body>
+</html>

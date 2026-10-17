@@ -7,6 +7,7 @@ const BUILTIN_APPS = [
     { bundlename: 'com.wujios.photos', name: '图库', icon: './assets/photos.svg', src: 'apps/photos.js' },
     { bundlename: 'com.wujios.wujigallery', name: '应用市场', icon: './assets/wujigallery.svg', src: 'apps/wujigallery.js' },
     { bundlename: 'com.wujios.calculator', name: '计算器', icon: './assets/calculator.svg', src: 'apps/calculator.js' },
+    { bundlename: 'com.wujios.themes', name: '主题', icon: './assets/themes.svg', src: 'apps/themes.js' },
 ];
 
 const PRELOAD_SCRIPTS = [

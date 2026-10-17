@@ -25,10 +25,10 @@ WujiApps.register({
     }
 
     .market-list {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
 
 .market-row {
   display: flex;
