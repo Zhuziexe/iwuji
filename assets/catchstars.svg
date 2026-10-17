@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+  <defs>
+    <linearGradient id="star" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ffe36b"/>
+      <stop offset="100%" stop-color="#ffb800"/>
+    </linearGradient>
+    <linearGradient id="face" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#fff7c2"/>
+      <stop offset="100%" stop-color="#ffd93b"/>
+    </linearGradient>
+  </defs>
+
+  <!-- 红色圆角背景 -->
+  <rect width="256" height="256" fill="#c9294a"/>
+
+  <!-- 五角星 -->
+  <path d="M128 28
+           l18 42 46 4
+           -35 31 11 46
+           -40 -24 -40 24
+           11 -46 -35 -31
+           46 -4 z"
+        fill="url(#star)" stroke="#e8912e" stroke-width="3" stroke-linejoin="round"/>
+
+  <!-- 笑脸 -->
+  <circle cx="128" cy="188" r="46" fill="url(#face)" stroke="#e8912e" stroke-width="3"/>
+
+  <!-- 眼睛 -->
+  <circle cx="112" cy="178" r="5.5" fill="#2a1a10"/>
+  <circle cx="144" cy="178" r="5.5" fill="#2a1a10"/>
+
+  <!-- 微笑 -->
+  <path d="M110 198 q18 18 36 0"
+        fill="none" stroke="#2a1a10" stroke-width="5" stroke-linecap="round"/>
+</svg>

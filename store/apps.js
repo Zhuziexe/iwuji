@@ -72,6 +72,16 @@ window.WUJI_MARKET_APPS = [
     src:         './store-apps/note.js',
   },
   {
+    bundle:      'com.wujinb.catchstars',
+    name:        '接住星星',
+    icon:        './assets/catchstars.svg',
+    version:     '1.0.0',
+    author:      'Wuji',
+    description: '接住星星，避开屎',
+    longdescription: '60 秒内移动笑脸接住掉落的星星，别被屎砸到。',
+    src:         './store-apps/catchstars.js',
+  },
+  {
     bundle:      'com.wujinb.dice',
     name:        '骰子',
     icon:        './assets/dice.svg',
