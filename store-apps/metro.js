@@ -1,16 +1,16 @@
 (() => {
   const BUNDLE = 'com.wujinb.metro';
 
-  const SPEED_MAX      = 120;
-  const ACCEL          = 55;
-  const BRAKE          = 95;
-  const DRAG           = 12;
-  const PX_PER_SPEED   = 3;
-  const STATION_GAP    = 800;
+  const SPEED_MAX = 120;
+  const ACCEL = 55;
+  const BRAKE = 95;
+  const DRAG = 12;
+  const PX_PER_SPEED = 3;
+  const STATION_GAP = 800;
   const STOP_MAX_SPEED = 30;
-  const STOP_DURATION  = 1400;
-  const TRAIN_CENTER   = 110;
-  const STATION_W      = 60;
+  const STOP_DURATION = 1400;
+  const TRAIN_CENTER = 110;
+  const STATION_W = 60;
 
   const STATION_SVG = `
     <svg viewBox="0 0 60 70" xmlns="http://www.w3.org/2000/svg">
@@ -240,7 +240,7 @@
       const screenX = (TRAIN_CENTER - STATION_W / 2) + (st.worldX - S.worldX);
       el.style.transform = `translate3d(${screenX}px,0,0)`;
 
-      if (st.passed === 'ok')  el.classList.add('is-pass-ok');
+      if (st.passed === 'ok') el.classList.add('is-pass-ok');
       if (st.passed === 'bad') el.classList.add('is-pass-bad');
     }
 
@@ -893,27 +893,27 @@
 
         mount(root) {
           els = {
-            score:        root.querySelector('#mScore'),
-            lives:        root.querySelector('#mLives'),
-            scene:        root.querySelector('#mScene'),
-            sun:          root.querySelector('.metro-sun'),
-            clouds:       root.querySelector('#mClouds'),
-            far:          root.querySelector('#mFar'),
-            near:         root.querySelector('#mNear'),
-            sleepers:     root.querySelector('#mSleepers'),
-            stations:     root.querySelector('#mStations'),
-            train:        root.querySelector('#mTrain'),
-            speed:        root.querySelector('#mSpeed'),
-            speedLabel:   root.querySelector('#mSpeedLabel'),
-            speedFill:    root.querySelector('#mSpeedFill'),
-            overlay:      root.querySelector('#mOverlay'),
+            score: root.querySelector('#mScore'),
+            lives: root.querySelector('#mLives'),
+            scene: root.querySelector('#mScene'),
+            sun: root.querySelector('.metro-sun'),
+            clouds: root.querySelector('#mClouds'),
+            far: root.querySelector('#mFar'),
+            near: root.querySelector('#mNear'),
+            sleepers: root.querySelector('#mSleepers'),
+            stations: root.querySelector('#mStations'),
+            train: root.querySelector('#mTrain'),
+            speed: root.querySelector('#mSpeed'),
+            speedLabel: root.querySelector('#mSpeedLabel'),
+            speedFill: root.querySelector('#mSpeedFill'),
+            overlay: root.querySelector('#mOverlay'),
             overlayTitle: root.querySelector('#mOverlayTitle'),
-            overlayDesc:  root.querySelector('#mOverlayDesc'),
-            overlayBtn:   root.querySelector('#mOverlayBtn'),
-            flash:        root.querySelector('#mFlash'),
+            overlayDesc: root.querySelector('#mOverlayDesc'),
+            overlayBtn: root.querySelector('#mOverlayBtn'),
+            flash: root.querySelector('#mFlash'),
           };
 
-          els.farWidth  = buildLayer(els.far,  36, 40, 100);
+          els.farWidth = buildLayer(els.far, 36, 40, 100);
           els.nearWidth = buildLayer(els.near, 26, 55, 130);
           buildClouds(els.clouds, 8);
 
@@ -968,23 +968,33 @@
           window.addEventListener('keydown', onKey);
           window.addEventListener('keyup', onKeyUp);
 
-          root._wjMetroCleanup = () => {
+          resetGame();
+          startLoop();
+
+          /* ★ 所有副作用在这里统一收尾 */
+          return () => {
+            stopLoop();
             window.removeEventListener('keydown', onKey);
             window.removeEventListener('keyup', onKeyUp);
             if (flashTimer) { clearTimeout(flashTimer); flashTimer = null; }
+            if (els) {
+              for (const [, el] of stationEls) el.remove();
+              stationEls.clear();
+              els = null;
+            }
+            input.accel = false;
+            input.brake = false;
           };
-
-          resetGame();
-          startLoop();
         },
 
         unmount() {
+          /* 兜底：_disposeItem 里 dispose 和 unmount 都会被调，这里保证幂等 */
           stopLoop();
           if (els) {
             for (const [, el] of stationEls) el.remove();
             stationEls.clear();
+            els = null;
           }
-          els = null;
         },
       },
     },

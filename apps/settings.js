@@ -101,11 +101,17 @@
 
     let current = '';
     let locked = false;
+    let cancelled = false;
 
     function updateDots() {
       dotsEl.querySelectorAll('.settings-pin-dot').forEach((dot, i) => {
         dot.classList.toggle('is-filled', i < current.length);
       });
+    }
+
+    function fireComplete(pin) {
+      if (cancelled) return;
+      onComplete?.(pin);
     }
 
     padEl.addEventListener('click', e => {
@@ -128,7 +134,7 @@
         if (current.length === 4) {
           locked = true;
           const pin = current;
-          setTimeout(() => onComplete?.(pin), 160);
+          setTimeout(() => fireComplete(pin), 160);
         }
       }
     });
@@ -142,7 +148,7 @@
         if (current.length === 4) {
           locked = true;
           const pin = current;
-          setTimeout(() => onComplete?.(pin), 160);
+          setTimeout(() => fireComplete(pin), 160);
         }
       } else if (e.key === 'Backspace') {
         current = current.slice(0, -1);
@@ -163,14 +169,16 @@
         }
       },
       destroy() {
+        cancelled = true;
         window.removeEventListener('keydown', onKey);
       },
     };
   }
 
+  /* ★ 返回清理函数，由 route.mount 直接 return */
   function bindToggle(root, key) {
     const el = root.querySelector(`[data-toggle="${key}"]`);
-    if (!el) return;
+    if (!el) return () => {};
 
     function readState() {
       if (window.WujiControlCenter && typeof WujiControlCenter.getToggle === 'function') {
@@ -190,10 +198,6 @@
     }
 
     function onCCChange(e) {
-      if (!el.isConnected) {
-        window.removeEventListener('wuji:cc-toggle-change', onCCChange);
-        return;
-      }
       if (!e.detail || e.detail.key !== key) return;
       el.classList.toggle('is-on', !!e.detail.value);
     }
@@ -201,12 +205,18 @@
 
     el.classList.toggle('is-on', readState());
 
-    el.addEventListener('click', () => {
+    function onClick() {
       const next = !el.classList.contains('is-on');
       el.classList.toggle('is-on', next);
       writeState(next);
       if (navigator.vibrate) { try { navigator.vibrate(8); } catch { } }
-    });
+    }
+    el.addEventListener('click', onClick);
+
+    return () => {
+      window.removeEventListener('wuji:cc-toggle-change', onCCChange);
+      el.removeEventListener('click', onClick);
+    };
   }
 
   WujiApps.register({
@@ -753,15 +763,11 @@
                   <span>移动数据</span>
                 </div>
               </div>
-
               <div class="settings-section">
                 <div class="settings-item" data-act="personalize">
                   <div class="settings-item__icon" style="background:#ff375f">${ICON.paint}</div>
                   <span>桌面和个性化</span>
                 </div>
-              </div>
-
-              <div class="settings-section">
                 <div class="settings-item" data-act="storage">
                   <div class="settings-item__icon" style="background:#5856d6">${ICON.storage}</div>
                   <span>存储</span>
@@ -816,7 +822,7 @@
 
               <div class="settings-about-card">
                 <div class="settings-about-card__title">WujiOS</div>
-                <div class="settings-about-card__version">1.0.107</div>
+                <div class="settings-about-card__version">1.0.108</div>
                 <div class="settings-about-card__btn" id="checkUpdateBtn">检查更新</div>
               </div>
 
@@ -831,7 +837,7 @@
                 </div>
                 <div class="settings-row">
                   <span>WujiOS版本</span>
-                  <span class="settings-row__value">1.0.107</span>
+                  <span class="settings-row__value">1.0.108</span>
                 </div>
                 <div class="settings-row">
                   <span>OpenWuji版本</span>
@@ -905,7 +911,7 @@
         },
 
         mount(root) {
-          bindToggle(root, 'wifi');
+          return bindToggle(root, 'wifi');
         },
       },
 
@@ -928,7 +934,7 @@
         },
 
         mount(root) {
-          bindToggle(root, 'bluetooth');
+          return bindToggle(root, 'bluetooth');
         },
       },
 
@@ -951,7 +957,7 @@
         },
 
         mount(root) {
-          bindToggle(root, 'cellular');
+          return bindToggle(root, 'cellular');
         },
       },
 
@@ -1008,6 +1014,8 @@
             } catch (e) {
               console.warn('[storage] usageAll failed', e);
             }
+
+            if (!root.isConnected) return;
 
             const used = SYSTEM_BYTES + appBytes;
             const free = Math.max(0, TOTAL_BYTES - used);
@@ -1076,11 +1084,13 @@
 
           renderList();
 
-          ctx.nav.onChange(() => {
+          const off = ctx.nav.onChange(() => {
             if (ctx.nav.current?.route?.name === 'app-manage') {
               renderList();
             }
           });
+
+          return () => off();
         },
       },
 
@@ -1224,11 +1234,13 @@
 
           renderList();
 
-          ctx.nav.onChange(() => {
+          const off = ctx.nav.onChange(() => {
             if (ctx.nav.current?.route?.name === 'biometric') {
               renderList();
             }
           });
+
+          return () => off();
         },
       },
 
@@ -1269,6 +1281,7 @@
               try { navigator.vibrate([30, 40, 30]); } catch { }
             }
             setTimeout(() => {
+              if (!root.isConnected) return;
               headingEl.classList.remove('is-error');
               setHeading();
               onDone?.();
@@ -1312,10 +1325,7 @@
             },
           });
 
-          const unbind = () => pad.destroy?.();
-          ctx.nav.onChange(() => {
-            if (ctx.nav.current?.route?.name !== 'pin-set') unbind();
-          });
+          return () => pad.destroy?.();
         },
       },
 
@@ -1344,6 +1354,7 @@
               try { navigator.vibrate([30, 40, 30]); } catch { }
             }
             setTimeout(() => {
+              if (!root.isConnected) return;
               headingEl.classList.remove('is-error');
               headingEl.textContent = '输入当前密码';
               onDone?.();
@@ -1362,10 +1373,7 @@
             },
           });
 
-          const unbind = () => pad.destroy?.();
-          ctx.nav.onChange(() => {
-            if (ctx.nav.current?.route?.name !== 'pin-verify') unbind();
-          });
+          return () => pad.destroy?.();
         },
       },
 
@@ -1374,7 +1382,6 @@
         name: 'personalize',
 
         render() {
-          /* ★ 读取当前主题的 storeimg 作为左侧图标 */
           const themeMeta = window.WujiTheme?.meta;
           const storeImg = themeMeta?.storeimg || '';
           const iconHtml = storeImg
@@ -1382,7 +1389,6 @@
             : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
                  stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                  <circle cx="12" cy="12" r="9"/>
-                 <path d="M12 3v18M3 12h18"/>
                </svg>`;
 
           return `
@@ -1626,6 +1632,7 @@
               const cleanup = () => {
                 document.removeEventListener('pointermove', onMove);
                 document.removeEventListener('pointerup', onUp);
+                document.removeEventListener('pointercancel', onUp);
               };
               const onMove = ev => {
                 if (!lpTimer) return;
@@ -1642,6 +1649,7 @@
               };
               document.addEventListener('pointermove', onMove, { passive: true });
               document.addEventListener('pointerup', onUp);
+              document.addEventListener('pointercancel', onUp);
             });
 
             /* 长按后点卡片 = 取消，不打开详情页 */
@@ -1699,6 +1707,11 @@
               window.WujiAppLauncher?.open('com.wujios.themes', {});
             } catch (e) { console.error(e); }
           });
+
+          /* ★ 离开页面时把可能残留的菜单 / 长按监听清掉 */
+          return () => {
+            hideMenu();
+          };
         },
       },
 

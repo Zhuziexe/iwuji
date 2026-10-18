@@ -953,7 +953,9 @@ img {
     position: absolute;
     inset: 0;
     z-index: 599;
-    background: rgba(0, 0, 0, 0.55);
+    background: rgba(0, 0, 0, 0.32);                       /* 轻暗化 */
+    -webkit-backdrop-filter: blur(10px) saturate(130%);
+    backdrop-filter: blur(10px) saturate(130%);
     opacity: 0;
     transition: opacity .35s cubic-bezier(.2, .7, .3, 1);
     pointer-events: none;
@@ -996,18 +998,8 @@ img {
     padding: 44px 14px 0;
     box-sizing: border-box;
     touch-action: none;
-}
 
-.panel-pane::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background:
-        radial-gradient(circle at 12% 6%, rgba(120, 160, 255, 0.20), transparent 55%),
-        radial-gradient(circle at 90% 94%, rgba(160, 120, 255, 0.16), transparent 55%),
-        radial-gradient(circle at 88% 10%, rgba(100, 190, 255, 0.10), transparent 45%);
-    pointer-events: none;
-    z-index: 0;
+    background: rgba(40, 50, 60, 0.08);
 }
 
 .panel-handle {

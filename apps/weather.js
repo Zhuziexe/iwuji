@@ -693,7 +693,7 @@
           });
 
           /* 从 city 页返回时检查城市是否变了 */
-          ctx.nav.onChange(async () => {
+          const offNav = ctx.nav.onChange(async () => {
             if (disposed) return;
             if (ctx.nav.current?.route?.name !== 'home') return;
             const storedCity = await db.get('city', DEFAULT_CITY);
@@ -724,18 +724,14 @@
             }
           })();
 
-          root._wjWeatherCleanup = () => {
+          /* ★ 所有副作用在这里统一收尾 */
+          return () => {
             disposed = true;
+            offNav();
             if (cooldownTimer)    { clearInterval(cooldownTimer);   cooldownTimer = null; }
             if (autoRefreshTimer) { clearTimeout(autoRefreshTimer); autoRefreshTimer = null; }
             loading = false;
           };
-        },
-
-        unmount() {
-          if (cooldownTimer)    { clearInterval(cooldownTimer);   cooldownTimer = null; }
-          if (autoRefreshTimer) { clearTimeout(autoRefreshTimer); autoRefreshTimer = null; }
-          loading = false;
         },
       },
 

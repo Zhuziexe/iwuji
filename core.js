@@ -6,6 +6,9 @@
      - register / registerInstalled / registerMeta
      - meta 条目（占位）与完整条目可互相升级
      - on() 事件订阅：桌面布局在增删时自动重绘
+     - boot() / shutdown() / shutdownOne()：应用生命周期钩子
+       · 完整注册后若已 booted 自动补调 onBoot
+       · 卸载 / 覆盖安装前调 onShutdown
 
    Store：
      - 系统级小数据（localStorage），同步、必须立即可读
@@ -16,6 +19,7 @@ window.WujiApps = (() => {
   const builtin   = new Map();
   const installed = new Map();
   const listeners = new Set();
+  let booted = false;
 
   function emit(evt) {
     listeners.forEach(fn => {
@@ -23,7 +27,13 @@ window.WujiApps = (() => {
     });
   }
 
-   function normalize(app) {
+  function safeInvoke(fn, label) {
+    if (typeof fn !== 'function') return;
+    try { fn(); }
+    catch (e) { console.error('[WujiApps]', label, e); }
+  }
+
+  function normalize(app) {
     return {
       bundlename:   app.bundlename || app.bundle,
       name:         app.name || app.bundlename,
@@ -39,6 +49,8 @@ window.WujiApps = (() => {
       mount:        app.mount || null,
       unmount:      app.unmount || null,
       styles:       app.styles || '',
+      onBoot:       app.onBoot || null,          // ★ 新增
+      onShutdown:   app.onShutdown || null,      // ★ 新增
       _src:         app.src || app._src || '',
       _metaOnly:    false,
     };
@@ -84,6 +96,10 @@ window.WujiApps = (() => {
     if (existingOther) other.delete(norm.bundlename);
 
     emit({ type: 'registered', bundle: norm.bundlename, source, app: norm });
+
+    /* ★ 开机后脚本才加载完 → 自动补调 onBoot */
+    if (booted) safeInvoke(norm.onBoot, 'onBoot:' + norm.bundlename);
+
     return true;
   }
 
@@ -122,6 +138,11 @@ window.WujiApps = (() => {
     return true;
   }
 
+  function eachFull(fn) {
+    for (const app of builtin.values())   if (!app._metaOnly) fn(app);
+    for (const app of installed.values()) if (!app._metaOnly) fn(app);
+  }
+
   return {
     /* 内置应用：随 OS 一起发布的 */
     register(app) { return register(app, 'builtin'); },
@@ -158,6 +179,26 @@ window.WujiApps = (() => {
       listeners.add(fn);
       return () => listeners.delete(fn);
     },
+
+    /* ★ 生命周期：开机完成 / 关机前 */
+    boot() {
+      booted = true;
+      eachFull(app => safeInvoke(app.onBoot, 'onBoot:' + app.bundlename));
+    },
+
+    shutdown() {
+      booted = false;
+      eachFull(app => safeInvoke(app.onShutdown, 'onShutdown:' + app.bundlename));
+    },
+
+    /* 卸载 / 覆盖安装单个应用前 */
+    shutdownOne(bundle) {
+      const app = installed.get(bundle) || builtin.get(bundle) || null;
+      if (!app || app._metaOnly) return;
+      safeInvoke(app.onShutdown, 'onShutdown:' + bundle);
+    },
+
+    get isBooted() { return booted; },
   };
 })();
 

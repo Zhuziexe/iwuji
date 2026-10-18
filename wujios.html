@@ -1491,7 +1491,7 @@
             console.error('[openApp] 缺少 src:', bundle);
             try { _resolveContentReady?.(); } catch { }
             setView('home');
-            return;                      /* ★ finally 兜底清理 oldNav / oldGhost */
+            return;
           }
           try {
             await WujiAppLoader.load(app._src, app.version);
@@ -1499,13 +1499,13 @@
             console.error('[openApp] 加载失败', bundle, e);
             try { _resolveContentReady?.(); } catch { }
             setView('home');
-            return;                      /* ★ 同上 */
+            return;
           }
           app = WujiApps.get(bundle);
           if (!app || app._metaOnly) {
             try { _resolveContentReady?.(); } catch { }
             setView('home');
-            return;                      /* ★ 同上 */
+            return;
           }
         }
 
@@ -1561,8 +1561,11 @@
       },
     };
 
-    function finishCloseApp() {
+        function finishCloseApp() {
       const closingBundle = S.currentBundle;
+
+      /* ★ 应用退场：清掉它打开的所有 overlay，防泄漏 */
+      try { window.WujiOverlay?.closeAll?.(); } catch { }
 
       if (currentNav) {
         currentNav.destroy();
@@ -1579,7 +1582,6 @@
       currentBackHandler = null;
       setView('home');
       try { WujiTheme.post('app-exit', {}); } catch { }
-      /* ★ 应用退出时关闭属于它的对话框 */
       try { window.WujiDialog?.closeByBundle?.(closingBundle); } catch { }
       notifyParent('app-close', {});
     }
@@ -2005,7 +2007,6 @@
       await sleep(T.expandOS);
       await sleep(T.hold);
     }
-
     async function powerOn() {
       if (S.power !== 'off') return;
       setPower('booting');
@@ -2016,6 +2017,7 @@
       PanelSystem.close();
       WujiNotification.hideBanner?.();
       try { HardwareUI?.hideMenu?.(); } catch { }
+      try { WujiOverlay?.closeAll?.(); } catch { }
 
       try { WujiNotification.clearAll?.(); } catch { }
 
@@ -2036,12 +2038,18 @@
       setView('locked');
       setPower('running');
 
+      try { WujiApps.boot(); } catch (e) { console.error(e); }
+
       scheduleBuiltinPreload();
     }
 
     async function powerOff() {
       if (S.power !== 'running' && S.power !== 'booting') return;
       setPower('shuttingdown');
+
+      try { WujiApps.shutdown(); } catch (e) { console.error(e); }
+      try { WujiOverlay?.closeAll?.(); } catch { }
+
       Store.set('lastShutdownAt', Date.now());
       await sleep(800);
 
@@ -2055,7 +2063,6 @@
       setView('locked');
       setPower('off');
     }
-
     async function restart() {
       await powerOff();
       await sleep(300);
@@ -2278,7 +2285,15 @@
       _builtinPreloadScheduled = true;
 
       const run = async () => {
-        /* 1) 串行前置脚本 */
+        /* 1) 内置应用脚本立即并行发起（不依赖 store/apps.js） */
+        const builtinLoads = BUILTIN_APPS.map(m => {
+          if (!m.src) return Promise.resolve();
+          return WujiAppLoader.load(m.src, m.version).catch(err => {
+            console.warn('[preload builtin]', m.bundlename, err);
+          });
+        });
+
+        /* 2) 串行前置脚本（store/apps.js） */
         for (const src of PRELOAD_SCRIPTS) {
           try {
             await WujiAppLoader.load(src);
@@ -2287,7 +2302,7 @@
           }
         }
 
-        /* 2) 清理不在市场清单里的已安装应用 */
+        /* 3) 清理不在市场清单里的已安装应用（必须在加载 installed 脚本前） */
         try {
           const n = await WujiAppInstaller.pruneMissing?.();
           if (n) console.log('[prune] removed', n);
@@ -2295,21 +2310,15 @@
           console.warn('[prune] 失败', e);
         }
 
-        /* 3) 并行内置应用 */
-        BUILTIN_APPS.forEach(m => {
-          if (!m.src) return;
-          WujiAppLoader.load(m.src, m.version).catch(err => {
-            console.warn('[preload builtin]', m.bundlename, err);
-          });
-        });
-
-        /* 4) 并行已安装的市场应用 */
-        WujiApps.installeds().forEach(app => {
-          if (!app._src) return;
-          WujiAppLoader.load(app._src, app.version).catch(err => {
+        /* 4) 已安装市场应用脚本并行发起 */
+        const installedLoads = WujiApps.installeds().map(app => {
+          if (!app._src) return Promise.resolve();
+          return WujiAppLoader.load(app._src, app.version).catch(err => {
             console.warn('[preload installed]', app.bundlename, err);
           });
         });
+
+        await Promise.allSettled([...builtinLoads, ...installedLoads]);
       };
 
       if ('requestIdleCallback' in window) {

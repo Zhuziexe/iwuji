@@ -298,17 +298,12 @@
 
           render();
 
-          this._cleanup = () => {
+          return () => {
             prevBtn?.removeEventListener('click', goPrev);
             nextBtn?.removeEventListener('click', goNext);
             todayBtn?.removeEventListener('click', goToday);
             gridEl.removeEventListener('click', onGridClick);
           };
-        },
-
-        unmount() {
-          this._cleanup?.();
-          this._cleanup = null;
         },
       },
     },

@@ -116,8 +116,10 @@ window.WujiAppInstaller = (() => {
         WujiAppLoader.invalidate(src);
       }
 
-      /* 已安装 → 先注销旧 meta，再注册新 meta（emit 顺序干净） */
+      /* ★ 覆盖安装：先让旧实例 onShutdown，再注销、注册新 meta */
       if (WujiApps.isInstalled(bundle)) {
+        try { WujiApps.shutdownOne(bundle); }
+        catch (e) { console.warn('[installer] shutdownOne', bundle, e); }
         WujiApps.unregister(bundle);
       }
       WujiApps.registerMeta(metaFromRecord(record), 'installed');
@@ -139,6 +141,7 @@ window.WujiAppInstaller = (() => {
 
     /**
      * 卸载应用，同时清空其 AppStorage 私有数据。
+     * 顺序：shutdownOne → 清 AppStorage / 通知 / 桌面 → unregister
      */
     async uninstall(bundle) {
       if (!bundle) return false;
@@ -146,6 +149,10 @@ window.WujiAppInstaller = (() => {
 
       const list = readAll().filter(a => a.bundle !== bundle);
       writeAll(list);
+
+      /* ★ 先让应用清自己的定时器 / window 监听 */
+      try { WujiApps.shutdownOne(bundle); }
+      catch (e) { console.warn('[installer] shutdownOne', bundle, e); }
 
       try { await AppStorage.uninstall(bundle); }
       catch (e) { console.warn('[installer] AppStorage.uninstall failed', bundle, e); }

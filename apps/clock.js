@@ -150,6 +150,15 @@
     initialRoute: 'home',
     version: '1.1.3',
 
+    /* ★ 开机 / 关机钩子 */
+    onBoot() {
+      /* 脚本加载后 Timer 已是 idle，这里显式重置一次防脏（覆盖安装场景） */
+      Timer.dismiss();
+    },
+    onShutdown() {
+      Timer.dismiss();
+    },
+
     styles: `
       .clock-page {
         position: absolute;
@@ -1046,16 +1055,13 @@
             renderTimer();
           }
 
-          root._wjClockCleanup = () => {
+          return () => {
             if (alignTimer)    { clearTimeout(alignTimer);    alignTimer = null; }
             if (clockInterval) { clearInterval(clockInterval); clockInterval = null; }
             timerUnsub?.();
             timerUnsub = null;
             window.removeEventListener('wuji:app-params', onParams);
           };
-        },
-
-        unmount() {
         },
       },
     },

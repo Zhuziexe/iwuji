@@ -27,7 +27,6 @@
         -webkit-user-select: none;
       }
 
-      /* 标题移到左上角 */
       .dice-title {
         flex: 0 0 auto;
         align-self: flex-start;
@@ -75,7 +74,6 @@
           inset 0 -3px 0 rgba(0, 0, 0, .06);
       }
 
-      /* ★ 容器不动，只让里面的 emoji 转 */
       .dice-face__emoji {
         display: inline-block;
         font-size: min(38vw, 140px);
@@ -160,7 +158,6 @@
               try { navigator.vibrate(20); } catch {}
             }
 
-            /* 重启旋转动画（只作用于 emoji） */
             emojiEl.classList.remove('is-rolling');
             void emojiEl.offsetWidth;
             emojiEl.classList.add('is-rolling');
@@ -195,17 +192,12 @@
 
           faceEl.addEventListener('click', onClick);
 
-          this._cleanup = () => {
+          return () => {
             faceEl.removeEventListener('click', onClick);
-            if (ticker)      { clearInterval(ticker);  ticker = null; }
-            if (endTimer)    { clearTimeout(endTimer);  endTimer = null; }
+            if (ticker)      { clearInterval(ticker);    ticker = null; }
+            if (endTimer)    { clearTimeout(endTimer);   endTimer = null; }
             if (revealTimer) { clearTimeout(revealTimer); revealTimer = null; }
           };
-        },
-
-        unmount() {
-          this._cleanup?.();
-          this._cleanup = null;
         },
       },
     },

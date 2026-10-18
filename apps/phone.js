@@ -52,32 +52,41 @@
         --key-size: min(72px, 18vw, 15vh);
       }
 
-      .phone-display {
-        flex: 0 0 auto;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 12px 24px 4px;
-      }
+.phone-display {
+  flex: 0 0 auto;
+  padding: 12px 24px 4px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-x;
+}
+.phone-display::-webkit-scrollbar { display: none; }
 
-      .phone-number {
-        font-size: 30px;
-        font-weight: 600;
-        color: var(--wj-text, #101828);
-        letter-spacing: 1.5px;
-        font-variant-numeric: tabular-nums;
-        line-height: 1.2;
-        text-align: center;
-        word-break: break-all;
-        max-width: 100%;
-        min-height: 38px;
-      }
-      .phone-number:empty::before {
-        content: '输入号码';
-        color: var(--wj-text-dim, #9aa4b8);
-        font-weight: 400;
-        letter-spacing: .5px;
-      }
+.phone-number {
+  display: block;
+  width: max-content;
+  min-width: 100%;
+  box-sizing: border-box;
+  text-align: center;
+  white-space: nowrap;
+  word-break: normal;
+  max-width: none;
+
+  font-size: 30px;
+  font-weight: 600;
+  color: var(--wj-text, #101828);
+  letter-spacing: 1.5px;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+  min-height: 38px;
+}
+.phone-number:empty::before {
+  content: '输入号码';
+  color: var(--wj-text-dim, #9aa4b8);
+  font-weight: 400;
+  letter-spacing: .5px;
+}
       .phone-pad {
         flex: 1 1 auto;
         min-height: 0;
@@ -387,6 +396,12 @@
           function updateNumber() {
             numberEl.textContent = number;
             backBtn.classList.toggle('is-visible', number.length > 0);
+
+            requestAnimationFrame(() => {
+              const display = numberEl.parentElement;
+              const max = display.scrollWidth - display.clientWidth;
+              display.scrollLeft = max > 0 ? max : 0;
+            });
           }
 
           function appendDigit(d) {
@@ -441,17 +456,12 @@
 
           updateNumber();
 
-          this._cleanup = () => {
+          return () => {
             padEl.removeEventListener('click', onPadClick);
             backBtn.removeEventListener('click', backspace);
             dialBtn.removeEventListener('click', onDial);
             window.removeEventListener('keydown', onKeydown);
           };
-        },
-
-        unmount() {
-          this._cleanup?.();
-          this._cleanup = null;
         },
       },
     },

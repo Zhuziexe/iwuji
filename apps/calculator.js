@@ -124,7 +124,6 @@ WujiApps.register({
   routes: {
     calc: {
       name: 'calc',
-      _cleanup: null,
 
       render() {
         return `
@@ -421,18 +420,14 @@ WujiApps.register({
         window.addEventListener('keydown', onKeydown);
         window.addEventListener('resize', onResize);
 
-        this._cleanup = () => {
+        update();
+
+        /* ★ 所有副作用在这里统一收尾 */
+        return () => {
           padEl.removeEventListener('click', onPadClick);
           window.removeEventListener('keydown', onKeydown);
           window.removeEventListener('resize', onResize);
         };
-
-        update();
-      },
-
-      unmount() {
-        this._cleanup?.();
-        this._cleanup = null;
       },
     },
   },

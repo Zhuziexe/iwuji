@@ -21,11 +21,6 @@
     player: '😊',
   };
 
-  /* =========================================================
-     音频引擎
-     用 Web Audio API 生成背景音乐 + 音效，不依赖外部文件
-     音量实时读取 HardwareUI / 控制中心 / Store
-     ========================================================= */
   const AudioEngine = (() => {
     let ctx = null;
     let master = null;
@@ -55,7 +50,6 @@
       sfxBus.gain.value = 0.85;
       sfxBus.connect(master);
 
-      /* 定时同步音量：每 400ms 检查一次 */
       volSyncTimer = setInterval(syncVolume, 400);
       return ctx;
     }
@@ -186,6 +180,19 @@
       if (bgTimer) { clearTimeout(bgTimer); bgTimer = null; }
     }
 
+    /* ★ 彻底挂起：关机 / 卸载时调 */
+    function suspend() {
+      stopBg();
+      if (volSyncTimer) { clearInterval(volSyncTimer); volSyncTimer = null; }
+      if (ctx) {
+        try { ctx.close(); } catch {}
+        ctx = null;
+        master = null;
+        musicBus = null;
+        sfxBus = null;
+      }
+    }
+
     /* ---------- 倒计时滴答 ---------- */
     function tick(timeLeft) {
       const sec = Math.ceil(timeLeft);
@@ -198,16 +205,11 @@
     function resetTick() { lastTickSec = -1; }
 
     function destroy() {
-      stopBg();
-      if (volSyncTimer) { clearInterval(volSyncTimer); volSyncTimer = null; }
-      if (ctx) {
-        try { ctx.close(); } catch {}
-        ctx = null;
-      }
+      suspend();
     }
 
     return {
-      resume, syncVolume, startBg, stopBg,
+      resume, syncVolume, startBg, stopBg, suspend,
       sfxStar, sfxPoop, sfxGameOver, tick, resetTick, destroy,
     };
   })();
@@ -513,6 +515,18 @@
     icon: './assets/catchstars.svg',
     initialRoute: 'home',
     version: '1.0.2',
+
+    /* ★ 开机 / 关机钩子 */
+    onBoot() {
+      /* 脚本加载后是全新状态，无需做任何事 */
+    },
+    onShutdown() {
+      stopLoop();
+      clearItems();
+      AudioEngine.suspend();
+      if (flashTimer) { clearTimeout(flashTimer); flashTimer = null; }
+      els = null;
+    },
 
     styles: `
       .star-page {
@@ -900,22 +914,20 @@
           const onCCChange = () => AudioEngine.syncVolume();
           window.addEventListener('wuji:cc-toggle-change', onCCChange);
 
-          root._wjStarCleanup = () => {
+          resetGame();
+          startLoop();
+
+          /* ★ 所有副作用在这里统一收尾 */
+          return () => {
+            stopLoop();
+            clearItems();
+            AudioEngine.stopBg();
             window.removeEventListener('keydown', onKey);
             window.removeEventListener('keyup', onKeyUp);
             window.removeEventListener('wuji:cc-toggle-change', onCCChange);
             if (flashTimer) { clearTimeout(flashTimer); flashTimer = null; }
+            els = null;
           };
-
-          resetGame();
-          startLoop();
-        },
-
-        unmount() {
-          stopLoop();
-          clearItems();
-          AudioEngine.stopBg();
-          if (els) els = null;
         },
       },
     },
