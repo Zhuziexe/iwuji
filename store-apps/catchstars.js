@@ -2,24 +2,215 @@
   const BUNDLE = 'com.wujinb.catchstars';
 
   /* ---------------- 参数 ---------------- */
-  const GAME_DURATION = 60;        // 秒
-  const PLAYER_WIDTH  = 52;        // px
-  const PLAYER_BOTTOM = 18;        // 玩家距场景底部的距离
-  const PLAYER_SPEED  = 420;       // px/s
-  const ITEM_BASE     = 36;        // 掉落物基础大小
-  const SPAWN_START   = 1000;      // ms，初始生成间隔
-  const SPAWN_MIN     = 550;       // ms，最快生成间隔
-  const FALL_MIN      = 130;       // px/s
-  const FALL_MAX      = 260;       // px/s
+  const GAME_DURATION = 60;
+  const PLAYER_WIDTH  = 52;
+  const PLAYER_BOTTOM = 18;
+  const PLAYER_SPEED  = 420;
+  const ITEM_BASE     = 36;
+  const SPAWN_START   = 1000;
+  const SPAWN_MIN     = 550;
+  const FALL_MIN      = 130;
+  const FALL_MAX      = 260;
   const STAR_SCORE    = 10;
   const POOP_SCORE    = -10;
-  const POOP_RATIO    = 0.25;      // 25% 掉落物是屎
+  const POOP_RATIO    = 0.25;
 
   const EMOJI = {
     star:   '⭐',
     poop:   '💩',
     player: '😊',
   };
+
+  /* =========================================================
+     音频引擎
+     用 Web Audio API 生成背景音乐 + 音效，不依赖外部文件
+     音量实时读取 HardwareUI / 控制中心 / Store
+     ========================================================= */
+  const AudioEngine = (() => {
+    let ctx = null;
+    let master = null;
+    let musicBus = null;
+    let sfxBus = null;
+    let bgPlaying = false;
+    let bgTimer = null;
+    let bgBeat = 0;
+    let lastTickSec = -1;
+    let volSyncTimer = null;
+
+    function ensure() {
+      if (ctx) return ctx;
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return null;
+      try { ctx = new AC(); } catch { return null; }
+
+      master = ctx.createGain();
+      master.gain.value = 0.5;
+      master.connect(ctx.destination);
+
+      musicBus = ctx.createGain();
+      musicBus.gain.value = 0.30;
+      musicBus.connect(master);
+
+      sfxBus = ctx.createGain();
+      sfxBus.gain.value = 0.85;
+      sfxBus.connect(master);
+
+      /* 定时同步音量：每 400ms 检查一次 */
+      volSyncTimer = setInterval(syncVolume, 400);
+      return ctx;
+    }
+
+    function readVolume() {
+      let v = 60;
+      try {
+        if (window.HardwareUI?.getVolume) v = HardwareUI.getVolume();
+        else if (window.WujiControlCenter?.getVolume) v = WujiControlCenter.getVolume();
+        else v = Store.get('control.volume', 60);
+      } catch {}
+      return Math.max(0, Math.min(100, v));
+    }
+
+    function isMuted() {
+      try {
+        return !!WujiControlCenter?.getToggle?.('soundmode');
+      } catch { return false; }
+    }
+
+    function syncVolume() {
+      if (!ctx || !master) return;
+      const vol = readVolume() / 100;
+      const target = isMuted() ? 0 : Math.pow(vol, 1.6) * 0.9;
+      try { master.gain.setTargetAtTime(target, ctx.currentTime, 0.06); } catch {}
+    }
+
+    function resume() {
+      ensure();
+      if (ctx && ctx.state === 'suspended') {
+        ctx.resume().catch(() => {});
+      }
+    }
+
+    function playNote(freq, dur, gain, when, bus, type) {
+      const osc = ctx.createOscillator();
+      osc.type = type || 'sine';
+      osc.frequency.value = freq;
+      const g = ctx.createGain();
+      g.gain.setValueAtTime(0.0001, when);
+      g.gain.exponentialRampToValueAtTime(gain, when + 0.015);
+      g.gain.exponentialRampToValueAtTime(0.0001, when + dur);
+      osc.connect(g);
+      g.connect(bus);
+      osc.start(when);
+      osc.stop(when + dur + 0.02);
+    }
+
+    /* ---------- 音效 ---------- */
+    function sfxStar() {
+      if (!ensure()) return;
+      const t = ctx.currentTime;
+      playNote(1046.5, 0.10, 0.22, t,        sfxBus, 'sine');
+      playNote(1318.5, 0.12, 0.20, t + 0.06, sfxBus, 'sine');
+      playNote(1568.0, 0.16, 0.18, t + 0.12, sfxBus, 'sine');
+    }
+
+    function sfxPoop() {
+      if (!ensure()) return;
+      const t = ctx.currentTime;
+      const osc = ctx.createOscillator();
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(260, t);
+      osc.frequency.exponentialRampToValueAtTime(70, t + 0.28);
+      const g = ctx.createGain();
+      g.gain.setValueAtTime(0.25, t);
+      g.gain.exponentialRampToValueAtTime(0.001, t + 0.30);
+      osc.connect(g);
+      g.connect(sfxBus);
+      osc.start(t);
+      osc.stop(t + 0.32);
+    }
+
+    function sfxTick() {
+      if (!ensure()) return;
+      playNote(1200, 0.05, 0.10, ctx.currentTime, sfxBus, 'square');
+    }
+
+    function sfxGameOver() {
+      if (!ensure()) return;
+      const t = ctx.currentTime;
+      playNote(523.25, 0.18, 0.18, t,        sfxBus, 'sine');
+      playNote(392.00, 0.18, 0.18, t + 0.16, sfxBus, 'sine');
+      playNote(261.63, 0.38, 0.18, t + 0.32, sfxBus, 'sine');
+    }
+
+    /* ---------- 背景音乐 ---------- */
+    const MELODY = [523.25, 659.25, 783.99, 659.25];  // C E G E
+    const BASS   = [130.81, 130.81, 174.61, 174.61];  // C3 C3 F3 F3
+    const BEAT   = 0.32;
+
+    function scheduleBeat() {
+      if (!bgPlaying || !ctx) return;
+      const when = ctx.currentTime + 0.02;
+      const mi = bgBeat % MELODY.length;
+      playNote(MELODY[mi], BEAT * 0.9, 0.10, when, musicBus, 'triangle');
+
+      if (bgBeat % 4 === 0) {
+        const bi = Math.floor(bgBeat / 4) % BASS.length;
+        const osc = ctx.createOscillator();
+        osc.type = 'sine';
+        osc.frequency.value = BASS[bi];
+        const g = ctx.createGain();
+        g.gain.setValueAtTime(0.0001, when);
+        g.gain.exponentialRampToValueAtTime(0.07, when + 0.04);
+        g.gain.exponentialRampToValueAtTime(0.0001, when + BEAT * 4);
+        osc.connect(g);
+        g.connect(musicBus);
+        osc.start(when);
+        osc.stop(when + BEAT * 4 + 0.02);
+      }
+
+      bgBeat++;
+      bgTimer = setTimeout(scheduleBeat, BEAT * 1000);
+    }
+
+    function startBg() {
+      if (!ensure()) return;
+      resume();
+      if (bgPlaying) return;
+      bgPlaying = true;
+      bgBeat = 0;
+      scheduleBeat();
+    }
+
+    function stopBg() {
+      bgPlaying = false;
+      if (bgTimer) { clearTimeout(bgTimer); bgTimer = null; }
+    }
+
+    /* ---------- 倒计时滴答 ---------- */
+    function tick(timeLeft) {
+      const sec = Math.ceil(timeLeft);
+      if (sec !== lastTickSec && sec > 0 && sec <= 10) {
+        lastTickSec = sec;
+        sfxTick();
+      }
+    }
+
+    function resetTick() { lastTickSec = -1; }
+
+    function destroy() {
+      stopBg();
+      if (volSyncTimer) { clearInterval(volSyncTimer); volSyncTimer = null; }
+      if (ctx) {
+        try { ctx.close(); } catch {}
+        ctx = null;
+      }
+    }
+
+    return {
+      resume, syncVolume, startBg, stopBg,
+      sfxStar, sfxPoop, sfxGameOver, tick, resetTick, destroy,
+    };
+  })();
 
   /* ---------------- 状态 ---------------- */
   let els = null;
@@ -30,7 +221,7 @@
   let sceneH = 0;
   let flashTimer = null;
 
-  const items = new Map();  // id -> { el, x, y, vy, size, half, type, hit, rotation, rotSpeed }
+  const items = new Map();
   const input = { left: false, right: false };
 
   const S = {
@@ -79,6 +270,8 @@
     S.spawnInterval = SPAWN_START;
     input.left = false;
     input.right = false;
+    AudioEngine.resetTick();
+    AudioEngine.stopBg();
     updateHUD();
   }
 
@@ -93,6 +286,11 @@
     S.spawnInterval = SPAWN_START;
     input.left = false;
     input.right = false;
+
+    AudioEngine.resume();
+    AudioEngine.resetTick();
+    AudioEngine.startBg();
+
     updateHUD();
     if (els) els.overlay.classList.remove('is-show');
   }
@@ -171,10 +369,12 @@
       S.score += STAR_SCORE;
       flash('ok');
       vibrate(10);
+      AudioEngine.sfxStar();
     } else {
       S.score += POOP_SCORE;
       flash('bad');
       vibrate([20, 30, 20]);
+      AudioEngine.sfxPoop();
     }
     updateHUD();
     removeItem(item.id);
@@ -188,8 +388,12 @@
     S.timeLeft = Math.max(0, GAME_DURATION - S.elapsed / 1000);
     updateHUD();
 
+    AudioEngine.tick(S.timeLeft);
+
     if (S.timeLeft <= 0) {
       S.status = 'gameover';
+      AudioEngine.stopBg();
+      AudioEngine.sfxGameOver();
       showOverlay(
         '时间到！',
         `本次得分 <b style="color:#e0356b;font-size:24px;display:inline-block;margin-top:6px;">${S.score}</b>`,
@@ -198,7 +402,6 @@
       return;
     }
 
-    /* 玩家移动 */
     const dir = (input.right ? 1 : 0) - (input.left ? 1 : 0);
     if (dir !== 0 && sceneW > 0) {
       S.playerX += dir * PLAYER_SPEED * dt / sceneW;
@@ -206,7 +409,6 @@
       S.playerX = Math.max(halfP, Math.min(1 - halfP, S.playerX));
     }
 
-    /* 生成掉落物 */
     S.spawnTimer += dt * 1000;
     if (S.spawnTimer >= S.spawnInterval) {
       S.spawnTimer = 0;
@@ -215,7 +417,6 @@
       S.spawnInterval = SPAWN_START - (SPAWN_START - SPAWN_MIN) * p;
     }
 
-    /* 更新掉落物 + 碰撞 */
     const playerCenterX = S.playerX * sceneW;
     const playerLeft  = playerCenterX - PLAYER_WIDTH / 2;
     const playerRight = playerCenterX + PLAYER_WIDTH / 2;
@@ -311,7 +512,7 @@
     name: '接住星星',
     icon: './assets/catchstars.svg',
     initialRoute: 'home',
-    version: '1.0.0',
+    version: '1.0.2',
 
     styles: `
       .star-page {
@@ -499,7 +700,37 @@
         50%      { transform: translateY(-3px); }
       }
 
-      /* ============ 遮罩 ============ */
+      /* ============ 底部按钮 ============ */
+      .star-controls {
+        flex: 0 0 auto;
+        display: flex;
+        gap: 12px;
+        padding: 12px 20px calc(16px + env(safe-area-inset-bottom, 0px));
+        z-index: 10;
+      }
+      .star-btn {
+        flex: 1 1 0;
+        height: 64px;
+        border: 0;
+        border-radius: 18px;
+        font: inherit;
+        font-size: 28px;
+        font-weight: 700;
+        color: #fff;
+        cursor: pointer;
+        transition: transform .08s ease, filter .1s;
+        -webkit-tap-highlight-color: transparent;
+        user-select: none;
+        -webkit-user-select: none;
+        box-shadow: 0 6px 16px rgba(0, 0, 0, .22);
+        background: linear-gradient(to bottom, #6a8dff 0%, #3a6ff0 100%);
+      }
+      .star-btn.is-active {
+        filter: brightness(.9);
+        transform: scale(.97);
+      }
+
+      /* ============ 全屏遮罩 & 闪光（相对 .star-page 全屏） ============ */
       .star-overlay {
         position: absolute;
         inset: 0;
@@ -552,7 +783,6 @@
       }
       .star-overlay__btn:active { transform: scale(.96); }
 
-      /* ============ 闪光 ============ */
       .star-flash {
         position: absolute;
         inset: 0;
@@ -570,41 +800,6 @@
         background: radial-gradient(circle, transparent 25%, rgba(224, 53, 107, .6) 100%);
         opacity: 1;
         transition: none;
-      }
-
-      /* ============ 底部按钮 ============ */
-      .star-controls {
-        flex: 0 0 auto;
-        display: flex;
-        gap: 12px;
-        padding: 12px 20px calc(16px + env(safe-area-inset-bottom, 0px));
-        z-index: 10;
-      }
-      .star-btn {
-        flex: 1 1 0;
-        height: 64px;
-        border: 0;
-        border-radius: 18px;
-        font: inherit;
-        font-size: 28px;
-        font-weight: 700;
-        color: #fff;
-        cursor: pointer;
-        transition: transform .08s ease, filter .1s;
-        -webkit-tap-highlight-color: transparent;
-        user-select: none;
-        -webkit-user-select: none;
-        box-shadow: 0 6px 16px rgba(0, 0, 0, .22);
-      }
-      .star-btn--left {
-        background: linear-gradient(to bottom, #6a8dff 0%, #3a6ff0 100%);
-      }
-      .star-btn--right {
-        background: linear-gradient(to bottom, #6a8dff 0%, #3a6ff0 100%);
-      }
-      .star-btn.is-active {
-        filter: brightness(.9);
-        transform: scale(.97);
       }
     `,
 
@@ -628,24 +823,24 @@
                 <div class="star-player" id="starPlayer">
                   <div class="star-player__inner">${EMOJI.player}</div>
                 </div>
-
-                <div class="star-flash" id="starFlash"></div>
-
-                <div class="star-overlay is-show" id="starOverlay">
-                  <div class="star-overlay__title" id="starOverlayTitle">接星星</div>
-                  <div class="star-overlay__desc" id="starOverlayDesc">
-                    用下方按钮左右移动 😊<br>
-                    接住 ⭐ 得 <b style="color:#5bd67f">10</b> 分，
-                    避开 💩 扣 <b style="color:#e0356b">5</b> 分<br>
-                    时间 60 秒
-                  </div>
-                  <button class="star-overlay__btn" id="starOverlayBtn" type="button">开始</button>
-                </div>
               </div>
 
               <div class="star-controls">
-                <button class="star-btn star-btn--left"  id="starLeft"  type="button" aria-label="左移">←</button>
-                <button class="star-btn star-btn--right" id="starRight" type="button" aria-label="右移">→</button>
+                <button class="star-btn" id="starLeft"  type="button" aria-label="左移">←</button>
+                <button class="star-btn" id="starRight" type="button" aria-label="右移">→</button>
+              </div>
+
+              <div class="star-flash" id="starFlash"></div>
+
+              <div class="star-overlay is-show" id="starOverlay">
+                <div class="star-overlay__title" id="starOverlayTitle">接星星</div>
+                <div class="star-overlay__desc" id="starOverlayDesc">
+                  用下方按钮左右移动 😊<br>
+                  接住 ⭐ 得 <b style="color:#5bd67f">10</b> 分，<br>
+                  接住 💩 扣 <b style="color:#e0356b">10</b> 分<br>
+                  时间 60 秒
+                </div>
+                <button class="star-overlay__btn" id="starOverlayBtn" type="button">开始</button>
               </div>
             </div>
           `;
@@ -701,9 +896,14 @@
           window.addEventListener('keydown', onKey);
           window.addEventListener('keyup', onKeyUp);
 
+          /* 音量 / 静音变化时立即同步一次 */
+          const onCCChange = () => AudioEngine.syncVolume();
+          window.addEventListener('wuji:cc-toggle-change', onCCChange);
+
           root._wjStarCleanup = () => {
             window.removeEventListener('keydown', onKey);
             window.removeEventListener('keyup', onKeyUp);
+            window.removeEventListener('wuji:cc-toggle-change', onCCChange);
             if (flashTimer) { clearTimeout(flashTimer); flashTimer = null; }
           };
 
@@ -714,6 +914,7 @@
         unmount() {
           stopLoop();
           clearItems();
+          AudioEngine.stopBg();
           if (els) els = null;
         },
       },

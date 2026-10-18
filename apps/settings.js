@@ -24,6 +24,28 @@
     return (n / 1024 / 1024 / 1024).toFixed(2) + ' GB';
   }
 
+  function imgToCanvas(src, w, h) {
+    const canvas = document.createElement('canvas');
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    canvas.width  = Math.round(w * dpr);
+    canvas.height = Math.round(h * dpr);
+    canvas.style.cssText = 'width:100%;height:100%;display:block;';
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return canvas;
+
+    const img = new Image();
+    img.decoding = 'async';
+    img.onload = () => {
+      const s = Math.max(canvas.width / img.naturalWidth, canvas.height / img.naturalHeight);
+      const dw = img.naturalWidth * s;
+      const dh = img.naturalHeight * s;
+      ctx.drawImage(img, (canvas.width - dw) / 2, (canvas.height - dh) / 2, dw, dh);
+    };
+    img.onerror = () => {};
+    img.src = src;
+    return canvas;
+  }
+
   function pinDotsHtml() {
     return `
       <div class="settings-pin-dots" data-pin-dots>
@@ -1379,10 +1401,9 @@
               <div style="font-size:15px;font-weight:600;color:var(--wj-text);">系统主题</div>
               <div class="theme-grid" id="sysThemeGrid">
                 ${sys.map(t => `
-                  <div class="theme-card" data-id="${escapeHtml(t.id)}" data-sys="1">
-                    <div class="theme-card__thumb">
-                      <img src="${escapeHtml(t.storeimg || t.static || '')}" alt="">
-                    </div>
+                  <div class="theme-card" data-id="${escapeHtml(t.id)}" data-sys="1"
+                       data-src="${escapeHtml(t.storeimg || t.static || '')}">
+                    <div class="theme-card__thumb"></div>
                     <div class="theme-card__name">${escapeHtml(t.name)}</div>
                   </div>
                 `).join('')}
@@ -1405,7 +1426,14 @@
           const gotoBtn = root.querySelector('#gotoMarketBtn');
           const SYS     = Array.isArray(window.SYSTEM_THEMES) ? window.SYSTEM_THEMES : [];
 
-          /* ---------- 系统主题点击 ---------- */
+          root.querySelectorAll('#sysThemeGrid .theme-card').forEach(card => {
+            const thumb = card.querySelector('.theme-card__thumb');
+            const src = card.dataset.src;
+            if (!thumb || !src) return;
+            thumb.innerHTML = '';
+            thumb.appendChild(imgToCanvas(src, 160, 213));
+          });
+
           root.querySelectorAll('#sysThemeGrid .theme-card').forEach(el => {
             el.addEventListener('click', () => {
               const t = SYS.find(x => x.id === el.dataset.id);
@@ -1414,7 +1442,6 @@
             });
           });
 
-          /* ---------- DB 读写 ---------- */
           const DB = () => AppStorage.for('com.wujios.themes');
 
           async function readDownloaded() {
@@ -1621,15 +1648,21 @@
             myEmpty.hidden = true;
 
             myGrid.innerHTML = list.map(t => `
-              <div class="theme-card" data-id="${escapeHtml(String(t.id))}" data-mine="1">
-                <div class="theme-card__thumb">
-                  <img src="${escapeHtml(t.storeimg || t.static || '')}" alt="">
-                </div>
+              <div class="theme-card" data-id="${escapeHtml(String(t.id))}" data-mine="1"
+                   data-src="${escapeHtml(t.storeimg || t.static || '')}">
+                <div class="theme-card__thumb"></div>
                 <div class="theme-card__name">${escapeHtml(t.name || '')}</div>
               </div>
             `).join('');
 
-            /* ★ 用索引绑定，避免 dataset.id 与 t.id 二次匹配失败 */
+            myGrid.querySelectorAll('.theme-card').forEach(card => {
+              const thumb = card.querySelector('.theme-card__thumb');
+              const src = card.dataset.src;
+              if (!thumb || !src) return;
+              thumb.innerHTML = '';
+              thumb.appendChild(imgToCanvas(src, 160, 213));
+            });
+
             const cards = myGrid.querySelectorAll('.theme-card');
             cards.forEach((el, i) => {
               const theme = list[i];
@@ -1651,7 +1684,6 @@
         },
       },
 
-      /* ==================== 主题详情（设置内） ==================== */
       'theme-detail': {
         name: 'theme-detail',
 
@@ -1663,9 +1695,7 @@
             <div class="theme-detail">
               <div class="theme-detail__scroll">
                 <div class="theme-detail__name">${escapeHtml(theme.name)}</div>
-                <div class="theme-detail__hero">
-                  <img src="${escapeHtml(theme.storeimg || theme.static || '')}" alt="">
-                </div>
+                <div class="theme-detail__hero" id="themeHero"></div>
               </div>
               <div class="theme-detail__footer">
                 <button class="theme-btn" id="setThemeBtn" type="button">
@@ -1682,6 +1712,12 @@
 
           const btn = root.querySelector('#setThemeBtn');
           if (!btn) return;
+
+          const hero = root.querySelector('#themeHero');
+          if (hero) {
+            const src = theme.storeimg || theme.static || '';
+            if (src) hero.appendChild(imgToCanvas(src, 800, 600));
+          }
 
           async function refresh() {
             const active = WujiTheme.current === theme.id;
