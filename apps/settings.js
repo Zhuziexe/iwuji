@@ -27,7 +27,7 @@
   function imgToCanvas(src, w, h) {
     const canvas = document.createElement('canvas');
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
-    canvas.width  = Math.round(w * dpr);
+    canvas.width = Math.round(w * dpr);
     canvas.height = Math.round(h * dpr);
     canvas.style.cssText = 'width:100%;height:100%;display:block;';
     const ctx = canvas.getContext('2d');
@@ -41,7 +41,26 @@
       const dh = img.naturalHeight * s;
       ctx.drawImage(img, (canvas.width - dw) / 2, (canvas.height - dh) / 2, dw, dh);
     };
-    img.onerror = () => {};
+    img.onerror = () => { };
+    img.src = src;
+    return canvas;
+  }
+
+  function imgToCanvasNatural(src, cssWidth) {
+    const canvas = document.createElement('canvas');
+    // 注意是 height:auto，父级没有高度，100% 没意义
+    canvas.style.cssText = 'width:100%;height:auto;display:block;';
+    const img = new Image();
+    img.decoding = 'async';
+    img.onload = () => {
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const w = cssWidth || canvas.clientWidth || img.naturalWidth;
+      const h = w * img.naturalHeight / img.naturalWidth;
+      canvas.width = Math.round(w * dpr);
+      canvas.height = Math.round(h * dpr);
+      const ctx = canvas.getContext('2d');
+      if (ctx) ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+    };
     img.src = src;
     return canvas;
   }
@@ -760,7 +779,7 @@
           `;
         },
 
-                mount(root, ctx) {
+        mount(root, ctx) {
           root.querySelector('[data-act="about"]')
             ?.addEventListener('click', () => ctx.push('about'));
           root.querySelector('[data-act="wlan"]')
@@ -971,12 +990,12 @@
 
         mount(root) {
           const percentEl = root.querySelector('#storagePercent');
-          const fillEl    = root.querySelector('#storageFill');
-          const usedEl    = root.querySelector('#storageUsed');
-          const freeEl    = root.querySelector('#storageFree');
+          const fillEl = root.querySelector('#storageFill');
+          const usedEl = root.querySelector('#storageUsed');
+          const freeEl = root.querySelector('#storageFree');
           const appDataEl = root.querySelector('#storageAppData');
 
-          const TOTAL_BYTES  = 64  * 1024 * 1024 * 1024;
+          const TOTAL_BYTES = 64 * 1024 * 1024 * 1024;
           const SYSTEM_BYTES = 4.3 * 1024 * 1024 * 1024;
 
           async function update() {
@@ -990,14 +1009,14 @@
               console.warn('[storage] usageAll failed', e);
             }
 
-            const used  = SYSTEM_BYTES + appBytes;
-            const free  = Math.max(0, TOTAL_BYTES - used);
-            const pct   = Math.min(100, (used / TOTAL_BYTES) * 100);
+            const used = SYSTEM_BYTES + appBytes;
+            const free = Math.max(0, TOTAL_BYTES - used);
+            const pct = Math.min(100, (used / TOTAL_BYTES) * 100);
 
             percentEl.textContent = pct.toFixed(1) + '%';
             fillEl.style.width = pct + '%';
             usedEl.textContent = '已使用 ' + formatBytes(used);
-            freeEl.textContent = '可用 '   + formatBytes(free);
+            freeEl.textContent = '可用 ' + formatBytes(free);
 
             appDataEl.textContent = formatBytes(appBytes);
           }
@@ -1357,8 +1376,8 @@
         render() {
           /* ★ 读取当前主题的 storeimg 作为左侧图标 */
           const themeMeta = window.WujiTheme?.meta;
-          const storeImg  = themeMeta?.storeimg || '';
-          const iconHtml  = storeImg
+          const storeImg = themeMeta?.storeimg || '';
+          const iconHtml = storeImg
             ? `<img src="${escapeHtml(storeImg)}" alt="">`
             : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
                  stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
@@ -1388,7 +1407,6 @@
         },
       },
 
-      /* ==================== 主题列表 ==================== */
       themes: {
         name: 'themes',
 
@@ -1421,10 +1439,10 @@
         },
 
         mount(root, ctx) {
-          const myGrid  = root.querySelector('#myThemeGrid');
+          const myGrid = root.querySelector('#myThemeGrid');
           const myEmpty = root.querySelector('#myThemeEmpty');
           const gotoBtn = root.querySelector('#gotoMarketBtn');
-          const SYS     = Array.isArray(window.SYSTEM_THEMES) ? window.SYSTEM_THEMES : [];
+          const SYS = Array.isArray(window.SYSTEM_THEMES) ? window.SYSTEM_THEMES : [];
 
           root.querySelectorAll('#sysThemeGrid .theme-card').forEach(card => {
             const thumb = card.querySelector('.theme-card__thumb');
@@ -1520,7 +1538,7 @@
             if (top < EDGE) top = rect.bottom + 6;
             if (top + mr.height > vh - EDGE) top = vh - EDGE - mr.height;
             menuEl.style.left = left + 'px';
-            menuEl.style.top  = top  + 'px';
+            menuEl.style.top = top + 'px';
 
             const item = menuEl.querySelector('.theme-menu__item');
             let handled = false;
@@ -1561,11 +1579,11 @@
             }, 0);
           }
 
-                    /* ---------- 长按删除 ---------- */
+          /* ---------- 长按删除 ---------- */
           function bindLongPressDelete(el, theme) {
             let lpTimer = null;
             let lpFired = false;
-            let startX  = 0, startY = 0;
+            let startX = 0, startY = 0;
             const MOVE_CANCEL = 10;
 
             el.addEventListener('pointerdown', e => {
@@ -1612,7 +1630,7 @@
               const onMove = ev => {
                 if (!lpTimer) return;
                 if (Math.abs(ev.clientX - startX) > MOVE_CANCEL ||
-                    Math.abs(ev.clientY - startY) > MOVE_CANCEL) {
+                  Math.abs(ev.clientY - startY) > MOVE_CANCEL) {
                   clearTimeout(lpTimer);
                   lpTimer = null;
                   cleanup();
@@ -1635,7 +1653,7 @@
               }
             }, true);
           }
-          
+
           /* ---------- 我的主题渲染 ---------- */
           async function renderMine() {
             const list = await readDownloaded();
@@ -1716,7 +1734,7 @@
           const hero = root.querySelector('#themeHero');
           if (hero) {
             const src = theme.storeimg || theme.static || '';
-            if (src) hero.appendChild(imgToCanvas(src, 800, 600));
+            if (src) hero.appendChild(imgToCanvasNatural(src, 800));
           }
 
           async function refresh() {
@@ -1735,7 +1753,7 @@
             if (btn.disabled) return;
             try {
               await WujiTheme.load(theme.id);
-              if (navigator.vibrate) { try { navigator.vibrate(10); } catch {} }
+              if (navigator.vibrate) { try { navigator.vibrate(10); } catch { } }
               refresh();
             } catch (e) { console.error('[theme] 应用失败', e); }
           });
