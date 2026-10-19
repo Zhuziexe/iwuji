@@ -62,6 +62,40 @@ window.WujiControlCenter = (() => {
     } catch { }
   }
 
+  function emitVolumeChange(v) {
+    try {
+      window.dispatchEvent(new CustomEvent('wuji:cc-volume-change', {
+        detail: { volume: v },
+      }));
+    } catch { }
+  }
+  function emitBrightnessChange(v) {
+    try {
+      window.dispatchEvent(new CustomEvent('wuji:cc-brightness-change', {
+        detail: { brightness: v },
+      }));
+    } catch { }
+  }
+
+  /* ---------------- ★ 音量唯一入口 ----------------
+     - 写内存 volume
+     - 写 Store（持久化）
+     - 更新 UI
+     - emit=true 时通知外层（拖滑块路径才需要）
+     -------------------------------------------------- */
+  function _applyVolume(v, { emit } = {}) {
+    volume = Math.max(0, Math.min(100, v));
+    Store.set('wujios.volume', volume);
+    applyVolumeUI();
+    emitVolumeChange(volume);            /* ★ 新增 */
+    if (emit) notifyParent('volume-set', { volume });
+  }
+  function _applyBrightness(v) {
+    brightness = Math.max(0, Math.min(100, v));
+    Store.set('wujios.brightness', brightness);
+    applyBrightnessUI();
+    emitBrightnessChange(brightness);
+  }
   /* ---------------- 滑块 ---------------- */
   function bindSlider(el, { setValue }) {
     if (!el) return;
@@ -101,9 +135,8 @@ window.WujiControlCenter = (() => {
         if (!CC_KEYS.includes(key)) return;
 
         ccState[key] = !ccState[key];
-        Store.set('control.' + key, ccState[key]);
+        Store.set('wujios.' + key, ccState[key]);
 
-        /* ★ 整体重绘，会一并更新 nb 的文字和图标 */
         applyToggleUI();
 
         emitToggleChange(key, ccState[key]);
@@ -121,20 +154,11 @@ window.WujiControlCenter = (() => {
     bindToggleEvents();
 
     bindSlider(document.querySelector('[data-slider="volume"]'), {
-      setValue: v => {
-        volume = Math.max(0, Math.min(100, v));
-        Store.set('control.volume', volume);
-        applyVolumeUI();
-        notifyParent('volume-set', { volume });
-      },
+      setValue: v => _applyVolume(v, { emit: true }),
     });
 
     bindSlider(document.querySelector('[data-slider="brightness"]'), {
-      setValue: v => {
-        brightness = Math.max(0, Math.min(100, v));
-        Store.set('control.brightness', brightness);
-        applyBrightnessUI();
-      },
+      setValue: v => _applyBrightness(v),
     });
   }
 
@@ -146,11 +170,9 @@ window.WujiControlCenter = (() => {
     ccVolumeFill     = document.getElementById('ccVolumeFill');
     ccBrightnessFill = document.getElementById('ccBrightnessFill');
 
-    CC_KEYS.forEach(k => { ccState[k] = !!Store.get('control.' + k, false); });
-    volume     = Store.get('control.volume', 60);
-    brightness = Store.get('control.brightness', 80);
-
-    try { Store.remove('control.nb'); } catch { }
+    CC_KEYS.forEach(k => { ccState[k] = !!Store.get('wujios.' + k, false); });
+    volume     = Store.get('wujios.volume', 60);
+    brightness = Store.get('wujios.brightness', 80);
 
     applyToggleUI();
     applyVolumeUI();
@@ -163,7 +185,6 @@ window.WujiControlCenter = (() => {
   return {
     init,
 
-    /* 打开 / 关闭 / 判断 全部委托给 PanelSystem */
     close()   { window.PanelSystem?.close(); },
     isOpen()  {
       return !!window.PanelSystem?.isOpen && window.PanelSystem.panel === 'cc';
@@ -171,24 +192,17 @@ window.WujiControlCenter = (() => {
     openFromRight() { window.PanelSystem?.open('cc'); },
     switchToNotificationCenter() { window.PanelSystem?.setPanel('nc'); },
 
-    /* 音量 / 亮度 */
-    setVolume(v) {
-      volume = Math.max(0, Math.min(100, v));
-      applyVolumeUI();
-    },
-    getVolume() { return volume; },
+    /* ★ 内部已写 Store，外部调用者不用再写 */
+    setVolume(v) { _applyVolume(v); },
+    getVolume()  { return volume; },
 
-    setBrightness(v) {
-      brightness = Math.max(0, Math.min(100, v));
-      applyBrightnessUI();
-    },
-    getBrightness() { return brightness; },
+    setBrightness(v) { _applyBrightness(v); },
+    getBrightness()  { return brightness; },
 
-    /* toggle */
     setToggle(key, value) {
       if (!CC_KEYS.includes(key)) return;
       ccState[key] = !!value;
-      Store.set('control.' + key, ccState[key]);
+      Store.set('wujios.' + key, ccState[key]);
       applyToggleUI();
       emitToggleChange(key, ccState[key]);
     },

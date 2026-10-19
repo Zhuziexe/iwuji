@@ -215,11 +215,6 @@
         transition: background .15s;
       }
       .city-btn:active { transform: scale(.97); }
-      .city-btn__arrow {
-        font-size: 10px;
-        color: var(--wj-text-dim);
-        line-height: 1;
-      }
       .refresh-btn {
         padding: 8px 16px;
         border: 0;
@@ -503,7 +498,6 @@
               <div class="weather-topbar">
                 <button class="city-btn" id="cityBtn" type="button">
                   <span id="cityLabel">${lastKnownCity}</span>
-                  <span class="city-btn__arrow">▾</span>
                 </button>
                 <button class="refresh-btn" id="refreshBtn" type="button">刷新</button>
               </div>
@@ -619,7 +613,6 @@
             }, 1000);
           }
 
-          /* ---------- 加载 ---------- */
           async function loadWeather({ force = false } = {}) {
             if (loading || disposed) return;
 
@@ -650,7 +643,6 @@
               await db.set('cache.' + currentCity, record);
               if (disposed) return;
 
-              /* 写完新缓存后清理旧的（不阻塞渲染） */
               cleanupCache(db, 'cache.' + currentCity).catch(() => {});
 
               weatherData = { city: currentCity, ...record };
@@ -685,14 +677,12 @@
             }, delay);
           }
 
-          /* ---------- 事件 ---------- */
           cityBtn.addEventListener('click', () => ctx.push('city'));
           refreshBtn.addEventListener('click', () => {
             if (refreshBtn.disabled || loading) return;
             loadWeather({ force: true });
           });
 
-          /* 从 city 页返回时检查城市是否变了 */
           const offNav = ctx.nav.onChange(async () => {
             if (disposed) return;
             if (ctx.nav.current?.route?.name !== 'home') return;
@@ -706,7 +696,6 @@
             }
           });
 
-          /* ---------- 首次读取真实城市 ---------- */
           (async () => {
             const storedCity = await db.get('city', DEFAULT_CITY);
             if (disposed) return;
@@ -715,7 +704,6 @@
             cityLabelEl.textContent = storedCity;
             loadWeather();
 
-            /* 空闲时清一次历史遗留的缓存 */
             const purge = () => cleanupCache(db, 'cache.' + currentCity).catch(() => {});
             if ('requestIdleCallback' in window) {
               requestIdleCallback(purge, { timeout: 4000 });
@@ -724,7 +712,6 @@
             }
           })();
 
-          /* ★ 所有副作用在这里统一收尾 */
           return () => {
             disposed = true;
             offNav();

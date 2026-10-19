@@ -54,7 +54,6 @@ window.WujiDialog = (() => {
   async function show(opts) {
     if (!opts || typeof opts !== 'object') return null;
 
-    /* 已有对话框 → 先强制关闭 */
     if (active) {
       dismiss(active, null);
       active = null;
@@ -86,7 +85,6 @@ window.WujiDialog = (() => {
 
       host.appendChild(backdrop);
 
-      /* 拦截所有触摸，防止穿透到下层（返回手势、锁屏手势、页面滑动） */
       const stop = e => e.stopPropagation();
       backdrop.addEventListener('touchstart', stop, { passive: true });
       backdrop.addEventListener('touchmove',  stop, { passive: true });
@@ -116,7 +114,6 @@ window.WujiDialog = (() => {
         }
       }, true);
 
-      /* 触发弹出动画 */
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
           backdrop.classList.add('is-show');

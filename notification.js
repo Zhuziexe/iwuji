@@ -216,7 +216,7 @@ window.WujiNotification = (() => {
 
     const silent =
       (window.WujiControlCenter?.getToggle?.('soundmode'))
-      ?? !!Store.get('control.soundmode', false);
+      ?? !!Store.get('wujios.soundmode', false);
 
     if (!silent) playSound();
 

@@ -1449,7 +1449,7 @@
     }
     img[data-interactive] { pointer-events: auto; }
 
-    .app-page { box-shadow: -14px 0 36px rgba(0, 0, 0, .3); }
+    .app-page { box-shadow: -4px 0 12px rgba(0, 0, 0, .08); }
     .app-body {
       flex: 1 1 auto;
       padding: var(--wj-pad);
@@ -1838,7 +1838,8 @@
 
       function beginGesture(x, y) {
         if (S.view !== 'app') return false;
-        if (window.WujiDialog?.isOpen) return false; 
+        if (window.WujiDialog?.isOpen) return false;
+        if (currentNav && currentNav.isGestureBlocked?.()) return false;
         const rect = osEl.getBoundingClientRect();
         if ((y - rect.top) < 30 && (x - rect.left) / rect.width >= 0.5) return false;
 
@@ -1986,6 +1987,119 @@
       });
     })();
 
+    const BootAudio = (() => {
+      let ctx = null;
+      let unlocked = false;
+
+      function ensureCtx() {
+        if (ctx) return ctx;
+        const AC = window.AudioContext || window.webkitAudioContext;
+        if (!AC) return null;
+        try { ctx = new AC(); } catch { return null; }
+        return ctx;
+      }
+
+      function unlock() {
+        const c = ensureCtx();
+        if (!c) return;
+        if (c.state === 'suspended') {
+          c.resume()
+            .then(() => { unlocked = c.state === 'running'; })
+            .catch(() => {});
+        } else {
+          unlocked = c.state === 'running';
+        }
+      }
+
+      /* ★ 把解锁挂到"用户真正能点下去的那个文档"上 */
+      function attachUnlock() {
+        /* 独立打开：监听自身 document */
+        if (window.parent === window) {
+          const selfHandler = () => {
+            unlock();
+            if (unlocked) {
+              document.removeEventListener('pointerdown', selfHandler, true);
+            }
+          };
+          document.addEventListener('pointerdown', selfHandler, {
+            capture: true,
+            passive: true,
+          });
+          return;
+        }
+
+        /* 套在模拟器壳子里：监听父文档（同源才能拿到） */
+        let parentDoc = null;
+        try { parentDoc = window.parent.document; } catch { return; }
+        if (!parentDoc) return;
+
+        const handler = () => {
+          unlock();
+          if (unlocked) {
+            try { parentDoc.removeEventListener('pointerdown', handler, true); } catch {}
+          }
+        };
+        try {
+          parentDoc.addEventListener('pointerdown', handler, {
+            capture: true,
+            passive: true,
+          });
+        } catch {}
+      }
+      function isBootSoundEnabled() {
+        const v = Store.get('wujios.playbootsound', undefined);
+        if (v === undefined) {
+          Store.set('wujios.playbootsound', true);
+          return true;
+        }
+        return v !== false;
+      }
+
+      function play() {
+        if (!isBootSoundEnabled()) return;
+        const c = ensureCtx();
+        if (!c) return;
+        if (c.state === 'suspended') c.resume().catch(() => {});
+
+        const t0 = c.currentTime + 0.02;
+
+        const comp = c.createDynamicsCompressor();
+        comp.threshold.value = -6;
+        comp.knee.value      = 0;
+        comp.ratio.value     = 12;
+        comp.attack.value    = 0.003;
+        comp.release.value   = 0.25;
+        comp.connect(c.destination);
+
+        const bus = c.createGain();
+        bus.gain.value = 1.0;
+        bus.connect(comp);
+
+        /* ★ C5 / E5 / G5 三音和弦：220ms 渐入，1.6s 渐出 */
+        [
+          { f: 523.25, t: 0.00, d: 0.42, g: 0.34 },   /* C5 */
+          { f: 659.25, t: 0.18, d: 0.42, g: 0.32 },   /* E5 */
+          { f: 783.99, t: 0.36, d: 0.60, g: 0.30 },   /* G5 */
+        ].forEach(n => {
+          const o = c.createOscillator();
+          o.type = 'triangle';
+          o.frequency.value = n.f;
+          const g = c.createGain();
+          g.gain.setValueAtTime(0.0001, t0 + n.t);
+          g.gain.exponentialRampToValueAtTime(n.g, t0 + n.t + 0.04);
+          g.gain.exponentialRampToValueAtTime(0.0001, t0 + n.t + n.d);
+          o.connect(g);
+          g.connect(bus);
+          o.start(t0 + n.t);
+          o.stop(t0 + n.t + n.d + 0.02);
+        });
+      }
+
+      attachUnlock();   /* ★ 模块创建时就挂好监听 */
+
+      return { unlock, play };
+    })();
+
     /* =========================================================
        开关机
        ========================================================= */
@@ -2004,6 +2118,7 @@
       mark.classList.add('stage-2');
       await sleep(T.fadeI);
       mark.classList.add('stage-3');
+      try { BootAudio.play(); } catch { }
       await sleep(T.expandOS);
       await sleep(T.hold);
     }
@@ -2330,6 +2445,22 @@
 
     WujiTheme.init();
     PanelSystem.init();
+    (function migrateControlKeys() {
+      const KEYS = ['volume', 'brightness', 'wifi', 'bluetooth', 'soundmode', 'cellular'];
+      let migrated = 0;
+      for (const k of KEYS) {
+        const oldVal = Store.get('control.' + k, undefined);
+        if (oldVal !== undefined) {
+          Store.set('wujios.' + k, oldVal);
+          Store.remove('control.' + k);
+          migrated++;
+        }
+      }
+      Store.remove('control.nb');
+      if (migrated) {
+        console.log('[migrate] control.* → wujios.*:', migrated);
+      }
+    })();
     WujiControlCenter.init({ osEl, notifyParent });
 
     function launchAppFromNotification(bundle, params) {
@@ -2375,14 +2506,18 @@
       const VOL_REPEAT_START = 400;
       const VOL_REPEAT_EVERY = 80;
 
-      let volume = 60;
       let volPressTimer  = null;
       let volRepeatTimer = null;
       let volHideTimer   = null;
 
+      /* ★ 唯一权威：每次从 Store 读，不保留本地副本 */
+      function readVolume() {
+        return Store.get('wujios.volume', 60);
+      }
+
       /* ---------- 音量 ---------- */
-      function showHud() {
-        hudBar.style.height = volume + '%';
+      function showHud(value) {
+        hudBar.style.height = value + '%';
         hudEl.classList.add('is-visible');
         clearTimeout(volHideTimer);
         volHideTimer = setTimeout(() => {
@@ -2391,13 +2526,18 @@
       }
 
       function changeVolume(delta) {
-        const prev = volume;
-        volume = Math.max(0, Math.min(100, volume + delta));
-        if (volume === prev) return false;
-        showHud();
-        try { Store.set('control.volume', volume); } catch {}
-        try { WujiControlCenter?.setVolume?.(volume); } catch {}
-        notifyParent('volume-change', { volume });
+        const cur  = readVolume();
+        const next = Math.max(0, Math.min(100, cur + delta));
+        if (next === cur) return false;
+
+        showHud(next);
+
+        /* Store 由 HardwareUI 与 ControlCenter 各写一次（幂等），
+           UI 更新走 ControlCenter；两者读同一权威，不再分叉 */
+        Store.set('wujios.volume', next);
+        try { WujiControlCenter?.setVolume?.(next); } catch {}
+
+        notifyParent('volume-change', { volume: next });
         return true;
       }
 
@@ -2512,11 +2652,12 @@
       return {
         powerShort,
         powerLong: showMenu,
-        volumePress: (dir) => startVolLoop(dir),
+        volumePress:   (dir) => startVolLoop(dir),
         volumeRelease: stopVolLoop,
         hideMenu,
         isMenuOpen,
-        getVolume: () => volume,
+        /* ★ 实时读 Store，游戏等模块拿到的是最新值 */
+        getVolume: () => readVolume(),
       };
     })();
 

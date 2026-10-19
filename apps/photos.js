@@ -81,6 +81,10 @@ WujiApps.register({
       gap: 24px;
       padding: var(--wj-pad);
       background: var(--wj-bg);
+      cursor: pointer;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-tap-highlight-color: transparent;
     }
 
     .photos-detail__card {
@@ -91,12 +95,7 @@ WujiApps.register({
       align-items: center;
       justify-content: center;
       box-shadow: 0 20px 50px rgba(15,20,45,.3);
-      animation: photosDetailIn .4s cubic-bezier(.2,.7,.3,1);
-    }
-
-    @keyframes photosDetailIn {
-      from { transform: scale(.85); opacity: 0; }
-      to   { transform: scale(1);   opacity: 1; }
+      /* 注意：进入 / 退出动画由 WujiNavigation 负责，这里只保留内层卡片样式 */
     }
 
     .photos-detail__emoji {
@@ -109,6 +108,18 @@ WujiApps.register({
       font-size: var(--wj-fs-lg);
       color: var(--wj-text);
       font-weight: 600;
+    }
+
+    .photos-detail__hint {
+      position: absolute;
+      bottom: calc(24px + env(safe-area-inset-bottom, 0px));
+      left: 0;
+      right: 0;
+      text-align: center;
+      font-size: 12px;
+      color: var(--wj-text-dim);
+      letter-spacing: .5px;
+      pointer-events: none;
     }
   `,
 
@@ -133,21 +144,42 @@ WujiApps.register({
         grid.addEventListener('click', e => {
           const cell = e.target.closest('.photos-cell');
           if (!cell) return;
-          ctx.push('detail', { index: +cell.dataset.index });
+
+          /* ★ 拿源元素的 rect 作为 zoom 转场的起点 */
+          const rect = cell.getBoundingClientRect();
+
+          if (navigator.vibrate) { try { navigator.vibrate(6); } catch {} }
+
+          ctx.push('detail',
+            { index: +cell.dataset.index },
+            {
+              origin: {
+                x: rect.left,
+                y: rect.top,
+                w: rect.width,
+                h: rect.height,
+              },
+            }
+          );
         });
       },
     },
 
     detail: {
+      name: 'detail',
+      transition: 'zoom',
       render(routeCtx) {
         const photo = PHOTOS[routeCtx.data.index] || PHOTOS[0];
         return `
-          <div class="photos-detail">
+          <div class="photos-detail" id="photosDetail">
             <div class="photos-detail__card" style="background:${photo.bg}">
               <div class="photos-detail__emoji">${photo.emoji}</div>
             </div>
             <div class="photos-detail__name">${photo.name}</div>
           </div>`;
+      },
+
+      mount() {
       },
     },
   },

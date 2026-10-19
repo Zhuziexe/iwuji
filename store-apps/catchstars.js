@@ -59,7 +59,7 @@
       try {
         if (window.HardwareUI?.getVolume) v = HardwareUI.getVolume();
         else if (window.WujiControlCenter?.getVolume) v = WujiControlCenter.getVolume();
-        else v = Store.get('control.volume', 60);
+        else v = Store.get('wujios.volume', 60);
       } catch {}
       return Math.max(0, Math.min(100, v));
     }

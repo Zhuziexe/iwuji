@@ -6,14 +6,9 @@
     grid: `<svg viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="3" width="7.5" height="7.5" rx="1.6"/><rect x="13.5" y="3" width="7.5" height="7.5" rx="1.6"/><rect x="3" y="13.5" width="7.5" height="7.5" rx="1.6"/><rect x="13.5" y="13.5" width="7.5" height="7.5" rx="1.6"/></svg>`,
     key: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="15" r="4"/><path d="M10.85 12.15 19 4"/><path d="M18 5l2 2"/><path d="M15 8l2 2"/></svg>`,
     storage: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="6" rx="8" ry="2.6"/><path d="M4 6v5c0 1.44 3.58 2.6 8 2.6s8-1.16 8-2.6V6"/><path d="M4 12v5c0 1.44 3.58 2.6 8 2.6s8-1.16 8-2.6v-5"/></svg>`,
-    /* ★ 桌面和个性化：红色圆形底 + 白色刷子 */
-    paint: `<svg viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg">
-      <circle cx="128" cy="128" r="128" fill="#ff375f"/>
-      <rect x="112" y="32" width="32" height="96" rx="10" fill="#FFFFFF"/>
-      <rect x="94"  y="128" width="68" height="18" rx="4"  fill="#FFFFFF"/>
-      <rect x="44"  y="146" width="168" height="80" rx="10" fill="#FFFFFF"/>
-      <line x1="44" y1="146" x2="212" y2="146" stroke="#ff375f" stroke-opacity="0.25" stroke-width="2"/>
-    </svg>`,
+    paint: `<svg viewBox="0 0 24 24"><rect width="24" height="24" fill="#ff375f" /><rect x="4.35" y="0.98" width="15.3" height="9" rx="1.13" fill="#FFFFFF" /><rect x="5.03" y="9.98" width="14.18" height="2.03" rx="0.45" fill="#FFFFFF" /><rect x="10.2" y="12" width="3.6" height="10.8" rx="1.13" fill="#FFFFFF" /></svg>`,
+    sound: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>`,
+    eye: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>`,
   };
 
   function formatBytes(n) {
@@ -48,7 +43,6 @@
 
   function imgToCanvasNatural(src, cssWidth) {
     const canvas = document.createElement('canvas');
-    // 注意是 height:auto，父级没有高度，100% 没意义
     canvas.style.cssText = 'width:100%;height:auto;display:block;';
     const img = new Image();
     img.decoding = 'async';
@@ -175,7 +169,6 @@
     };
   }
 
-  /* ★ 返回清理函数，由 route.mount 直接 return */
   function bindToggle(root, key) {
     const el = root.querySelector(`[data-toggle="${key}"]`);
     if (!el) return () => {};
@@ -184,7 +177,7 @@
       if (window.WujiControlCenter && typeof WujiControlCenter.getToggle === 'function') {
         return WujiControlCenter.getToggle(key);
       }
-      return !!Store.get('control.' + key, false);
+      return !!Store.get('wujios.' + key, false);
     }
 
     function writeState(v) {
@@ -192,7 +185,7 @@
         WujiControlCenter.setToggle(key, v);
         return;
       }
-      Store.set('control.' + key, v);
+      Store.set('wujios.' + key, v);
       const ccToggle = document.querySelector(`.cc-toggle[data-key="${key}"]`);
       if (ccToggle) ccToggle.classList.toggle('is-on', v);
     }
@@ -219,12 +212,118 @@
     };
   }
 
+  function bindPercentSlider(root, ctx, {
+    sliderSel, fillSel, labelSel, knobSel, initial, onChange, eventName,
+  }) {
+    const sliderEl = root.querySelector(sliderSel);
+    const fillEl   = root.querySelector(fillSel);
+    const labelEl  = root.querySelector(labelSel);
+    const knobEl   = knobSel ? root.querySelector(knobSel) : null;
+    if (!sliderEl || !fillEl || !labelEl) return () => {};
+
+    let value = Math.max(0, Math.min(100, Number(initial) || 0));
+    let dragging = false;
+    let activePointer = null;
+
+    function paint(v) {
+      const vv = Math.max(0, Math.min(100, v));
+      const w = sliderEl.clientWidth;
+      if (!w) return;
+
+      const R_FILL = 14;
+      const PAD    = 4;
+
+      const px = w * vv / 100;
+
+      const knobX = Math.max(R_FILL + PAD, Math.min(w - R_FILL - PAD, px));
+
+      const fillWidth = Math.max(R_FILL * 2, knobX + R_FILL - PAD);
+
+      fillEl.style.width = fillWidth + 'px';
+      knobEl.style.left = knobX + 'px';
+      labelEl.textContent = vv + '%';
+    }
+    paint(value);
+
+    function setBlock(on) {
+      const item = ctx.nav?.current;
+      const el = item?.element;
+      if (!el) return;
+      if (on) el.dataset.blockBackGesture = '1';
+      else delete el.dataset.blockBackGesture;
+    }
+
+    function computeFromEvent(e) {
+      const rect = sliderEl.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      return Math.round(Math.max(0, Math.min(1, x / rect.width)) * 100);
+    }
+
+    function onDown(e) {
+      e.stopPropagation();
+      e.preventDefault();
+      setBlock(true);
+      dragging = true;
+      activePointer = e.pointerId;
+      try { sliderEl.setPointerCapture(e.pointerId); } catch {}
+      value = computeFromEvent(e);
+      paint(value);
+      onChange(value);
+    }
+
+    function onMove(e) {
+      if (!dragging || e.pointerId !== activePointer) return;
+      e.preventDefault();
+      value = computeFromEvent(e);
+      paint(value);
+      onChange(value);
+    }
+
+    function onUp(e) {
+      if (!dragging) return;
+      dragging = false;
+      activePointer = null;
+      setBlock(false);
+      try { sliderEl.releasePointerCapture(e.pointerId); } catch {}
+    }
+
+    function onTouchStart(e) { e.stopPropagation(); }
+
+    function onExternal(e) {
+      if (dragging) return;
+      if (!e.detail) return;
+      let v = null;
+      if (typeof e.detail.volume === 'number')      v = e.detail.volume;
+      if (typeof e.detail.brightness === 'number')  v = e.detail.brightness;
+      if (v == null) return;
+      value = Math.max(0, Math.min(100, v));
+      paint(value);
+    }
+
+    sliderEl.addEventListener('touchstart', onTouchStart, { passive: true });
+    sliderEl.addEventListener('pointerdown', onDown);
+    sliderEl.addEventListener('pointermove', onMove);
+    sliderEl.addEventListener('pointerup', onUp);
+    sliderEl.addEventListener('pointercancel', onUp);
+    if (eventName) window.addEventListener(eventName, onExternal);
+
+    return () => {
+      sliderEl.removeEventListener('touchstart', onTouchStart);
+      sliderEl.removeEventListener('pointerdown', onDown);
+      sliderEl.removeEventListener('pointermove', onMove);
+      sliderEl.removeEventListener('pointerup', onUp);
+      sliderEl.removeEventListener('pointercancel', onUp);
+      if (eventName) window.removeEventListener(eventName, onExternal);
+      setBlock(false);
+    };
+  }
+
   WujiApps.register({
     bundlename: 'com.wujios.settings',
     name: '设置',
     icon: './assets/settings.svg',
     initialRoute: 'home',
-    version: '1.0.8',
+    version: '1.1.3',
     styles: `
       .settings-page {
         position: absolute;
@@ -286,7 +385,6 @@
         background: rgba(0, 0, 0, .06);
       }
 
-      /* ---------- 设置项圆形图标 ---------- */
       .settings-item__icon {
         width: 36px;
         height: 36px;
@@ -388,7 +486,7 @@
         padding: 10px 22px;
         border: 0;
         border-radius: 999px;
-        background: #3a6ff0;
+        background: var(--wj-primary);
         color: #fff;
         font: inherit;
         font-size: 14px;
@@ -484,7 +582,6 @@
       .settings-pin-key--empty  { visibility: hidden; pointer-events: none; }
       .settings-pin-key--action { font-size: 22px; }
 
-      /* ============ 存储页 ============ */
       .storage-card {
         padding: 20px 18px 16px;
         border-radius: 14px;
@@ -513,7 +610,7 @@
         height: 100%;
         width: 0;
         border-radius: 5px;
-        background: #5856d6;
+        background: var(--wj-primary);
         transition: width .5s cubic-bezier(.2, .7, .3, 1);
       }
 
@@ -525,7 +622,6 @@
         letter-spacing: .2px;
       }
 
-      /* ============ 应用管理 ============ */
       .app-item {
         gap: 12px;
       }
@@ -623,7 +719,6 @@
         cursor: default;
       }
 
-      /* ===== 主题网格 ===== */
       .theme-grid {
         display: grid;
         grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -654,7 +749,7 @@
         padding: 14px 20px;
         border: 0;
         border-radius: 999px;
-        background: #3a6ff0;
+        background: var(--wj-primary);
         color: #fff;
         font: inherit;
         font-size: 15px;
@@ -665,38 +760,6 @@
       }
       .theme-goto-market:active { transform: scale(.98); }
 
-      /* ===== 长按菜单 ===== */
-      .theme-menu {
-        position: absolute;
-        z-index: 999;
-        background: rgba(255,255,255,.92);
-        backdrop-filter: blur(20px) saturate(180%);
-        -webkit-backdrop-filter: blur(20px) saturate(180%);
-        border-radius: 12px;
-        box-shadow: 0 12px 32px rgba(0,0,0,.18);
-        padding: 4px;
-        animation: themeMenuIn .14s cubic-bezier(.2,.7,.3,1);
-      }
-      @keyframes themeMenuIn {
-        from { opacity: 0; transform: scale(.92); }
-        to   { opacity: 1; transform: scale(1); }
-      }
-      .theme-menu__item {
-        padding: 10px 14px;
-        border: 0;
-        border-radius: 8px;
-        background: transparent;
-        color: #e0356b;
-        font: inherit;
-        font-size: 14px;
-        font-weight: 500;
-        cursor: pointer;
-        white-space: nowrap;
-        -webkit-tap-highlight-color: transparent;
-      }
-      .theme-menu__item:active { background: rgba(224,53,107,.1); }
-
-      /* ===== 主题详情页 ===== */
       .theme-detail { position: absolute; inset: 0; display: flex; flex-direction: column; background: var(--wj-bg); }
       .theme-detail__scroll {
         flex: 1 1 auto; min-height: 0; overflow-y: auto;
@@ -719,7 +782,7 @@
       .theme-btn {
         position: relative; display: block; width: 100%; height: 48px;
         border: 0; border-radius: 999px;
-        background: #3a6ff0; color: #fff;
+        background: var(--wj-primary); color: #fff;
         font: inherit; font-size: 16px; font-weight: 600;
         cursor: pointer; -webkit-tap-highlight-color: transparent;
         transition: transform .1s, background .2s;
@@ -728,6 +791,73 @@
       .theme-btn:disabled { background: var(--wj-bg-alt); color: var(--wj-text-muted); }
       .theme-btn__label {
         display: flex; align-items: center; justify-content: center; height: 100%;
+      }
+      .settings-slider {
+        position: relative;
+        width: 100%;
+        height: 36px;
+        border-radius: 18px;
+        background: var(--wj-bg-alt, #eef1f6);
+        cursor: pointer;
+        touch-action: none;
+        user-select: none;
+        -webkit-user-select: none;
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      .settings-slider__fill {
+        position: absolute;
+        top: 4px;
+        bottom: 4px;
+        left: 4px;
+        width: 0;
+        background: var(--wj-primary);
+        border-radius: 14px;
+        pointer-events: none;
+        transition: width .06s linear;
+      }
+
+      .settings-slider__knob {
+        position: absolute;
+        top: 50%;
+        left: 18px;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background: #ffffff;
+        box-shadow:
+          0 2px 6px rgba(0, 0, 0, .22),
+          0 0 0 1px rgba(0, 0, 0, .04);
+        transform: translate(-50%, -50%);
+        z-index: 1;
+        pointer-events: none;
+        transition: left .06s linear;
+      }
+
+      .settings-segment {
+        display: flex;
+        gap: 8px;
+      }
+      .settings-segment__btn {
+        flex: 1 1 0;
+        padding: 12px 16px;
+        border: 2px solid var(--wj-border, #e6e9ef);
+        border-radius: 999px;
+        background: var(--wj-bg-alt);
+        color: var(--wj-text);
+        font: inherit;
+        font-size: 15px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: border-color .15s, background .15s, color .15s, transform .08s;
+        -webkit-tap-highlight-color: transparent;
+      }
+      .settings-segment__btn:active { transform: scale(.97); }
+      .settings-segment__btn.is-active {
+        border-color: var(--wj-primary);
+        background: rgba(58, 111, 240, .10);
+        color: var(--wj-primary);
+        font-weight: 600;
       }
     `,
 
@@ -764,21 +894,31 @@
                 </div>
               </div>
               <div class="settings-section">
+                <div class="settings-item" data-act="sound">
+                  <div class="settings-item__icon" style="background:#3a6ff0">${ICON.sound}</div>
+                  <span>铃声和音量</span>
+                </div>
+                <div class="settings-item" data-act="display">
+                  <div class="settings-item__icon" style="background:#34c759">${ICON.eye}</div>
+                  <span>显示和亮度</span>
+                </div>
                 <div class="settings-item" data-act="personalize">
                   <div class="settings-item__icon" style="background:#ff375f">${ICON.paint}</div>
                   <span>桌面和个性化</span>
                 </div>
-                <div class="settings-item" data-act="storage">
-                  <div class="settings-item__icon" style="background:#5856d6">${ICON.storage}</div>
-                  <span>存储</span>
+                <div class="settings-item" data-act="biometric">
+                  <div class="settings-item__icon" style="background:#00c7be">${ICON.key}</div>
+                  <span>生物识别和密码</span>
                 </div>
+              </div>
+              <div class="settings-section">
                 <div class="settings-item" data-act="app-manage">
                   <div class="settings-item__icon" style="background:#ffb800">${ICON.grid}</div>
                   <span>应用管理</span>
                 </div>
-                <div class="settings-item" data-act="biometric">
-                  <div class="settings-item__icon" style="background:#00c7be">${ICON.key}</div>
-                  <span>生物识别和密码</span>
+                <div class="settings-item" data-act="storage">
+                  <div class="settings-item__icon" style="background:#5856d6">${ICON.storage}</div>
+                  <span>存储</span>
                 </div>
               </div>
             </div>
@@ -802,7 +942,10 @@
             ?.addEventListener('click', () => ctx.push('app-manage'));
           root.querySelector('[data-act="biometric"]')
             ?.addEventListener('click', () => ctx.push('biometric'));
-
+          root.querySelector('[data-act="sound"]')
+            ?.addEventListener('click', () => ctx.push('sound'));
+          root.querySelector('[data-act="display"]')
+            ?.addEventListener('click', () => ctx.push('display')); 
           const target = ctx.data && ctx.data.route;
           if (target && ctx.nav && ctx.nav.routes && ctx.nav.routes[target]) {
             requestAnimationFrame(() => {
@@ -822,7 +965,7 @@
 
               <div class="settings-about-card">
                 <div class="settings-about-card__title">WujiOS</div>
-                <div class="settings-about-card__version">1.0.108</div>
+                <div class="settings-about-card__version">1.0.109</div>
                 <div class="settings-about-card__btn" id="checkUpdateBtn">检查更新</div>
               </div>
 
@@ -837,7 +980,7 @@
                 </div>
                 <div class="settings-row">
                   <span>WujiOS版本</span>
-                  <span class="settings-row__value">1.0.108</span>
+                  <span class="settings-row__value">1.0.109</span>
                 </div>
                 <div class="settings-row">
                   <span>OpenWuji版本</span>
@@ -1244,6 +1387,166 @@
         },
       },
 
+      sound: {
+        name: 'sound',
+
+        render() {
+          const vol = (window.WujiControlCenter?.getVolume?.())
+                   ?? Store.get('wujios.volume', 60);
+          const mute = (window.WujiControlCenter?.getToggle?.('soundmode'))
+                    ?? !!Store.get('wujios.soundmode', false);
+          const playBoot = Store.get('wujios.playbootsound', true) !== false;
+
+          return `
+            <div class="settings-page">
+              <div class="settings-title">铃声和音量</div>
+
+              <div class="settings-section"
+                   style="padding:14px 18px;gap:12px;display:flex;flex-direction:column;">
+                <div style="display:flex;justify-content:space-between;align-items:baseline;">
+                  <span>音量</span>
+                  <span class="settings-row__value" id="sVolumeLabel">${vol}%</span>
+                </div>
+                <div class="settings-slider" id="sVolumeSlider">
+                  <div class="settings-slider__fill" id="sVolumeFill"></div>
+                  <div class="settings-slider__knob" id="sVolumeKnob"></div>
+                </div>
+              </div>
+
+              <div class="settings-section"
+                   style="padding:14px 18px;gap:10px;display:flex;flex-direction:column;">
+                <div>音量模式</div>
+                <div class="settings-segment" id="sSoundMode">
+                  <button class="settings-segment__btn ${!mute ? 'is-active' : ''}"
+                          data-mode="ring" type="button">铃声</button>
+                  <button class="settings-segment__btn ${mute ? 'is-active' : ''}"
+                          data-mode="mute" type="button">静音</button>
+                </div>
+              </div>
+
+              <div class="settings-section">
+                <div class="settings-row">
+                  <span>开机铃声</span>
+                  <div class="settings-toggle ${playBoot ? 'is-on' : ''}"
+                       data-toggle="playbootsound" role="switch"></div>
+                </div>
+              </div>
+            </div>
+          `;
+        },
+
+        mount(root, ctx) {
+          const segmentEl  = root.querySelector('#sSoundMode');
+          const bootToggle = root.querySelector('[data-toggle="playbootsound"]');
+
+          const offSlider = bindPercentSlider(root, ctx, {
+            sliderSel: '#sVolumeSlider',
+            fillSel:   '#sVolumeFill',
+            labelSel:  '#sVolumeLabel',
+            knobSel:   '#sVolumeKnob',
+            initial:   window.WujiControlCenter?.getVolume?.()
+                       ?? Store.get('wujios.volume', 60),
+            eventName: 'wuji:cc-volume-change',
+            onChange: v => {
+              try { WujiControlCenter?.setVolume?.(v); }
+              catch { Store.set('wujios.volume', v); }
+            },
+          });
+
+          let onCCChange   = null;
+          let onSegClick   = null;
+          let onBootToggle = null;
+
+          if (segmentEl) {
+            function syncButtons(mute) {
+              segmentEl.querySelectorAll('.settings-segment__btn').forEach(b => {
+                b.classList.toggle('is-active',
+                  (b.dataset.mode === 'mute') === mute);
+              });
+            }
+
+            onSegClick = e => {
+              const btn = e.target.closest('.settings-segment__btn');
+              if (!btn || btn.classList.contains('is-active')) return;
+
+              const mute = btn.dataset.mode === 'mute';
+              try { WujiControlCenter?.setToggle?.('soundmode', mute); }
+              catch { Store.set('wujios.soundmode', mute); }
+
+              syncButtons(mute);
+              if (navigator.vibrate) { try { navigator.vibrate(8); } catch {} }
+            };
+            segmentEl.addEventListener('click', onSegClick);
+
+            onCCChange = e => {
+              if (!e.detail || e.detail.key !== 'soundmode') return;
+              syncButtons(!!e.detail.value);
+            };
+            window.addEventListener('wuji:cc-toggle-change', onCCChange);
+          }
+
+          /* ★ 开机铃声开关 */
+          if (bootToggle) {
+            onBootToggle = () => {
+              const next = !bootToggle.classList.contains('is-on');
+              bootToggle.classList.toggle('is-on', next);
+              Store.set('wujios.playbootsound', next);
+              if (navigator.vibrate) { try { navigator.vibrate(8); } catch {} }
+            };
+            bootToggle.addEventListener('click', onBootToggle);
+          }
+
+          return () => {
+            offSlider();
+            if (segmentEl && onSegClick)   segmentEl.removeEventListener('click', onSegClick);
+            if (onCCChange)                window.removeEventListener('wuji:cc-toggle-change', onCCChange);
+            if (bootToggle && onBootToggle) bootToggle.removeEventListener('click', onBootToggle);
+          };
+        },
+      },
+
+      display: {
+        name: 'display',
+
+        render() {
+          const b = (window.WujiControlCenter?.getBrightness?.())
+                 ?? Store.get('wujios.brightness', 80);
+          return `
+            <div class="settings-page">
+              <div class="settings-title">显示和亮度</div>
+
+              <div class="settings-section"
+                   style="padding:14px 18px;gap:12px;display:flex;flex-direction:column;">
+                <div style="display:flex;justify-content:space-between;align-items:baseline;">
+                  <span>亮度</span>
+                  <span class="settings-row__value" id="sBrightLabel">${b}%</span>
+                </div>
+                <div class="settings-slider" id="sBrightSlider">
+                  <div class="settings-slider__fill" id="sBrightFill"></div>
+                  <div class="settings-slider__knob" id="sBrightKnob"></div>
+                </div>
+              </div>
+            </div>
+          `;
+        },
+
+        mount(root, ctx) {
+          return bindPercentSlider(root, ctx, {
+            sliderSel: '#sBrightSlider',
+            fillSel:   '#sBrightFill',
+            labelSel:  '#sBrightLabel',
+            knobSel:   '#sBrightKnob',
+            initial:   window.WujiControlCenter?.getBrightness?.()
+                       ?? Store.get('wujios.brightness', 80),
+            eventName: 'wuji:cc-brightness-change',
+            onChange: v => {
+              try { WujiControlCenter?.setBrightness?.(v); }
+              catch { Store.set('wujios.brightness', v); }
+            },
+          });
+        },
+      },
+
       'pin-set': {
         name: 'pin-set',
 
@@ -1377,7 +1680,6 @@
         },
       },
 
-      /* ==================== 桌面和个性化 ==================== */
       personalize: {
         name: 'personalize',
 
@@ -1462,7 +1764,20 @@
             el.addEventListener('click', () => {
               const t = SYS.find(x => x.id === el.dataset.id);
               if (!t) return;
-              ctx.push('theme-detail', { theme: t, isSystem: true });
+
+              const rect = el.getBoundingClientRect();
+
+              ctx.push('theme-detail',
+                { theme: t, isSystem: true },
+                {
+                  origin: {
+                    x: rect.left,
+                    y: rect.top,
+                    w: rect.width,
+                    h: rect.height,
+                  },
+                }
+              );
             });
           });
 
@@ -1511,7 +1826,6 @@
             return await writeDownloaded(next);
           }
 
-          /* ---------- 菜单 ---------- */
           let menuEl = null;
           let menuOffHandler = null;
 
@@ -1523,69 +1837,6 @@
             if (menuEl) { menuEl.remove(); menuEl = null; }
           }
 
-          /* ---------- 菜单 ---------- */
-          function showDeleteMenu(theme, rect) {
-            hideMenu();
-            menuEl = document.createElement('div');
-            menuEl.className = 'theme-menu';
-            menuEl.innerHTML = `
-              <button class="theme-menu__item" type="button">
-                删除主题「${escapeHtml(theme.name || '')}」
-              </button>
-            `;
-            root.appendChild(menuEl);
-
-            const mr = menuEl.getBoundingClientRect();
-            const vw = window.innerWidth, vh = window.innerHeight;
-            const EDGE = 8;
-            let left = rect.left + rect.width / 2 - mr.width / 2;
-            left = Math.max(EDGE, Math.min(vw - mr.width - EDGE, left));
-            let top = rect.top - mr.height - 6;
-            if (top < EDGE) top = rect.bottom + 6;
-            if (top + mr.height > vh - EDGE) top = vh - EDGE - mr.height;
-            menuEl.style.left = left + 'px';
-            menuEl.style.top = top + 'px';
-
-            const item = menuEl.querySelector('.theme-menu__item');
-            let handled = false;
-
-            const handleDelete = async ev => {
-              if (handled) return;
-              handled = true;
-              try { ev.stopPropagation(); ev.preventDefault(); } catch { }
-              hideMenu();
-              console.log('[themes] delete clicked:', theme.id);
-
-              const ok = await deleteTheme(theme.id);
-              if (!ok) { handled = false; return; }
-
-              if (WujiTheme.current === theme.id) {
-                const fallback = (SYS[0] && SYS[0].id) || 'sea';
-                try { await WujiTheme.load(fallback); } catch (e) {
-                  console.warn('[themes] fallback load failed:', e);
-                }
-              }
-              await renderMine();
-            };
-
-            /* pointerup + click 双保险 */
-            item.addEventListener('pointerup', handleDelete);
-            item.addEventListener('click', handleDelete);
-
-            /* 点菜单外面关闭 */
-            menuOffHandler = ev => {
-              if (menuEl && !menuEl.contains(ev.target)) {
-                hideMenu();
-              }
-            };
-            setTimeout(() => {
-              if (menuEl && menuOffHandler) {
-                document.addEventListener('pointerdown', menuOffHandler, true);
-              }
-            }, 0);
-          }
-
-          /* ---------- 长按删除 ---------- */
           function bindLongPressDelete(el, theme) {
             let lpTimer = null;
             let lpFired = false;
@@ -1652,7 +1903,6 @@
               document.addEventListener('pointercancel', onUp);
             });
 
-            /* 长按后点卡片 = 取消，不打开详情页 */
             el.addEventListener('click', e => {
               if (lpFired) {
                 lpFired = false;
@@ -1662,7 +1912,6 @@
             }, true);
           }
 
-          /* ---------- 我的主题渲染 ---------- */
           async function renderMine() {
             const list = await readDownloaded();
 
@@ -1694,7 +1943,19 @@
               const theme = list[i];
               if (!theme) return;
               el.addEventListener('click', () => {
-                ctx.push('theme-detail', { theme, isSystem: false });
+                const rect = el.getBoundingClientRect();
+
+                ctx.push('theme-detail',
+                  { theme, isSystem: false },
+                  {
+                    origin: {
+                      x: rect.left,
+                      y: rect.top,
+                      w: rect.width,
+                      h: rect.height,
+                    },
+                  }
+                );
               });
               bindLongPressDelete(el, theme);
             });
@@ -1708,7 +1969,6 @@
             } catch (e) { console.error(e); }
           });
 
-          /* ★ 离开页面时把可能残留的菜单 / 长按监听清掉 */
           return () => {
             hideMenu();
           };
@@ -1717,7 +1977,7 @@
 
       'theme-detail': {
         name: 'theme-detail',
-
+        transition: 'zoom',
         render(routeCtx) {
           const theme = routeCtx.data?.theme;
           if (!theme) return `<div class="settings-page"><div class="settings-row"><span>主题不存在</span></div></div>`;
@@ -1766,7 +2026,6 @@
             if (btn.disabled) return;
             try {
               await WujiTheme.load(theme.id);
-              if (navigator.vibrate) { try { navigator.vibrate(10); } catch { } }
               refresh();
             } catch (e) { console.error('[theme] 应用失败', e); }
           });
