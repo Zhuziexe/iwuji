@@ -411,6 +411,7 @@ WujiApps.registerInstalled({
 
       render() {
         const products = [
+          { id: 'wujibuds', icon: './assets/com.wujinb.wmall/wujibuds.png', name: 'WujiBuds', price: 599 },
           { id: 'charger', icon: './assets/com.wujinb.wmall/iwuji_charger.png', name: 'iWuji快充充电器', price: 79 },
           { id: 'case', icon: './assets/com.wujinb.wmall/iwuji_baohuke.png', name: 'iWuji透明保护壳', price: 39 },
         ];
@@ -534,7 +535,7 @@ WujiApps.registerInstalled({
 
         const map = {
           wujibuds: {
-            img: './assets/com.wujinb.wmall/iwuji_baohuke.png',
+            img: './assets/com.wujinb.wmall/wujibuds.png',
             name: 'WujiBuds',
             price: 599,
           },
