@@ -181,6 +181,7 @@
   <script src="navigation.js"></script>
   <script src="core.js"></script>
   <script src="app-storage.js"></script>
+  <script src="backup.js"></script>
   <script src="app-loader.js"></script>
   <script src="installer.js"></script>
   <script src="desktop-layout.js"></script>
@@ -2174,7 +2175,9 @@
       S.viewBeforeLock = 'home';
       setView('locked');
       setPower('running');
-
+      if (Store.get('wujios.lastbootversion', null) != '1.0.110') {
+        Store.set('wujios.lastbootversion', '1.0.110');
+      }
       try { WujiApps.boot(); } catch (e) { console.error(e); }
 
       scheduleBuiltinPreload();
@@ -2702,6 +2705,19 @@
         case 'hw:vol-down-release': HardwareUI.volumeRelease(); break;
       }
     });
+    (function autoPowerOnAfterRestore() {
+      try {
+        if (sessionStorage.getItem('wujios:restore-pending') === '1') {
+          sessionStorage.removeItem('wujios:restore-pending');
+          // 等基础模块初始化完成后再开机
+          setTimeout(() => {
+            if (S.power === 'off') powerOn();
+          }, 50);
+        }
+      } catch (e) {
+        console.warn('[restore] auto power-on failed', e);
+      }
+    })();
     notifyParent('statechange', { state: S.power });
   </script>
 

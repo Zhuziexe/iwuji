@@ -7,8 +7,9 @@
     key: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="15" r="4"/><path d="M10.85 12.15 19 4"/><path d="M18 5l2 2"/><path d="M15 8l2 2"/></svg>`,
     storage: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="6" rx="8" ry="2.6"/><path d="M4 6v5c0 1.44 3.58 2.6 8 2.6s8-1.16 8-2.6V6"/><path d="M4 12v5c0 1.44 3.58 2.6 8 2.6s8-1.16 8-2.6v-5"/></svg>`,
     paint: `<svg viewBox="0 0 24 24"><rect width="24" height="24" fill="#ff375f" /><rect x="4.35" y="0.98" width="15.3" height="8.6" rx="1.13" fill="#FFFFFF" /><rect x="5.03" y="9.98" width="14.18" height="2.03" rx="0.45" fill="#FFFFFF" /><rect x="10.2" y="12" width="3.6" height="10.8" rx="1.13" fill="#FFFFFF" /></svg>`,
-    sound: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>`,
+    sound: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" fill="currentColor"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>`,
     eye: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>`,
+    backup: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a8 8 0 0 1 13.6-5.7"/><path d="M20 4v4.5h-4.5"/><path d="M20 12a8 8 0 0 1-13.6 5.7"/><path d="M4 20v-4.5h4.5"/><rect x="9" y="10" width="6" height="4" rx="1" fill="currentColor" stroke="none"/></svg>`,
   };
 
   function formatBytes(n) {
@@ -171,7 +172,7 @@
 
   function bindToggle(root, key) {
     const el = root.querySelector(`[data-toggle="${key}"]`);
-    if (!el) return () => {};
+    if (!el) return () => { };
 
     function readState() {
       if (window.WujiControlCenter && typeof WujiControlCenter.getToggle === 'function') {
@@ -216,10 +217,10 @@
     sliderSel, fillSel, labelSel, knobSel, initial, onChange, eventName,
   }) {
     const sliderEl = root.querySelector(sliderSel);
-    const fillEl   = root.querySelector(fillSel);
-    const labelEl  = root.querySelector(labelSel);
-    const knobEl   = knobSel ? root.querySelector(knobSel) : null;
-    if (!sliderEl || !fillEl || !labelEl) return () => {};
+    const fillEl = root.querySelector(fillSel);
+    const labelEl = root.querySelector(labelSel);
+    const knobEl = knobSel ? root.querySelector(knobSel) : null;
+    if (!sliderEl || !fillEl || !labelEl) return () => { };
 
     let value = Math.max(0, Math.min(100, Number(initial) || 0));
     let dragging = false;
@@ -231,7 +232,7 @@
       if (!w) return;
 
       const R_FILL = 14;
-      const PAD    = 4;
+      const PAD = 4;
 
       const px = w * vv / 100;
 
@@ -265,7 +266,7 @@
       setBlock(true);
       dragging = true;
       activePointer = e.pointerId;
-      try { sliderEl.setPointerCapture(e.pointerId); } catch {}
+      try { sliderEl.setPointerCapture(e.pointerId); } catch { }
       value = computeFromEvent(e);
       paint(value);
       onChange(value);
@@ -284,7 +285,7 @@
       dragging = false;
       activePointer = null;
       setBlock(false);
-      try { sliderEl.releasePointerCapture(e.pointerId); } catch {}
+      try { sliderEl.releasePointerCapture(e.pointerId); } catch { }
     }
 
     function onTouchStart(e) { e.stopPropagation(); }
@@ -293,8 +294,8 @@
       if (dragging) return;
       if (!e.detail) return;
       let v = null;
-      if (typeof e.detail.volume === 'number')      v = e.detail.volume;
-      if (typeof e.detail.brightness === 'number')  v = e.detail.brightness;
+      if (typeof e.detail.volume === 'number') v = e.detail.volume;
+      if (typeof e.detail.brightness === 'number') v = e.detail.brightness;
       if (v == null) return;
       value = Math.max(0, Math.min(100, v));
       paint(value);
@@ -368,6 +369,7 @@
         padding: 8px 14px;
         border: 0;
         background: transparent;
+        min-height: 53px;
         color: var(--wj-text);
         font: inherit;
         font-size: 15px;
@@ -859,8 +861,305 @@
         color: var(--wj-primary);
         font-weight: 600;
       }
+      .backup-status {
+        flex: 0 0 auto;
+        text-align: center;
+        font-size: 13px;
+        color: var(--wj-text-muted);
+        min-height: 20px;
+        letter-spacing: .3px;
+        line-height: 1.6;
+        padding: 4px 8px;
+      }
+      .backup-status.is-error { color: var(--wj-danger, #e0356b); }
+      .backup-status.is-ok    { color: #34c759; }
+      .backup-hero {
+        width: 100%;
+        background: var(--wj-bg-alt);
+        overflow: hidden;
+      }
+      .backup-hero img {
+        display: block;
+        width: 100%;
+        height: auto;
+        pointer-events: none;
+        user-select: none;
+        -webkit-user-drag: none;
+      }
+      .ov-backup {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #070b14;
+        overflow: hidden;
+        user-select: none;
+        -webkit-user-select: none;
+        touch-action: none;
+      }
+
+      .ov-backup__glow {
+        position: absolute;
+        width: 420px;
+        height: 420px;
+        border-radius: 50%;
+        pointer-events: none;
+        filter: blur(60px);
+        opacity: .55;
+      }
+      .ov-backup__glow--1 {
+        top: -120px;
+        left: -120px;
+        background: radial-gradient(circle, rgba(58,111,240,.65), transparent 70%);
+      }
+      .ov-backup__glow--2 {
+        bottom: -140px;
+        right: -100px;
+        background: radial-gradient(circle, rgba(40,80,200,.55), transparent 70%);
+      }
+
+            .ov-backup__content {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 40px;
+        text-align: center;
+      }
+
+      .ov-backup__progress {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 48px;
+      }
+      .ov-backup__progress.is-hide {
+        display: none;
+      }
+
+      .ov-backup__done {
+        display: none;
+        flex-direction: column;
+        align-items: center;
+        gap: 32px;
+      }
+      .ov-backup__done.is-show {
+        display: flex;
+      }
+
+      .ov-backup__title {
+        font-size: 28px;
+        font-weight: 700;
+        color: #ffffff;
+        letter-spacing: 3px;
+        text-shadow: 0 4px 20px rgba(58,111,240,.4);
+      }
+
+      .ov-backup__orb {
+        width: min(168px, 44vw);
+        height: min(168px, 44vw);
+        border-radius: 50%;
+        border: 3px solid #3a6ff0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow:
+          0 0 30px rgba(58,111,240,.35),
+          inset 0 0 30px rgba(58,111,240,.15);
+        background: radial-gradient(circle at 40% 30%, rgba(58,111,240,.15), transparent 60%);
+      }
+
+      .ov-backup__percent {
+        font-size: clamp(30px, 9vw, 38px);
+        font-weight: 700;
+        color: #ffffff;
+        font-variant-numeric: tabular-nums;
+        letter-spacing: 1px;
+        text-shadow: 0 2px 12px rgba(58,111,240,.5);
+      }
+
+      .ov-backup__check {
+        width: 84px;
+        height: 84px;
+        border-radius: 50%;
+        border: 3px solid #3a6ff0;
+        background: radial-gradient(circle at 40% 30%, rgba(58,111,240,.18), transparent 60%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #3a6ff0;
+        box-shadow:
+          0 0 32px rgba(58,111,240,.4),
+          inset 0 0 20px rgba(58,111,240,.15);
+      }
+      .ov-backup__check svg {
+        width: 40px;
+        height: 40px;
+        display: block;
+      }
+
+      .ov-backup__btn {
+        min-width: 168px;
+        padding: 14px 44px;
+        border: 0;
+        border-radius: 999px;
+        background: #3a6ff0;
+        color: #fff;
+        font: inherit;
+        font-size: 17px;
+        font-weight: 600;
+        letter-spacing: 2px;
+        cursor: pointer;
+        box-shadow: 0 8px 24px rgba(58,111,240,.5);
+        transition: transform .1s, filter .15s;
+        -webkit-tap-highlight-color: transparent;
+      }
+      .ov-backup__btn:active {
+        transform: scale(.96);
+        filter: brightness(.9);
+      }
     `,
 
+    overlays: [
+      {
+        name: 'backup',
+
+        render() {
+          return `
+            <div class="ov-backup">
+              <div class="ov-backup__glow ov-backup__glow--1"></div>
+              <div class="ov-backup__glow ov-backup__glow--2"></div>
+              <div class="ov-backup__content">
+
+                <div class="ov-backup__progress" id="ovBackupProgress">
+                  <div class="ov-backup__title" id="ovBackupTitle">数据备份中</div>
+                  <div class="ov-backup__orb">
+                    <span class="ov-backup__percent" id="ovBackupPercent">0%</span>
+                  </div>
+                </div>
+
+                <div class="ov-backup__done" id="ovBackupDone">
+                  <div class="ov-backup__check">
+                    <svg viewBox="0 0 24 24" fill="none"
+                         stroke="currentColor" stroke-width="3"
+                         stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M5 12l5 5 9-11"/>
+                    </svg>
+                  </div>
+                  <div class="ov-backup__title">数据备份完成</div>
+                  <button class="ov-backup__btn" id="ovBackupOk"
+                          type="button" data-overlay-interactive>确定</button>
+                </div>
+
+              </div>
+            </div>
+          `;
+        },
+
+        mount(root) {
+          const progressEl = root.querySelector('#ovBackupProgress');
+          const doneEl     = root.querySelector('#ovBackupDone');
+          const percentEl  = root.querySelector('#ovBackupPercent');
+          const titleEl    = root.querySelector('#ovBackupTitle');
+          const okBtn      = root.querySelector('#ovBackupOk');
+
+          const startTime = performance.now();
+          let exportData     = null;    // 导出完成后先存住，进度走完再下载
+          let exportDone     = false;
+          let exportDoneTime = 0;
+          let percentAtDone  = 0;
+          let failed         = false;
+          let finished       = false;   // 100% 到了、下载完了、切到完成态
+          let rafId          = null;
+
+          function setPercent(p) {
+            percentEl.textContent = Math.floor(p) + '%';
+          }
+
+          function showDone() {
+            finished = true;
+            progressEl.classList.add('is-hide');
+            doneEl.classList.add('is-show');
+          }
+
+          function loop(now) {
+            if (!root.isConnected) return;
+            if (failed || finished) return;
+
+            if (!exportDone) {
+              const elapsed = now - startTime;
+              setPercent(Math.min(90, (elapsed / 8000) * 90));
+              rafId = requestAnimationFrame(loop);
+              return;
+            }
+
+            const elapsedSinceDone = now - exportDoneTime;
+            if (elapsedSinceDone >= 5000) {
+              setPercent(100);
+              try {
+                if (exportData && window.WujiBackup) {
+                  WujiBackup.downloadJson(exportData);
+                }
+              } catch (e) {
+                console.error('[settings/backup] download failed', e);
+              }
+              showDone();
+              return;
+            }
+
+            const displayPercent =
+              percentAtDone + (elapsedSinceDone / 5000) * (100 - percentAtDone);
+            setPercent(displayPercent);
+            rafId = requestAnimationFrame(loop);
+          }
+
+          rafId = requestAnimationFrame(loop);
+
+          (async () => {
+            try {
+              if (!window.WujiBackup) throw new Error('备份模块未加载');
+              const data = await WujiBackup.exportAll();
+              if (!root.isConnected) return;
+
+              exportData     = data;
+              exportDone     = true;
+              exportDoneTime = performance.now();
+              percentAtDone  = parseFloat(percentEl.textContent) || 0;
+              if (percentAtDone >= 100) percentAtDone = 90;
+            } catch (e) {
+              console.error('[settings/backup]', e);
+              if (!root.isConnected) return;
+
+              failed = true;
+              if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
+
+              titleEl.textContent = '备份失败';
+              percentEl.textContent = '!';
+              percentEl.style.color = '#ff6b6b';
+
+              setTimeout(() => {
+                if (root.isConnected) WujiOverlay.close();
+              }, 2500);
+            }
+          })();
+
+          okBtn.addEventListener('click', () => {
+            WujiOverlay.close();
+          });
+
+          this._cleanup = () => {
+            if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
+          };
+        },
+
+        unmount() {
+          this._cleanup?.();
+          this._cleanup = null;
+        },
+      },
+    ],
     routes: {
       home: {
         name: 'home',
@@ -920,6 +1219,10 @@
                   <div class="settings-item__icon" style="background:#5856d6">${ICON.storage}</div>
                   <span>存储</span>
                 </div>
+                <div class="settings-item" data-act="backup">
+                  <div class="settings-item__icon" style="background:#3a6ff0">${ICON.backup}</div>
+                  <span>备份和恢复</span>
+                </div>
               </div>
             </div>
           `;
@@ -945,8 +1248,11 @@
           root.querySelector('[data-act="sound"]')
             ?.addEventListener('click', () => ctx.push('sound'));
           root.querySelector('[data-act="display"]')
-            ?.addEventListener('click', () => ctx.push('display')); 
+            ?.addEventListener('click', () => ctx.push('display'));
+          root.querySelector('[data-act="backup"]')
+            ?.addEventListener('click', () => ctx.push('backup'));
           const target = ctx.data && ctx.data.route;
+          
           if (target && ctx.nav && ctx.nav.routes && ctx.nav.routes[target]) {
             requestAnimationFrame(() => {
               ctx.nav.reset(target, {});
@@ -965,7 +1271,7 @@
 
               <div class="settings-about-card">
                 <div class="settings-about-card__title">WujiOS</div>
-                <div class="settings-about-card__version">1.0.109</div>
+                <div class="settings-about-card__version">1.0.110</div>
                 <div class="settings-about-card__btn" id="checkUpdateBtn">检查更新</div>
               </div>
 
@@ -980,7 +1286,7 @@
                 </div>
                 <div class="settings-row">
                   <span>WujiOS版本</span>
-                  <span class="settings-row__value">1.0.109</span>
+                  <span class="settings-row__value">1.0.110</span>
                 </div>
                 <div class="settings-row">
                   <span>OpenWuji版本</span>
@@ -1392,9 +1698,9 @@
 
         render() {
           const vol = (window.WujiControlCenter?.getVolume?.())
-                   ?? Store.get('wujios.volume', 60);
+            ?? Store.get('wujios.volume', 60);
           const mute = (window.WujiControlCenter?.getToggle?.('soundmode'))
-                    ?? !!Store.get('wujios.soundmode', false);
+            ?? !!Store.get('wujios.soundmode', false);
           const playBoot = Store.get('wujios.playbootsound', true) !== false;
 
           return `
@@ -1436,16 +1742,16 @@
         },
 
         mount(root, ctx) {
-          const segmentEl  = root.querySelector('#sSoundMode');
+          const segmentEl = root.querySelector('#sSoundMode');
           const bootToggle = root.querySelector('[data-toggle="playbootsound"]');
 
           const offSlider = bindPercentSlider(root, ctx, {
             sliderSel: '#sVolumeSlider',
-            fillSel:   '#sVolumeFill',
-            labelSel:  '#sVolumeLabel',
-            knobSel:   '#sVolumeKnob',
-            initial:   window.WujiControlCenter?.getVolume?.()
-                       ?? Store.get('wujios.volume', 60),
+            fillSel: '#sVolumeFill',
+            labelSel: '#sVolumeLabel',
+            knobSel: '#sVolumeKnob',
+            initial: window.WujiControlCenter?.getVolume?.()
+              ?? Store.get('wujios.volume', 60),
             eventName: 'wuji:cc-volume-change',
             onChange: v => {
               try { WujiControlCenter?.setVolume?.(v); }
@@ -1453,8 +1759,8 @@
             },
           });
 
-          let onCCChange   = null;
-          let onSegClick   = null;
+          let onCCChange = null;
+          let onSegClick = null;
           let onBootToggle = null;
 
           if (segmentEl) {
@@ -1474,7 +1780,7 @@
               catch { Store.set('wujios.soundmode', mute); }
 
               syncButtons(mute);
-              if (navigator.vibrate) { try { navigator.vibrate(8); } catch {} }
+              if (navigator.vibrate) { try { navigator.vibrate(8); } catch { } }
             };
             segmentEl.addEventListener('click', onSegClick);
 
@@ -1491,15 +1797,15 @@
               const next = !bootToggle.classList.contains('is-on');
               bootToggle.classList.toggle('is-on', next);
               Store.set('wujios.playbootsound', next);
-              if (navigator.vibrate) { try { navigator.vibrate(8); } catch {} }
+              if (navigator.vibrate) { try { navigator.vibrate(8); } catch { } }
             };
             bootToggle.addEventListener('click', onBootToggle);
           }
 
           return () => {
             offSlider();
-            if (segmentEl && onSegClick)   segmentEl.removeEventListener('click', onSegClick);
-            if (onCCChange)                window.removeEventListener('wuji:cc-toggle-change', onCCChange);
+            if (segmentEl && onSegClick) segmentEl.removeEventListener('click', onSegClick);
+            if (onCCChange) window.removeEventListener('wuji:cc-toggle-change', onCCChange);
             if (bootToggle && onBootToggle) bootToggle.removeEventListener('click', onBootToggle);
           };
         },
@@ -1510,7 +1816,7 @@
 
         render() {
           const b = (window.WujiControlCenter?.getBrightness?.())
-                 ?? Store.get('wujios.brightness', 80);
+            ?? Store.get('wujios.brightness', 80);
           return `
             <div class="settings-page">
               <div class="settings-title">显示和亮度</div>
@@ -1533,11 +1839,11 @@
         mount(root, ctx) {
           return bindPercentSlider(root, ctx, {
             sliderSel: '#sBrightSlider',
-            fillSel:   '#sBrightFill',
-            labelSel:  '#sBrightLabel',
-            knobSel:   '#sBrightKnob',
-            initial:   window.WujiControlCenter?.getBrightness?.()
-                       ?? Store.get('wujios.brightness', 80),
+            fillSel: '#sBrightFill',
+            labelSel: '#sBrightLabel',
+            knobSel: '#sBrightKnob',
+            initial: window.WujiControlCenter?.getBrightness?.()
+              ?? Store.get('wujios.brightness', 80),
             eventName: 'wuji:cc-brightness-change',
             onChange: v => {
               try { WujiControlCenter?.setBrightness?.(v); }
@@ -2028,6 +2334,111 @@
               await WujiTheme.load(theme.id);
               refresh();
             } catch (e) { console.error('[theme] 应用失败', e); }
+          });
+        },
+      },
+      backup: {
+        name: 'backup',
+
+        render() {
+          return `
+            <div class="settings-page">
+              <div class="settings-title">备份和恢复</div>
+
+              <div class="settings-section" style="padding:0;overflow:hidden;">
+                <div class="backup-hero">
+                  <img src="./assets/com.wujios.settings/connect_to_pc.png"
+                       alt="" draggable="false">
+                </div>
+                <div style="padding:14px 18px;font-size:14px;color:var(--wj-text-muted);line-height:1.6;">
+                  将 iWuji 连接到电脑，进行数据备份 / 恢复
+                </div>
+              </div>
+
+              <div class="settings-section">
+                <div class="settings-item" data-act="export" style="justify-content:center;">
+                  <span>备份到电脑</span>
+                </div>
+                <div class="settings-item" data-act="import" style="justify-content:center;color:var(--wj-danger,#e0356b);">
+                  <span>从电脑恢复</span>
+                </div>
+                <input type="file" id="backupFileInput" accept="application/json,.json" hidden>
+              </div>
+
+              <div class="backup-status" id="backupStatus"></div>
+            </div>
+          `;
+        },
+
+        mount(root, ctx) {
+          const statusEl  = root.querySelector('#backupStatus');
+          const fileInput = root.querySelector('#backupFileInput');
+          const exportBtn = root.querySelector('[data-act="export"]');
+          const importBtn = root.querySelector('[data-act="import"]');
+
+          let busy = false;
+
+          function setStatus(text, kind) {
+            statusEl.textContent = text || '';
+            statusEl.classList.toggle('is-error', kind === 'error');
+            statusEl.classList.toggle('is-ok', kind === 'ok');
+          }
+
+          function ensureBackup() {
+            if (window.WujiBackup) return true;
+            setStatus('备份模块未加载，请检查 backup.js 是否已在 index.html 引入', 'error');
+            return false;
+          }
+
+          exportBtn.addEventListener('click', () => {
+            if (busy || !ensureBackup()) return;
+            WujiOverlay.open({ bundlename: 'com.wujios.settings', name: 'backup' });
+          });
+
+          importBtn.addEventListener('click', () => {
+            if (busy || !ensureBackup()) return;
+            fileInput.click();
+          });
+
+          fileInput.addEventListener('change', async () => {
+            const file = fileInput.files && fileInput.files[0];
+            fileInput.value = '';
+            if (!file) return;
+
+            let answer = '恢复';
+            try {
+              answer = await WujiDialog.show({
+                bundlename: 'com.wujios.settings',
+                title: '恢复备份',
+                content: `将从「${file.name}」恢复全部数据，覆盖当前设备所有应用数据，并自动重启。\n确定继续？`,
+                buttons: [
+                  { value: '取消', color: 'var(--wj-primary, #3a6ff0)' },
+                  { value: '恢复', color: 'var(--wj-danger, #e0356b)' },
+                ],
+              });
+            } catch (_) {
+              answer = '取消';
+            }
+            if (answer !== '恢复') return;
+
+            busy = true;
+            importBtn.style.pointerEvents = 'none';
+            importBtn.style.opacity = '.55';
+            setStatus('正在恢复…');
+
+            try {
+              const text = await file.text();
+              const json = JSON.parse(text);
+              await WujiBackup.importAll(json);
+              setStatus('恢复完成，正在重启…', 'ok');
+              setTimeout(() => WujiBackup.triggerRestart(), 400);
+            } catch (e) {
+              console.error('[settings/backup]', e);
+              setStatus('恢复失败：' + (e.message || '未知错误'), 'error');
+              busy = false;
+              importBtn.style.pointerEvents = '';
+              importBtn.style.opacity = '';
+            }
           });
         },
       },
