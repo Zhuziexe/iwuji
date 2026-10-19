@@ -75,7 +75,7 @@ window.WUJI_MARKET_APPS = [
     bundle:      'com.wujinb.piano',
     name:        '迷你钢琴',
     icon:        './assets/piano.svg',
-    version:     '1.0.3',
+    version:     '1.0.5',
     author:      'Wuji',
     description: '一个迷你钢琴',
     longdescription: '一个迷你钢琴，点击琴键发出声音。',

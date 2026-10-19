@@ -126,7 +126,7 @@
     name: '迷你钢琴',
     icon: './assets/piano.svg',
     initialRoute: 'home',
-    version: '1.0.6',
+    version: '1.0.5',
 
     onShutdown() {
       disposeCtx();
