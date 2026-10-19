@@ -55,7 +55,7 @@ window.WUJI_MARKET_APPS = [
     bundle:      'com.wujinb.doushabao',
     name:        '豆沙包',
     icon:        './assets/doushabao.svg',
-    version:     '1.0.5',
+    version:     '1.0.6',
     author:      'Wuji',
     description: '豆沙包官方正版',
     longdescription: '豆沙包，你的无能AI助手',

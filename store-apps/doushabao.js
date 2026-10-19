@@ -4,15 +4,11 @@
   const SYSTEM_PROMPT = '你是豆沙包，一个AI助手。回答简洁、友好，用中文。';
   const DEFAULT_MODEL = 'turboderp/Qwen3.8-27B-exl3';
 
-  // ============================================================
-  // TTS 支持检测（仅在存在 speechSynthesis 时启用朗读）
-  // ============================================================
   const TTS_SUPPORTED =
     typeof window !== 'undefined' &&
     'speechSynthesis' in window &&
     typeof window.SpeechSynthesisUtterance === 'function';
 
-  // 朗读状态（模块级，切换对话/重新发送时统一停止）
   let isSpeaking = false;
   let activeUtterance = null;
 
@@ -23,16 +19,15 @@
     activeUtterance = null;
   }
 
-  // 去掉 markdown 符号，避免 TTS 把 ** 或 # 念出来
   function cleanTextForTTS(text) {
     if (!text) return '';
     return String(text)
-      .replace(/```[\s\S]*?```/g, '')          // 去掉代码块
-      .replace(/`([^`]+)`/g, '$1')             // 行内代码只留内容
-      .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1') // 链接只留文字
-      .replace(/^#{1,6}\s+/gm, '')             // 标题井号
-      .replace(/^[>\-+*]\s+/gm, '')            // 列表/引用符号
-      .replace(/[*_~]/g, '')                   // 粗体斜体
+      .replace(/```[\s\S]*?```/g, '')
+      .replace(/`([^`]+)`/g, '$1')
+      .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+      .replace(/^#{1,6}\s+/gm, '')
+      .replace(/^[>\-+*]\s+/gm, '')
+      .replace(/[*_~]/g, '')
       .replace(/\n{3,}/g, '\n\n')
       .trim();
   }
@@ -144,7 +139,7 @@
     name: '豆沙包',
     icon: './assets/doushabao.svg',
     initialRoute: 'home',
-    version: '1.0.5',
+    version: '1.0.6',
 
     styles: `
       .dsb-page {
@@ -159,20 +154,15 @@
 
       .dsb-header {
         flex: 0 0 auto;
-        padding: 8px 14px 6px;
+        padding: 10px 14px;
         border-bottom: 1px solid var(--wj-border, #e6e9ef);
       }
       .dsb-header__title {
-        font-size: 18px;
+        font-size: 24px;
         font-weight: 700;
         color: var(--wj-text);
         letter-spacing: .3px;
         line-height: 1.2;
-      }
-      .dsb-header__sub {
-        font-size: 11px;
-        color: var(--wj-text-muted);
-        margin-top: 2px;
       }
 
       .dsb-body {
@@ -195,7 +185,7 @@
         text-align: center;
       }
       .dsb-state__text {
-        font-size: 14px;
+        font-size: 18px;
         color: var(--wj-text-muted);
         line-height: 1.5;
       }
@@ -213,7 +203,7 @@
       .dsb-answer {
         display: flex;
         flex-direction: column;
-        gap: 6px;
+        gap: 8px;
       }
 
       .dsb-reasoning {
@@ -253,7 +243,6 @@
 
       .dsb-error { color: var(--wj-danger, #e0356b); }
 
-      /* ---- 朗读按钮（仅支持时渲染）---- */
       .dsb-tts-row {
         display: flex;
         justify-content: flex-end;
@@ -342,7 +331,6 @@
             <div class="dsb-page">
               <div class="dsb-header">
                 <div class="dsb-header__title">豆沙包</div>
-                <div class="dsb-header__sub">我是豆沙包，你的AI助手</div>
               </div>
 
               <div class="dsb-body" id="dsbBody"></div>
@@ -400,7 +388,6 @@
             if (inStream) return;
             inStream = true;
 
-            // 只有支持 TTS 时才渲染朗读按钮
             const ttsHtml = TTS_SUPPORTED
               ? `<div class="dsb-tts-row">
                    <button class="dsb-tts" id="dsbTtsBtn" type="button" disabled>
@@ -431,7 +418,6 @@
           function onTtsClick() {
             if (!TTS_SUPPORTED || !ttsBtn) return;
 
-            // 正在朗读：点击停止
             if (isSpeaking) {
               stopSpeaking();
               updateTtsUI();
@@ -512,7 +498,6 @@
             const text = inputEl.value.trim();
             if (!text) return;
 
-            // 新对话开始前先停止旧朗读
             stopSpeaking();
 
             busy = true;
@@ -550,7 +535,6 @@
                 `;
               } else {
                 bodyEl.scrollTop = bodyEl.scrollHeight;
-                // 流式结束，启用朗读按钮
                 if (ttsBtn) ttsBtn.disabled = false;
               }
             } catch (err) {
@@ -568,7 +552,6 @@
               busy = false;
               sendBtn.disabled = false;
               abortController = null;
-              try { inputEl.focus(); } catch { }
             }
           }
 

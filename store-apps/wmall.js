@@ -533,6 +533,11 @@ WujiApps.registerInstalled({
         }
 
         const map = {
+          wujibuds: {
+            img: './assets/com.wujinb.wmall/iwuji_baohuke.png',
+            name: 'WujiBuds',
+            price: 599,
+          },
           charger: {
             img: './assets/com.wujinb.wmall/iwuji_charger.png',
             name: 'iWuji快充充电器',
