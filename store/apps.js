@@ -52,6 +52,16 @@ window.WUJI_MARKET_APPS = [
     src:         './store-apps/metromap.js',
   },
   {
+    bundle:      'com.wujinb.doushabao',
+    name:        '豆沙包',
+    icon:        './assets/doushabao.svg',
+    version:     '1.0.5',
+    author:      'Wuji',
+    description: '豆沙包官方正版',
+    longdescription: '豆沙包，你的无能AI助手',
+    src:         './store-apps/doushabao.js',
+  },
+  {
     bundle:      'com.wujinb.dailywater',
     name:        '每日喝水',
     icon:        './assets/dailywater.svg',

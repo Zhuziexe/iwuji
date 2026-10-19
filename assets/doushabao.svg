@@ -1,0 +1,74 @@
+<svg width="256" height="256" viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- 包子主体渐变 -->
+    <linearGradient id="bunGradient" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#FFFFFF" />
+      <stop offset="70%" stop-color="#FDFDFD" />
+      <stop offset="100%" stop-color="#F2ECE2" />
+    </linearGradient>
+
+    <!-- 包子底部阴影 -->
+    <radialGradient id="shadowGradient" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#D1C4B8" stop-opacity="0.6" />
+      <stop offset="100%" stop-color="#D1C4B8" stop-opacity="0" />
+    </radialGradient>
+
+    <!-- 投影滤镜 -->
+    <filter id="drop-shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="8" stdDeviation="6" flood-color="#E0D4C8" flood-opacity="0.4" />
+    </filter>
+  </defs>
+
+  <!-- 背景 -->
+  <rect width="256" height="256" fill="#FFE0C2" />
+  
+  <!-- 底部阴影 -->
+  <ellipse cx="128" cy="218" rx="84" ry="14" fill="url(#shadowGradient)" />
+
+  <!-- 豆沙包主体组 -->
+  <g filter="url(#drop-shadow)">
+    <!-- 包子底部垫纸/阴影 -->
+    <ellipse cx="128" cy="210" rx="76" ry="12" fill="#E8D8C8" opacity="0.4" />
+    
+    <!-- 包子轮廓（更胖更饱满） -->
+    <path d="M 50 152 
+             C 50 95, 80 68, 108 62
+             C 118 59, 123 58, 128 58
+             C 133 58, 138 59, 148 62
+             C 176 68, 206 95, 206 152
+             C 206 212, 154 218, 128 218
+             C 102 218, 50 212, 50 152 Z" 
+          fill="url(#bunGradient)" />
+    
+    <!-- 包子顶部褶皱（三瓣汇聚） -->
+    <!-- 左瓣 -->
+    <ellipse cx="111" cy="73" rx="21" ry="15" fill="#FFFFFF" stroke="#E8D8C8" stroke-width="2" transform="rotate(-20 111 73)" />
+    <!-- 右瓣 -->
+    <ellipse cx="145" cy="73" rx="21" ry="15" fill="#FFFFFF" stroke="#E8D8C8" stroke-width="2" transform="rotate(20 145 73)" />
+    <!-- 中瓣 -->
+    <ellipse cx="128" cy="60" rx="19" ry="15" fill="#FFFFFF" stroke="#E8D8C8" stroke-width="2" />
+
+    <!-- 中央收拢点（包子顶部收口） -->
+    <ellipse cx="128" cy="58" rx="9" ry="7" fill="#FEFEFE" stroke="#E8D8C8" stroke-width="1.5" />
+
+    <!-- 褶皱纹理线条（从中心向外辐射） -->
+    <path d="M 128 58 Q 104 68 91 92" stroke="#E8D8C8" stroke-width="2" stroke-linecap="round" fill="none" />
+    <path d="M 128 58 Q 152 68 165 92" stroke="#E8D8C8" stroke-width="2" stroke-linecap="round" fill="none" />
+    <path d="M 128 58 Q 117 70 107 90" stroke="#E8D8C8" stroke-width="2" stroke-linecap="round" fill="none" />
+    <path d="M 128 58 Q 139 70 149 90" stroke="#E8D8C8" stroke-width="2" stroke-linecap="round" fill="none" />
+
+    <!-- 包子左侧高光 -->
+    <ellipse cx="80" cy="130" rx="14" ry="28" fill="#FFFFFF" opacity="0.6" transform="rotate(-30 80 130)" />
+
+    <!-- 眼睛 -->
+    <circle cx="96" cy="164" r="6.5" fill="#4A3B32" />
+    <circle cx="160" cy="164" r="6.5" fill="#4A3B32" />
+
+    <!-- 眼睛高光 -->
+    <circle cx="94" cy="162" r="3" fill="#FFFFFF" />
+    <circle cx="158" cy="162" r="3" fill="#FFFFFF" />
+
+    <!-- 嘴巴（可爱的微笑） -->
+    <path d="M 117 176 Q 128 186 139 176" stroke="#4A3B32" stroke-width="3.2" stroke-linecap="round" fill="none" />
+  </g>
+</svg>
