@@ -3,21 +3,21 @@
 
   /* ---------------- 参数 ---------------- */
   const GAME_DURATION = 60;
-  const PLAYER_WIDTH  = 52;
+  const PLAYER_WIDTH = 52;
   const PLAYER_BOTTOM = 18;
-  const PLAYER_SPEED  = 420;
-  const ITEM_BASE     = 36;
-  const SPAWN_START   = 1000;
-  const SPAWN_MIN     = 550;
-  const FALL_MIN      = 130;
-  const FALL_MAX      = 260;
-  const STAR_SCORE    = 10;
-  const POOP_SCORE    = -10;
-  const POOP_RATIO    = 0.25;
+  const PLAYER_SPEED = 420;
+  const ITEM_BASE = 36;
+  const SPAWN_START = 1000;
+  const SPAWN_MIN = 550;
+  const FALL_MIN = 130;
+  const FALL_MAX = 260;
+  const STAR_SCORE = 10;
+  const POOP_SCORE = -10;
+  const POOP_RATIO = 0.25;
 
   const EMOJI = {
-    star:   '⭐',
-    poop:   '💩',
+    star: '⭐',
+    poop: '💩',
     player: '😊',
   };
 
@@ -33,7 +33,8 @@
     let volSyncTimer = null;
 
     function ensure() {
-      if (ctx) return ctx;
+      if (ctx && ctx.state !== 'closed') return ctx;
+      if (ctx) { ctx = null; master = null; musicBus = null; sfxBus = null; }
       const AC = window.AudioContext || window.webkitAudioContext;
       if (!AC) return null;
       try { ctx = new AC(); } catch { return null; }
@@ -60,27 +61,21 @@
         if (window.HardwareUI?.getVolume) v = HardwareUI.getVolume();
         else if (window.WujiControlCenter?.getVolume) v = WujiControlCenter.getVolume();
         else v = Store.get('wujios.volume', 60);
-      } catch {}
+      } catch { }
       return Math.max(0, Math.min(100, v));
-    }
-
-    function isMuted() {
-      try {
-        return !!WujiControlCenter?.getToggle?.('soundmode');
-      } catch { return false; }
     }
 
     function syncVolume() {
       if (!ctx || !master) return;
       const vol = readVolume() / 100;
-      const target = isMuted() ? 0 : Math.pow(vol, 1.6) * 0.9;
-      try { master.gain.setTargetAtTime(target, ctx.currentTime, 0.06); } catch {}
+      const target = Math.pow(vol, 1.6) * 0.9;
+      try { master.gain.setTargetAtTime(target, ctx.currentTime, 0.06); } catch { }
     }
 
     function resume() {
       ensure();
       if (ctx && ctx.state === 'suspended') {
-        ctx.resume().catch(() => {});
+        ctx.resume().catch(() => { });
       }
     }
 
@@ -102,7 +97,7 @@
     function sfxStar() {
       if (!ensure()) return;
       const t = ctx.currentTime;
-      playNote(1046.5, 0.10, 0.22, t,        sfxBus, 'sine');
+      playNote(1046.5, 0.10, 0.22, t, sfxBus, 'sine');
       playNote(1318.5, 0.12, 0.20, t + 0.06, sfxBus, 'sine');
       playNote(1568.0, 0.16, 0.18, t + 0.12, sfxBus, 'sine');
     }
@@ -131,15 +126,15 @@
     function sfxGameOver() {
       if (!ensure()) return;
       const t = ctx.currentTime;
-      playNote(523.25, 0.18, 0.18, t,        sfxBus, 'sine');
+      playNote(523.25, 0.18, 0.18, t, sfxBus, 'sine');
       playNote(392.00, 0.18, 0.18, t + 0.16, sfxBus, 'sine');
       playNote(261.63, 0.38, 0.18, t + 0.32, sfxBus, 'sine');
     }
 
     /* ---------- 背景音乐 ---------- */
     const MELODY = [523.25, 659.25, 783.99, 659.25];  // C E G E
-    const BASS   = [130.81, 130.81, 174.61, 174.61];  // C3 C3 F3 F3
-    const BEAT   = 0.32;
+    const BASS = [130.81, 130.81, 174.61, 174.61];  // C3 C3 F3 F3
+    const BEAT = 0.32;
 
     function scheduleBeat() {
       if (!bgPlaying || !ctx) return;
@@ -180,16 +175,18 @@
       if (bgTimer) { clearTimeout(bgTimer); bgTimer = null; }
     }
 
-    /* ★ 彻底挂起：关机 / 卸载时调 */
     function suspend() {
       stopBg();
       if (volSyncTimer) { clearInterval(volSyncTimer); volSyncTimer = null; }
       if (ctx) {
-        try { ctx.close(); } catch {}
+        const old = ctx;
         ctx = null;
         master = null;
         musicBus = null;
         sfxBus = null;
+        try {
+          if (old.state !== 'closed') old.close().catch(() => { });
+        } catch { }
       }
     }
 
@@ -238,7 +235,7 @@
   };
 
   function vibrate(p) {
-    if (navigator.vibrate) { try { navigator.vibrate(p); } catch {} }
+    if (navigator.vibrate) { try { navigator.vibrate(p); } catch { } }
   }
 
   /* ---------------- 云 ---------------- */
@@ -420,9 +417,9 @@
     }
 
     const playerCenterX = S.playerX * sceneW;
-    const playerLeft  = playerCenterX - PLAYER_WIDTH / 2;
+    const playerLeft = playerCenterX - PLAYER_WIDTH / 2;
     const playerRight = playerCenterX + PLAYER_WIDTH / 2;
-    const playerTop    = sceneH - PLAYER_BOTTOM - PLAYER_WIDTH;
+    const playerTop = sceneH - PLAYER_BOTTOM - PLAYER_WIDTH;
     const playerBottom = sceneH - PLAYER_BOTTOM;
 
     for (const item of items.values()) {
@@ -495,7 +492,7 @@
     const down = e => {
       e.preventDefault();
       el.classList.add('is-active');
-      try { el.setPointerCapture?.(e.pointerId); } catch {}
+      try { el.setPointerCapture?.(e.pointerId); } catch { }
       setter(true);
     };
     const up = () => {
@@ -516,9 +513,7 @@
     initialRoute: 'home',
     version: '1.0.2',
 
-    /* ★ 开机 / 关机钩子 */
     onBoot() {
-      /* 脚本加载后是全新状态，无需做任何事 */
     },
     onShutdown() {
       stopLoop();
@@ -862,17 +857,17 @@
 
         mount(root) {
           els = {
-            score:        root.querySelector('#starScore'),
-            time:         root.querySelector('#starTime'),
-            scene:        root.querySelector('#starScene'),
-            clouds:       root.querySelector('#starClouds'),
-            items:        root.querySelector('#starItems'),
-            player:       root.querySelector('#starPlayer'),
-            overlay:      root.querySelector('#starOverlay'),
+            score: root.querySelector('#starScore'),
+            time: root.querySelector('#starTime'),
+            scene: root.querySelector('#starScene'),
+            clouds: root.querySelector('#starClouds'),
+            items: root.querySelector('#starItems'),
+            player: root.querySelector('#starPlayer'),
+            overlay: root.querySelector('#starOverlay'),
             overlayTitle: root.querySelector('#starOverlayTitle'),
-            overlayDesc:  root.querySelector('#starOverlayDesc'),
-            overlayBtn:   root.querySelector('#starOverlayBtn'),
-            flash:        root.querySelector('#starFlash'),
+            overlayDesc: root.querySelector('#starOverlayDesc'),
+            overlayBtn: root.querySelector('#starOverlayBtn'),
+            flash: root.querySelector('#starFlash'),
           };
 
           buildClouds(els.clouds, 7);
@@ -883,7 +878,7 @@
             }
           });
 
-          bindHold(root.querySelector('#starLeft'),  v => { input.left  = v; });
+          bindHold(root.querySelector('#starLeft'), v => { input.left = v; });
           bindHold(root.querySelector('#starRight'), v => { input.right = v; });
 
           /* 键盘 */
@@ -903,7 +898,7 @@
           };
           const onKeyUp = e => {
             switch (e.key) {
-              case 'ArrowLeft': case 'a': case 'A':  input.left  = false; break;
+              case 'ArrowLeft': case 'a': case 'A': input.left = false; break;
               case 'ArrowRight': case 'd': case 'D': input.right = false; break;
             }
           };
@@ -921,7 +916,7 @@
           return () => {
             stopLoop();
             clearItems();
-            AudioEngine.stopBg();
+            AudioEngine.suspend();
             window.removeEventListener('keydown', onKey);
             window.removeEventListener('keyup', onKeyUp);
             window.removeEventListener('wuji:cc-toggle-change', onCCChange);

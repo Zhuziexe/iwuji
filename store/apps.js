@@ -72,6 +72,16 @@ window.WUJI_MARKET_APPS = [
     src:         './store-apps/dailywater.js',
   },
   {
+    bundle:      'com.wujinb.piano',
+    name:        '迷你钢琴',
+    icon:        './assets/piano.svg',
+    version:     '1.0.3',
+    author:      'Wuji',
+    description: '一个迷你钢琴',
+    longdescription: '一个迷你钢琴，点击琴键发出声音。',
+    src:         './store-apps/piano.js',
+  },
+  {
     bundle:      'com.wujios.note',
     name:        '备忘录',
     icon:        './assets/note.svg',

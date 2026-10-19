@@ -1,0 +1,41 @@
+<svg width="256" height="256" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- 白色琴键渐变 -->
+    <linearGradient id="whiteKeyGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#FFFFFF" />
+      <stop offset="100%" stop-color="#F2F2F2" />
+    </linearGradient>
+
+    <!-- 黑色琴键渐变 -->
+    <linearGradient id="blackKeyGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#4A4A4A" />
+      <stop offset="100%" stop-color="#1A1A1A" />
+    </linearGradient>
+  </defs>
+
+  <!-- 粉色背景 -->
+  <rect width="256" height="256" fill="#FF9A9E" />
+
+  <!-- 钢琴琴键组 -->
+  <g id="piano-keys">
+    
+    <!-- 白色琴键（3个，间隙为6px） -->
+    <g>
+      <!-- 白键 1 -->
+      <rect x="38" y="64" width="56" height="128" rx="8" fill="url(#whiteKeyGrad)" stroke="#E6E6E6" stroke-width="1" />
+      <!-- 白键 2 -->
+      <rect x="100" y="64" width="56" height="128" rx="8" fill="url(#whiteKeyGrad)" stroke="#E6E6E6" stroke-width="1" />
+      <!-- 白键 3 -->
+      <rect x="162" y="64" width="56" height="128" rx="8" fill="url(#whiteKeyGrad)" stroke="#E6E6E6" stroke-width="1" />
+    </g>
+
+    <!-- 黑色琴键（2个，居中于白键间隙） -->
+    <g>
+      <!-- 黑键 1 -->
+      <rect x="81" y="64" width="32" height="76" rx="6" fill="url(#blackKeyGrad)" />
+      <!-- 黑键 2 -->
+      <rect x="143" y="64" width="32" height="76" rx="6" fill="url(#blackKeyGrad)" />
+    </g>
+
+  </g>
+</svg>

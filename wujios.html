@@ -1560,28 +1560,43 @@
       },
     };
 
-    function finishCloseApp() {
+    function disposeCurrentApp() {
       const closingBundle = S.currentBundle;
 
-      /* ★ 应用退场：清掉它打开的所有 overlay，防泄漏 */
+      /* 1) 清掉应用打开的 overlay */
       try { window.WujiOverlay?.closeAll?.(); } catch { }
 
+      /* 2) 销毁导航栈 —— 会逐个触发路由的 dispose() */
       if (currentNav) {
-        currentNav.destroy();
+        try { currentNav.destroy(); } catch { }
         currentNav = null;
-      } else {
-        const app = S.currentBundle ? WujiApps.get(S.currentBundle) : null;
-        app?.unmount?.();
+      } else if (S.currentBundle) {
+        /* 旧式（无 routes）应用走 unmount */
+        const app = WujiApps.get(S.currentBundle);
+        try { app?.unmount?.(); } catch { }
       }
 
+      /* 3) 清屏 */
       appScreen.innerHTML = '';
       appScreen.style.transition = 'none';
       appScreen.style.transform = '';
+      appScreen.style.opacity = '';
+
+      /* 4) 清状态 */
       S.currentBundle = null;
       currentBackHandler = null;
+
+      /* 5) 关掉该应用打开的对话框 */
+      try { window.WujiDialog?.closeByBundle?.(closingBundle); } catch { }
+
+      return closingBundle;
+    }
+
+    function finishCloseApp() {
+      const closingBundle = disposeCurrentApp();
+
       setView('home');
       try { WujiTheme.post('app-exit', {}); } catch { }
-      try { window.WujiDialog?.closeByBundle?.(closingBundle); } catch { }
       notifyParent('app-close', {});
     }
 
@@ -2168,7 +2183,7 @@
     async function powerOff() {
       if (S.power !== 'running' && S.power !== 'booting') return;
       setPower('shuttingdown');
-
+      try { disposeCurrentApp(); } catch (e) { console.error(e); }
       try { WujiApps.shutdown(); } catch (e) { console.error(e); }
       try { WujiOverlay?.closeAll?.(); } catch { }
 
