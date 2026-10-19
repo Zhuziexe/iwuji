@@ -91,4 +91,14 @@ window.WUJI_MARKET_APPS = [
     longdescription: '一个骰子，生成1~6随机数',
     src:         './store-apps/dice.js',
   },
+  {
+    bundle:      'com.niunai.niunairailway',
+    name:        '牛奶铁路',
+    icon:        './assets/niunairailway.svg',
+    version:     '1.0.4',
+    author:      'Niunai',
+    description: '牛奶铁路官方正版',
+    longdescription: '牛奶铁路，查询高铁/火车路线',
+    src:         './store-apps/niunairailway.js',
+  },
 ];

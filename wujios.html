@@ -148,10 +148,9 @@
     <div class="hw-menu-overlay" id="hwMenu">
       <div class="hw-menu-panel" id="hwMenuPanel"></div>
       <button class="hw-menu-close" id="hwMenuClose" type="button" aria-label="关闭">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
-             stroke-width="2.4" stroke-linecap="round">
-          <line x1="6" y1="6" x2="18" y2="18"/>
-          <line x1="18" y1="6" x2="6" y2="18"/>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round">
+          <line x1="6" y1="6" x2="18" y2="18" />
+          <line x1="18" y1="6" x2="6" y2="18" />
         </svg>
       </button>
     </div>
@@ -1410,7 +1409,7 @@
         S.currentBundle = bundle;
         currentBackHandler = null;
 
-        setView('app');      
+        setView('app');
         appScreen.style.transition = 'none';
         appScreen.style.transform = '';
         appScreen.style.opacity = '0';
@@ -1561,7 +1560,7 @@
       },
     };
 
-        function finishCloseApp() {
+    function finishCloseApp() {
       const closingBundle = S.currentBundle;
 
       /* ★ 应用退场：清掉它打开的所有 overlay，防泄漏 */
@@ -2005,7 +2004,7 @@
         if (c.state === 'suspended') {
           c.resume()
             .then(() => { unlocked = c.state === 'running'; })
-            .catch(() => {});
+            .catch(() => { });
         } else {
           unlocked = c.state === 'running';
         }
@@ -2028,7 +2027,6 @@
           return;
         }
 
-        /* 套在模拟器壳子里：监听父文档（同源才能拿到） */
         let parentDoc = null;
         try { parentDoc = window.parent.document; } catch { return; }
         if (!parentDoc) return;
@@ -2036,7 +2034,7 @@
         const handler = () => {
           unlock();
           if (unlocked) {
-            try { parentDoc.removeEventListener('pointerdown', handler, true); } catch {}
+            try { parentDoc.removeEventListener('pointerdown', handler, true); } catch { }
           }
         };
         try {
@@ -2044,7 +2042,7 @@
             capture: true,
             passive: true,
           });
-        } catch {}
+        } catch { }
       }
       function isBootSoundEnabled() {
         const v = Store.get('wujios.playbootsound', undefined);
@@ -2059,16 +2057,16 @@
         if (!isBootSoundEnabled()) return;
         const c = ensureCtx();
         if (!c) return;
-        if (c.state === 'suspended') c.resume().catch(() => {});
+        if (c.state === 'suspended') c.resume().catch(() => { });
 
         const t0 = c.currentTime + 0.02;
 
         const comp = c.createDynamicsCompressor();
         comp.threshold.value = -6;
-        comp.knee.value      = 0;
-        comp.ratio.value     = 12;
-        comp.attack.value    = 0.003;
-        comp.release.value   = 0.25;
+        comp.knee.value = 0;
+        comp.ratio.value = 12;
+        comp.attack.value = 0.003;
+        comp.release.value = 0.25;
         comp.connect(c.destination);
 
         const bus = c.createGain();
@@ -2095,7 +2093,16 @@
         });
       }
 
-      attachUnlock();   /* ★ 模块创建时就挂好监听 */
+      (function preInitAudioCtx() {
+        const create = () => { try { ensureCtx(); } catch { } };
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', create, { once: true });
+        } else {
+          create();
+        }
+      })();
+
+      attachUnlock();
 
       return { unlock, play };
     })();
@@ -2449,8 +2456,8 @@
       const KEYS = ['volume', 'brightness', 'wifi', 'bluetooth', 'soundmode', 'cellular'];
       let migrated = 0;
       for (const k of KEYS) {
-        const oldVal = Store.get('control.' + k, undefined);
-        if (oldVal !== undefined) {
+        const oldVal = Store.get('control.' + k, null);
+        if (oldVal !== null) {
           Store.set('wujios.' + k, oldVal);
           Store.remove('control.' + k);
           migrated++;
@@ -2496,19 +2503,19 @@
       desktopTrackEl.style.transform = `translateX(${-currentPage * w}px)`;
     });
     const HardwareUI = (() => {
-      const hudEl      = document.getElementById('hwVolumeHud');
-      const hudBar     = hudEl.querySelector('i');
-      const menuEl     = document.getElementById('hwMenu');
-      const menuPanel  = document.getElementById('hwMenuPanel');
-      const menuClose  = document.getElementById('hwMenuClose');
+      const hudEl = document.getElementById('hwVolumeHud');
+      const hudBar = hudEl.querySelector('i');
+      const menuEl = document.getElementById('hwMenu');
+      const menuPanel = document.getElementById('hwMenuPanel');
+      const menuClose = document.getElementById('hwMenuClose');
 
-      const VOL_STEP         = 5;
+      const VOL_STEP = 5;
       const VOL_REPEAT_START = 400;
       const VOL_REPEAT_EVERY = 80;
 
-      let volPressTimer  = null;
+      let volPressTimer = null;
       let volRepeatTimer = null;
-      let volHideTimer   = null;
+      let volHideTimer = null;
 
       /* ★ 唯一权威：每次从 Store 读，不保留本地副本 */
       function readVolume() {
@@ -2526,7 +2533,7 @@
       }
 
       function changeVolume(delta) {
-        const cur  = readVolume();
+        const cur = readVolume();
         const next = Math.max(0, Math.min(100, cur + delta));
         if (next === cur) return false;
 
@@ -2535,7 +2542,7 @@
         /* Store 由 HardwareUI 与 ControlCenter 各写一次（幂等），
            UI 更新走 ControlCenter；两者读同一权威，不再分叉 */
         Store.set('wujios.volume', next);
-        try { WujiControlCenter?.setVolume?.(next); } catch {}
+        try { WujiControlCenter?.setVolume?.(next); } catch { }
 
         notifyParent('volume-change', { volume: next });
         return true;
@@ -2554,7 +2561,7 @@
       function stopVolLoop() {
         clearTimeout(volPressTimer);
         clearInterval(volRepeatTimer);
-        volPressTimer  = null;
+        volPressTimer = null;
         volRepeatTimer = null;
       }
 
@@ -2621,8 +2628,8 @@
         if (!btn) return;
         const action = btn.dataset.action;
         hideMenu();
-        if (action === 'power-on')  powerOn();
-        else if (action === 'restart')  restart();
+        if (action === 'power-on') powerOn();
+        else if (action === 'restart') restart();
         else if (action === 'shutdown') powerOff();
       });
 
@@ -2652,7 +2659,7 @@
       return {
         powerShort,
         powerLong: showMenu,
-        volumePress:   (dir) => startVolLoop(dir),
+        volumePress: (dir) => startVolLoop(dir),
         volumeRelease: stopVolLoop,
         hideMenu,
         isMenuOpen,
@@ -2672,12 +2679,12 @@
       const d = e.data;
       if (!d || d.type !== 'iwuji:control') return;
       switch (d.action) {
-        case 'hw:power-short':      HardwareUI.powerShort();         break;
-        case 'hw:power-long':       HardwareUI.powerLong();          break;
-        case 'hw:vol-up-press':     HardwareUI.volumePress(+1);      break;
-        case 'hw:vol-up-release':   HardwareUI.volumeRelease();      break;
-        case 'hw:vol-down-press':   HardwareUI.volumePress(-1);      break;
-        case 'hw:vol-down-release': HardwareUI.volumeRelease();      break;
+        case 'hw:power-short': HardwareUI.powerShort(); break;
+        case 'hw:power-long': HardwareUI.powerLong(); break;
+        case 'hw:vol-up-press': HardwareUI.volumePress(+1); break;
+        case 'hw:vol-up-release': HardwareUI.volumeRelease(); break;
+        case 'hw:vol-down-press': HardwareUI.volumePress(-1); break;
+        case 'hw:vol-down-release': HardwareUI.volumeRelease(); break;
       }
     });
     notifyParent('statechange', { state: S.power });

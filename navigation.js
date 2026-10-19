@@ -166,8 +166,10 @@ window.WujiNavigation = class WujiNavigation {
 
   /* ---------------------------------------------------------
      push
+     选项新增 onResult：(result, data) => void
+     当本页面被 pop 时，把 result 回传给调用方
      --------------------------------------------------------- */
-  push(routeOrName, data = {}, { animate = true, transition, origin } = {}) {
+  push(routeOrName, data = {}, { animate = true, transition, origin, onResult } = {}) {
     const route = typeof routeOrName === 'string'
       ? this.routes[routeOrName]
       : routeOrName;
@@ -199,7 +201,7 @@ window.WujiNavigation = class WujiNavigation {
       data,
       nav: this,
       push: (r, d, opts) => this.push(r, d, opts),   /* ★ 透传选项 */
-      pop: () => this.pop(),
+      pop: (result) => this.pop(result),             /* ★ 透传回传值 */
       close: () => this.destroy(),
     };
 
@@ -222,6 +224,7 @@ window.WujiNavigation = class WujiNavigation {
       _mountRaf: 0,
       transitionType: type,          /* ★ */
       transitionOrigin: origin || null,
+      onResult: typeof onResult === 'function' ? onResult : null,  /* ★ */
     };
     this.stack.push(item);
 
@@ -243,13 +246,20 @@ window.WujiNavigation = class WujiNavigation {
   }
 
   /* ---------------------------------------------------------
-     pop
+     pop(result)
+     result 会通过 push 时传入的 onResult 回传给调用方
      --------------------------------------------------------- */
-  pop() {
+  pop(result) {
     if (this.stack.length <= 1) return false;
 
     const cur = this.stack.pop();
     const prev = this.stack[this.stack.length - 1];
+
+    /* ★ 先回传结果，再卸载页面 */
+    if (typeof cur.onResult === 'function') {
+      try { cur.onResult(result, cur.data); }
+      catch (e) { console.error('[WujiNavigation] onResult', e); }
+    }
 
     this._disposeItem(cur);
 

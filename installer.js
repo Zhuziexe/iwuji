@@ -147,8 +147,12 @@ window.WujiAppInstaller = (() => {
       if (!bundle) return false;
       if (!this.has(bundle)) return false;
 
-      const list = readAll().filter(a => a.bundle !== bundle);
-      writeAll(list);
+      /* ★ 必须在写回之前抓 src，否则记录已被移除 */
+      const list = readAll();
+      const rec  = list.find(a => a.bundle === bundle);
+      const src  = rec?.src || '';
+
+      writeAll(list.filter(a => a.bundle !== bundle));
 
       /* ★ 先让应用清自己的定时器 / window 监听 */
       try { WujiApps.shutdownOne(bundle); }
@@ -165,21 +169,20 @@ window.WujiAppInstaller = (() => {
         console.warn('[installer] 清理通知失败', bundle, e);
       }
 
-      /* 主动清桌面，不依赖监听器 */
       if (window.DesktopLayout?.removeApp) {
         DesktopLayout.removeApp(bundle);
+      }
+
+      /* ★ 清脚本缓存 + 移除 script 元素 + 推进 generation */
+      if (src && window.WujiAppLoader?.invalidate) {
+        try { WujiAppLoader.invalidate(src); }
+        catch (e) { console.warn('[installer] invalidate failed', bundle, e); }
       }
 
       WujiApps.unregister(bundle);
       return true;
     },
 
-    /* ---------- 启动恢复 ---------- */
-
-    /**
-     * 由 index.html 在启动时调用一次：
-     * 把 Store 里记录的已安装应用注册成内存 meta 占位。
-     */
     restore() {
       const list = readAll();
       list.forEach(rec => {

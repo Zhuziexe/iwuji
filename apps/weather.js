@@ -87,14 +87,12 @@
     return 'linear-gradient(165deg, #5b8dff 0%, #3a5fd0 100%)';
   }
 
-  /* ---------- 模块状态 ---------- */
   let weatherData       = null;
   let cooldownTimer     = null;
   let autoRefreshTimer  = null;
   let loading           = false;
   let lastKnownCity     = DEFAULT_CITY;
 
-  /* ---------- 工具 ---------- */
   function weatherCode(code) {
     const [text, icon] = WEATHER_MAP[code] || ['未知', '❓'];
     return { text, icon };
