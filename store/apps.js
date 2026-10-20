@@ -14,7 +14,7 @@ window.WUJI_MARKET_APPS = [
     name:        '吴际商城',
     icon:        './assets/wmall.svg',
     image:       './assets/com.wujios.wujigallery/wmall.png',
-    version:     '1.0.4',
+    version:     '1.0.5',
     author:      'Wuji',
     description: '吴际商城官方正版',
     longdescription: '吴际商城，购买 iWuji 系列产品。',

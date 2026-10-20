@@ -15,6 +15,9 @@
     '长沙南':   { stopId: 'cn-china-railway_CWQ', lat: 28.150078, lon: 113.059880 },
     '济南西':   { stopId: 'cn-china-railway_JGK', lat: 36.668804, lon: 116.886000 },
     '邵阳北':   { stopId: 'cn-china-railway_OVQ', lat: 27.577555, lon: 111.498980 },
+    '南京南':   { stopId: 'cn-china-railway_NKH', lat: 31.970797, lon: 118.793050 },
+    '北京西':   { stopId: 'cn-china-railway_BXP', lat: 39.893670, lon: 116.315100 },
+    '青岛':     { stopId: 'cn-china-railway_QDK', lat: 36.063100, lon: 120.307460 },
   };
 
   const STATION_ORDER = Object.keys(STATIONS);

@@ -816,7 +816,6 @@
         background: var(--wj-primary);
         border-radius: 14px;
         pointer-events: none;
-        transition: width .06s linear;
       }
 
       .settings-slider__knob {
@@ -833,7 +832,6 @@
         transform: translate(-50%, -50%);
         z-index: 1;
         pointer-events: none;
-        transition: left .06s linear;
       }
 
       .settings-segment {

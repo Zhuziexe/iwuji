@@ -1,0 +1,45 @@
+{
+  "products": [
+    {
+      "id": "iwuji",
+      "icon": "./assets/com.wujinb.wmall/iwuji_blue.png",
+      "banner": "./assets/com.wujinb.wmall/iwuji_banner.png",
+      "name": "iWuji",
+      "price": 2999,
+      "colors": [
+        { "id": "blue",  "text": "牛逼蓝", "image": "./assets/com.wujinb.wmall/iwuji_blue.png",  "buyable": true  },
+        { "id": "white", "text": "牛逼白", "image": "./assets/com.wujinb.wmall/iwuji_white.png", "buyable": false },
+        { "id": "black", "text": "牛逼黑", "image": "./assets/com.wujinb.wmall/iwuji_black.png", "buyable": true  }
+      ],
+      "specs": [
+        { "label": "运行内存(RAM)", "value": "4GB" },
+        { "label": "机身内存(ROM)", "value": "64GB", "note": "*可使用的内存容量小于此值，因为手机软件占用部分空间。" },
+        { "label": "操作系统", "value": "WujiOS" },
+        { "label": "电池容量", "value": "4720 mAh（典型值）", "note": "*电池额定容量为 4610mAh。" }
+      ]
+    },
+    {
+      "id": "wujibuds",
+      "icon": "./assets/com.wujinb.wmall/wujibuds_sky.png",
+      "name": "WujiBuds",
+      "price": 599,
+      "colors": [
+        { "id": "sky",  "text": "天空蓝", "image": "./assets/com.wujinb.wmall/wujibuds_sky.png", "buyable": true  },
+        { "id": "blue", "text": "牛逼蓝", "image": "./assets/com.wujinb.wmall/wujibuds_blue.png", "buyable": false }
+      ]
+    },
+    {
+      "id": "charger",
+      "icon": "./assets/com.wujinb.wmall/iwuji_charger.png",
+      "name": "iWuji快充充电器",
+      "price": 79
+    },
+    {
+      "id": "case",
+      "icon": "./assets/com.wujinb.wmall/iwuji_baohuke.png",
+      "name": "iWuji透明保护壳",
+      "price": 39,
+      "buyable": true
+    }
+  ]
+}

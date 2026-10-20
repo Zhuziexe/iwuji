@@ -328,7 +328,7 @@ window.WujiNavigation = class WujiNavigation {
     const w = el.offsetWidth || 1;
 
     if (cur.transitionType === 'slide-up') {
-      const p = Math.max(0, Math.min(1, clamped / (w * 0.5)));
+      const p = Math.max(0, Math.min(1, clamped / (w * 0.8)));
       el.style.transform = `translateY(${p * 100}%)`;
       return;
     }

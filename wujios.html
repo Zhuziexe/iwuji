@@ -2175,7 +2175,7 @@
       S.viewBeforeLock = 'home';
       setView('locked');
       setPower('running');
-      if (Store.get('wujios.lastbootversion', null) != '1.0.110') {
+      if (Store.get('wujios.lastbootversion', null) !== '1.0.110') {
         Store.set('wujios.lastbootversion', '1.0.110');
       }
       try { WujiApps.boot(); } catch (e) { console.error(e); }
@@ -2304,7 +2304,7 @@
         const real = realTargetOf(e);
         if (!real || real.nodeType !== 1) return;
         if (real.tagName === 'IFRAME') return;
-        if (real.closest('button, a, input, textarea, select, label, [contenteditable]')) return;
+        if (real.closest('input, textarea, select, [contenteditable]')) return;
 
         const sc = findScroller(real);
         if (!sc) return;

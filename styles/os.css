@@ -1061,7 +1061,6 @@ img {
   bottom: 0;
   height: 60%;
   background: #ffffff;
-  transition: height .06s linear;
   z-index: 0;
 }
 
