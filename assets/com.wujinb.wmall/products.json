@@ -57,7 +57,7 @@
           "id": "sky",
           "text": "天空蓝",
           "image": "./assets/com.wujinb.wmall/wujibuds_sky.png",
-          "buyable": true
+          "buyable": false
         },
         {
           "id": "blue",
@@ -72,7 +72,7 @@
       "icon": "./assets/com.wujinb.wmall/iwuji_charger.png",
       "name": "iWuji快充充电器",
       "price": 79,
-      "buyable": true
+      "buyable": false
     },
     {
       "id": "case",
