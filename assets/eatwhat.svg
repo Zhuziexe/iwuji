@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- 黄色圆角背景 -->
+  <rect width="256" height="256" fill="#FFC107"/>
+
+  <!-- 热气：三条短弧线 -->
+  <g stroke="#1c2536" stroke-width="7" stroke-linecap="round" fill="none">
+    <path d="M98 132 Q 106 120 98 108"/>
+    <path d="M128 124 Q 136 112 128 100"/>
+    <path d="M158 132 Q 166 120 158 108"/>
+  </g>
+
+  <!-- 碗身 -->
+  <path d="M60 154
+           C 60 200, 88 216, 128 216
+           C 168 216, 196 200, 196 154
+           Z"
+        fill="#ffffff" stroke="#1c2536" stroke-width="8" stroke-linejoin="round"/>
+
+  <!-- 碗口 -->
+  <ellipse cx="128" cy="154" rx="68" ry="15"
+           fill="#ffffff" stroke="#1c2536" stroke-width="8"/>
+</svg>

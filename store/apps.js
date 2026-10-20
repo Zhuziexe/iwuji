@@ -52,6 +52,16 @@ window.WUJI_MARKET_APPS = [
     src:         './store-apps/metromap.js',
   },
   {
+    bundle:      'com.wujinb.eatwhat',
+    name:        '今天吃什么',
+    icon:        './assets/eatwhat.svg',
+    version:     '1.0.0',
+    author:      'Wuji',
+    description: '今天吃什么',
+    longdescription: `看看今天吃什么`,
+    src:         './store-apps/eatwhat.js',
+  },
+  {
     bundle:      'com.wujinb.doushabao',
     name:        '豆沙包',
     icon:        './assets/doushabao.svg',

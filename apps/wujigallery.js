@@ -335,20 +335,45 @@ WujiApps.register({
         const refreshBtn = () => {
           if (busy) return;
 
+          // 两个数据源都查：Store.installedApps 和 WujiApps 内存注册表
           const rec = WujiAppInstaller.get(app.bundle);
-          const sameVersion = rec && rec.version === app.version;
+          const inRegistry =
+            WujiApps.has(app.bundle) && WujiApps.isInstalled(app.bundle);
+          const registeredApp = WujiApps.get(app.bundle);
 
-          if (sameVersion) {
-            label.textContent = '已安装';
-            btn.disabled = true;
-            btn.classList.remove('is-progress');
-            fill.style.width = '0%';
-          } else {
+          // 归一化版本号，兼容数字/字符串两种写法
+          const normalize = v => String(v == null ? '' : v).trim();
+
+          const currentVersion = normalize(
+            (rec && rec.version) ||
+            (registeredApp && registeredApp.version) ||
+            ''
+          );
+          const targetVersion = normalize(app.version);
+
+          // ---- 状态 1：完全没装过 ----
+          if (!rec && !inRegistry) {
             label.textContent = '安装';
             btn.disabled = false;
             btn.classList.remove('is-progress');
             fill.style.width = '0%';
+            return;
           }
+
+          // ---- 状态 2：装了，版本一致 ----
+          if (currentVersion && currentVersion === targetVersion) {
+            label.textContent = '已安装';
+            btn.disabled = true;
+            btn.classList.remove('is-progress');
+            fill.style.width = '0%';
+            return;
+          }
+
+          // ---- 状态 3：装了，但版本不同 ----
+          label.textContent = '更新';
+          btn.disabled = false;
+          btn.classList.remove('is-progress');
+          fill.style.width = '0%';
         };
 
         refreshBtn();
