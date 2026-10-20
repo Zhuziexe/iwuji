@@ -1794,13 +1794,16 @@ img {
   user-select: none;
 }
 
-.lock-pin-text-btn:active {
-  background: rgba(58, 111, 240, .08);
-}
-
 .lock-pin-action-key {
+  background-color: transparent;
+  border: 0;
+  border-radius: 10px;
   color: #ffffff;
   font-size: 15px;
-  font-weight: 600;
   letter-spacing: 0;
+}
+
+.lock-pin-action-key:active {
+  background: rgba(0,0,0,.12);
+  transition: background .25s;
 }

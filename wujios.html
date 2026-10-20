@@ -60,8 +60,7 @@
           <button class="lock-pin-key lock-pin-key--empty" disabled></button>
           <button class="lock-pin-key" data-digit="0">0</button>
 
-          <!-- 右下角：取消 / 退格 -->
-          <button class="lock-pin-key lock-pin-action-key" id="lockPinTextBtn" type="button">取消</button>
+          <button class="lock-pin-action-key" id="lockPinTextBtn" type="button">取消</button>
         </div>
       </div>
     </div>
@@ -1928,7 +1927,7 @@
 
           if (!unlocked) {
             postUnlockProgress(0);
-            cleanupViewStyles();          // ★ 取消时清理 inline style
+            cleanupViewStyles();
           }
 
           setTimeout(() => {
@@ -1957,7 +1956,7 @@
 
           setTimeout(() => {
             lockedView.style.transition = '';
-            cleanupViewStyles();          // ★ 回弹后清理
+            cleanupViewStyles();
           }, 280);
         }
         deltaY = 0;
