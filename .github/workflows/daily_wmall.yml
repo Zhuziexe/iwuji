@@ -1,0 +1,39 @@
+name: Daily WMALL Stock Refresh
+
+on:
+  schedule:
+    # 每天 UTC 00:00 = 北京时间 08:00
+    - cron: '0 0 * * *'
+  workflow_dispatch:   # 允许在 Actions 页面手动触发，方便测试
+
+permissions:
+  contents: write      # 必须，否则 push 会 403
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Refresh stock
+        run: node scripts/refresh-stock.js
+
+      - name: Commit if changed
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          git add assets/com.wujinb.wmall/products.json
+
+          if git diff --staged --quiet; then
+            echo "No stock change today, skip commit."
+          else
+            git commit -m "chore(wmall): refresh daily stock at $(date -u +%F)"
+            git push
+          fi
