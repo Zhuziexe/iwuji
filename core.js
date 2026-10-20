@@ -16,7 +16,7 @@
    ========================================================= */
 
 window.WujiApps = (() => {
-  const builtin   = new Map();
+  const builtin = new Map();
   const installed = new Map();
   const listeners = new Set();
   let booted = false;
@@ -35,24 +35,24 @@ window.WujiApps = (() => {
 
   function normalize(app) {
     return {
-      bundlename:   app.bundlename || app.bundle,
-      name:         app.name || app.bundlename,
-      icon:         app.icon || '',
-      iconStyle:    app.iconStyle || '',
-      version:      app.version || '1.0.0',
-      author:       app.author || '',
-      description:  app.description || '',
+      bundlename: app.bundlename || app.bundle,
+      name: app.name || app.bundlename,
+      icon: app.icon || '',
+      iconStyle: app.iconStyle || '',
+      version: app.version || '1.0.0',
+      author: app.author || '',
+      description: app.description || '',
       initialRoute: app.initialRoute || null,
-      routes:       app.routes || null,
-      overlays:     app.overlays || null,        // ★ 新增
-      render:       app.render || null,
-      mount:        app.mount || null,
-      unmount:      app.unmount || null,
-      styles:       app.styles || '',
-      onBoot:       app.onBoot || null,          // ★ 新增
-      onShutdown:   app.onShutdown || null,      // ★ 新增
-      _src:         app.src || app._src || '',
-      _metaOnly:    false,
+      routes: app.routes || null,
+      overlays: app.overlays || null,        // ★ 新增
+      render: app.render || null,
+      mount: app.mount || null,
+      unmount: app.unmount || null,
+      styles: app.styles || '',
+      onBoot: app.onBoot || null,          // ★ 新增
+      onShutdown: app.onShutdown || null,      // ★ 新增
+      _src: app.src || app._src || '',
+      _metaOnly: false,
     };
   }
 
@@ -67,9 +67,9 @@ window.WujiApps = (() => {
 
     const isInstalled = source === 'installed';
     const bucket = isInstalled ? installed : builtin;
-    const other  = isInstalled ? builtin   : installed;
+    const other = isInstalled ? builtin : installed;
 
-    const existingSelf  = bucket.get(app.bundlename);
+    const existingSelf = bucket.get(app.bundlename);
     const existingOther = other.get(app.bundlename);
 
     /* 已经完整注册过 → 忽略 */
@@ -103,19 +103,19 @@ window.WujiApps = (() => {
     return true;
   }
 
-    /* ---------------------------------------------------------
-     只注册元数据（占位），等脚本加载后升级为完整定义
-     source = 'builtin'  → 占位放进 builtin 桶
-     source = 'installed'→ 占位放进 installed 桶（默认）
-     --------------------------------------------------------- */
+  /* ---------------------------------------------------------
+   只注册元数据（占位），等脚本加载后升级为完整定义
+   source = 'builtin'  → 占位放进 builtin 桶
+   source = 'installed'→ 占位放进 installed 桶（默认）
+   --------------------------------------------------------- */
   function registerMeta(meta, source = 'installed') {
     if (!meta) return false;
     const bundle = meta.bundlename || meta.bundle;
     if (!bundle) return false;
 
     const isBuiltin = source === 'builtin';
-    const bucket    = isBuiltin ? builtin   : installed;
-    const other     = isBuiltin ? installed : builtin;
+    const bucket = isBuiltin ? builtin : installed;
+    const other = isBuiltin ? installed : builtin;
 
     /* 目标桶里已有完整定义 → 忽略 */
     const existingSelf = bucket.get(bundle);
@@ -139,7 +139,7 @@ window.WujiApps = (() => {
   }
 
   function eachFull(fn) {
-    for (const app of builtin.values())   if (!app._metaOnly) fn(app);
+    for (const app of builtin.values()) if (!app._metaOnly) fn(app);
     for (const app of installed.values()) if (!app._metaOnly) fn(app);
   }
 
@@ -169,10 +169,10 @@ window.WujiApps = (() => {
       return [...builtin.values(), ...installed.values()];
     },
 
-    builtins()   { return [...builtin.values()]; },
+    builtins() { return [...builtin.values()]; },
     installeds() { return [...installed.values()]; },
 
-    has(bundle)  { return builtin.has(bundle) || installed.has(bundle); },
+    has(bundle) { return builtin.has(bundle) || installed.has(bundle); },
     isInstalled(bundle) { return installed.has(bundle); },
 
     on(fn) {
@@ -193,6 +193,7 @@ window.WujiApps = (() => {
 
     /* 卸载 / 覆盖安装单个应用前 */
     shutdownOne(bundle) {
+      if (!booted) return;          // 没 boot 过，没什么可 shutdown 的
       const app = installed.get(bundle) || builtin.get(bundle) || null;
       if (!app || app._metaOnly) return;
       safeInvoke(app.onShutdown, 'onShutdown:' + bundle);
@@ -221,11 +222,11 @@ window.Store = (() => {
     },
     set(k, v) {
       if (useMemory) { memory.set(k, v); return; }
-      try { localStorage.setItem(k, v); } catch {}
+      try { localStorage.setItem(k, v); } catch { }
     },
     remove(k) {
       if (useMemory) { memory.delete(k); return; }
-      try { localStorage.removeItem(k); } catch {}
+      try { localStorage.removeItem(k); } catch { }
     },
     keys() {
       if (useMemory) return [...memory.keys()];
@@ -239,7 +240,7 @@ window.Store = (() => {
       if (s === null) return fb;
       try { return JSON.parse(s); } catch { return fb; }
     },
-    set(key, value) { try { raw.set(NS + key, JSON.stringify(value)); } catch {} },
+    set(key, value) { try { raw.set(NS + key, JSON.stringify(value)); } catch { } },
     remove(key) { raw.remove(NS + key); },
     reset() { raw.keys().filter(k => k.startsWith(NS)).forEach(k => raw.remove(k)); },
     get isMemoryOnly() { return useMemory; },
@@ -247,4 +248,4 @@ window.Store = (() => {
 })();
 
 window.escapeHtml = s => String(s).replace(/[&<>"']/g, c =>
-  ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' })[c]);
+  ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);

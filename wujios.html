@@ -59,7 +59,9 @@
           <button class="lock-pin-key" data-digit="9">9</button>
           <button class="lock-pin-key lock-pin-key--empty" disabled></button>
           <button class="lock-pin-key" data-digit="0">0</button>
-          <button class="lock-pin-key lock-pin-key--action" data-action="backspace">⌫</button>
+
+          <!-- 右下角：取消 / 退格 -->
+          <button class="lock-pin-key lock-pin-action-key" id="lockPinTextBtn" type="button">取消</button>
         </div>
       </div>
     </div>
@@ -172,6 +174,18 @@
       </div>
     </div>
 
+    <div class="power-overlay power-overlay--update">
+      <div class="update-stage">
+        <div class="update-brand">WujiOS</div>
+        <div class="update-bar"><i id="updateBar"></i></div>
+        <div class="update-text">正在更新中 请勿关机</div>
+      </div>
+      <div class="update-powered">
+        —Powered by—<br />
+        <span style="font-weight: 500;font-size: 16px;letter-spacing: 0.2px;">OpenWuji</span>
+      </div>
+    </div>
+
     <div class="power-overlay power-overlay--shutdown">
       <div class="shutdown-text">正在关机…</div>
     </div>
@@ -277,6 +291,19 @@
     function setView(v) {
       S.view = v;
       osEl.dataset.view = v;
+
+      if (v === 'locked') {
+        appView.style.pointerEvents = 'none';
+        homeView.style.pointerEvents = 'none';
+      } else {
+        appView.style.removeProperty('pointer-events');
+        homeView.style.removeProperty('pointer-events');
+      }
+
+      if (v === 'locked') {
+        currentUnlockProgress = 0;
+      }
+
       try {
         WujiTheme.post('view', { view: v });
         if (v === 'locked') {
@@ -619,7 +646,7 @@
         previewEl.removeAttribute('data-dragging');
         previewEl.removeAttribute('data-bundle');
         previewEl.style.display = 'none';
-        (document.getElementById('os') || document.body).appendChild(ghostEl);
+        (document.getElementById('os') || document.body).appendChild(previewEl);
       }
 
       function destroyPreview() {
@@ -1622,12 +1649,29 @@
     let pinChecking = false;
     let errorTimer = null;
 
+    const lockPinTextBtn = document.getElementById('lockPinTextBtn');
+
+    function updatePinTextBtn() {
+      lockPinTextBtn.textContent = enteredPin.length > 0 ? '退格' : '取消';
+    }
+
+    // 把 updatePinTextBtn 合并到现有的 updatePasswordDots 里
     function updatePasswordDots() {
       const dots = passwordDots.querySelectorAll('.password-dot');
       dots.forEach((dot, i) => {
         dot.classList.toggle('is-filled', i < enteredPin.length);
       });
+      updatePinTextBtn();   // ← 新增
     }
+
+    lockPinTextBtn.addEventListener('click', () => {
+      if (enteredPin.length > 0) {
+        enteredPin = enteredPin.slice(0, -1);
+        updatePasswordDots();
+      } else {
+        hidePasswordPanel();   // 取消：退出密码面板，回到锁屏
+      }
+    });
 
     function showPasswordPanel() {
       enteredPin = '';
@@ -1640,7 +1684,7 @@
       passwordPanel.classList.add('is-open');
     }
 
-    function hidePasswordPanel() {
+    function hidePasswordPanel(resetProgress = true) {
       passwordPanel.classList.remove('is-open');
       lockContent.classList.remove('is-hidden');
       clearTimeout(errorTimer);
@@ -1649,6 +1693,16 @@
       updatePasswordDots();
       passwordTitle.textContent = '输入密码';
       passwordTitle.classList.remove('is-error');
+
+      appView.style.removeProperty('visibility');
+      appView.style.removeProperty('opacity');
+      homeView.style.removeProperty('visibility');
+      homeView.style.removeProperty('opacity');
+
+      if (resetProgress) {
+        currentUnlockProgress = 0;
+        try { WujiTheme.post('unlock-cancel', {}); } catch { }
+      }
     }
 
     function checkPin() {
@@ -1716,26 +1770,75 @@
       }
     });
 
+    let currentUnlockProgress = 0;
+
+    function postUnlockProgress(p) {
+      currentUnlockProgress = p;
+      try { WujiTheme.postProgress(p); } catch { }
+    }
+
     function completeUnlock(target) {
+      const startProgress = currentUnlockProgress;
+
+      // 已经到 1（无密码路径拖到底），直接收尾
+      if (startProgress >= 0.99) {
+        finishUnlock(target);
+        return;
+      }
+
+      // 密码路径：从 0.3 平滑补间到 1
+      const duration = 360;
+      const startTime = performance.now();
+
+      function tick(now) {
+        const t = Math.min(1, (now - startTime) / duration);
+        const eased = 1 - Math.pow(1 - t, 3);   // easeOutCubic
+        const p = startProgress + (1 - startProgress) * eased;
+        postUnlockProgress(p);
+
+        if (t < 1) {
+          requestAnimationFrame(tick);
+        } else {
+          finishUnlock(target);
+        }
+      }
+      requestAnimationFrame(tick);
+    }
+
+    function finishUnlock(target) {
       try { WujiTheme.post('unlock-finish', {}); } catch { }
 
       lockedView.style.transition = 'transform .3s ease, opacity .3s ease';
-      homeView.style.transition = 'opacity .3s ease';
       lockedView.style.transform = 'translateY(-100%)';
       lockedView.style.opacity = '0';
-      homeView.style.opacity = '1';
+
+      // ★ 按 target 选一个 view 淡入
+      if (target === 'app') {
+        appView.style.setProperty('visibility', 'visible');
+        appView.style.transition = 'opacity .3s ease';
+        appView.style.opacity = '1';
+      } else {
+        homeView.style.setProperty('visibility', 'visible');
+        homeView.style.transition = 'opacity .3s ease';
+        homeView.style.opacity = '1';
+      }
 
       setTimeout(() => {
         setView(target);
         lockedView.style.transition = '';
         lockedView.style.transform = '';
         lockedView.style.opacity = '';
-        homeView.style.transition = '';
-        homeView.style.opacity = '';
-        homeView.style.removeProperty('visibility');
+
+        // ★ 清理 inline style，交还给 CSS 控制
         appView.style.removeProperty('visibility');
-        hidePasswordPanel();
-      }, 320);
+        appView.style.removeProperty('opacity');
+        appView.style.removeProperty('transition');
+        homeView.style.removeProperty('visibility');
+        homeView.style.removeProperty('opacity');
+        homeView.style.removeProperty('transition');
+
+        hidePasswordPanel(false);
+      }, 100);
     }
 
     (function bindLockGesture() {
@@ -1744,6 +1847,7 @@
       let deltaY = 0;
       let hasPassword = false;
       let pointerId = null;
+      let unlockTarget = 'home';        // ★ 新增：本次解锁的目标
 
       lockedView.addEventListener('pointerdown', e => {
         if (S.view !== 'locked' || S.power !== 'running') return;
@@ -1760,12 +1864,17 @@
         pointerId = e.pointerId;
         hasPassword = !!Store.get('lock.password', '');
 
-        const target = S.viewBeforeLock === 'app' && S.currentBundle ? 'app' : 'home';
+        // ★ 一次性算好目标，后续都用它
+        unlockTarget = (S.viewBeforeLock === 'app' && S.currentBundle) ? 'app' : 'home';
 
         if (!hasPassword) {
-          if (target === 'app') appView.style.setProperty('visibility', 'visible');
-          homeView.style.setProperty('visibility', 'visible');
-          homeView.style.setProperty('opacity', '0');
+          if (unlockTarget === 'app') {
+            appView.style.setProperty('visibility', 'visible');
+            appView.style.opacity = '0';
+          } else {
+            homeView.style.setProperty('visibility', 'visible');
+            homeView.style.opacity = '0';
+          }
         }
 
         lockedView.style.transition = 'none';
@@ -1786,13 +1895,20 @@
           const p = Math.min(-dy / 300, 1);
           lockedView.style.transform = `translateY(${damp}px)`;
           lockedView.style.opacity = String(1 - p * 0.25);
-          WujiTheme.postProgress(p * 0.3);
+          postUnlockProgress(p * 0.3);
         } else {
           const p = Math.min(-dy / 120, 1);
           lockedView.style.transform = `translateY(${dy}px)`;
           lockedView.style.opacity = String(1 - p * 0.65);
-          homeView.style.opacity = String(p);
-          WujiTheme.postProgress(p);
+
+          // ★ 只对目标 view 做淡入
+          if (unlockTarget === 'app') {
+            appView.style.opacity = String(p);
+          } else {
+            homeView.style.opacity = String(p);
+          }
+
+          postUnlockProgress(p);
         }
       }, { passive: false });
 
@@ -1802,13 +1918,18 @@
         dragging = false;
         pointerId = null;
 
-        const target = S.viewBeforeLock === 'app' && S.currentBundle ? 'app' : 'home';
+        const target = unlockTarget;
         const unlocked = -deltaY > 70;
 
         if (hasPassword) {
           lockedView.style.transition = 'transform .22s ease, opacity .22s ease';
           lockedView.style.transform = '';
           lockedView.style.opacity = '';
+
+          if (!unlocked) {
+            postUnlockProgress(0);
+            cleanupViewStyles();          // ★ 取消时清理 inline style
+          }
 
           setTimeout(() => {
             lockedView.style.transition = '';
@@ -1823,21 +1944,30 @@
           completeUnlock(target);
         } else {
           WujiTheme.post('unlock-cancel', {});
+          currentUnlockProgress = 0;
           lockedView.style.transition = 'transform .26s ease, opacity .26s ease';
-          homeView.style.transition = 'opacity .26s ease';
           lockedView.style.transform = '';
           lockedView.style.opacity = '';
-          homeView.style.opacity = '0';
+
+          if (unlockTarget === 'app') {
+            appView.style.opacity = '0';
+          } else {
+            homeView.style.opacity = '0';
+          }
 
           setTimeout(() => {
             lockedView.style.transition = '';
-            homeView.style.transition = '';
-            homeView.style.opacity = '';
-            homeView.style.removeProperty('visibility');
-            appView.style.removeProperty('visibility');
+            cleanupViewStyles();          // ★ 回弹后清理
           }, 280);
         }
         deltaY = 0;
+      }
+
+      function cleanupViewStyles() {
+        appView.style.removeProperty('visibility');
+        appView.style.removeProperty('opacity');
+        homeView.style.removeProperty('visibility');
+        homeView.style.removeProperty('opacity');
       }
 
       lockedView.addEventListener('pointerup', endDrag);
@@ -2145,10 +2275,10 @@
       await sleep(T.expandOS);
       await sleep(T.hold);
     }
-    async function powerOn() {
-      if (S.power !== 'off') return;
-      setPower('booting');
 
+    async function doBoot() {
+      setPower('booting');
+      scheduleBuiltinPreload();
       await playBootAnimation();
 
       hidePasswordPanel();
@@ -2175,14 +2305,65 @@
       S.viewBeforeLock = 'home';
       setView('locked');
       setPower('running');
-      if (Store.get('wujios.lastbootversion', null) !== '1.0.110') {
-        Store.set('wujios.lastbootversion', '1.0.110');
-      }
-      try { WujiApps.boot(); } catch (e) { console.error(e); }
 
-      scheduleBuiltinPreload();
+      try { WujiApps.boot(); } catch (e) { console.error(e); }
     }
 
+    async function runUpdate() {
+      setPower('updating');
+
+      const bar = document.getElementById('updateBar');
+      if (bar) {
+        bar.style.transition = 'none';
+        bar.style.width = '0%';
+        void bar.offsetWidth;
+      }
+
+      const DURATION = 20000;
+      const start = performance.now();
+
+      await new Promise(resolve => {
+        const tick = now => {
+          if (!bar || !bar.isConnected) return resolve();
+          const p = Math.min(1, (now - start) / DURATION);
+          bar.style.width = (p * 100).toFixed(2) + '%';
+          if (p < 1) requestAnimationFrame(tick);
+          else resolve();
+        };
+        requestAnimationFrame(tick);
+      });
+
+      Store.set('wujios.lastbootversion', '1.0.112');
+
+      await sleep(400);
+
+      setPower('shuttingdown');
+      await sleep(800);
+
+      setPower('off');
+      await new Promise(r =>
+        requestAnimationFrame(() => requestAnimationFrame(r))
+      );
+
+      await doBoot();
+    }
+
+    async function powerOn() {
+      if (S.power !== 'off') return;
+
+      const lastVersion = Store.get('wujios.lastbootversion', null);
+
+      if (lastVersion === null) {
+        /* 首次开机：直接写版本，正常开机 */
+        Store.set('wujios.lastbootversion', '1.0.112');
+      } else if (lastVersion !== '1.0.112') {
+        /* 已有旧版本号且不是 1.0.112 → 更新 */
+        await runUpdate();
+        return;
+      }
+
+      await doBoot();
+    }
     async function powerOff() {
       if (S.power !== 'running' && S.power !== 'booting') return;
       setPower('shuttingdown');
@@ -2202,6 +2383,85 @@
       S.viewBeforeLock = 'home';
       setView('locked');
       setPower('off');
+    }
+    async function deleteWujiosDatabases() {
+      if (typeof indexedDB === 'undefined' || !indexedDB.databases) return;
+      let list;
+      try { list = await indexedDB.databases(); }
+      catch { return; }
+
+      const names = list
+        .map(d => d && d.name)
+        .filter(n => n && n.startsWith('wujios'));
+
+      await Promise.all(names.map(name => new Promise(resolve => {
+        let req;
+        try { req = indexedDB.deleteDatabase(name); }
+        catch { return resolve(); }
+        req.onsuccess = () => resolve();
+        req.onerror = () => resolve();
+        /* 别的 tab 还开着这个库 → 删不掉，只能放行，无法完全解决 */
+        req.onblocked = () => resolve();
+      })));
+    }
+
+    /* 清除全部用户数据 → 重启 */
+    async function clearAllData() {
+      /* 1. 关掉所有浮层，避免残留 */
+      try { HardwareUI?.hideMenu?.(); } catch { }
+      try { WujiDialog.close(); } catch { }
+      try { WujiOverlay.closeAll(); } catch { }
+      try { PanelSystem.close(); } catch { }
+      try { WujiNotification.hideBanner?.(); } catch { }
+      try { WujiNotification.clearAll(); } catch { }
+      setScreenOff(false);
+
+      /* 2. 停应用：先 shutdown 让应用清定时器/监听，再 dispose 当前页面 */
+      const wasRunning = (S.power === 'running' || S.power === 'booting');
+      if (wasRunning) {
+        setPower('shuttingdown');
+        try { disposeCurrentApp(); } catch (e) { console.error(e); }
+        try { WujiApps.shutdown(); } catch (e) { console.error(e); }
+      }
+
+      /* 3. 把已安装应用从内存注册表也摘掉
+            —— 否则 Store 清了、桌面却还显示已安装应用，直到刷新 */
+      try {
+        for (const app of WujiApps.installeds()) {
+          try { WujiApps.unregister(app.bundlename); } catch { }
+        }
+      } catch { }
+
+      /* 4. 删 IndexedDB：先走 AppStorage 的完整清理（含 apis Map 与 mem 降级） */
+      try { await AppStorage.destroy(); }
+      catch (e) { console.warn('[clear-data] AppStorage.destroy', e); }
+      /* 再兜底扫一遍 wujios-* 前缀（为未来拆库留余地） */
+      try { await deleteWujiosDatabases(); }
+      catch (e) { console.warn('[clear-data] deleteWujiosDatabases', e); }
+
+      /* 5. 清 localStorage / sessionStorage */
+      try { Store.reset(); } catch (e) { console.warn('[clear-data] Store.reset', e); }
+      try { sessionStorage.removeItem('wujios:restore-pending'); } catch { }
+
+      /* 6. 主题：unmount 清 shadow DOM 与 CSS 变量，init 重新加载系统默认 */
+      try { WujiTheme.unmount(); } catch { }
+      try { WujiTheme.init(); } catch { }
+
+      /* 7. 桌面：清 Store 里的 layout，按当前注册表重新 seed */
+      try {
+        DesktopLayout.reset();
+        DesktopLayout.seedFromRegistry();
+        currentPage = 0;
+        renderHome();
+      } catch (e) { console.warn('[clear-data] DesktopLayout', e); }
+
+      /* 8. 回到 off → 重新开机（powerOn 会走 lastbootversion 检查，
+            此时 Store 已清空，会走首次开机分支，不触发更新动画） */
+      setPower('off');
+      setView('locked');
+      S.viewBeforeLock = 'home';
+      await sleep(200);
+      powerOn();
     }
     async function restart() {
       await powerOff();
@@ -2233,13 +2493,7 @@
           break;
 
         case 'clear-data':
-          Store.reset();
-          DesktopLayout.reset();
-          DesktopLayout.seedFromRegistry();
-          currentPage = 0;
-          renderHome();
-          if (S.power === 'off') powerOn();
-          else restart();
+          clearAllData();
           break;
 
         case 'volume-change':
@@ -2425,7 +2679,6 @@
       _builtinPreloadScheduled = true;
 
       const run = async () => {
-        /* 1) 内置应用脚本立即并行发起（不依赖 store/apps.js） */
         const builtinLoads = BUILTIN_APPS.map(m => {
           if (!m.src) return Promise.resolve();
           return WujiAppLoader.load(m.src, m.version).catch(err => {
@@ -2433,7 +2686,6 @@
           });
         });
 
-        /* 2) 串行前置脚本（store/apps.js） */
         for (const src of PRELOAD_SCRIPTS) {
           try {
             await WujiAppLoader.load(src);
@@ -2442,7 +2694,6 @@
           }
         }
 
-        /* 3) 清理不在市场清单里的已安装应用（必须在加载 installed 脚本前） */
         try {
           const n = await WujiAppInstaller.pruneMissing?.();
           if (n) console.log('[prune] removed', n);
@@ -2450,7 +2701,6 @@
           console.warn('[prune] 失败', e);
         }
 
-        /* 4) 已安装市场应用脚本并行发起 */
         const installedLoads = WujiApps.installeds().map(app => {
           if (!app._src) return Promise.resolve();
           return WujiAppLoader.load(app._src, app.version).catch(err => {
@@ -2596,28 +2846,25 @@
       </svg>`;
 
       function buildMenuButtons() {
-        if (S.power === 'off') {
-          return `
-            <button class="hw-menu-btn" data-action="power-on" type="button">
-              ${ICON_POWER}
-              <span>开机</span>
-            </button>
-          `;
-        }
         return `
-          <button class="hw-menu-btn" data-action="restart" type="button">
-            ${ICON_REBOOT}
-            <span>重启</span>
-          </button>
-          <button class="hw-menu-btn" data-action="shutdown" type="button">
-            ${ICON_POWER}
-            <span>关机</span>
-          </button>
-        `;
+    <button class="hw-menu-btn" data-action="restart" type="button">
+      ${ICON_REBOOT}
+      <span>重启</span>
+    </button>
+    <button class="hw-menu-btn" data-action="shutdown" type="button">
+      ${ICON_POWER}
+      <span>关机</span>
+    </button>
+  `;
       }
 
       function showMenu() {
-        if (S.power === 'booting' || S.power === 'shuttingdown') return;
+        if (S.power === 'booting' || S.power === 'shuttingdown' || S.power === 'updating') return;
+        if (S.power === 'off') {
+          powerOn();
+          return;
+        }
+
         if (menuEl.classList.contains('is-open')) {
           hideMenu();
           return;
@@ -2657,7 +2904,7 @@
           powerOn();
           return;
         }
-        if (S.power === 'booting' || S.power === 'shuttingdown') return;
+        if (S.power === 'booting' || S.power === 'shuttingdown' || S.power === 'updating') return;
 
         if (isMenuOpen()) hideMenu();
 

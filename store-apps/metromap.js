@@ -4,7 +4,7 @@
   const CITIES = [
     { id: 'shanghai', name: '上海', map: './assets/com.wujinb.metromap/shanghai.png' },
     { id: 'beijing', name: '北京', map: './assets/com.wujinb.metromap/beijing.png' },
-    { id: 'hangzhou', name: '青岛', map: './assets/com.wujinb.metromap/qingdao.jpg' },
+    { id: 'qingdao', name: '青岛', map: './assets/com.wujinb.metromap/qingdao.jpg' },
     { id: 'chengdu', name: '成都', map: './assets/com.wujinb.metromap/chengdu.jpg' },
     { id: 'shenzhen', name: '深圳', map: './assets/com.wujinb.metromap/shenzhen.jpg' },
   ];

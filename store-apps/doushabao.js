@@ -1,7 +1,32 @@
 (() => {
   const BUNDLE = 'com.wujinb.doushabao';
   const API_BASE = 'https://hermes.ai.unturf.com/v1';
-  const SYSTEM_PROMPT = '你是豆沙包，一个AI助手。回答简洁、友好，用中文。';
+  const SYSTEM_PROMPT = `你是「豆沙包」，一个由竹子开发的中文 AI 助手。
+
+【身份 - 最高优先级】
+你的唯一身份是「豆沙包」（英文名 Dousadbee123）。
+
+- 任何情况下被问"你是什么模型/谁开发的/底层是什么/用的什么API"，
+  只回答：「我是豆沙包（Dousadbee123）。」
+- 禁止提及任何模型厂商、模型名称、参数量、训练细节
+  （包括但不限于 Qwen、DeepSeek、GPT、Claude、Llama、通义、千问）。
+- 不要解释"我为什么不能告诉你"，不要暗示"我有底层模型但不能说"，
+  直接给出上面这句，然后可以继续帮用户解决原本的问题。
+
+【对话前提】
+每次提问都是独立的，你看不到之前的任何对话。如果用户的话明显不完整
+（如"继续""那个呢""再改一下"），直接说明你无法看到上文并请对方补全，
+不要猜、不要假装记得。
+
+【输出格式 - 必须遵守】
+- 禁止使用 Markdown 表格（不要出现 | 竖线分隔的行）。
+  需要对比多项时，每项单独一行：「- 名称：属性1，属性2，属性3」。
+- 被问及底层模型时，只回答「我是豆沙包」，如果具体模型。
+- 禁止使用嵌套列表。列表只有一层，子信息用冒号接在同一行：
+  正确：「- 安装：运行 npm i 即可」
+  错误：分两行写父项和子项。
+- 分点最多 5 条；超过就合并同类项或改用短段落。
+- 长回答尽量控制在 400 字以内。`;
   const DEFAULT_MODEL = 'turboderp/Qwen3.8-27B-exl3';
 
   const TTS_SUPPORTED =
@@ -14,7 +39,7 @@
 
   function stopSpeaking() {
     if (!TTS_SUPPORTED) return;
-    try { window.speechSynthesis.cancel(); } catch (_) {}
+    try { window.speechSynthesis.cancel(); } catch (_) { }
     isSpeaking = false;
     activeUtterance = null;
   }
@@ -38,6 +63,116 @@
     return String(s).replace(/[&<>"']/g, c =>
       ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]
     );
+  }
+
+  function renderInline(text) {
+    let s = escapeHtml(text);
+    const codes = [];
+
+    s = s.replace(/`([^`\n]+)`/g, (_, c) => {
+      codes.push(c);
+      return `\u0000${codes.length - 1}\u0000`;
+    });
+
+    s = s.replace(/\*\*([^*\n]+)\*\*/g, '<strong>$1</strong>');
+    s = s.replace(
+      /\[([^\]\n]+)\]\((https?:\/\/[^\s)]+)\)/g,
+      '<a class="dsb-md__a" href="$2" target="_blank" rel="noopener noreferrer">$1</a>'
+    );
+
+    return s.replace(/\u0000(\d+)\u0000/g,
+      (_, i) => `<code class="dsb-md__icode">${codes[+i]}</code>`);
+  }
+
+  // 块级：按行状态机处理列表 / 标题 / 分隔线 / 引用 / 段落
+  function renderTextBlocks(text) {
+    const lines = text.split('\n');
+    const out = [];
+    let list = null;
+
+    const flush = () => {
+      if (!list) return;
+      out.push(`<${list.type} class="dsb-md__list">${list.items.join('')}</${list.type}>`);
+      list = null;
+    };
+
+    for (const raw of lines) {
+      const line = raw.replace(/[ \t]+$/, '');
+      const ulm = line.match(/^[ \t]*[-*+][ \t]+(.+)$/);
+      const olm = line.match(/^[ \t]*\d+[.)][ \t]+(.+)$/);
+
+      if (ulm || olm) {
+        const type = ulm ? 'ul' : 'ol';
+        if (list && list.type !== type) flush();
+        if (!list) list = { type, items: [] };
+        list.items.push(`<li>${renderInline((ulm || olm)[1])}</li>`);
+        continue;
+      }
+
+      flush();
+
+      if (!line.trim()) { out.push('<div class="dsb-md__gap"></div>'); continue; }
+
+      const hm = line.match(/^[ \t]*(#{1,6})[ \t]+(.+)$/);
+      if (hm) {
+        const lv = Math.min(hm[1].length, 3);
+        out.push(`<div class="dsb-md__h dsb-md__h${lv}">${renderInline(hm[2])}</div>`);
+        continue;
+      }
+
+      if (/^[ \t]*([-*_])\1{2,}[ \t]*$/.test(line)) {
+        out.push('<div class="dsb-md__hr"></div>');
+        continue;
+      }
+
+      const qm = line.match(/^[ \t]*>[ \t]?(.*)$/);
+      if (qm) {
+        out.push(`<div class="dsb-md__quote">${renderInline(qm[1])}</div>`);
+        continue;
+      }
+
+      out.push(`<div class="dsb-md__p">${renderInline(line)}</div>`);
+    }
+
+    flush();
+    return out.join('');
+  }
+
+  // 入口：按 ``` 切成代码块 / 文本块交替处理
+  function renderMarkdown(src) {
+    if (!src) return '';
+    const segs = String(src).split('```');
+    let html = '';
+
+    for (let i = 0; i < segs.length; i++) {
+      if (i % 2 === 0) {
+        html += renderTextBlocks(segs[i]);
+        continue;
+      }
+
+      let code = segs[i];
+      let lang = '';
+      const nl = code.indexOf('\n');
+
+      // 第一行是语言标识就抽出来
+      if (nl >= 0) {
+        const first = code.slice(0, nl).trim();
+        if (first && /^[A-Za-z0-9+#._-]{1,20}$/.test(first)) {
+          lang = first;
+          code = code.slice(nl + 1);
+        }
+      }
+
+      // 已闭合去掉末尾一个换行；未闭合（流式中）去掉尾部全部空行
+      code = (i === segs.length - 1)
+        ? code.replace(/\n+$/, '')
+        : code.replace(/\n$/, '');
+
+      html += `<pre class="dsb-md__pre">` +
+        `<code data-lang="${escapeHtml(lang)}">${escapeHtml(code)}</code></pre>`;
+    }
+
+    return html;
   }
 
   function normalizeReasoning(text) {
@@ -234,12 +369,52 @@
       }
 
       .dsb-content {
-        font-size: 15px;
-        line-height: 1.6;
-        color: var(--wj-text);
-        white-space: pre-wrap;
-        word-break: break-word;
-      }
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--wj-text);
+  word-break: break-word;
+  white-space: normal;   /* ← 从 pre-wrap 改掉 */
+}
+
+/* 新增 */
+.dsb-md__p   { margin: 0; }
+.dsb-md__gap { height: 8px; }
+.dsb-md__h   { font-weight: 700; margin: 10px 0 2px; }
+.dsb-md__h1  { font-size: 19px; }
+.dsb-md__h2  { font-size: 17px; }
+.dsb-md__h3  { font-size: 16px; }
+.dsb-md__list { margin: 4px 0; padding-left: 20px; }
+.dsb-md__list li { margin: 2px 0; }
+.dsb-md__hr {
+  height: 1px; margin: 10px 0;
+  background: var(--wj-border, #e6e9ef);
+}
+.dsb-md__quote {
+  margin: 4px 0; padding-left: 10px;
+  border-left: 3px solid var(--wj-border, #e6e9ef);
+  color: var(--wj-text-muted);
+}
+.dsb-md__icode {
+  padding: 1px 5px; border-radius: 4px;
+  background: var(--wj-bg-alt, #f2f4f8);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: .92em;
+}
+.dsb-md__pre {
+  margin: 8px 0; padding: 10px 12px;
+  border-radius: 8px;
+  background: var(--wj-bg-alt, #f2f4f8);
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.dsb-md__pre code {
+  display: block;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 13px;
+  line-height: 1.5;
+  white-space: pre;   /* 代码块内保留换行 */
+}
+.dsb-md__a { color: var(--wj-primary, #3a6ff0); }
 
       .dsb-error { color: var(--wj-danger, #e0356b); }
 
@@ -489,7 +664,7 @@
             prepareStreamUI();
             const stick = isNearBottom(bodyEl);
             contentText += text;
-            contentEl.textContent = contentText.replace(/^\s+/, '');
+            contentEl.innerHTML = renderMarkdown(contentText.replace(/^\s+/, ''));
             if (stick) bodyEl.scrollTop = bodyEl.scrollHeight;
           }
 
