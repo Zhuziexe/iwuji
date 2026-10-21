@@ -1103,25 +1103,42 @@
       menu.style.left = left + 'px';
       menu.style.top = top + 'px';
 
-      menu.querySelector('.app-menu__item').addEventListener('click', async () => {
+      menu.querySelector('.app-menu__item').addEventListener('click', () => {
         hideAppMenu();
 
-        const liveEl = desktopViewportEl.querySelector(
-          `.app[data-bundle="${bundle}"]`
-        );
-        if (liveEl) {
-          liveEl.style.transition = 'opacity .18s ease, transform .18s ease';
-          liveEl.style.opacity = '0';
-          liveEl.style.transform = 'scale(.8)';
-        }
+        const app = WujiApps.get(bundle);
+        if (!app) return;
 
-        setTimeout(async () => {
-          try {
-            await WujiAppInstaller.uninstall(bundle);
-          } catch (err) {
-            console.error('[uninstall]', err);
+        WujiDialog.show({
+          bundlename: '',                       // 空字符串 = 系统弹窗，不随应用关闭
+          icon: app.icon || '',
+          title: `卸载“${app.name || bundle}”`,
+          content: '卸载后，应用内本地数据同步清除',
+          buttons: [
+            { value: '取消', color: 'var(--wj-primary)' },
+            { value: '卸载', color: 'var(--wj-danger)' },
+          ],
+        }).then(async res => {
+          if (res !== '卸载') return;
+
+          // 桌面图标先缩小淡出，再真正卸载
+          const liveEl = desktopViewportEl.querySelector(
+            `.app[data-bundle="${bundle}"]`
+          );
+          if (liveEl) {
+            liveEl.style.transition = 'opacity .18s ease, transform .18s ease';
+            liveEl.style.opacity = '0';
+            liveEl.style.transform = 'scale(.8)';
           }
-        }, 180);
+
+          setTimeout(async () => {
+            try {
+              await WujiAppInstaller.uninstall(bundle);
+            } catch (err) {
+              console.error('[uninstall]', err);
+            }
+          }, 180);
+        });
       });
 
       appMenuCloseHandler = ev => {
@@ -2332,7 +2349,7 @@
         requestAnimationFrame(tick);
       });
 
-      Store.set('wujios.lastbootversion', '1.0.112');
+      Store.set('wujios.lastbootversion', '1.0.113');
 
       await sleep(400);
 
@@ -2354,9 +2371,9 @@
 
       if (lastVersion === null) {
         /* 首次开机：直接写版本，正常开机 */
-        Store.set('wujios.lastbootversion', '1.0.112');
-      } else if (lastVersion !== '1.0.112') {
-        /* 已有旧版本号且不是 1.0.112 → 更新 */
+        Store.set('wujios.lastbootversion', '1.0.113');
+      } else if (lastVersion !== '1.0.113') {
+        /* 已有旧版本号且不是 1.0.113 → 更新 */
         await runUpdate();
         return;
       }

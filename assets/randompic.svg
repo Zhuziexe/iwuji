@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <rect width="256" height="256" fill="#5856d6"/>
+  <!-- 相框 -->
+  <rect x="48" y="64" width="160" height="128" rx="12"
+        fill="#ffffff" stroke="#1c2536" stroke-width="8"/>
+  <!-- 山 -->
+  <path d="M64 168 L108 116 L140 152 L168 120 L192 168 Z"
+        fill="#5856d6" stroke="#1c2536" stroke-width="6"
+        stroke-linejoin="round"/>
+  <!-- 太阳 -->
+  <circle cx="170" cy="100" r="12"
+          fill="#ffd93b" stroke="#1c2536" stroke-width="5"/>
+</svg>

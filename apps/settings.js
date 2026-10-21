@@ -1058,19 +1058,19 @@
 
         mount(root) {
           const progressEl = root.querySelector('#ovBackupProgress');
-          const doneEl     = root.querySelector('#ovBackupDone');
-          const percentEl  = root.querySelector('#ovBackupPercent');
-          const titleEl    = root.querySelector('#ovBackupTitle');
-          const okBtn      = root.querySelector('#ovBackupOk');
+          const doneEl = root.querySelector('#ovBackupDone');
+          const percentEl = root.querySelector('#ovBackupPercent');
+          const titleEl = root.querySelector('#ovBackupTitle');
+          const okBtn = root.querySelector('#ovBackupOk');
 
           const startTime = performance.now();
-          let exportData     = null;    // 导出完成后先存住，进度走完再下载
-          let exportDone     = false;
+          let exportData = null;    // 导出完成后先存住，进度走完再下载
+          let exportDone = false;
           let exportDoneTime = 0;
-          let percentAtDone  = 0;
-          let failed         = false;
-          let finished       = false;   // 100% 到了、下载完了、切到完成态
-          let rafId          = null;
+          let percentAtDone = 0;
+          let failed = false;
+          let finished = false;   // 100% 到了、下载完了、切到完成态
+          let rafId = null;
 
           function setPercent(p) {
             percentEl.textContent = Math.floor(p) + '%';
@@ -1121,10 +1121,10 @@
               const data = await WujiBackup.exportAll();
               if (!root.isConnected) return;
 
-              exportData     = data;
-              exportDone     = true;
+              exportData = data;
+              exportDone = true;
               exportDoneTime = performance.now();
-              percentAtDone  = parseFloat(percentEl.textContent) || 0;
+              percentAtDone = parseFloat(percentEl.textContent) || 0;
               if (percentAtDone >= 100) percentAtDone = 90;
             } catch (e) {
               console.error('[settings/backup]', e);
@@ -1250,7 +1250,7 @@
           root.querySelector('[data-act="backup"]')
             ?.addEventListener('click', () => ctx.push('backup'));
           const target = ctx.data && ctx.data.route;
-          
+
           if (target && ctx.nav && ctx.nav.routes && ctx.nav.routes[target]) {
             requestAnimationFrame(() => {
               ctx.nav.reset(target, {});
@@ -1269,7 +1269,7 @@
 
               <div class="settings-about-card">
                 <div class="settings-about-card__title">WujiOS</div>
-                <div class="settings-about-card__version">1.0.112</div>
+                <div class="settings-about-card__version">1.0.113</div>
                 <div class="settings-about-card__btn" id="checkUpdateBtn">检查更新</div>
               </div>
 
@@ -1284,7 +1284,7 @@
                 </div>
                 <div class="settings-row">
                   <span>WujiOS版本</span>
-                  <span class="settings-row__value">1.0.112</span>
+                  <span class="settings-row__value">1.0.113</span>
                 </div>
                 <div class="settings-row">
                   <span>OpenWuji版本</span>
@@ -1599,8 +1599,24 @@
 
             btn.addEventListener('click', async () => {
               if (busy) return;
-              busy = true;
 
+              const app = WujiApps.get(bundle);
+              if (!app) return;
+
+              const res = await WujiDialog.show({
+                bundlename: '',
+                icon: app.icon || '',
+                title: `卸载“${app.name || bundle}”`,
+                content: '卸载后，应用内本地数据同步清除',
+                buttons: [
+                  { value: '取消', color: 'var(--wj-primary)' },
+                  { value: '卸载', color: 'var(--wj-danger)' },
+                ],
+              });
+
+              if (res !== '卸载') return;
+
+              busy = true;
               btn.textContent = '卸载中...';
               btn.disabled = true;
 
@@ -2369,7 +2385,7 @@
         },
 
         mount(root, ctx) {
-          const statusEl  = root.querySelector('#backupStatus');
+          const statusEl = root.querySelector('#backupStatus');
           const fileInput = root.querySelector('#backupFileInput');
           const exportBtn = root.querySelector('[data-act="export"]');
           const importBtn = root.querySelector('[data-act="import"]');

@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <rect width="256" height="256" fill="#ff2d55"/>
+
+  <!-- 横梁 -->
+  <rect x="104" y="72" width="90" height="16" fill="#ffffff"/>
+  <!-- 左竖线 -->
+  <rect x="104" y="72" width="10" height="108" fill="#ffffff"/>
+  <!-- 右竖线 -->
+  <rect x="184" y="72" width="10" height="108" fill="#ffffff"/>
+  <!-- 左音符头 -->
+  <ellipse cx="88" cy="180" rx="26" ry="20" fill="#ffffff"
+           transform="rotate(-25 88 180)"/>
+  <!-- 右音符头 -->
+  <ellipse cx="168" cy="180" rx="26" ry="20" fill="#ffffff"
+           transform="rotate(-25 168 180)"/>
+</svg>

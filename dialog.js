@@ -34,7 +34,7 @@ window.WujiDialog = (() => {
 
   function esc(s) {
     return String(s == null ? '' : s).replace(/[&<>"']/g, c =>
-      ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' })[c]);
+      ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
   }
 
   function dismiss(entry, value) {
@@ -72,22 +72,33 @@ window.WujiDialog = (() => {
         return `<button class="wj-dialog__btn" data-idx="${i}" type="button" style="color:${esc(color)}">${esc(b.value || '')}</button>`;
       }).join('');
 
-      const titleHtml   = opts.title   ? `<div class="wj-dialog__title">${esc(opts.title)}</div>` : '';
+      // ★ 图标：只有路径形式才渲染，空串 / null / undefined / emoji 都不显示
+      const iconSrc = opts.icon && /^(https?:|data:|\.{1,2}\/|\/)/.test(String(opts.icon))
+        ? String(opts.icon)
+        : '';
+      const iconHtml = iconSrc
+        ? `<div style="width:56px;height:56px;margin:0 auto 14px;border-radius:14px;overflow:hidden;display:flex;align-items:center;justify-content:center;background:var(--wj-bg-alt,#eef1f6);box-shadow:0 2px 8px rgba(0,0,0,.06);">
+       <img src="${esc(iconSrc)}" alt="" style="width:100%;height:100%;object-fit:cover;display:block;">
+     </div>`
+        : '';
+
+      const titleHtml = opts.title ? `<div class="wj-dialog__title">${esc(opts.title)}</div>` : '';
       const contentHtml = opts.content ? `<div class="wj-dialog__content">${esc(opts.content)}</div>` : '';
 
       backdrop.innerHTML = `
-        <div class="wj-dialog" role="dialog" aria-modal="true">
-          ${titleHtml}
-          ${contentHtml}
-          <div class="wj-dialog__actions">${buttonsHtml}</div>
-        </div>
-      `;
+  <div class="wj-dialog" role="dialog" aria-modal="true">
+    ${iconHtml}
+    ${titleHtml}
+    ${contentHtml}
+    <div class="wj-dialog__actions">${buttonsHtml}</div>
+  </div>
+`;
 
       host.appendChild(backdrop);
 
       const stop = e => e.stopPropagation();
       backdrop.addEventListener('touchstart', stop, { passive: true });
-      backdrop.addEventListener('touchmove',  stop, { passive: true });
+      backdrop.addEventListener('touchmove', stop, { passive: true });
       backdrop.addEventListener('pointerdown', stop, { passive: true });
       backdrop.addEventListener('pointermove', stop, { passive: true });
 

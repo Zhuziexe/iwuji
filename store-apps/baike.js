@@ -19,6 +19,29 @@
       ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
   }
 
+  function computeGain(volume100) {
+    const v = Math.max(0, Math.min(100, Number(volume100) || 0)) / 100;
+    const g = Math.pow(v, 1.6) * 0.9;
+    return Math.max(0, Math.min(1, g));
+  }
+
+  /* 让一个 <video> 跟随系统媒体音量。返回 cleanup 函数 */
+  function attachVolumeSync(videoEl) {
+    if (!videoEl) return () => { };
+
+    function apply() {
+      const v = Store.get('wujios.volume', 60);
+      try { videoEl.volume = computeGain(v); } catch { }
+    }
+
+    apply();  // 创建时立即应用一次
+    window.addEventListener('wuji:cc-volume-change', apply);
+
+    return () => {
+      window.removeEventListener('wuji:cc-volume-change', apply);
+    };
+  }
+
   function fmtTime(s) {
     if (!isFinite(s) || s < 0) return '00:00';
     const m = Math.floor(s / 60);
@@ -692,6 +715,8 @@
             const timeEl = videoEl.querySelector('#bkVpTime');
             const fsBtn = videoEl.querySelector('#bkVpFsBtn');
 
+            const detachVolume = attachVolumeSync(v);
+
             v.src = src;
             v.playsInline = true;
             v.setAttribute('playsinline', '');
@@ -775,6 +800,7 @@
             updateTimeText();
 
             cleanupVideo = () => {
+              detachVolume();                 // ★ 移除音量监听
               try { v.pause(); } catch { }
               try { v.removeAttribute('src'); v.load(); } catch { }
             };
@@ -847,6 +873,8 @@
 
           const src = v.dataset.src;
           if (!src) return;
+
+          const detachVolume = attachVolumeSync(v);
 
           v.src = src;
           v.playsInline = true;
@@ -921,9 +949,9 @@
           updateTimeText();
 
           return () => {
+            detachVolume();               // ★ 移除音量监听
             try { v.pause(); } catch { }
             try { v.removeAttribute('src'); v.load(); } catch { }
-            // 兜底清理返回手势
             delete root.dataset.blockBackGesture;
           };
         },
