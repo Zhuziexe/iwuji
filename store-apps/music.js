@@ -165,7 +165,7 @@
       }
       .mv-header { flex: 0 0 auto; padding: 8px 14px 4px; }
       .mv-title {
-        font-size: 20px;
+        font-size: 22px;
         font-weight: 700;
         color: var(--wj-text);
         letter-spacing: .3px;
@@ -179,14 +179,14 @@
       .mv-input {
         flex: 1 1 auto;
         min-width: 0;
-        height: 38px;
+        height: 40px;
         padding: 0 12px;
         border: 1px solid var(--wj-border, #e6e9ef);
         border-radius: 10px;
         background: var(--wj-bg-alt);
         color: var(--wj-text);
         font: inherit;
-        font-size: 14px;
+        font-size: 16px;
         outline: none;
         box-sizing: border-box;
       }
@@ -194,14 +194,14 @@
       .mv-input::placeholder { color: var(--wj-text-dim); }
       .mv-search-btn {
         flex: 0 0 auto;
-        height: 38px;
+        height: 40px;
         padding: 0 14px;
         border: 0;
         border-radius: 10px;
         background: var(--wj-primary, #3a6ff0);
         color: #fff;
         font: inherit;
-        font-size: 14px;
+        font-size: 16px;
         font-weight: 600;
         cursor: pointer;
         display: flex;
@@ -209,7 +209,7 @@
         gap: 4px;
         -webkit-tap-highlight-color: transparent;
       }
-      .mv-search-btn svg { width: 14px; height: 14px; }
+      .mv-search-btn svg { width: 16px; height: 16px; }
       .mv-search-btn:active { filter: brightness(.92); }
 
       .mv-body {
@@ -221,7 +221,7 @@
         padding: 0 14px 16px;
       }
       .mv-section-title {
-        font-size: 13px;
+        font-size: 16px;
         font-weight: 600;
         color: var(--wj-text-muted);
         letter-spacing: .3px;
@@ -239,7 +239,7 @@
         background: var(--wj-bg-alt);
         color: var(--wj-text);
         font: inherit;
-        font-size: 13px;
+        font-size: 16px;
         font-weight: 500;
         cursor: pointer;
         transition: background .12s;
@@ -268,15 +268,14 @@
         gap: 3px;
       }
       .mv-result__name {
-        font-size: 14px;
+        font-size: 16px;
         font-weight: 600;
         color: var(--wj-text);
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
       }
-      .mv-result__singer { font-size: 12px; color: var(--wj-text-dim); }
-      .mv-result__arrow { flex: 0 0 auto; color: var(--wj-text-dim); font-size: 20px; }
+      .mv-result__singer { font-size: 14px; color: var(--wj-text-dim); }
 
       /* ---------- 播放页 ---------- */
       .mv-player {
@@ -335,7 +334,7 @@
 
       .mv-info { flex: 0 0 auto; padding: 14px 18px 8px; }
       .mv-info__name {
-        font-size: 17px;
+        font-size: 20px;
         font-weight: 700;
         color: var(--wj-text);
         line-height: 1.35;
@@ -343,7 +342,7 @@
       }
       .mv-info__singer {
         margin-top: 4px;
-        font-size: 13px;
+        font-size: 14px;
         color: var(--wj-text-dim);
       }
 
@@ -422,7 +421,7 @@
       .mv-progress.is-dragging .mv-knob { transform: scale(1.15); }
       .mv-time {
         flex: 0 0 auto;
-        font-size: 11px;
+        font-size: 14px;
         color: var(--wj-text-dim);
         font-variant-numeric: tabular-nums;
         letter-spacing: .3px;
@@ -448,7 +447,7 @@
       }
       @keyframes mv-spin { to { transform: rotate(360deg); } }
       .mv-state__text {
-        font-size: 14px;
+        font-size: 16px;
         color: var(--wj-text-muted);
         line-height: 1.6;
       }
@@ -459,7 +458,7 @@
         background: var(--wj-primary, #3a6ff0);
         color: #fff;
         font: inherit;
-        font-size: 14px;
+        font-size: 16px;
         font-weight: 600;
         cursor: pointer;
         -webkit-tap-highlight-color: transparent;
@@ -586,7 +585,6 @@
                       <div class="mv-result__name">${escapeHtml(item.name || '未命名')}</div>
                       <div class="mv-result__singer">${escapeHtml(item.singer || '')}</div>
                     </div>
-                    <div class="mv-result__arrow">›</div>
                   </div>
                 `).join('')}
               </div>
