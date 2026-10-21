@@ -1,0 +1,25 @@
+<svg width="256" height="256" viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg">
+  <!-- 背景 -->
+  <rect width="256" height="256" fill="#5BC0EB"/>
+
+  <!-- 放大镜镜片（微弱填充，增强镜片质感） -->
+  <circle cx="108" cy="100" r="52" fill="rgba(255,255,255,0.07)"/>
+
+  <!-- 镜片内知识网络连线 -->
+  <g stroke="#FFFFFF" stroke-width="5" stroke-linecap="round" stroke-linejoin="round">
+    <line x1="86" y1="88" x2="124" y2="82" />
+    <line x1="86" y1="88" x2="108" y2="118" />
+  </g>
+
+  <!-- 镜片内知识节点 -->
+  <circle cx="86" cy="88" r="11" fill="#FFFFFF" />
+  <circle cx="124" cy="82" r="9" fill="#FFFFFF" />
+  <circle cx="108" cy="118" r="8" fill="#FFFFFF" />
+
+  <!-- 放大镜镜框 -->
+  <circle cx="108" cy="100" r="52" stroke="#FFFFFF" stroke-width="16" fill="none"/>
+
+  <!-- 放大镜手柄 -->
+  <line x1="140" y1="132" x2="184" y2="176"
+        stroke="#FFFFFF" stroke-width="18" stroke-linecap="round"/>
+</svg>

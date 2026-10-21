@@ -664,7 +664,7 @@
 
               <div class="rail-loading" id="railLoading">
                 <img class="rail-loading__img"
-                     src="./assets/com.niunai.niunairailway/loading.png"
+                     src="./assets/loading.png"
                      alt="">
                 <div class="rail-loading__text">加载中</div>
               </div>

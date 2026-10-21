@@ -8,7 +8,6 @@
     );
   }
 
-  // 每次调用都真的走网络，cache: 'no-store' + 时间戳双保险
   async function fetchProducts() {
     const url = `${DATA_URL}?t=${Date.now()}`;
     const r = await fetch(url, { cache: 'no-store' });

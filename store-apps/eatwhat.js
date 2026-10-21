@@ -82,7 +82,7 @@
         background: var(--wj-primary, #3a6ff0);
         color: #fff;
         font: inherit;
-        font-size: 12px;
+        font-size: 14px;
         font-weight: 600;
         letter-spacing: .3px;
         cursor: pointer;
@@ -114,7 +114,7 @@
         background: transparent;
         color: var(--wj-text-muted);
         font: inherit;
-        font-size: 12px;
+        font-size: 14px;
         font-weight: 500;
         line-height: 1;
         cursor: pointer;
@@ -141,7 +141,7 @@
         text-align: center;
         padding: 40px 16px;
         color: var(--wj-text-dim);
-        font-size: 13px;
+        font-size: 14px;
         line-height: 1.6;
       }
 
@@ -206,7 +206,7 @@
       }
 
       .ew-card__name {
-        font-size: 15px;
+        font-size: 16px;
         font-weight: 700;
         color: var(--wj-text);
         letter-spacing: .3px;
@@ -214,17 +214,17 @@
         text-overflow: ellipsis;
         white-space: nowrap;
       }
-      .ew-card.is-big .ew-card__name { font-size: 19px; }
+      .ew-card.is-big .ew-card__name { font-size: 20px; }
 
       .ew-card__meta {
         margin-top: 2px;
-        font-size: 11px;
+        font-size: 12px;
         color: var(--wj-text-dim);
         display: flex;
         gap: 5px;
         flex-wrap: wrap;
       }
-      .ew-card.is-big .ew-card__meta { font-size: 12px; margin-top: 4px; }
+      .ew-card.is-big .ew-card__meta { font-size: 14px; margin-top: 4px; }
 
       .ew-detail {
         position: absolute;
@@ -255,14 +255,14 @@
       }
       .ew-detail__head { padding: 14px 18px 0; }
       .ew-detail__name {
-        font-size: 22px;
+        font-size: 24px;
         font-weight: 700;
         color: var(--wj-text);
         letter-spacing: .3px;
       }
       .ew-detail__meta {
         margin-top: 4px;
-        font-size: 12px;
+        font-size: 14px;
         color: var(--wj-text-dim);
         display: flex;
         gap: 5px;
@@ -270,7 +270,7 @@
       }
       .ew-section { padding: 14px 18px 0; }
       .ew-section__title {
-        font-size: 14px;
+        font-size: 16px;
         font-weight: 700;
         color: var(--wj-text);
         margin-bottom: 8px;
@@ -285,7 +285,7 @@
         display: flex;
         align-items: baseline;
         gap: 8px;
-        font-size: 13px;
+        font-size: 14px;
         color: var(--wj-text);
         padding: 8px 12px;
         background: var(--wj-bg-alt);
@@ -307,7 +307,7 @@
       .ew-step {
         display: flex;
         gap: 10px;
-        font-size: 13px;
+        font-size: 14px;
         line-height: 1.55;
         color: var(--wj-text);
         counter-increment: step;

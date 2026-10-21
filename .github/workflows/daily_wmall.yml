@@ -2,7 +2,6 @@ name: Daily WMALL Stock Refresh
 
 on:
   schedule:
-    # 每天 UTC 00:00 = 北京时间 08:00
     - cron: '37 2 * * *'
   workflow_dispatch:   # 允许在 Actions 页面手动触发，方便测试
 

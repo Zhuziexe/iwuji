@@ -1,22 +1,19 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
-  <!-- 黄色圆角背景 -->
-  <rect width="256" height="256" fill="#FFC107"/>
+  <!-- 圆角背景 -->
+  <rect width="256" height="256" fill="#FFCB3D"/>
 
-  <!-- 热气：三条短弧线 -->
-  <g stroke="#1c2536" stroke-width="7" stroke-linecap="round" fill="none">
-    <path d="M98 132 Q 106 120 98 108"/>
-    <path d="M128 124 Q 136 112 128 100"/>
-    <path d="M158 132 Q 166 120 158 108"/>
+  <!-- 热气：三条对称 S 形 -->
+  <g stroke="#1c2536" stroke-width="8" stroke-linecap="round" fill="none">
+    <path d="M99 120 Q 107 108 99 96 Q 91 84 99 72"/>
+    <path d="M128 114 Q 136 102 128 90 Q 120 78 128 66"/>
+    <path d="M157 120 Q 165 108 157 96 Q 149 84 157 72"/>
   </g>
 
-  <!-- 碗身 -->
-  <path d="M60 154
-           C 60 200, 88 216, 128 216
-           C 168 216, 196 200, 196 154
-           Z"
-        fill="#ffffff" stroke="#1c2536" stroke-width="8" stroke-linejoin="round"/>
+  <!-- 碗身：只画下半段，避免和碗口线打架 -->
+  <path d="M60 152 C 60 194, 88 214, 128 214 C 168 214, 196 194, 196 152"
+        fill="#ffffff" stroke="#1c2536" stroke-width="8" stroke-linecap="round"/>
 
   <!-- 碗口 -->
-  <ellipse cx="128" cy="154" rx="68" ry="15"
+  <ellipse cx="128" cy="152" rx="68" ry="14"
            fill="#ffffff" stroke="#1c2536" stroke-width="8"/>
 </svg>
