@@ -365,11 +365,19 @@
       if (currentPage >= total) currentPage = total - 1;
       if (currentPage < 0) currentPage = 0;
 
-      let html = '';
-      for (let i = 0; i < total; i++) {
-        html += `<div class="page-dot${i === currentPage ? ' is-active' : ''}" data-page-index="${i}"></div>`;
+      const existing = pageDotsEl.querySelectorAll('.page-dot');
+
+      if (existing.length !== total) {
+        let html = '';
+        for (let i = 0; i < total; i++) {
+          html += `<div class="page-dot" data-page-index="${i}"></div>`;
+        }
+        pageDotsEl.innerHTML = html;
       }
-      pageDotsEl.innerHTML = html;
+
+      pageDotsEl.querySelectorAll('.page-dot').forEach((dot, i) => {
+        dot.classList.toggle('is-active', i === currentPage);
+      });
     }
 
     function renderHome() {
@@ -463,12 +471,6 @@
 
       updatePageDots();
     }
-
-    pageDotsEl.addEventListener('click', e => {
-      const dot = e.target.closest('.page-dot');
-      if (!dot) return;
-      goToPage(+dot.dataset.pageIndex);
-    });
 
     (function bindPageSwipe() {
       let pointerState = null;
@@ -1168,9 +1170,6 @@
       openApp(appEl.dataset.bundle, appEl, null);
     });
 
-    /* =========================================================
-       打开动画 1：桌面图标飞到中心 + 白色遮罩扩散
-       ========================================================= */
     function playIconFlyEnter(iconInfo, contentReady) {
       return new Promise(resolve => {
         const { size, br, styleAttr, html, rect } = iconInfo;
@@ -1183,7 +1182,7 @@
         const targetLeft = Math.round((window.innerWidth - size) / 2);
         const targetTop = Math.round((window.innerHeight - size) / 2);
 
-        const HOLD = 60, GROW = 520, FADE = 280;
+        const HOLD = 50, GROW = 480, FADE = 220;
         const EASE = 'cubic-bezier(.4, 0, .2, 1)';
 
         const mask = document.createElement('div');
@@ -1285,7 +1284,7 @@
        ========================================================= */
     function playSlideUpEnter(app, oldGhost, contentReady) {
       return new Promise(resolve => {
-        const DUR = 460, FADE = 220;
+        const DUR = 400, FADE = 220;
         const EASE = 'cubic-bezier(.2,.7,.3,1)';
 
         const mask = document.createElement('div');
@@ -1520,16 +1519,13 @@
         navHost.style.cssText = 'position:absolute;inset:0;overflow:hidden;';
         shadow.appendChild(navHost);
 
-        /* ---------- content-ready：让动画知道"内容什么时候就绪" ---------- */
         let _resolveContentReady = null;
         const contentReady = new Promise(r => { _resolveContentReady = r; });
 
-        /* ---------- 启动动画（与脚本加载并行） ---------- */
         const animPromise = (animType === 'icon-fly')
           ? playIconFlyEnter(iconInfo, contentReady)
           : playSlideUpEnter(app, oldGhost, contentReady);
 
-        /* ---------- 等待脚本（仅市场应用需要） ---------- */
         if (app._metaOnly) {
           if (!app._src) {
             console.error('[openApp] 缺少 src:', bundle);
@@ -1553,10 +1549,8 @@
           }
         }
 
-        /* ---------- 私有样式 ---------- */
         appStyleEl.textContent = app.styles || '';
 
-        /* ---------- 建 nav + push 首屏 ---------- */
         const nav = new WujiNavigation({
           host: navHost,
           routes: app.routes || {},
@@ -2361,7 +2355,7 @@
         requestAnimationFrame(tick);
       });
 
-      Store.set('wujios.lastbootversion', '1.0.113');
+      Store.set('wujios.lastbootversion', '1.0.114');
 
       await sleep(400);
 
@@ -2383,9 +2377,9 @@
 
       if (lastVersion === null) {
         /* 首次开机：直接写版本，正常开机 */
-        Store.set('wujios.lastbootversion', '1.0.113');
-      } else if (lastVersion !== '1.0.113') {
-        /* 已有旧版本号且不是 1.0.113 → 更新 */
+        Store.set('wujios.lastbootversion', '1.0.114');
+      } else if (lastVersion !== '1.0.114') {
+        /* 已有旧版本号且不是 1.0.114 → 更新 */
         await runUpdate();
         return;
       }

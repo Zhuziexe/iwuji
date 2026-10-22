@@ -724,7 +724,7 @@ img {
   transform: translateX(-50%);
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   z-index: 5;
   pointer-events: auto;
 }
@@ -732,16 +732,16 @@ img {
 .page-dot {
   width: 8px;
   height: 8px;
-  border-radius: 50%;
+  border-radius: 4px;
   background: rgba(255, 255, 255, .5);
   box-shadow: 0 1px 2px rgba(0, 0, 0, .35);
   cursor: pointer;
-  transition: background .2s, transform .2s;
+  transition: background .2s, width .2s, transform .2s;
 }
 
 .page-dot.is-active {
-  background: #fff;
-  transform: scale(1.4);
+  background: rgba(255, 255, 255, .9);
+  width: 14px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, .5);
 }
 
