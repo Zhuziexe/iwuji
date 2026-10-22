@@ -1607,7 +1607,7 @@
                 bundlename: '',
                 icon: app.icon || '',
                 title: `卸载“${app.name || bundle}”`,
-                content: '卸载后，应用内本地数据同步清除',
+                content: '卸载后，应用内本地数据同步清除。',
                 buttons: [
                   { value: '取消', color: 'var(--wj-primary)' },
                   { value: '卸载', color: 'var(--wj-danger)' },
