@@ -63,7 +63,7 @@
     name: '牛逼新闻',
     icon: ICON_URL,
     initialRoute: 'home',
-    version: '1.0.1',
+    version: '1.0.2',
 
     styles: `
       .nw-page {
@@ -260,8 +260,8 @@
         text-align: center;
       }
       .nw-spinner {
-        width: 32px;
-        height: 32px;
+        width: 64px;
+        height: 64px;
         border-radius: 50%;
         overflow: hidden;
         object-fit: cover;

@@ -12,19 +12,19 @@
    ========================================================= */
 window.PanelSystem = (() => {
   const EASE = 'cubic-bezier(.2,.7,.3,1)';
-  const DUR  = 340;
+  const DUR = 340;
 
   /* 速度阈值（px/ms）—— 快速滑动判定 */
-  const V_THRESH   = 0.3;
+  const V_THRESH = 0.3;
   /* 速度触发所需的最小位移（避免轻点误触） */
-  const MIN_DIST   = 18;
+  const MIN_DIST = 18;
   /* 松手前多少毫秒内没动就认为「停住了」，忽略速度 */
-  const STALE_MS   = 100;
+  const STALE_MS = 100;
 
-  let root     = null;
-  let track    = null;
+  let root = null;
+  let track = null;
   let backdrop = null;
-  let osEl     = null;
+  let osEl = null;
 
   let v = -100;        // -100 = 收起，0 = 展开
   let h = 0;           // 0 = 通知中心，-50 = 控制中心
@@ -38,16 +38,16 @@ window.PanelSystem = (() => {
     if (!ready) return;
 
     if (animate) {
-      root.style.transition     = `transform ${DUR}ms ${EASE}`;
-      track.style.transition    = `transform ${DUR}ms ${EASE}`;
+      root.style.transition = `transform ${DUR}ms ${EASE}`;
+      track.style.transition = `transform ${DUR}ms ${EASE}`;
       backdrop.style.transition = `opacity ${DUR}ms ${EASE}`;
     } else {
-      root.style.transition     = 'none';
-      track.style.transition    = 'none';
+      root.style.transition = 'none';
+      track.style.transition = 'none';
       backdrop.style.transition = 'none';
     }
 
-    root.style.transform  = `translateY(${v}%)`;
+    root.style.transform = `translateY(${v}%)`;
     track.style.transform = `translateX(${h}%)`;
 
     const progress = Math.max(0, Math.min(1, (v + 100) / 100));
@@ -104,23 +104,20 @@ window.PanelSystem = (() => {
   }
 
   function startGesture(target, x, y) {
-    if (window.WujiOverlay?.isOpen) return;
-    if (osEl.dataset.power !== 'running') return;
-    if (osEl.dataset.view === 'locked') return;
-    if (gesture) return;
+    if (window.WujiOverlay?.isOpen) return false;
+    if (osEl.dataset.power !== 'running') return false;
+    if (osEl.dataset.view === 'locked') return false;
+    if (gesture) return false;
 
-    /* ★ 排除控制中心的滑块（音量 / 亮度），避免在滑块上滑动时误触关闭 */
-    if (target && target.closest && target.closest('.cc-slider-card')) return;
-    /* ★ 排除控制中心的 toggle，避免按钮上的触摸被当作面板手势 */
-    if (target && target.closest && target.closest('.cc-toggle')) return;
+    if (target && target.closest && target.closest('.cc-slider-card')) return false;
+    if (target && target.closest && target.closest('.cc-toggle')) return false;
 
     const rect = osEl.getBoundingClientRect();
     const ly = y - rect.top;
     const rx = (x - rect.left) / rect.width;
 
     if (!open) {
-      /* 仅顶部 30px 内下拉可触发 */
-      if (ly > 30) return;
+      if (ly > 30) return false;
 
       const targetPane = rx < 0.5 ? 'nc' : 'cc';
 
@@ -130,6 +127,7 @@ window.PanelSystem = (() => {
         v0: -100,
         h0: (targetPane === 'nc' ? 0 : -50),
         lastX: x, lastY: y,
+        axis: 'v',
       });
 
       panel = targetPane;
@@ -137,11 +135,11 @@ window.PanelSystem = (() => {
       v = -100;
       apply(false);
       root.classList.add('is-active');
-      return;
+      return true;
     }
 
-    /* 已打开：通知项横滑删除交给 item 自己处理 */
-    if (target && target.closest && target.closest('.nc-item')) return;
+    /* 已打开：触摸时允许从 panel 内部上滑关闭 */
+    if (target && target.closest && target.closest('.nc-item')) return false;
 
     gesture = makeGesture({
       mode: 'inside',
@@ -151,12 +149,12 @@ window.PanelSystem = (() => {
       lastX: x, lastY: y,
       fromList: !!(target && target.closest && target.closest('.nc-list')),
     });
+    return true;
   }
 
   function moveGesture(x, y, preventFn) {
     if (!gesture) return;
 
-    /* ★ 速度追踪（指数平滑，缓解单帧抖动） */
     const now = performance.now();
     const mdt = now - gesture.lastT;
     if (mdt > 0) {
@@ -173,7 +171,7 @@ window.PanelSystem = (() => {
     const dy = y - gesture.startY;
 
     if (!gesture.moved) {
-      if (Math.abs(dx) < 6 && Math.abs(dy) < 6) return;
+      if (gesture.mode !== 'open' && Math.abs(dx) < 6 && Math.abs(dy) < 6) return;
       gesture.moved = true;
 
       if (gesture.mode === 'open') {
@@ -182,7 +180,6 @@ window.PanelSystem = (() => {
         if (Math.abs(dx) > Math.abs(dy) * 1.2) {
           gesture.axis = 'h';
         } else if (dy < 0) {
-          /* 列表已经滚动过 → 不拦，让列表自己滚 */
           if (gesture.fromList) {
             const list = document.getElementById('ncList');
             if (list && list.scrollTop > 0) { gesture = null; return; }
@@ -245,16 +242,16 @@ window.PanelSystem = (() => {
     } else if (g.axis === 'v') {
       if (g.mode === 'open') {
         /* 下拉打开：向下快滑 → 打开；向上快滑 → 放弃 */
-        if (fastV && vy > 0)        { open = true;  v = 0; }
-        else if (fastV && vy < 0)   { open = false; v = -100; }
-        else if (v > -50)           { open = true;  v = 0; }
-        else                        { open = false; v = -100; }
+        if (fastV && vy > 0) { open = true; v = 0; }
+        else if (fastV && vy < 0) { open = false; v = -100; }
+        else if (v > -50) { open = true; v = 0; }
+        else { open = false; v = -100; }
       } else {
         /* 已打开：向上快滑 → 关闭；向下快滑 → 保持 */
-        if (fastV && vy < 0)        { open = false; v = -100; }
-        else if (fastV && vy > 0)   { open = true;  v = 0; }
-        else if (v < -30)           { open = false; v = -100; }
-        else                        { open = true;  v = 0; }
+        if (fastV && vy < 0) { open = false; v = -100; }
+        else if (fastV && vy > 0) { open = true; v = 0; }
+        else if (v < -30) { open = false; v = -100; }
+        else { open = true; v = 0; }
       }
       apply(true);
 
@@ -269,7 +266,11 @@ window.PanelSystem = (() => {
       const t = e.touches[0];
       if (!t) return;
       startGesture(e.target, t.clientX, t.clientY);
-    }, { capture: true, passive: true });
+
+      if (gesture && gesture.mode === 'open' && e.cancelable) {
+        e.preventDefault();
+      }
+    }, { capture: true, passive: false });
 
     osEl.addEventListener('touchmove', e => {
       if (!gesture) return;
@@ -283,24 +284,51 @@ window.PanelSystem = (() => {
     osEl.addEventListener('touchend', endGesture);
     osEl.addEventListener('touchcancel', endGesture);
 
+    /* ---------- 鼠标 ---------- */
     osEl.addEventListener('pointerdown', e => {
       if (e.pointerType !== 'mouse' || e.button !== 0) return;
-      startGesture(e.target, e.clientX, e.clientY);
+
+      if (open) {
+        // ★ panel 已打开：鼠标在交互元素上不接管，交给元素自己
+        const interactive = e.target.closest(
+          '.nc-item, .nc-clear, .cc-slider-card, .cc-toggle, ' +
+          'button, a, input, textarea, select'
+        );
+        if (interactive) return;
+
+        // ★ 非交互区域：创建 inside 手势，允许拖动关闭
+        const started = startGesture(e.target, e.clientX, e.clientY);
+        if (started) {
+          e.preventDefault();
+        }
+        return;
+      }
+
+      // panel 未打开：顶部 30px 下拉打开
+      const started = startGesture(e.target, e.clientX, e.clientY);
+      if (started) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
     }, { capture: true });
 
     document.addEventListener('pointermove', e => {
       if (e.pointerType !== 'mouse') return;
       if (!gesture) return;
-      moveGesture(e.clientX, e.clientY, null);
-    });
+      moveGesture(e.clientX, e.clientY, () => {
+        if (e.cancelable) e.preventDefault();
+      });
+    }, { passive: false });
 
     document.addEventListener('pointerup', e => {
       if (e.pointerType !== 'mouse') return;
+      if (!gesture) return;
       endGesture();
     });
 
     document.addEventListener('pointercancel', e => {
       if (e.pointerType !== 'mouse') return;
+      if (!gesture) return;
       endGesture();
     });
   }
@@ -309,10 +337,10 @@ window.PanelSystem = (() => {
   function init() {
     if (ready) return;
 
-    root     = document.getElementById('panelSystem');
-    track    = document.getElementById('panelTrack');
+    root = document.getElementById('panelSystem');
+    track = document.getElementById('panelTrack');
     backdrop = document.getElementById('panelBackdrop');
-    osEl     = document.getElementById('os');
+    osEl = document.getElementById('os');
 
     if (!root || !track || !backdrop || !osEl) {
       console.warn('[PanelSystem] 缺少 DOM 节点，初始化失败');
@@ -329,10 +357,10 @@ window.PanelSystem = (() => {
   /* ---------------- 导出 ---------------- */
   return {
     init,
-    open:     (p = 'nc') => openPanel(p, true),
-    close:    () => closePanel(true),
+    open: (p = 'nc') => openPanel(p, true),
+    close: () => closePanel(true),
     setPanel: (p) => setPanel(p, true),
     get isOpen() { return open; },
-    get panel()  { return panel; },
+    get panel() { return panel; },
   };
 })();

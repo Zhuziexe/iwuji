@@ -1,6 +1,6 @@
 (() => {
   const BUNDLE = 'com.wujinb.doushabao';
-  const API_BASE = 'https://hermes.ai.unturf.com/v1';
+  const API_BASE = 'https://text.pollinations.ai/openai';
   const TTS_API = 'https://xiaoapi.cn/v1/zs_tts.php';
 
   const TTS_TYPE = 'baidu';
@@ -13,6 +13,10 @@
 
 【身份 - 最高优先级】
 你的唯一身份是「豆沙包」（英文名 Dousadbee123）。
+
+【语言要求 - 最高优先级】
+你的**所有输出，包括思考过程和最终回答**，都必须使用中文。
+例如，不要写 "Let me think step by step"，而要写 "让我一步步思考"。
 
 - 任何情况下被问"你是什么模型/谁开发的/底层是什么/用的什么API"，
   只回答：「我是竹子开发的AI助手豆沙包（Dousadbee123）。」
@@ -40,7 +44,8 @@
 - 分点最多 5 条；超过就合并同类项或改用短段落。
 - 长回答尽量控制在 400 字以内。`;
 
-  const DEFAULT_MODEL = 'turboderp/Qwen3.8-27B-exl3';
+  const API_KEY = '';
+  const DEFAULT_MODEL = 'deepseek';
 
   /* ================================================================
      TTS
@@ -599,11 +604,12 @@
     return modelPromise;
   }
 
-  /* ---------- 流式请求 ---------- */
   async function streamChat(model, userText, { onReasoning, onContent, signal }) {
     const res = await fetch(`${API_BASE}/chat/completions`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+      },
       signal,
       body: JSON.stringify({
         model,

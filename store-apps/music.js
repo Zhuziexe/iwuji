@@ -41,16 +41,30 @@
     return () => window.removeEventListener('wuji:cc-volume-change', apply);
   }
 
-  function attachProgressDrag({ progress, mediaEl, updateProgress, root, onDragStart, onDragEnd }) {
+  function attachProgressDrag({ progress, mediaEl, videoEl, updateProgress, root, onDragStart, onDragEnd }) {
+    const media = mediaEl || videoEl;
+    if (!progress || !media) {
+      console.warn('[progressDrag] 缺少 progress 或 media 元素');
+      return;
+    }
+
     let activePid = null;
     let dragging = false;
 
-    function seekTo(clientX) {
-      if (!isFinite(mediaEl.duration) || mediaEl.duration <= 0) return;
+    function seekTo(clientX, clientY) {
+      if (!isFinite(media.duration) || media.duration <= 0) return;
       const rect = progress.getBoundingClientRect();
-      if (rect.width <= 0) return;
-      const x = Math.max(0, Math.min(rect.width, clientX - rect.left));
-      try { mediaEl.currentTime = (x / rect.width) * mediaEl.duration; } catch { }
+      if (!rect.width || !rect.height) return;
+
+      let ratio;
+      // 自动判断方向：height > width → 垂直（全屏页旋转后）
+      if (rect.height > rect.width) {
+        ratio = (clientY - rect.top) / rect.height;
+      } else {
+        ratio = (clientX - rect.left) / rect.width;
+      }
+      ratio = Math.max(0, Math.min(1, ratio));
+      try { media.currentTime = ratio * media.duration; } catch { }
       updateProgress();
     }
 
@@ -74,13 +88,13 @@
       if (root) root.dataset.blockBackGesture = '1';
       onDragStart?.();
       try { progress.setPointerCapture(e.pointerId); } catch { }
-      seekTo(e.clientX);
+      seekTo(e.clientX, e.clientY);
     });
 
     progress.addEventListener('pointermove', e => {
       if (!dragging || e.pointerId !== activePid) return;
       e.preventDefault();
-      seekTo(e.clientX);
+      seekTo(e.clientX, e.clientY);
     });
 
     progress.addEventListener('pointerup', endSeek);
@@ -464,45 +478,56 @@
         -webkit-tap-highlight-color: transparent;
       }
 
-      /* ---------- 全屏页 ---------- */
       .mv-fs {
-        position: absolute;
-        inset: 0;
-        background: #000;
-        overflow: hidden;
-      }
-      .mv-fs__stage { position: absolute; inset: 0; background: #000; }
-      .mv-fs__video {
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        width: 100vh;
-        height: 100vw;
-        transform: translate(-50%, -50%) rotate(90deg);
-        transform-origin: center center;
-        background: #000;
-        object-fit: contain;
-        -webkit-tap-highlight-color: transparent;
-      }
-      .mv-fs__controls {
-        position: absolute;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        padding: 10px 12px calc(10px + env(safe-area-inset-bottom, 0px));
-        background: linear-gradient(to top, rgba(0,0,0,.82), rgba(0,0,0,0) 100%);
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        z-index: 3;
-        transition: opacity .2s ease;
-      }
-      .mv-fs.is-hide .mv-fs__controls { opacity: 0; pointer-events: none; }
-      .mv-fs .mv-track { background: rgba(255,255,255,.28); }
-      .mv-fs .mv-knob { background: #fff; }
-      .mv-fs .mv-time { color: #fff; }
-      .mv-fs .mv-ctrl-btn { background: rgba(255,255,255,.16); color: #fff; }
-      .mv-fs .mv-ctrl-btn.is-primary { background: var(--wj-primary, #3a6ff0); }
+  position: absolute;
+  inset: 0;
+  background: #000;
+  overflow: hidden;
+}
+
+.mv-fs__stage {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 100vh;
+  height: 100vw;
+  transform: translate(-50%, -50%) rotate(90deg);
+  transform-origin: center center;
+  background: #000;
+  overflow: hidden;
+}
+
+.mv-fs__video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: #000;
+}
+
+.mv-fs__controls {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 10px 12px;
+  background: linear-gradient(to top, rgba(0,0,0,.82), transparent);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  z-index: 3;
+  transition: opacity .2s ease;
+}
+.mv-fs.is-hide .mv-fs__controls {
+  opacity: 0;
+  pointer-events: none;
+}
+.mv-fs .mv-track { background: rgba(255,255,255,.28); }
+.mv-fs .mv-knob { background: #fff; }
+.mv-fs .mv-time { color: #fff; }
+.mv-fs .mv-ctrl-btn { background: rgba(255,255,255,.16); color: #fff; }
+.mv-fs .mv-ctrl-btn.is-primary { background: var(--wj-primary, #3a6ff0); }
     `,
 
     routes: {
@@ -762,9 +787,25 @@
             e.stopPropagation();
             e.preventDefault();
             if (!videoSrc) return;
+
+            const currentTime = v.currentTime;
+            const wasPlaying = !v.paused;
             try { v.pause(); } catch { }
+
             const r = stageEl.getBoundingClientRect();
-            ctx.push('fullscreen', { src: videoSrc, title: videoTitle }, {
+            ctx.push('fullscreen', {
+              src: videoSrc,
+              title: videoTitle,
+              currentTime,
+              wasPlaying,
+              onClose: (state) => {
+                if (!state) return;
+                try { v.currentTime = state.currentTime; } catch { }
+                if (state.wasPlaying) {
+                  v.play().catch(() => { });
+                }
+              },
+            }, {
               transition: 'zoom',
               origin: { x: r.left, y: r.top, w: r.width, h: r.height },
             });
@@ -842,29 +883,31 @@
         render(routeCtx) {
           const src = routeCtx.data?.src || '';
           return `
-            <div class="mv-fs" id="mvFs">
-              <div class="mv-fs__stage">
-                <video class="mv-fs__video" id="mvFsVideo"
-                       playsinline webkit-playsinline
-                       data-src="${escapeHtml(src)}"></video>
-              </div>
-              <div class="mv-fs__controls" id="mvFsControls">
-                <button class="mv-ctrl-btn" id="mvFsBack" type="button" aria-label="退出全屏">${ICON_BACK}</button>
-                <button class="mv-ctrl-btn is-primary" id="mvFsPlayBtn" type="button">${ICON_PLAY}</button>
-                <div class="mv-progress" id="mvFsProgress">
-                  <div class="mv-track">
-                    <div class="mv-fill" id="mvFsFill"></div>
-                  </div>
-                  <div class="mv-knob" id="mvFsKnob"></div>
-                </div>
-                <span class="mv-time" id="mvFsTime">00:00 / 00:00</span>
-              </div>
+    <div class="mv-fs" id="mvFs">
+      <div class="mv-fs__stage">
+        <video class="mv-fs__video" id="mvFsVideo"
+               playsinline webkit-playsinline
+               data-src="${escapeHtml(src)}"></video>
+        <div class="mv-fs__controls" id="mvFsControls">
+          <button class="mv-ctrl-btn" id="mvFsBack" type="button" aria-label="退出全屏">${ICON_BACK}</button>
+          <button class="mv-ctrl-btn is-primary" id="mvFsPlayBtn" type="button">${ICON_PLAY}</button>
+          <div class="mv-progress" id="mvFsProgress">
+            <div class="mv-track">
+              <div class="mv-fill" id="mvFsFill"></div>
             </div>
-          `;
+            <div class="mv-knob" id="mvFsKnob"></div>
+          </div>
+          <span class="mv-time" id="mvFsTime">00:00 / 00:00</span>
+        </div>
+      </div>
+    </div>
+  `;
         },
 
         mount(root, ctx) {
+          const data = ctx.data || {};
           const v = root.querySelector('#mvFsVideo');
+          const wrap = root.querySelector('#mvFs');
           const backBtn = root.querySelector('#mvFsBack');
           const playBtn = root.querySelector('#mvFsPlayBtn');
           const progress = root.querySelector('#mvFsProgress');
@@ -872,11 +915,14 @@
           const knob = root.querySelector('#mvFsKnob');
           const timeEl = root.querySelector('#mvFsTime');
 
-          const src = v.dataset.src;
-          if (!src) return;
+          const src = data.src || v.dataset.src || '';
+          const initialTime = typeof data.currentTime === 'number' ? data.currentTime : 0;
+          const wasPlaying = data.wasPlaying !== false;
+          const onClose = typeof data.onClose === 'function' ? data.onClose : null;
+
+          if (!src) { ctx.pop(); return; }
 
           let disposed = false;
-
           const detachVolume = attachVolumeSync(v);
 
           v.src = src;
@@ -897,13 +943,18 @@
             timeEl.textContent = `${fmtTime(cur)} / ${fmtTime(dur)}`;
           }
 
-          backBtn.addEventListener('click', e => {
+          wrap.addEventListener('click', (e) => {
+            if (e.target.closest('.mv-fs__controls')) return;
+            wrap.classList.toggle('is-hide');
+          });
+
+          backBtn.addEventListener('click', (e) => {
             e.stopPropagation();
             e.preventDefault();
             ctx.pop();
           });
 
-          playBtn.addEventListener('click', e => {
+          playBtn.addEventListener('click', (e) => {
             e.stopPropagation();
             e.preventDefault();
             if (v.paused) v.play().catch(() => { });
@@ -914,8 +965,17 @@
           v.addEventListener('pause', () => updatePlayIcon(false));
           v.addEventListener('ended', () => updatePlayIcon(false));
           v.addEventListener('timeupdate', updateProgress);
-          v.addEventListener('loadedmetadata', updateProgress);
-          v.addEventListener('error', () => { if (!disposed) ctx.pop(); }, { once: true });
+
+          v.addEventListener('loadedmetadata', () => {
+            if (initialTime > 0) {
+              try { v.currentTime = initialTime; } catch { }
+            }
+            updateProgress();
+          });
+
+          v.addEventListener('error', () => {
+            if (!disposed) ctx.pop();
+          }, { once: true });
 
           attachProgressDrag({
             progress, mediaEl: v, updateProgress, root,
@@ -923,14 +983,19 @@
             onDragEnd: () => progress.classList.remove('is-dragging'),
           });
 
-          v.play().catch(() => { });
+          if (wasPlaying) v.play().catch(() => { });
           updateProgress();
 
           return () => {
             disposed = true;
             detachVolume();
+            const state = {
+              currentTime: isFinite(v.currentTime) ? v.currentTime : initialTime,
+              wasPlaying: !v.paused,
+            };
+            try { v.pause(); } catch { }
+            try { onClose?.(state); } catch { }
             try {
-              v.pause();
               v.removeAttribute('src');
               v.load();
             } catch { }

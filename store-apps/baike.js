@@ -5,8 +5,8 @@
   const REQUEST_TIMEOUT = 8000;
 
   const HOT_WORDS = [
-    '机器人', '人工智能', '量子计算', '黑洞',
-    '光合作用', '相对论', 'DNA', '光年',
+    '机器人', '高铁', '磁悬浮列车', '黑洞',
+    '人工智能', '相对论', '北京', '苹果',
   ];
 
   const ICON_PLAY = `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 4.5 19 12 7 19.5z"/></svg>`;
@@ -392,47 +392,55 @@
         pointer-events: none;
       }
 
-      /* ---------- 全屏页 ---------- */
       .bk-fs {
-        position: absolute;
-        inset: 0;
-        background: #000;
-        overflow: hidden;
-      }
-      .bk-fs__stage {
-        position: absolute;
-        inset: 0;
-        background: #000;
-      }
-      .bk-fs__video {
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        width: 100vh;
-        height: 100vw;
-        transform: translate(-50%, -50%) rotate(90deg);
-        transform-origin: center center;
-        background: #000;
-        object-fit: contain;
-        -webkit-tap-highlight-color: transparent;
-      }
-      .bk-fs__controls {
-        position: absolute;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        padding: 10px 12px calc(10px + env(safe-area-inset-bottom, 0px));
-        background: linear-gradient(to top, rgba(0,0,0,.82), rgba(0,0,0,0) 100%);
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        z-index: 3;
-        transition: opacity .2s ease;
-      }
-      .bk-fs.is-hide .bk-fs__controls {
-        opacity: 0;
-        pointer-events: none;
-      }
+  position: absolute;
+  inset: 0;
+  background: #000;
+  overflow: hidden;
+}
+
+.bk-fs__stage {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 100vh;
+  height: 100vw;
+  transform: translate(-50%, -50%) rotate(90deg);
+  transform-origin: center center;
+  background: #000;
+  overflow: hidden;
+}
+
+.bk-fs__video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: #000;
+}
+
+.bk-fs__controls {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 10px 12px;
+  background: linear-gradient(to top, rgba(0,0,0,.82), transparent);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  z-index: 3;
+  transition: opacity .2s ease;
+}
+.bk-fs.is-hide .bk-fs__controls {
+  opacity: 0;
+  pointer-events: none;
+}
+.bk-fs .bk-vp__track { background: rgba(255,255,255,.28); }
+.bk-fs .bk-vp__knob { background: #fff; }
+.bk-fs .bk-vp__time { color: #fff; }
+.bk-fs .bk-vp__btn { background: rgba(255,255,255,.16); color: #fff; }
 
       .bk-state {
         display: flex;
@@ -758,12 +766,28 @@
             fsBtn.addEventListener('click', e => {
               e.stopPropagation();
               e.preventDefault();
+              if (!src) return;
+
+              const currentTime = v.currentTime;
+              const wasPlaying = !v.paused;
               try { v.pause(); } catch { }
 
-              const rect = v.getBoundingClientRect();
-              ctx.push('fullscreen', { src, title }, {
+              const r = wrap.getBoundingClientRect(); 
+              ctx.push('fullscreen', {
+                src: src,
+                title: title,
+                currentTime,
+                wasPlaying,
+                onClose: (state) => {
+                  if (!state) return;
+                  try { v.currentTime = state.currentTime; } catch { }
+                  if (state.wasPlaying) {
+                    v.play().catch(() => { });
+                  }
+                },
+              }, {
                 transition: 'zoom',
-                origin: { x: rect.left, y: rect.top, w: rect.width, h: rect.height },
+                origin: { x: r.left, y: r.top, w: r.width, h: r.height },
               });
             });
 
@@ -838,30 +862,35 @@
 
         render(routeCtx) {
           const src = routeCtx.data?.src || '';
-          const title = routeCtx.data?.title || '';
           return `
-            <div class="bk-fs" id="bkFs">
-              <div class="bk-fs__stage">
-                <video class="bk-fs__video" id="bkFsVideo"
-                       playsinline webkit-playsinline
-                       data-src="${escapeHtml(src)}"></video>
-              </div>
-              <div class="bk-fs__controls" id="bkFsControls">
-                <button class="bk-vp__btn" id="bkFsBack" type="button" aria-label="退出全屏">${ICON_BACK}</button>
-                <button class="bk-vp__btn" id="bkFsPlayBtn" type="button">${ICON_PLAY}</button>
-                <div class="bk-vp__progress" id="bkFsProgress">
-                  <div class="bk-vp__track">
-                    <div class="bk-vp__fill" id="bkFsFill"></div>
-                  </div>
-                  <div class="bk-vp__knob" id="bkFsKnob"></div>
-                </div>
-                <span class="bk-vp__time" id="bkFsTime">00:00 / 00:00</span>
-              </div>
+    <div class="bk-fs" id="bkFs">
+      <div class="bk-fs__stage">
+        <video class="bk-fs__video" id="bkFsVideo"
+               playsinline webkit-playsinline
+               data-src="${escapeHtml(src)}"></video>
+        <div class="bk-fs__controls" id="bkFsControls">
+          <button class="bk-vp__btn" id="bkFsBack" type="button" aria-label="退出全屏">${ICON_BACK}</button>
+          <button class="bk-vp__btn" id="bkFsPlayBtn" type="button">${ICON_PLAY}</button>
+          <div class="bk-vp__progress" id="bkFsProgress">
+            <div class="bk-vp__track">
+              <div class="bk-vp__fill" id="bkFsFill"></div>
             </div>
-          `;
+            <div class="bk-vp__knob" id="bkFsKnob"></div>
+          </div>
+          <span class="bk-vp__time" id="bkFsTime">00:00 / 00:00</span>
+        </div>
+      </div>
+    </div>
+  `;
         },
 
         mount(root, ctx) {
+          const data = ctx.data || {};
+          const src = data.src || '';
+          const initialTime = typeof data.currentTime === 'number' ? data.currentTime : 0;
+          const wasPlaying = data.wasPlaying !== false;
+          const onClose = typeof data.onClose === 'function' ? data.onClose : null;
+
           const wrap = root.querySelector('#bkFs');
           const v = root.querySelector('#bkFsVideo');
           const backBtn = root.querySelector('#bkFsBack');
@@ -871,9 +900,9 @@
           const knob = root.querySelector('#bkFsKnob');
           const timeEl = root.querySelector('#bkFsTime');
 
-          const src = v.dataset.src;
-          if (!src) return;
+          if (!src) { ctx.pop(); return; }
 
+          let disposed = false;
           const detachVolume = attachVolumeSync(v);
 
           v.src = src;
@@ -885,73 +914,76 @@
             playBtn.innerHTML = playing ? ICON_PAUSE : ICON_PLAY;
           }
 
-          function updateTimeText() {
+          function updateProgress() {
             const cur = isFinite(v.currentTime) ? v.currentTime : 0;
             const dur = isFinite(v.duration) ? v.duration : 0;
-            timeEl.textContent = `${fmtTime(cur)} / ${fmtTime(dur)}`;
-          }
-
-          function updateProgress() {
-            if (!isFinite(v.duration) || v.duration <= 0) {
-              fill.style.width = '0%';
-              knob.style.left = '0%';
-              return;
-            }
-            const pct = Math.max(0, Math.min(100, (v.currentTime / v.duration) * 100));
+            const pct = dur > 0 ? Math.max(0, Math.min(100, (cur / dur) * 100)) : 0;
             fill.style.width = pct + '%';
             knob.style.left = pct + '%';
-            updateTimeText();
+            timeEl.textContent = `${fmtTime(cur)} / ${fmtTime(dur)}`;
           }
 
           function toggleControls() {
             wrap.classList.toggle('is-hide');
           }
 
-          backBtn.addEventListener('click', e => {
+          // 点击画面切换控制条，点在控制条内不切换
+          wrap.addEventListener('click', (e) => {
+            if (e.target.closest('.bk-fs__controls')) return;
+            toggleControls();
+          });
+
+          backBtn.addEventListener('click', (e) => {
             e.stopPropagation();
             e.preventDefault();
             ctx.pop();
           });
 
-          playBtn.addEventListener('click', e => {
+          playBtn.addEventListener('click', (e) => {
             e.stopPropagation();
             e.preventDefault();
             if (v.paused) v.play().catch(() => { });
             else v.pause();
           });
 
-          v.addEventListener('click', () => toggleControls());
-
           v.addEventListener('play', () => updatePlayIcon(true));
           v.addEventListener('pause', () => updatePlayIcon(false));
           v.addEventListener('ended', () => updatePlayIcon(false));
-
           v.addEventListener('timeupdate', updateProgress);
+
           v.addEventListener('loadedmetadata', () => {
-            updateTimeText();
+            if (initialTime > 0) {
+              try { v.currentTime = initialTime; } catch { }
+            }
             updateProgress();
           });
 
           v.addEventListener('error', () => {
-            // 视频不可用时直接退出
-            ctx.pop();
+            if (!disposed) ctx.pop();
           }, { once: true });
 
           attachProgressDrag({
-            progress, videoEl: v, updateProgress,
-            root, onDragStart: () => progress.classList.add('is-dragging'),
+            progress, mediaEl: v, updateProgress, root,
+            onDragStart: () => progress.classList.add('is-dragging'),
             onDragEnd: () => progress.classList.remove('is-dragging'),
           });
 
-          try { v.play().catch(() => { }); } catch { }
-
-          updatePlayIcon(false);
-          updateTimeText();
+          if (wasPlaying) v.play().catch(() => { });
+          updateProgress();
 
           return () => {
-            detachVolume();               // ★ 移除音量监听
+            disposed = true;
+            detachVolume();
+            const state = {
+              currentTime: isFinite(v.currentTime) ? v.currentTime : initialTime,
+              wasPlaying: !v.paused,
+            };
             try { v.pause(); } catch { }
-            try { v.removeAttribute('src'); v.load(); } catch { }
+            try { onClose?.(state); } catch { }
+            try {
+              v.removeAttribute('src');
+              v.load();
+            } catch { }
             delete root.dataset.blockBackGesture;
           };
         },
@@ -962,48 +994,61 @@
   /* =========================================================
      进度条拖动：圆点 + 触摸热区 + 阻止返回手势
      ========================================================= */
-  function attachProgressDrag({ progress, videoEl, updateProgress, root, onDragStart, onDragEnd }) {
-    let activePointerId = null;
+  function attachProgressDrag({ progress, mediaEl, videoEl, updateProgress, root, onDragStart, onDragEnd }) {
+    // ★ 兼容两种参数名，避免调用处写错导致 undefined
+    const media = mediaEl || videoEl;
+    if (!progress || !media) {
+      console.warn('[progressDrag] 缺少 progress 或 media 元素');
+      return;
+    }
+
+    let activePid = null;
     let dragging = false;
 
-    function seekTo(clientX) {
-      if (!isFinite(videoEl.duration) || videoEl.duration <= 0) return;
+    function seekTo(clientX, clientY) {
+      if (!isFinite(media.duration) || media.duration <= 0) return;
       const rect = progress.getBoundingClientRect();
-      if (rect.width <= 0) return;
-      const x = Math.max(0, Math.min(rect.width, clientX - rect.left));
-      try { videoEl.currentTime = (x / rect.width) * videoEl.duration; } catch { }
+      if (!rect.width || !rect.height) return;
+
+      let ratio;
+      // 自动判断方向：height > width → 垂直（全屏页旋转后）
+      if (rect.height > rect.width) {
+        ratio = (clientY - rect.top) / rect.height;
+      } else {
+        ratio = (clientX - rect.left) / rect.width;
+      }
+      ratio = Math.max(0, Math.min(1, ratio));
+      try { media.currentTime = ratio * media.duration; } catch { }
       updateProgress();
     }
 
     function endSeek(e) {
       if (!dragging) return;
-      if (e && activePointerId !== null && e.pointerId !== activePointerId) return;
+      if (e && activePid !== null && e.pointerId !== activePid) return;
       dragging = false;
-      const pid = activePointerId;
-      activePointerId = null;
-      // ★ 解除返回手势阻止
+      const pid = activePid;
+      activePid = null;
       if (root) delete root.dataset.blockBackGesture;
-      if (onDragEnd) onDragEnd();
+      onDragEnd?.();
       try { progress.releasePointerCapture(pid); } catch { }
     }
 
     progress.addEventListener('pointerdown', e => {
       e.stopPropagation();
       e.preventDefault();
-      if (activePointerId !== null) return;
-      activePointerId = e.pointerId;
+      if (activePid !== null) return;
+      activePid = e.pointerId;
       dragging = true;
-      // ★ 阻止返回手势：拖动进度条时不能触发左滑返回
       if (root) root.dataset.blockBackGesture = '1';
-      if (onDragStart) onDragStart();
+      onDragStart?.();
       try { progress.setPointerCapture(e.pointerId); } catch { }
-      seekTo(e.clientX);
+      seekTo(e.clientX, e.clientY);
     });
 
     progress.addEventListener('pointermove', e => {
-      if (!dragging || e.pointerId !== activePointerId) return;
+      if (!dragging || e.pointerId !== activePid) return;
       e.preventDefault();
-      seekTo(e.clientX);
+      seekTo(e.clientX, e.clientY);
     });
 
     progress.addEventListener('pointerup', endSeek);

@@ -283,6 +283,7 @@
     };
 
     let currentNav = null;
+    let pendingLaunch = null;
     let currentBackHandler = null;
 
     const sleep = ms => new Promise(r => setTimeout(r, ms));
@@ -1717,6 +1718,7 @@
 
       if (resetProgress) {
         currentUnlockProgress = 0;
+        pendingLaunch = null;
         try { WujiTheme.post('unlock-cancel', {}); } catch { }
       }
     }
@@ -1822,14 +1824,19 @@
     }
 
     function finishUnlock(target) {
+      const launch = pendingLaunch;
+      pendingLaunch = null;
+
       try { WujiTheme.post('unlock-finish', {}); } catch { }
 
       lockedView.style.transition = 'transform .3s ease, opacity .3s ease';
       lockedView.style.transform = 'translateY(-100%)';
       lockedView.style.opacity = '0';
 
-      // ★ 按 target 选一个 view 淡入
-      if (target === 'app') {
+      // 有待启动的应用时，视觉上先回到 home，再打开目标应用
+      const visualTarget = launch ? 'home' : target;
+
+      if (visualTarget === 'app') {
         appView.style.setProperty('visibility', 'visible');
         appView.style.transition = 'opacity .3s ease';
         appView.style.opacity = '1';
@@ -1840,12 +1847,11 @@
       }
 
       setTimeout(() => {
-        setView(target);
+        setView(visualTarget);
         lockedView.style.transition = '';
         lockedView.style.transform = '';
         lockedView.style.opacity = '';
 
-        // ★ 清理 inline style，交还给 CSS 控制
         appView.style.removeProperty('visibility');
         appView.style.removeProperty('opacity');
         appView.style.removeProperty('transition');
@@ -1854,7 +1860,13 @@
         homeView.style.removeProperty('transition');
 
         hidePasswordPanel(false);
-      }, 100);
+
+        if (launch) {
+          requestAnimationFrame(() => {
+            openApp(launch.bundle, null, launch.params);
+          });
+        }
+      }, 320);
     }
 
     (function bindLockGesture() {
@@ -2756,6 +2768,24 @@
 
     function launchAppFromNotification(bundle, params) {
       PanelSystem.close();
+      WujiNotification.hideBanner?.();
+
+      if (S.view === 'locked') {
+        const hasPassword = !!Store.get('lock.password', '');
+
+        if (hasPassword) {
+          // 有密码：暂存，弹密码面板
+          pendingLaunch = { bundle, params: params || {} };
+          showPasswordPanel();
+          return;
+        }
+
+        // 无密码：锁屏本身没有保护，直接解锁并打开
+        pendingLaunch = { bundle, params: params || {} };
+        completeUnlock('app');
+        return;
+      }
+
       openApp(bundle, null, params);
     }
 

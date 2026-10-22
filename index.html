@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -14,81 +15,192 @@
       --key-w: 14px;
     }
 
-    * { box-sizing: border-box; }
+    * {
+      box-sizing: border-box;
+    }
 
-    html, body {
-      width: 100%; height: 100%; overflow: hidden;
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
       font-family: var(--wj-font);
       -webkit-font-smoothing: antialiased;
       -webkit-text-size-adjust: none !important;
       -moz-text-size-adjust: none !important;
       text-size-adjust: none !important;
-      background: #000; color: #fff;
+      background: #000;
+      color: #fff;
     }
 
-    html { font-size: 16px !important; }
+    html {
+      font-size: 16px !important;
+    }
 
     body {
-      display: flex; flex-direction: column;
-      height: 100vh; height: 100dvh;
-      overflow: hidden; overscroll-behavior: none;
-      background: #0f1116; color: #e9ecf2;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      height: 100dvh;
+      overflow: hidden;
+      overscroll-behavior: none;
+      background: #0f1116;
+      color: #e9ecf2;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI",
-                   "PingFang SC", "Microsoft YaHei", sans-serif;
+        "PingFang SC", "Microsoft YaHei", sans-serif;
     }
 
     .titlebar {
-      flex: 0 0 auto; height: var(--bar-h);
-      display: flex; align-items: center; justify-content: space-between;
-      gap: 12px; padding: 0 16px;
-      background: #1a1d24; border-bottom: 1px solid #2a2f3a;
-      user-select: none; z-index: 10;
+      flex: 0 0 auto;
+      height: var(--bar-h);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 0 16px;
+      background: #1a1d24;
+      border-bottom: 1px solid #2a2f3a;
+      user-select: none;
+      z-index: 10;
     }
-    .titlebar .title { font-size: 16px; font-weight: 600; letter-spacing: .6px; }
 
-    .tb-actions { display: flex; gap: 8px; }
+    .titlebar .title {
+      font-size: 16px;
+      font-weight: 600;
+      letter-spacing: .6px;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .tb-actions {
+      display: flex;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
     .tb-btn {
-      font: inherit; font-size: 13px; line-height: 1;
-      padding: 7px 12px; color: #8ad4ff;
+      font: inherit;
+      font-size: 13px;
+      line-height: 1;
+      padding: 7px 12px;
+      color: #8ad4ff;
       background: rgba(138, 212, 255, .08);
       border: 1px solid rgba(138, 212, 255, .35);
-      border-radius: 6px; cursor: pointer; white-space: nowrap;
-      transition: background .15s, transform .05s;
+      border-radius: 6px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background .15s, transform .05s, color .15s, border-color .15s;
     }
-    .tb-btn:hover  { background: rgba(138, 212, 255, .18); }
-    .tb-btn:active { transform: translateY(1px); }
+
+    .tb-btn:hover {
+      background: rgba(138, 212, 255, .18);
+    }
+
+    .tb-btn:active {
+      transform: translateY(1px);
+    }
+
+    .tb-btn:disabled {
+      opacity: .4;
+      cursor: not-allowed;
+    }
+
     .tb-btn--danger {
-      color: #ff9fb5; background: rgba(224,53,107,.08);
-      border-color: rgba(224,53,107,.35);
+      color: #ff9fb5;
+      background: rgba(224, 53, 107, .08);
+      border-color: rgba(224, 53, 107, .35);
     }
-    .tb-btn--danger:hover { background: rgba(224,53,107,.18); }
+
+    .tb-btn--danger:hover {
+      background: rgba(224, 53, 107, .18);
+    }
+
+    .tb-btn--wake {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: #8a94a6;
+      background: transparent;
+      border-color: rgba(138, 148, 166, .35);
+    }
+
+    .tb-btn--wake:hover {
+      background: rgba(138, 148, 166, .10);
+    }
+
+    .tb-btn--wake.is-on {
+      color: #5bd67f;
+      background: rgba(91, 214, 127, .16);
+      border-color: rgba(91, 214, 127, .55);
+    }
+
+    .tb-btn--wake.is-on:hover {
+      background: rgba(91, 214, 127, .26);
+    }
+
+    .wake-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: transparent;
+      border: 1.5px solid currentColor;
+      box-sizing: border-box;
+      flex: 0 0 auto;
+      transition: background .15s, box-shadow .15s;
+    }
+
+    .tb-btn--wake.is-on .wake-dot {
+      background: currentColor;
+      border-color: currentColor;
+      box-shadow: 0 0 6px currentColor;
+    }
 
     .stage {
-      flex: 1 1 auto; min-height: 0;
-      display: flex; align-items: center; justify-content: center;
+      flex: 1 1 auto;
+      min-height: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       padding: var(--gap) calc(var(--gap) + 20px);
-      overflow: hidden; container-type: size;
+      overflow: hidden;
+      container-type: size;
       background: radial-gradient(1200px 600px at 50% 0%, #171b23 0%, #0f1116 70%);
     }
 
     .device {
-      position: relative; aspect-ratio: 3 / 4;
+      position: relative;
+      aspect-ratio: 3 / 4;
       width: min(100cqw, calc(100cqh * 3 / 4));
-      max-width: 100%; max-height: 100%;
+      max-width: 100%;
+      max-height: 100%;
     }
-    .screen-wrap { position: absolute; inset: 0; }
+
+    .screen-wrap {
+      position: absolute;
+      inset: 0;
+    }
 
     .screen {
-      position: absolute; inset: 0;
-      overflow: hidden; background: #000;
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      background: #000;
       border-radius: var(--radius);
-      box-shadow: 0 10px 40px rgba(0,0,0,.55), 0 0 0 1px #2a2f3a;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, .55), 0 0 0 1px #2a2f3a;
       z-index: 1;
     }
+
     .screen iframe {
-      position: absolute; left: 50%; top: 50%;
-      width: var(--design-w); height: var(--design-h);
-      border: 0; display: block; background: #000;
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: var(--design-w);
+      height: var(--design-h);
+      border: 0;
+      display: block;
+      background: #000;
       transform-origin: center center;
       transform: translate(-50%, -50%) scale(1);
       will-change: transform;
@@ -99,76 +211,124 @@
     }
 
     .camera-notch {
-      position: absolute; top: 2.2%; right: 3.6%;
+      position: absolute;
+      top: 2.2%;
+      right: 3.6%;
       width: clamp(12px, 4.5%, 18px);
       aspect-ratio: 1;
       border-radius: 50%;
       background: #05070c;
-      z-index: 5; pointer-events: none;
+      z-index: 5;
+      pointer-events: none;
       box-shadow:
-        inset 0 0 0 1px rgba(255,255,255,.06),
-        inset 0 -1px 3px rgba(90,130,255,.6),
-        inset 0 1.5px 2px rgba(0,0,0,1),
-        0 0 6px rgba(0,0,0,.65);
+        inset 0 0 0 1px rgba(255, 255, 255, .06),
+        inset 0 -1px 3px rgba(90, 130, 255, .6),
+        inset 0 1.5px 2px rgba(0, 0, 0, 1),
+        0 0 6px rgba(0, 0, 0, .65);
     }
+
     .camera-notch::after {
       content: "";
-      position: absolute; top: 18%; left: 18%;
-      width: 34%; height: 34%;
+      position: absolute;
+      top: 18%;
+      left: 18%;
+      width: 34%;
+      height: 34%;
       border-radius: 50%;
-      background: rgba(170,210,255,.45);
+      background: rgba(170, 210, 255, .45);
       filter: blur(.6px);
     }
 
     .hw-rail {
-      position: absolute; display: flex; flex-direction: column;
-      gap: 8px; z-index: 2;
+      position: absolute;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      z-index: 2;
     }
-    .hw-rail--right { left: 100%;  margin-left: 5px;  top: 16%; }
-    .hw-rail--left  { right: 100%; margin-right: 5px; top: 22%; }
+
+    .hw-rail--right {
+      left: 100%;
+      margin-left: 5px;
+      top: 16%;
+    }
+
+    .hw-rail--left {
+      right: 100%;
+      margin-right: 5px;
+      top: 22%;
+    }
 
     .hw-key {
-      position: relative; width: var(--key-w);
-      padding: 0; border: 0; border-radius: 4px;
+      position: relative;
+      width: var(--key-w);
+      padding: 0;
+      border: 0;
+      border-radius: 4px;
       background: linear-gradient(180deg, #3a4050, #232732);
       box-shadow:
-        inset 0 1px 0 rgba(255,255,255,.18),
-        inset 0 -1px 0 rgba(0,0,0,.55),
-        0 2px 4px rgba(0,0,0,.45);
+        inset 0 1px 0 rgba(255, 255, 255, .18),
+        inset 0 -1px 0 rgba(0, 0, 0, .55),
+        0 2px 4px rgba(0, 0, 0, .45);
       cursor: pointer;
       transition: transform .1s, background .1s, box-shadow .1s;
       -webkit-tap-highlight-color: transparent;
       touch-action: none;
     }
+
     .hw-key::before {
       content: "";
       position: absolute;
       inset: -8px -12px;
       border-radius: inherit;
     }
-    .hw-key:hover { background: linear-gradient(180deg, #464e60, #2b3140); }
+
+    .hw-key:hover {
+      background: linear-gradient(180deg, #464e60, #2b3140);
+    }
+
     .hw-key:active {
       transform: scaleX(.7);
       background: linear-gradient(180deg, #4a7dff, #2b5adf);
       box-shadow:
-        inset 0 1px 0 rgba(255,255,255,.35),
-        0 0 16px rgba(74,125,255,.8);
+        inset 0 1px 0 rgba(255, 255, 255, .35),
+        0 0 16px rgba(74, 125, 255, .8);
     }
-    .hw-key--power { height: 72px; }
-    .hw-key--vol-up, .hw-key--vol-down { height: 58px; }
 
-    .device:fullscreen, .device:-webkit-full-screen {
+    .hw-key--power {
+      height: 72px;
+    }
+
+    .hw-key--vol-up,
+    .hw-key--vol-down {
+      height: 58px;
+    }
+
+    .device:fullscreen,
+    .device:-webkit-full-screen {
       aspect-ratio: auto;
-      width: 100vw !important; height: 100vh !important;
-      max-width: none !important; max-height: none !important;
+      width: 100vw !important;
+      height: 100vh !important;
+      max-width: none !important;
+      max-height: none !important;
       background: #000;
-      display: flex; align-items: center; justify-content: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
-    .device:fullscreen .screen-wrap, .device:-webkit-full-screen .screen-wrap {
-      position: relative; inset: auto; flex: 0 0 auto;
-      width: min(88vw, calc(88vh * 3 / 4)); aspect-ratio: 3 / 4;
+
+    .device:fullscreen .screen-wrap,
+    .device:-webkit-full-screen .screen-wrap {
+      position: relative;
+      inset: auto;
+      flex: 0 0 auto;
+      width: min(88vw, calc(88vh * 3 / 4));
+      aspect-ratio: 3 / 4;
     }
-    .device::backdrop { background: #000; }
+
+    .device::backdrop {
+      background: #000;
+    }
   </style>
 </head>
 
@@ -178,6 +338,7 @@
     <span class="title">iWuji</span>
     <div class="tb-actions">
       <button class="tb-btn tb-btn--danger" id="clearDataBtn" type="button">清除数据</button>
+      <button class="tb-btn tb-btn--wake is-on" id="wakeBtn" type="button">不息屏</button>
       <button class="tb-btn" id="fsBtn" type="button">全屏</button>
     </div>
   </header>
@@ -187,17 +348,17 @@
       <div class="screen-wrap">
 
         <div class="screen" id="screen">
-          <iframe id="osFrame" src="wujios.html" title="iWuji OS"></iframe>
+          <iframe id="osFrame" src="wujios.html" title="iWuji"></iframe>
           <div class="camera-notch" aria-hidden="true"></div>
         </div>
 
         <div class="hw-rail hw-rail--right">
-          <button class="hw-key hw-key--power" id="powerKey" type="button"
-                  aria-label="电源键" title="短按息屏/亮屏 · 长按弹出菜单"></button>
+          <button class="hw-key hw-key--power" id="powerKey" type="button" aria-label="电源键"
+            title="短按息屏/亮屏 · 长按弹出菜单"></button>
         </div>
 
         <div class="hw-rail hw-rail--left">
-          <button class="hw-key hw-key--vol-up"   id="volUpKey"   type="button" aria-label="音量加"></button>
+          <button class="hw-key hw-key--vol-up" id="volUpKey" type="button" aria-label="音量加"></button>
           <button class="hw-key hw-key--vol-down" id="volDownKey" type="button" aria-label="音量减"></button>
         </div>
 
@@ -211,12 +372,13 @@
 
     const deviceEl = document.getElementById('device');
     const screenEl = document.getElementById('screen');
-    const osFrame  = document.getElementById('osFrame');
-    const fsBtn    = document.getElementById('fsBtn');
+    const osFrame = document.getElementById('osFrame');
+    const fsBtn = document.getElementById('fsBtn');
     const clearBtn = document.getElementById('clearDataBtn');
+    const wakeBtn = document.getElementById('wakeBtn');
 
-    const powerKey   = document.getElementById('powerKey');
-    const volUpKey   = document.getElementById('volUpKey');
+    const powerKey = document.getElementById('powerKey');
+    const volUpKey = document.getElementById('volUpKey');
     const volDownKey = document.getElementById('volDownKey');
 
     function fit() {
@@ -236,7 +398,7 @@
       try {
         osFrame.contentWindow?.postMessage(
           { type: 'iwuji:control', action, payload }, '*');
-      } catch {}
+      } catch { }
     }
 
     fsBtn.addEventListener('click', async () => {
@@ -251,6 +413,91 @@
       sendToOS('clear-data');
     });
 
+    /* ---------- 不息屏（Screen Wake Lock） ---------- */
+    const WAKE_KEY = 'iwuji:wakelock';
+    const wakeSupported = 'wakeLock' in navigator;
+
+    let wakeLock = null;
+    let wakeEnabled = true;
+
+    try {
+      const saved = localStorage.getItem(WAKE_KEY);
+      if (saved !== null) wakeEnabled = saved === '1';
+    } catch { }
+
+    if (!wakeSupported) {
+      wakeBtn.disabled = true;
+      wakeEnabled = false;
+    }
+
+    function updateWakeBtn() {
+      wakeBtn.classList.toggle('is-on', wakeEnabled);
+
+      if (!wakeSupported) {
+        wakeBtn.title = '当前浏览器不支持屏幕常亮';
+        return;
+      }
+      if (!wakeEnabled) {
+        wakeBtn.title = '点击开启屏幕常亮';
+        return;
+      }
+      if (wakeLock) {
+        wakeBtn.title = '屏幕常亮已激活，点击关闭';
+      } else {
+        wakeBtn.title = '屏幕常亮已开启（当前未激活，切回页面后自动恢复）';
+      }
+    }
+
+    async function requestWake() {
+      if (!wakeSupported || !wakeEnabled) return;
+      if (wakeLock) return;
+      if (document.visibilityState !== 'visible') return;
+
+      try {
+        wakeLock = await navigator.wakeLock.request('screen');
+        wakeLock.addEventListener('release', () => {
+          wakeLock = null;
+          updateWakeBtn();
+        });
+      } catch (err) {
+        console.warn('[wakelock] 请求失败', err.name, err.message);
+        wakeLock = null;
+      }
+      updateWakeBtn();
+    }
+
+    async function releaseWake() {
+      if (!wakeLock) return;
+      try { await wakeLock.release(); } catch { }
+      wakeLock = null;
+      updateWakeBtn();
+    }
+
+    wakeBtn.addEventListener('click', async () => {
+      if (!wakeSupported) return;
+
+      wakeEnabled = !wakeEnabled;
+      try { localStorage.setItem(WAKE_KEY, wakeEnabled ? '1' : '0'); } catch { }
+
+      if (wakeEnabled) {
+        await requestWake();
+      } else {
+        await releaseWake();
+      }
+      updateWakeBtn();
+    });
+
+    // 页面从后台切回前台，重新请求（系统在切后台时自动释放锁）
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible' && wakeEnabled) {
+        requestWake();
+      }
+    });
+
+    // 页面加载后自动请求
+    if (wakeEnabled) requestWake();
+    updateWakeBtn();
+
     /* ---------- 电源键：短按 / 长按 ---------- */
     let pressStartAt = 0;
     let longPressTimer = null;
@@ -258,13 +505,13 @@
 
     powerKey.addEventListener('pointerdown', e => {
       e.preventDefault();
-      try { powerKey.setPointerCapture(e.pointerId); } catch {}
+      try { powerKey.setPointerCapture(e.pointerId); } catch { }
       pressStartAt = Date.now();
       longPressed = false;
       clearTimeout(longPressTimer);
       longPressTimer = setTimeout(() => {
         longPressed = true;
-        if (navigator.vibrate) { try { navigator.vibrate(18); } catch {} }
+        if (navigator.vibrate) { try { navigator.vibrate(18); } catch { } }
         sendToOS('hw:power-long');
       }, LONG_PRESS_MS);
     });
@@ -285,12 +532,12 @@
 
     /* ---------- 音量键：按下 / 松开 ---------- */
     function bindVolumeKey(el, dir) {
-      const pressAction   = dir === 'up' ? 'hw:vol-up-press'   : 'hw:vol-down-press';
+      const pressAction = dir === 'up' ? 'hw:vol-up-press' : 'hw:vol-down-press';
       const releaseAction = dir === 'up' ? 'hw:vol-up-release' : 'hw:vol-down-release';
 
       el.addEventListener('pointerdown', e => {
         e.preventDefault();
-        try { el.setPointerCapture(e.pointerId); } catch {}
+        try { el.setPointerCapture(e.pointerId); } catch { }
         sendToOS(pressAction);
       });
       el.addEventListener('pointerup', () => sendToOS(releaseAction));
@@ -310,4 +557,5 @@
   </script>
 
 </body>
+
 </html>

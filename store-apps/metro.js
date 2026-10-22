@@ -55,34 +55,21 @@
     if (navigator.vibrate) { try { navigator.vibrate(p); } catch { } }
   }
 
-  /* ---------------- 建筑层 ---------------- */
   function buildLayer(el, count, minH, maxH) {
     const parts = [];
     let total = 0;
     for (let i = 0; i < count; i++) {
       const w = 30 + Math.random() * 45;
       const h = minH + Math.random() * (maxH - minH);
-      /* 每栋楼加窗户 */
-      const rows = Math.max(1, Math.floor(h / 22));
-      const cols = Math.max(1, Math.floor(w / 16));
-      let windows = '';
-      for (let r = 0; r < rows; r++) {
-        for (let c = 0; c < cols; c++) {
-          if (Math.random() < 0.55) {
-            const wx = 6 + c * (w - 12) / cols;
-            const wy = 8 + r * (h - 16) / rows;
-            windows += `<i style="left:${wx.toFixed(1)}px;top:${wy.toFixed(1)}px"></i>`;
-          }
-        }
-      }
-      parts.push(`<div class="b" style="width:${w.toFixed(1)}px;height:${h.toFixed(1)}px">${windows}</div>`);
+      parts.push(
+        `<div class="b" style="width:${w.toFixed(1)}px;height:${h.toFixed(1)}px"></div>`
+      );
       total += w + 8;
     }
     el.innerHTML = parts.join('') + parts.join('');
     return total;
   }
 
-  /* ---------------- 云 ---------------- */
   function buildClouds(el, count) {
     let html = '';
     for (let i = 0; i < count; i++) {
@@ -488,28 +475,22 @@
       .metro-far  { bottom: 42%; z-index: 1; }
       .metro-near { bottom: 42%; z-index: 2; }
 
-      .metro-far .b {
-        position: relative;
-        flex: 0 0 auto;
-        background: rgba(70, 110, 160, .28);
-        border-radius: 3px 3px 0 0;
-      }
-      .metro-near .b {
-        position: relative;
-        flex: 0 0 auto;
-        background: rgba(50, 85, 135, .55);
-        border-radius: 4px 4px 0 0;
-      }
-      .metro-far .b i,
-      .metro-near .b i {
-        position: absolute;
-        width: 4px;
-        height: 4px;
-        border-radius: 1px;
-        display: block;
-      }
-      .metro-far .b i  { background: rgba(255, 235, 150, .55); }
-      .metro-near .b i { background: rgba(255, 235, 150, .75); }
+.metro-far .b,
+.metro-near .b {
+  position: relative;
+  flex: 0 0 auto;
+  background-repeat: repeat;
+}
+
+.metro-far .b {
+  background-color: rgba(70, 110, 160, 0.28);
+  border-radius: 3px 3px 0 0;
+}
+
+.metro-near .b {
+  background-color: rgba(50, 85, 135, 0.55);
+  border-radius: 4px 4px 0 0;
+}
 
       /* ---------- 地面 ---------- */
       .metro-ground {

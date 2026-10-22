@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+  <defs>
+    <linearGradient id="area" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.32"/>
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+
+  <!-- 背景：红色圆角方形 -->
+  <rect width="256" height="256" fill="#f5474b"/>
+
+  <!-- 折线下方渐变填充 -->
+  <path d="M52,176 L92,136 L128,154 L168,96 L204,76 L204,204 L52,204 Z"
+        fill="url(#area)"/>
+
+  <!-- 白色折线 -->
+  <path d="M52,176 L92,136 L128,154 L168,96 L204,76"
+        fill="none"
+        stroke="#ffffff"
+        stroke-width="14"
+        stroke-linecap="round"
+        stroke-linejoin="round"/>
+
+  <!-- 末端数据点 -->
+  <circle cx="204" cy="76" r="14" fill="#ffffff"/>
+</svg>
