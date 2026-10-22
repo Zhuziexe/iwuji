@@ -196,6 +196,7 @@
   <script src="app-storage.js"></script>
   <script src="backup.js"></script>
   <script src="app-loader.js"></script>
+  <script src="app-code-store.js"></script>
   <script src="installer.js"></script>
   <script src="desktop-layout.js"></script>
   <script src="overlay.js"></script>
@@ -1597,6 +1598,14 @@
       open(bundle, params) {
         openApp(bundle, null, params || null);
       },
+      /** 当前前台应用 bundle（不在应用页返回 null） */
+      getCurrentBundle() {
+        return S.view === 'app' ? S.currentBundle : null;
+      },
+      /** 关闭当前应用，回到桌面 */
+      close() {
+        if (S.view === 'app') closeApp();
+      },
     };
 
     function disposeCurrentApp() {
@@ -2716,13 +2725,6 @@
           }
         }
 
-        try {
-          const n = await WujiAppInstaller.pruneMissing?.();
-          if (n) console.log('[prune] removed', n);
-        } catch (e) {
-          console.warn('[prune] 失败', e);
-        }
-
         const installedLoads = WujiApps.installeds().map(app => {
           if (!app._src) return Promise.resolve();
           return WujiAppLoader.load(app._src, app.version).catch(err => {
@@ -2788,10 +2790,8 @@
       openApp: launchAppFromNotification,
     });
 
-    /* 内置应用：先登记元数据，桌面图标立刻可见 */
     BUILTIN_APPS.forEach(meta => WujiApps.registerMeta(meta, 'builtin'));
 
-    WujiAppInstaller.restore();
     DesktopLayout.seedFromRegistry();
     renderHome();
 
@@ -2804,6 +2804,37 @@
         renderHome();
       }
     });
+
+    (async () => {
+      let legacyRecords = [];
+      try {
+        const r = await WujiAppInstaller.restore();
+        if (r && Array.isArray(r.legacyRecords)) {
+          legacyRecords = r.legacyRecords;
+        }
+      } catch (e) {
+        console.warn('[boot] restore failed', e);
+      }
+
+      /* 保险再 seed 一次（restore 里 registerMeta 已触发事件，
+         但如果没有应用需要恢复，这里确保桌面是最新的） */
+      try {
+        DesktopLayout.seedFromRegistry();
+        renderHome();
+      } catch (e) { console.warn('[boot] reseed failed', e); }
+
+      if (legacyRecords.length) {
+        setTimeout(() => {
+          WujiAppInstaller.migrateLegacyToIdb(legacyRecords)
+            .then(n => {
+              if (n > 0) {
+                console.log(`[migrate] ${n} 个应用已迁移到本地，下次刷新生效`);
+              }
+            })
+            .catch(e => console.warn('[migrate] failed', e));
+        }, 3000);
+      }
+    })();
 
     window.addEventListener('resize', () => {
       const w = desktopViewportEl.offsetWidth;

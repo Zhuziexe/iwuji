@@ -1,6 +1,6 @@
 /* =========================================================
    backup.js —— 全量备份 / 恢复
-     备份：localStorage(wujios:) + 所有 IndexedDB
+     备份：localStorage(wujios:) + 所有 IndexedDB（含应用代码库）
      恢复：覆盖写入 + 触发重启
    ========================================================= */
 window.WujiBackup = (() => {
@@ -50,8 +50,8 @@ window.WujiBackup = (() => {
         console.warn('[backup] indexedDB.databases failed', e);
       }
     }
-    // 兜底：从已安装应用 + 内置应用里猜库名
-    const names = new Set();
+    // 兜底：从已安装应用 + 内置应用 + 应用代码库里猜库名
+    const names = new Set(['wujios-appcode']);
     try {
       (window.Store?.get?.('installedApps', []) || [])
         .forEach(a => a.bundle && names.add(a.bundle));
@@ -142,6 +142,9 @@ window.WujiBackup = (() => {
       };
       req.onsuccess = () => resolve(req.result);
       req.onerror = () => reject(req.error);
+      req.onblocked = () => {
+        console.warn('[backup] openOrCreate blocked:', name);
+      };
     });
   }
 
@@ -220,12 +223,10 @@ window.WujiBackup = (() => {
 
   function triggerRestart() {
     try {
-      // 标记：下一次加载时自动开机
       sessionStorage.setItem('wujios:restore-pending', '1');
     } catch (e) {
       console.warn('[backup] sessionStorage failed', e);
     }
-    // 立刻刷新整个 DOM，销毁所有应用状态
     location.reload();
   }
 

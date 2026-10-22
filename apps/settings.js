@@ -357,6 +357,9 @@
         display: flex;
         flex-direction: column;
       }
+      .settings-section[hidden] {
+        display: none !important;
+      }
 
       .settings-item {
         display: flex;
@@ -423,6 +426,16 @@
       }
       .settings-row + .settings-row {
         border-top: 1px solid rgba(0, 0, 0, .07);
+      }
+      .settings-row--tap {
+        cursor: pointer;
+        user-select: none;
+        -webkit-user-select: none;
+        -webkit-tap-highlight-color: transparent;
+        transition: background .12s;
+      }
+      .settings-row--tap:active {
+        background: rgba(0, 0, 0, .04);
       }
       .settings-row__value {
         color: var(--wj-text-dim);
@@ -1018,6 +1031,31 @@
         transform: scale(.96);
         filter: brightness(.9);
       }
+      .sideload-status {
+        padding: 12px 18px;
+        text-align: center;
+        font-size: 13px;
+        color: var(--wj-text-muted);
+        letter-spacing: .3px;
+        line-height: 1.6;
+        min-height: 20px;
+      }
+      .sideload-status.is-error { color: var(--wj-danger, #e0356b); }
+      .sideload-status.is-ok    { color: #34c759; }
+      .sideload-status.is-busy  { color: var(--wj-primary); }
+      .sideload-tip {
+        padding: 14px 18px;
+        font-size: 13px;
+        color: var(--wj-text-muted);
+        line-height: 1.7;
+      }
+      .sideload-tip code {
+        padding: 1px 5px;
+        border-radius: 4px;
+        background: rgba(0, 0, 0, .06);
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 12px;
+      }
     `,
 
     overlays: [
@@ -1190,6 +1228,7 @@
                   <span>移动数据</span>
                 </div>
               </div>
+
               <div class="settings-section">
                 <div class="settings-item" data-act="sound">
                   <div class="settings-item__icon" style="background:#3a6ff0">${ICON.sound}</div>
@@ -1208,6 +1247,7 @@
                   <span>生物识别和密码</span>
                 </div>
               </div>
+
               <div class="settings-section">
                 <div class="settings-item" data-act="app-manage">
                   <div class="settings-item__icon" style="background:#ffb800">${ICON.grid}</div>
@@ -1220,6 +1260,21 @@
                 <div class="settings-item" data-act="backup">
                   <div class="settings-item__icon" style="background:#3a6ff0">${ICON.backup}</div>
                   <span>备份和恢复</span>
+                </div>
+              </div>
+
+              <div class="settings-section" id="devSection" hidden>
+                <div class="settings-item" data-act="devmode">
+                  <div class="settings-item__icon" style="background:#8e8e93">
+                    <svg viewBox="0 0 24 24" fill="none"
+                         stroke="currentColor" stroke-width="2.2"
+                         stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M8 7l-5 5 5 5"/>
+                      <path d="M16 7l5 5-5 5"/>
+                      <path d="M14 4l-4 16"/>
+                    </svg>
+                  </div>
+                  <span>开发者选项</span>
                 </div>
               </div>
             </div>
@@ -1249,13 +1304,29 @@
             ?.addEventListener('click', () => ctx.push('display'));
           root.querySelector('[data-act="backup"]')
             ?.addEventListener('click', () => ctx.push('backup'));
-          const target = ctx.data && ctx.data.route;
+          root.querySelector('[data-act="devmode"]')
+            ?.addEventListener('click', () => ctx.push('devmode'));
 
+          /* ★ 开发者选项 section 显隐 */
+          const devSection = root.querySelector('#devSection');
+          function syncDevSection() {
+            if (devSection) devSection.hidden = !Store.get('devMode.enabled', false);
+          }
+          syncDevSection();
+
+          /* 从 about 返回时，Store 可能刚被解锁，重新同步 */
+          const offDevSync = ctx.nav.onChange(() => {
+            if (ctx.nav.current?.route?.name === 'home') syncDevSection();
+          });
+
+          const target = ctx.data && ctx.data.route;
           if (target && ctx.nav && ctx.nav.routes && ctx.nav.routes[target]) {
             requestAnimationFrame(() => {
               ctx.nav.reset(target, {});
             });
           }
+
+          return () => { offDevSync(); };
         },
       },
 
@@ -1282,7 +1353,7 @@
                   <span>型号</span>
                   <span class="settings-row__value">IWUJI-1</span>
                 </div>
-                <div class="settings-row">
+                <div class="settings-row settings-row--tap" id="aboutVersionRow">
                   <span>WujiOS版本</span>
                   <span class="settings-row__value">1.0.114</span>
                 </div>
@@ -1308,33 +1379,89 @@
 
         mount(root) {
           const btn = root.querySelector('#checkUpdateBtn');
-          if (!btn) return;
+          const versionEl = root.querySelector('#aboutVersionRow');
 
           let t1 = null, t2 = null;
           let destroyed = false;
+          let tapCount = 0;
+          let tapTimer = null;
 
-          btn.addEventListener('click', () => {
-            if (btn.classList.contains('is-disabled') || destroyed) return;
+          /* ---- toast ---- */
+          let toastEl = null;
+          let toastTimer = null;
 
-            btn.classList.add('is-disabled');
-            btn.textContent = '检查更新中';
+          function showToast(msg, ms = 1600) {
+            if (!toastEl) {
+              toastEl = document.createElement('div');
+              toastEl.style.cssText =
+                'position:absolute;left:50%;bottom:64px;transform:translate(-50%,8px);' +
+                'padding:10px 20px;border-radius:999px;background:rgba(0,0,0,.85);' +
+                'color:#fff;font-size:13px;font-weight:500;letter-spacing:.3px;' +
+                'white-space:nowrap;pointer-events:none;opacity:0;z-index:850;' +
+                'transition:opacity .2s ease, transform .2s ease;' +
+                'box-shadow:0 4px 16px rgba(0,0,0,.25);';
+              root.appendChild(toastEl);
+            }
+            toastEl.textContent = msg;
+            void toastEl.offsetWidth;
+            toastEl.style.opacity = '1';
+            toastEl.style.transform = 'translate(-50%,0)';
+            clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => {
+              toastEl.style.opacity = '0';
+              toastEl.style.transform = 'translate(-50%,8px)';
+            }, ms);
+          }
 
-            t1 = setTimeout(() => {
-              if (destroyed) return;
-              btn.textContent = '已是最新版本';
+          if (versionEl) {
+            versionEl.addEventListener('click', () => {
+              if (Store.get('devMode.enabled', false)) {
+                showToast('已经处于开发者模式');
+                return;
+              }
 
-              t2 = setTimeout(() => {
+              tapCount++;
+              clearTimeout(tapTimer);
+              tapTimer = setTimeout(() => { tapCount = 0; }, 2000);
+
+              if (tapCount >= 7) {
+                tapCount = 0;
+                clearTimeout(tapTimer);
+                Store.set('devMode.enabled', true);
+                showToast('开发者模式已开启', 2500);
+                if (navigator.vibrate) {
+                  try { navigator.vibrate([20, 40, 20]); } catch { }
+                }
+                return;
+              }
+            });
+          }
+
+          if (btn) {
+            btn.addEventListener('click', () => {
+              if (btn.classList.contains('is-disabled') || destroyed) return;
+              btn.classList.add('is-disabled');
+              btn.textContent = '检查更新中';
+
+              t1 = setTimeout(() => {
                 if (destroyed) return;
-                btn.classList.remove('is-disabled');
-                btn.textContent = '检查更新';
-              }, 2000);
-            }, 3000);
-          });
+                btn.textContent = '已是最新版本';
+                t2 = setTimeout(() => {
+                  if (destroyed) return;
+                  btn.classList.remove('is-disabled');
+                  btn.textContent = '检查更新';
+                }, 2000);
+              }, 3000);
+            });
+          }
 
           return () => {
             destroyed = true;
             clearTimeout(t1);
             clearTimeout(t2);
+            clearTimeout(tapTimer);
+            clearTimeout(toastTimer);
+            if (toastEl) { toastEl.remove(); toastEl = null; }
           };
         },
       },
@@ -2453,6 +2580,256 @@
               importBtn.style.pointerEvents = '';
               importBtn.style.opacity = '';
             }
+          });
+        },
+      },
+      devmode: {
+        name: 'devmode',
+
+        render() {
+          return `
+            <div class="settings-page">
+              <div class="settings-title">开发者选项</div>
+
+              <div class="settings-section">
+                <div class="settings-item" id="sideloadPick">
+                  <div class="settings-item__icon" style="background:#8e44ad">
+                    <svg viewBox="0 0 24 24" fill="none"
+                         stroke="currentColor" stroke-width="2.2"
+                         stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M12 3v12"/>
+                      <path d="M7 10l5 5 5-5"/>
+                      <path d="M5 21h14"/>
+                    </svg>
+                  </div>
+                  <span>侧载应用</span>
+                </div>
+                <input type="file" id="sideloadInput"
+                       accept=".js,application/javascript,text/javascript" hidden>
+              </div>
+
+              <div class="sideload-tip" style="padding:2px 18px 0;">
+                JS 顶层必须调用
+                <code>WujiApps.registerInstalled({...})</code>，
+                图标请用 <code>data:</code> URL 或远程 <code>https</code> 地址，
+                不要用相对路径。
+              </div>
+
+              <div class="settings-section">
+                <div class="settings-item" id="disableDevBtn"
+                     style="color:var(--wj-danger,#e0356b);">
+                  <div class="settings-item__icon" style="background:#e0356b">
+                    <svg viewBox="0 0 24 24" fill="none"
+                         stroke="currentColor" stroke-width="2.2"
+                         stroke-linecap="round" stroke-linejoin="round">
+                      <circle cx="12" cy="12" r="9"/>
+                      <path d="M9 9l6 6"/>
+                      <path d="M15 9l-6 6"/>
+                    </svg>
+                  </div>
+                  <span>关闭开发者选项</span>
+                </div>
+              </div>
+
+              <div class="sideload-status" id="sideloadStatus"></div>
+            </div>
+          `;
+        },
+
+        mount(root, ctx) {
+          const pickEl = root.querySelector('#sideloadPick');
+          const inputEl = root.querySelector('#sideloadInput');
+          const statusEl = root.querySelector('#sideloadStatus');
+          const disableBtn = root.querySelector('#disableDevBtn');
+
+          let busy = false;
+
+          function setStatus(text, kind) {
+            if (!statusEl) return;
+            statusEl.textContent = text || '';
+            statusEl.classList.toggle('is-error', kind === 'error');
+            statusEl.classList.toggle('is-ok',    kind === 'ok');
+            statusEl.classList.toggle('is-busy',  kind === 'busy');
+          }
+
+          function setPickDisabled(on) {
+            if (!pickEl) return;
+            pickEl.style.pointerEvents = on ? 'none' : '';
+            pickEl.style.opacity = on ? '.55' : '';
+          }
+
+          /* 临时替换 registerInstalled 捕获 meta */
+          function captureRegistration(code) {
+            return new Promise((resolve, reject) => {
+              const orig = WujiApps.registerInstalled;
+              let captured = null;
+              let count = 0;
+
+              WujiApps.registerInstalled = meta => {
+                captured = meta;
+                count++;
+                return true;
+              };
+
+              try {
+                new Function(code)();
+              } catch (e) {
+                WujiApps.registerInstalled = orig;
+                return reject(new Error('执行失败：' + (e.message || e)));
+              } finally {
+                WujiApps.registerInstalled = orig;
+              }
+
+              if (count === 0) return reject(new Error('JS 未调用 registerInstalled'));
+              if (count > 1)   return reject(new Error('JS 注册了多个应用，一次只能侧载一个'));
+              if (!captured || !captured.bundlename) {
+                return reject(new Error('缺少 bundlename'));
+              }
+              resolve(captured);
+            });
+          }
+
+          async function installSideload(meta, code) {
+            const bundle  = meta.bundlename;
+            const version = meta.version || '1.0.0';
+
+            /* 1. 写 IDB（原子覆盖） */
+            await WujiAppCode.upsert({
+              bundle,
+              version,
+              code,
+              meta: {
+                name:        meta.name        || bundle,
+                icon:        meta.icon        || '',
+                author:      meta.author      || '',
+                description: meta.description || '',
+              },
+              savedAt: Date.now(),
+            });
+
+            /* 2. 写 Store 记录 */
+            const record = {
+              bundle,
+              name:        meta.name        || bundle,
+              icon:        meta.icon        || '',
+              version,
+              author:      meta.author      || '',
+              description: meta.description || '',
+              src:         `idb://${bundle}`,
+              installedAt: Date.now(),
+            };
+            const list = Store.get('installedApps', []) || [];
+            const idx  = list.findIndex(a => a.bundle === bundle);
+            if (idx >= 0) {
+              list[idx] = { ...list[idx], ...record, installedAt: list[idx].installedAt };
+            } else {
+              list.push(record);
+            }
+            Store.set('installedApps', list);
+
+            /* 3. 清 loader 缓存 */
+            try { WujiAppLoader.invalidate(`idb://${bundle}`); } catch { }
+
+            /* 4. 重注册 */
+            if (WujiApps.isInstalled(bundle)) {
+              try { WujiApps.shutdownOne(bundle); } catch { }
+              WujiApps.unregister(bundle);
+            }
+            WujiApps.registerMeta({
+              bundlename:  bundle,
+              name:        record.name,
+              icon:        record.icon,
+              version,
+              author:      record.author,
+              description: record.description,
+              src:         `idb://${bundle}`,
+            }, 'installed');
+
+            /* 5. 桌面重绘 */
+            try { DesktopLayout.seedFromRegistry(); } catch { }
+          }
+
+          /* ---------- 侧载 ---------- */
+          pickEl.addEventListener('click', () => {
+            if (busy) return;
+            inputEl.click();
+          });
+
+          inputEl.addEventListener('change', async () => {
+            const file = inputEl.files && inputEl.files[0];
+            inputEl.value = '';
+            if (!file || busy) return;
+
+            busy = true;
+            setPickDisabled(true);
+            setStatus('读取文件…', 'busy');
+
+            try {
+              const code = await file.text();
+              setStatus('解析应用信息…', 'busy');
+
+              const meta = await captureRegistration(code);
+              const bundle = meta.bundlename;
+
+              const exist = WujiApps.get(bundle);
+              if (exist && !WujiApps.isInstalled(bundle)) {
+                throw new Error(`包名 ${bundle} 已被系统应用占用`);
+              }
+
+              const isUpdate = WujiApps.isInstalled(bundle);
+              const res = await WujiDialog.show({
+                bundlename: 'com.wujios.settings',
+                icon: meta.icon || '',
+                title: isUpdate ? '更新侧载应用' : '安装侧载应用',
+                content: `应用：${meta.name || bundle}\n版本：${meta.version || '1.0.0'}\n包名：${bundle}`,
+                buttons: [
+                  { value: '取消', color: 'var(--wj-primary)' },
+                  { value: isUpdate ? '更新' : '安装', color: 'var(--wj-primary)' },
+                ],
+              });
+              if (res !== '安装' && res !== '更新') {
+                setStatus('');
+                busy = false;
+                setPickDisabled(false);
+                return;
+              }
+
+              setStatus(isUpdate ? '更新中…' : '安装中…', 'busy');
+              await installSideload(meta, code);
+
+              setStatus(isUpdate ? '更新成功' : '安装成功', 'ok');
+              if (navigator.vibrate) { try { navigator.vibrate(10); } catch { } }
+
+              busy = false;
+              setPickDisabled(false);
+            } catch (e) {
+              console.warn('[sideload]', e);
+              setStatus('失败：' + (e.message || '未知错误'), 'error');
+              busy = false;
+              setPickDisabled(false);
+            }
+          });
+
+          /* ---------- 关闭开发者选项 ---------- */
+          disableBtn.addEventListener('click', async () => {
+            if (busy) return;
+
+            const res = await WujiDialog.show({
+              bundlename: 'com.wujios.settings',
+              title: '关闭开发者选项',
+              content: '关闭后侧载入口会隐藏，已安装的侧载应用不受影响。',
+              buttons: [
+                { value: '取消', color: 'var(--wj-primary)' },
+                { value: '关闭', color: 'var(--wj-danger)' },
+              ],
+            });
+            if (res !== '关闭') return;
+
+            Store.set('devMode.enabled', false);
+            if (navigator.vibrate) { try { navigator.vibrate(10); } catch { } }
+
+            /* 返回首页；首页 nav.onChange 会自动 syncDevSection 隐藏整块 section */
+            ctx.pop();
           });
         },
       },
