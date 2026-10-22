@@ -11,13 +11,13 @@
           "id": "blue",
           "text": "牛逼蓝",
           "image": "./assets/com.wujinb.wmall/iwuji_blue.png",
-          "buyable": true
+          "buyable": false
         },
         {
           "id": "white",
           "text": "牛逼白",
           "image": "./assets/com.wujinb.wmall/iwuji_white.png",
-          "buyable": true
+          "buyable": false
         },
         {
           "id": "black",
@@ -72,7 +72,7 @@
       "icon": "./assets/com.wujinb.wmall/iwuji_charger.png",
       "name": "iWuji快充充电器",
       "price": 79,
-      "buyable": false
+      "buyable": true
     },
     {
       "id": "case",
