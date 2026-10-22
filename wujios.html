@@ -2131,10 +2131,8 @@
         if (e.target.tagName === 'IFRAME') return;
         const t = e.touches[0];
         if (!t) return;
-        moveGesture(t.clientX, t.clientY, () => {
-          if (e.cancelable) e.preventDefault();
-        });
-      }, { passive: false });
+        moveGesture(t.clientX, t.clientY, null);
+      }, { passive: true });         
 
       appScreen.addEventListener('touchend', endGesture);
       appScreen.addEventListener('touchcancel', endGesture);

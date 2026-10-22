@@ -796,7 +796,7 @@ img {
   color: var(--wj-text);
   will-change: transform;
   transition: none;
-  touch-action: auto;
+  touch-action: pan-y;
 }
 
 .app-page {
