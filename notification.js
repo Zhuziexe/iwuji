@@ -9,7 +9,7 @@
      - 横幅通知（3 秒自动消失 / 左右滑关闭 / 上滑打开通知中心 / 点击拉起）
    ========================================================= */
 window.WujiNotification = (() => {
-    const DAYS = ['星期日','星期一','星期二','星期三','星期四','星期五','星期六'];
+  const DAYS = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'];
 
   const listeners = new Set();
 
@@ -45,12 +45,12 @@ window.WujiNotification = (() => {
     const idx = list.findIndex(n => sameKey(n, opts.bundlename, id));
 
     const next = {
-      bundlename:  opts.bundlename,
+      bundlename: opts.bundlename,
       id,
-      title:       String(opts.title   || ''),
-      content:     String(opts.content || ''),
-      showtime:    opts.showtime !== false,
-      notifyuser:  !!opts.notifyuser,
+      title: String(opts.title || ''),
+      content: String(opts.content || ''),
+      showtime: opts.showtime !== false,
+      notifyuser: !!opts.notifyuser,
       clickparams: opts.clickparams || {},
     };
 
@@ -60,9 +60,9 @@ window.WujiNotification = (() => {
       const prev = list[idx];
       /* 内容完全相同 → 不刷新 UI */
       if (prev.title === next.title &&
-          prev.content === next.content &&
-          prev.showtime === next.showtime &&
-          JSON.stringify(prev.clickparams) === JSON.stringify(next.clickparams)) {
+        prev.content === next.content &&
+        prev.showtime === next.showtime &&
+        JSON.stringify(prev.clickparams) === JSON.stringify(next.clickparams)) {
         return true;
       }
       record = { ...prev, ...next, time: Date.now() };
@@ -142,7 +142,7 @@ window.WujiNotification = (() => {
 
       const t0 = audioCtx.currentTime;
       [880, 1174].forEach((freq, i) => {
-        const osc  = audioCtx.createOscillator();
+        const osc = audioCtx.createOscillator();
         const gain = audioCtx.createGain();
         osc.type = 'sine';
         osc.frequency.value = freq;
@@ -162,8 +162,8 @@ window.WujiNotification = (() => {
     if (bannerEl) {
       bannerEl.classList.remove('is-show');
       bannerEl.style.transition = '';
-      bannerEl.style.transform  = '';
-      bannerEl.style.opacity    = '';
+      bannerEl.style.transform = '';
+      bannerEl.style.opacity = '';
     }
   }
 
@@ -208,8 +208,8 @@ window.WujiNotification = (() => {
     /* 复位 */
     if (bannerTimer) { clearTimeout(bannerTimer); bannerTimer = null; }
     bannerEl.style.transition = '';
-    bannerEl.style.transform  = '';
-    bannerEl.style.opacity    = '';
+    bannerEl.style.transform = '';
+    bannerEl.style.opacity = '';
     bannerEl.classList.remove('is-show');
     void bannerEl.offsetWidth;
     bannerEl.classList.add('is-show');
@@ -222,8 +222,8 @@ window.WujiNotification = (() => {
 
     /* ---- 手势状态 ---- */
     let pressed = false;
-    let moved   = false;
-    let pid     = null;
+    let moved = false;
+    let pid = null;
     let sx = 0, sy = 0;
     let bx = 0, by = 0;
 
@@ -240,8 +240,8 @@ window.WujiNotification = (() => {
       bannerTimer = null;
       bannerEl.classList.remove('is-show');
       bannerEl.style.transition = '';
-      bannerEl.style.transform  = '';
-      bannerEl.style.opacity    = '';
+      bannerEl.style.transform = '';
+      bannerEl.style.opacity = '';
     }
 
     function slideOutTo(dirX) {
@@ -250,26 +250,25 @@ window.WujiNotification = (() => {
       const W = window.innerWidth + 60;
       const H = 140;
 
-      bannerEl.style.transition =
-        'transform .28s cubic-bezier(.2,.7,.3,1), opacity .22s ease';
+      bannerEl.style.transition = 'transform .28s cubic-bezier(.2,.7,.3,1)';
 
       if (dirX === 0) {
         bannerEl.style.transform = `translateY(${-H}px)`;
       } else {
         bannerEl.style.transform = `translateX(${dirX * W}px)`;
       }
-      bannerEl.style.opacity = '0';
 
       setTimeout(() => {
         bannerEl.classList.remove('is-show');
         bannerEl.style.transition = '';
-        bannerEl.style.transform  = '';
-        bannerEl.style.opacity    = '';
+        bannerEl.style.transform = '';
+        bannerEl.style.opacity = '';
       }, 260);
     }
 
     function onDown(e) {
       if (e.pointerType === 'mouse' && e.button !== 0) return;
+      e.preventDefault();
       pressed = true;
       moved = false;
       pid = e.pointerId;
@@ -292,10 +291,6 @@ window.WujiNotification = (() => {
 
       const useBy = by < 0 ? by : 0;
       bannerEl.style.transform = `translate(${bx}px, ${useBy}px)`;
-
-      const fade = Math.max(0.15,
-        1 - Math.abs(bx) / 220 - Math.max(0, -by) / 180);
-      bannerEl.style.opacity = String(fade);
     }
 
     function onUp(e) {
@@ -303,7 +298,7 @@ window.WujiNotification = (() => {
       pressed = false;
       try { bannerEl.releasePointerCapture(e.pointerId); } catch { }
 
-      const W_THRESH  = 60;
+      const W_THRESH = 60;
       const UP_THRESH = 42;
 
       if (!moved) {
@@ -317,7 +312,7 @@ window.WujiNotification = (() => {
         return;
       }
 
-       if (Math.abs(bx) > W_THRESH) {
+      if (Math.abs(bx) > W_THRESH) {
         slideOutTo(bx > 0 ? 1 : -1);
         try {
           unpublish({ bundlename: record.bundlename, id: record.id });
@@ -331,13 +326,13 @@ window.WujiNotification = (() => {
       bannerEl.style.transition =
         'transform .26s cubic-bezier(.2,.7,.3,1), opacity .22s ease';
       bannerEl.style.transform = '';
-      bannerEl.style.opacity   = '';
+      bannerEl.style.opacity = '';
       scheduleAutoHide();
     }
 
-    bannerEl.onpointerdown   = onDown;
-    bannerEl.onpointermove   = onMove;
-    bannerEl.onpointerup     = onUp;
+    bannerEl.onpointerdown = onDown;
+    bannerEl.onpointermove = onMove;
+    bannerEl.onpointerup = onUp;
     bannerEl.onpointercancel = onUp;
 
     scheduleAutoHide();
@@ -367,10 +362,10 @@ window.WujiNotification = (() => {
     const { scrollTop, scrollHeight, clientHeight } = ncListEl;
 
     const canScroll = scrollHeight > clientHeight + 1;
-    const atTop     = scrollTop <= 1;
-    const atBottom  = scrollTop + clientHeight >= scrollHeight - 1;
+    const atTop = scrollTop <= 1;
+    const atBottom = scrollTop + clientHeight >= scrollHeight - 1;
 
-    ncListEl.classList.toggle('has-top-mask',    canScroll && !atTop);
+    ncListEl.classList.toggle('has-top-mask', canScroll && !atTop);
     ncListEl.classList.toggle('has-bottom-mask', canScroll && !atBottom);
   }
 
@@ -378,8 +373,8 @@ window.WujiNotification = (() => {
     if (!ncListEl) return;
     const list = loadAll();
 
-    ncEmptyEl.hidden  = list.length > 0;
-    ncListEl.hidden   = list.length === 0;
+    ncEmptyEl.hidden = list.length > 0;
+    ncListEl.hidden = list.length === 0;
     ncClearBtn.hidden = list.length === 0;
 
     const keys = new Set(list.map(n => n.bundlename + '::' + n.id));
@@ -421,7 +416,7 @@ window.WujiNotification = (() => {
     }
 
     /* 按 bundlename 去重，保留首次出现的顺序 */
-    const seen   = new Set();
+    const seen = new Set();
     const unique = [];
     for (const n of list) {
       if (seen.has(n.bundlename)) continue;
@@ -429,8 +424,8 @@ window.WujiNotification = (() => {
       unique.push(n.bundlename);
     }
 
-    const shown    = unique.slice(0, STATUS_ICON_MAX);
-    const hasMore  = unique.length > STATUS_ICON_MAX;
+    const shown = unique.slice(0, STATUS_ICON_MAX);
+    const hasMore = unique.length > STATUS_ICON_MAX;
 
     let html = '';
     for (const bundle of shown) {
@@ -466,7 +461,7 @@ window.WujiNotification = (() => {
   }
 
   function updateItem(el, n) {
-    el.querySelector('.nc-item__title').textContent   = n.title   || '';
+    el.querySelector('.nc-item__title').textContent = n.title || '';
     el.querySelector('.nc-item__content').textContent = n.content || '';
 
     const timeEl = el.querySelector('.nc-item__time');
@@ -515,13 +510,13 @@ window.WujiNotification = (() => {
       if (!active || (e && e.pointerId !== pointerId)) return;
       active = false;
 
-      const moved  = Math.abs(dx);
+      const moved = Math.abs(dx);
       const tapped = moved < 6;
 
       el.style.transition =
         'transform .22s ease, opacity .22s ease, height .24s ease, margin .24s ease, padding .24s ease';
       el.style.transform = '';
-      el.style.opacity   = '';
+      el.style.opacity = '';
 
       if (tapped) {
         triggerLaunch(n);
@@ -532,12 +527,12 @@ window.WujiNotification = (() => {
 
         /* 1) 记录其余项的当前位置，作为 FLIP 起点 */
         const siblings = [...ncListEl.children].filter(c => c !== el);
-        const oldTops  = siblings.map(c => c.getBoundingClientRect().top);
+        const oldTops = siblings.map(c => c.getBoundingClientRect().top);
 
         /* 2) 被删项先水平滑出 + 淡出 */
         el.style.transition = 'transform .18s ease, opacity .18s ease';
-        el.style.transform  = `translateX(${dir * (el.offsetWidth + 40)}px)`;
-        el.style.opacity    = '0';
+        el.style.transform = `translateX(${dir * (el.offsetWidth + 40)}px)`;
+        el.style.opacity = '0';
 
         /* 3) 从数据中移除 → 触发 renderList 移除 DOM */
         setTimeout(() => {
@@ -551,10 +546,10 @@ window.WujiNotification = (() => {
             if (Math.abs(dy) < 0.5) return;
 
             c.style.transition = 'none';
-            c.style.transform  = `translateY(${dy}px)`;
+            c.style.transform = `translateY(${dy}px)`;
             void c.offsetHeight;                  /* 强制重排 */
             c.style.transition = 'transform .22s cubic-bezier(.2,.7,.3,1)';
-            c.style.transform  = '';
+            c.style.transform = '';
           });
         }, 170);
       }
@@ -573,11 +568,11 @@ window.WujiNotification = (() => {
 
     try { Store.remove('notifications'); } catch { }
 
-    ncListEl     = document.getElementById('ncList');
-    ncEmptyEl    = document.getElementById('ncEmpty');
-    ncClearBtn   = document.getElementById('ncClearBtn');
-    ncClockEl    = document.getElementById('ncClock');
-    ncDateEl     = document.getElementById('ncDate');
+    ncListEl = document.getElementById('ncList');
+    ncEmptyEl = document.getElementById('ncEmpty');
+    ncClearBtn = document.getElementById('ncClearBtn');
+    ncClockEl = document.getElementById('ncClock');
+    ncDateEl = document.getElementById('ncDate');
     statusBarIconsEl = document.getElementById('statusbarNotifIcons');
 
     updateHeadClock();
@@ -615,9 +610,9 @@ window.WujiNotification = (() => {
     hideBanner,
 
     /* 面板控制 —— 全部委托给 PanelSystem */
-    open()    { window.PanelSystem?.open('nc'); },
-    close()   { window.PanelSystem?.close(); },
-    isOpen()  {
+    open() { window.PanelSystem?.open('nc'); },
+    close() { window.PanelSystem?.close(); },
+    isOpen() {
       return !!window.PanelSystem?.isOpen && window.PanelSystem.panel === 'nc';
     },
     openFromLeft() { window.PanelSystem?.open('nc'); },

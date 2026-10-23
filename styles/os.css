@@ -796,7 +796,7 @@ img {
   color: var(--wj-text);
   will-change: transform;
   transition: none;
-  touch-action: pan-y;
+  touch-action: none;
 }
 
 .app-page {
@@ -1434,10 +1434,10 @@ img {
   gap: 10px;
   padding: 11px 14px;
   border-radius: 20px;
-  background: rgba(255, 255, 255, .72);
-  backdrop-filter: blur(26px) saturate(180%);
-  -webkit-backdrop-filter: blur(26px) saturate(180%);
-  border: .5px solid rgba(255, 255, 255, .6);
+  background: rgba(255, 255, 255, .5);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+  border: .5px solid rgba(255, 255, 255, .5);
   box-shadow: 0 12px 34px rgba(0, 0, 0, .2), 0 2px 8px rgba(0, 0, 0, .06);
   color: #101828;
   transform: translateY(-160%);
@@ -1448,13 +1448,13 @@ img {
   user-select: none;
   -webkit-user-select: none;
   touch-action: none;
-  will-change: transform, opacity;
 }
 
 .wj-banner.is-show {
   transform: translateY(0);
   opacity: 1;
   pointer-events: auto;
+  will-change: transform, opacity;
 }
 
 .wj-banner__icon {
@@ -1462,7 +1462,6 @@ img {
   width: 36px;
   height: 36px;
   border-radius: 9px;
-  /* 方形圆角 */
   overflow: hidden;
   background: #fff;
   display: flex;

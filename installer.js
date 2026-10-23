@@ -97,96 +97,77 @@ window.WujiAppInstaller = (() => {
      *   error?: Error,
      * }>}
      */
-    async install(meta, { force = false } = {}) {
+    async install(meta, { force = false, code = null } = {}) {
       if (!meta) throw new Error('installer.install: missing meta');
 
       const bundle = meta.bundle || meta.bundlename;
       const src    = meta.src || meta._src;
       if (!bundle) throw new Error('installer.install: missing bundle');
-      if (!src)    throw new Error('installer.install: missing src');
+      if (!src && code == null) throw new Error('installer.install: missing src/code');
 
       const nextVersion = meta.version || '1.0.0';
       const existing    = this.get(bundle);
 
-      /* 版本判断 */
+      /* force=true 时跳过版本判断，永远覆盖 */
       if (existing && !force) {
         const c = cmpVer(existing.version, nextVersion);
         if (c === 0) return { ok: false, action: 'noop', version: existing.version };
         if (c >  0)  return { ok: false, action: 'newer-local', version: existing.version };
       }
 
-      /* 下载代码（先不动 IDB） */
-      let code;
-      if (src.startsWith('idb://')) {
+      /* 取代码：优先用传入的 code，其次 IDB，最后 fetch */
+      let codeText;
+      if (code != null) {
+        codeText = code;
+      } else if (src.startsWith('idb://')) {
         const rec = await WujiAppCode.get(bundle);
         if (!rec) return { ok: false, action: 'idb-failed', error: new Error('IDB 中不存在代码') };
-        code = rec.code;
+        codeText = rec.code;
       } else {
         try {
           const r = await fetch(src, { cache: 'no-store' });
           if (!r.ok) throw new Error(`HTTP ${r.status}`);
-          code = await r.text();
+          codeText = await r.text();
         } catch (e) {
           return { ok: false, action: 'fetch-failed', error: e };
         }
       }
 
       /* 原子覆盖 IDB */
-      const idbRecord = {
-        bundle,
-        version: nextVersion,
-        code,
-        meta: {
-          name:        meta.name        || bundle,
-          icon:        meta.icon        || '',
-          author:      meta.author      || '',
-          description: meta.description || '',
-        },
-        savedAt: Date.now(),
-      };
-      try { await WujiAppCode.upsert(idbRecord); }
-      catch (e) { return { ok: false, action: 'idb-failed', error: e }; }
+      try {
+        await WujiAppCode.upsert({
+          bundle,
+          version: nextVersion,
+          code: codeText,
+          meta: {
+            name:        meta.name        || bundle,
+            icon:        meta.icon        || '',
+            author:      meta.author      || '',
+            description: meta.description || '',
+          },
+          savedAt: Date.now(),
+        });
+      } catch (e) {
+        return { ok: false, action: 'idb-failed', error: e };
+      }
 
-      /* 写 Store 记录 */
-      const record = recordFromMeta({
-        ...meta,
-        bundle,
-        src: `idb://${bundle}`,
-        version: nextVersion,
-      });
+      /* 写 Store + 重注册 + 清缓存 */
+      const record = recordFromMeta({ ...meta, bundle, src: `idb://${bundle}`, version: nextVersion });
       if (existing) record.installedAt = existing.installedAt || Date.now();
-
       const list = readAll();
-      const idx = list.findIndex(a => a.bundle === bundle);
-      if (idx >= 0) list[idx] = record;
-      else          list.push(record);
+      const idx  = list.findIndex(a => a.bundle === bundle);
+      if (idx >= 0) list[idx] = record; else list.push(record);
       writeAll(list);
 
-      /* 清 loader 缓存（IDB 记录不删） */
-      if (window.WujiAppLoader?.invalidate) {
-        try { WujiAppLoader.invalidate(`idb://${bundle}`); } catch { }
-      }
-
-      /* 运行时重注册 */
-      const wasRunning =
-        window.WujiAppLauncher?.getCurrentBundle?.() === bundle;
+      try { WujiAppLoader.invalidate(`idb://${bundle}`); } catch { }
 
       if (WujiApps.isInstalled(bundle)) {
-        try { WujiApps.shutdownOne(bundle); }
-        catch (e) { console.warn('[installer] shutdownOne', bundle, e); }
+        try { WujiApps.shutdownOne(bundle); } catch { }
         WujiApps.unregister(bundle);
       }
-      WujiApps.registerMeta(
-        { ...metaFromRecord(record), src: `idb://${bundle}` },
-        'installed'
-      );
+      WujiApps.registerMeta({ ...metaFromRecord(record), src: `idb://${bundle}` }, 'installed');
 
-      return {
-        ok: true,
-        action: existing ? 'updated' : 'installed',
-        version: nextVersion,
-        pendingReload: wasRunning,
-      };
+      return { ok: true, action: existing ? 'updated' : 'installed', version: nextVersion };
     },
 
     /* ---------- 检查更新 ---------- */

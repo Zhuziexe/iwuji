@@ -1,7 +1,7 @@
 /* =========================================================
    天气 —— Open-Meteo（无需 API Key）
    路由：
-     home      → 当前天气
+     home      → 当前天气 + 空气质量
      forecast  → 未来 7 天
      city      → 选择城市
    缓存：30 分钟；手动刷新间隔 5 分钟；超过 5 分钟自动刷新
@@ -71,6 +71,16 @@
     99: ['强雷阵雨伴冰雹', '⛈️'],
   };
 
+  /* ---------- 空气质量分级 ---------- */
+  function aqiLevel(aqi) {
+    if (aqi <= 50)  return { label: '优',       color: '#34c759' };
+    if (aqi <= 100) return { label: '良',       color: '#ffb800' };
+    if (aqi <= 150) return { label: '轻度污染', color: '#ff9500' };
+    if (aqi <= 200) return { label: '中度污染', color: '#e0356b' };
+    if (aqi <= 300) return { label: '重度污染', color: '#8e44ad' };
+    return                  { label: '严重污染', color: '#7a2048' };
+  }
+
   function heroGradient(code) {
     if (code === 0 || code === 1)
       return 'linear-gradient(165deg, #5b8dff 0%, #3a5fd0 100%)';
@@ -111,6 +121,7 @@
     return `${p(d.getHours())}:${p(d.getMinutes())}`;
   }
 
+  /* ---------- 并行拉天气 + 空气质量 ---------- */
   async function fetchWeather(city) {
     const params = new URLSearchParams({
       latitude:  city.lat,
@@ -120,16 +131,45 @@
       timezone:  'auto',
       forecast_days: String(FORECAST_DAYS),
     });
-    const res = await fetch(`https://api.open-meteo.com/v1/forecast?${params}`);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    return res.json();
+
+    const airUrl =
+      `https://air-quality-api.open-meteo.com/v1/air-quality` +
+      `?latitude=${city.lat}&longitude=${city.lon}` +
+      `&current=us_aqi,pm2_5,pm10,european_aqi&timezone=auto`;
+
+    /* 并行请求；空气质量失败不影响天气主流程 */
+    const [weatherRes, airRes] = await Promise.allSettled([
+      fetch(`https://api.open-meteo.com/v1/forecast?${params}`),
+      fetch(airUrl),
+    ]);
+
+    if (weatherRes.status !== 'fulfilled' || !weatherRes.value.ok) {
+      throw new Error('weather fetch failed');
+    }
+
+    const weatherJson = await weatherRes.value.json();
+
+    let air = null;
+    if (airRes.status === 'fulfilled' && airRes.value.ok) {
+      try {
+        const airJson = await airRes.value.json();
+        const c = airJson && airJson.current;
+        if (c) {
+          air = {
+            usAqi: typeof c.us_aqi === 'number' ? c.us_aqi : null,
+            euAqi: typeof c.european_aqi === 'number' ? c.european_aqi : null,
+            pm25: typeof c.pm2_5 === 'number' ? c.pm2_5 : null,
+            pm10: typeof c.pm10 === 'number' ? c.pm10 : null,
+          };
+        }
+      } catch { }
+    }
+
+    return { ...weatherJson, air };
   }
 
   /* ---------------------------------------------------------
      缓存清理：保证 cache.* 条目数 <= MAX_CACHED_CITIES
-       - 当前城市一定保留
-       - 其余优先保留"未过期且最近更新"的
-       - 过期 / 超量的删掉
      --------------------------------------------------------- */
   async function cleanupCache(db, keepKey) {
     let keys;
@@ -150,12 +190,10 @@
 
     const others = entries.filter(e => e.key !== keepKey);
 
-    /* 其它城市里，未过期 + 最新的放前面 */
     const fresh = others
       .filter(e => now - e.at < CACHE_TTL)
       .sort((a, b) => b.at - a.at);
 
-    /* 保留：当前城市 + 前 (MAX-1) 个未过期的其它城市 */
     const keep = new Set([
       keepKey,
       ...fresh.slice(0, Math.max(0, MAX_CACHED_CITIES - 1)).map(e => e.key),
@@ -302,6 +340,7 @@
         gap: 8px;
       }
       .weather-hero__range .dot { opacity: .5; }
+
       .weather-meta {
         flex: 0 0 auto;
         display: grid;
@@ -318,7 +357,7 @@
       }
       .weather-meta__label {
         font-size: 12px;
-        color: var(--wj-text-dim);
+        color: var(--wj-text-muted);
       }
       .weather-meta__value {
         font-size: 22px;
@@ -326,6 +365,96 @@
         color: var(--wj-text);
         line-height: 1.1;
       }
+
+      /* ---------- 空气质量卡片 ---------- */
+      .weather-air {
+        flex: 0 0 auto;
+        padding: 14px 16px;
+        border-radius: 16px;
+        background: var(--wj-bg-alt);
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+      .weather-air__top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+      }
+      .weather-air__label {
+        font-size: 14px;
+        color: var(--wj-text-muted);
+        font-weight: 500;
+      }
+      .weather-air__level {
+        padding: 3px 10px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 600;
+        color: #fff;
+        letter-spacing: .3px;
+      }
+      .weather-air__main {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+      }
+      .weather-air__aqi {
+        flex: 0 0 auto;
+        display: flex;
+        align-items: baseline;
+        gap: 4px;
+      }
+      .weather-air__num {
+        font-size: 32px;
+        font-weight: 700;
+        line-height: 1;
+        color: var(--wj-text);
+        font-variant-numeric: tabular-nums;
+        letter-spacing: -1px;
+      }
+      .weather-air__unit {
+        font-size: 12px;
+        color: var(--wj-text-dim);
+        font-weight: 500;
+      }
+      .weather-air__stats {
+        flex: 1 1 auto;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        min-width: 0;
+      }
+      .weather-air__stat {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        min-width: 0;
+      }
+      .weather-air__stat-label {
+        font-size: 12px;
+        color: var(--wj-text-dim);
+      }
+      .weather-air__stat-value {
+        font-size: 16px;
+        font-weight: 600;
+        color: var(--wj-text);
+        font-variant-numeric: tabular-nums;
+      }
+      .weather-air__stat-value i {
+        font-size: 12px;
+        font-weight: 400;
+        font-style: normal;
+        color: var(--wj-text-dim);
+        margin-left: 2px;
+      }
+      .weather-air__empty {
+        font-size: 14px;
+        color: var(--wj-text-dim);
+        padding: 4px 0;
+      }
+
       .weather-more {
         flex: 0 0 auto;
         display: flex;
@@ -338,7 +467,7 @@
         background: var(--wj-bg-alt);
         color: var(--wj-text);
         font: inherit;
-        font-size: 15px;
+        font-size: 16px;
         font-weight: 600;
         cursor: pointer;
         transition: background .15s, transform .1s;
@@ -353,7 +482,7 @@
       .weather-updated {
         flex: 0 0 auto;
         text-align: center;
-        font-size: 11px;
+        font-size: 12px;
         color: var(--wj-text-dim);
         margin-top: -2px;
       }
@@ -534,6 +663,51 @@
             weatherRoot.querySelector('#retryBtn')
               ?.addEventListener('click', () => loadWeather({ force: true }));
           }
+
+          /* ---------- 空气质量卡片 HTML ---------- */
+          function renderAirHtml(air) {
+            if (!air || air.usAqi == null) {
+              return `
+                <div class="weather-air">
+                  <div class="weather-air__top">
+                    <span class="weather-air__label">空气质量</span>
+                  </div>
+                  <div class="weather-air__empty">暂无空气质量数据</div>
+                </div>
+              `;
+            }
+
+            const lv = aqiLevel(air.usAqi);
+            const pm25 = air.pm25 != null ? air.pm25.toFixed(1) : '--';
+            const pm10 = air.pm10 != null ? air.pm10.toFixed(1) : '--';
+
+            return `
+              <div class="weather-air">
+                <div class="weather-air__top">
+                  <span class="weather-air__label">空气质量</span>
+                  <span class="weather-air__level"
+                        style="background:${lv.color}">${lv.label}</span>
+                </div>
+                <div class="weather-air__main">
+                  <div class="weather-air__aqi">
+                    <span class="weather-air__num">${air.usAqi}</span>
+                    <span class="weather-air__unit">AQI</span>
+                  </div>
+                  <div class="weather-air__stats">
+                    <div class="weather-air__stat">
+                      <span class="weather-air__stat-label">PM2.5</span>
+                      <span class="weather-air__stat-value">${pm25}<i>μg/m³</i></span>
+                    </div>
+                    <div class="weather-air__stat">
+                      <span class="weather-air__stat-label">PM10</span>
+                      <span class="weather-air__stat-value">${pm10}<i>μg/m³</i></span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            `;
+          }
+
           function renderWeather(data, fromCache) {
             const cur   = data.current;
             const daily = data.daily;
@@ -567,6 +741,7 @@
                     <span class="weather-meta__value">${hum}%</span>
                   </div>
                 </div>
+                ${renderAirHtml(data.air)}
                 <button class="weather-more" id="moreBtn" type="button">
                   <span>未来 ${FORECAST_DAYS} 天</span>
                   <span class="weather-more__arrow">›</span>

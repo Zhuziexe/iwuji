@@ -2185,39 +2185,53 @@
         }
       }
 
-      /* ★ 把解锁挂到"用户真正能点下去的那个文档"上 */
       function attachUnlock() {
-        /* 独立打开：监听自身 document */
-        if (window.parent === window) {
+        /* 1. 自身 document 永久监听，直到解锁 */
+        if (!window.__wujiSelfUnlockBound) {
+          window.__wujiSelfUnlockBound = true;
           const selfHandler = () => {
             unlock();
             if (unlocked) {
               document.removeEventListener('pointerdown', selfHandler, true);
+              window.__wujiSelfUnlockBound = false;
             }
           };
           document.addEventListener('pointerdown', selfHandler, {
             capture: true,
             passive: true,
           });
-          return;
         }
 
+        /* 2. 独立打开：到此为止 */
+        if (window.parent === window) return;
+
+        /* 3. iframe：挂父文档，直到解锁 */
         let parentDoc = null;
         try { parentDoc = window.parent.document; } catch { return; }
         if (!parentDoc) return;
 
+        let cleaned = false;
         const handler = () => {
           unlock();
-          if (unlocked) {
-            try { parentDoc.removeEventListener('pointerdown', handler, true); } catch { }
-          }
+          if (unlocked) cleanup();
         };
+        function cleanup() {
+          if (cleaned) return;
+          cleaned = true;
+          try { parentDoc.removeEventListener('pointerdown', handler, true); } catch { }
+        }
+
         try {
           parentDoc.addEventListener('pointerdown', handler, {
             capture: true,
             passive: true,
           });
-        } catch { }
+        } catch { return; }
+
+        /* 4. iframe 真正卸载时才清理（bfcache 保留时不清理） */
+        window.addEventListener('pagehide', e => {
+          if (!e.persisted) cleanup();
+        });
       }
       function isBootSoundEnabled() {
         const v = Store.get('wujios.playbootsound', undefined);
@@ -2500,7 +2514,18 @@
 
     window.addEventListener('message', e => {
       const d = e.data;
-      if (!d || d.type !== 'iwuji:control') return;
+      if (!d) return;
+
+      if (d.type === 'studio:open' && d.bundle) {
+        try {
+          if (typeof WujiAppLauncher !== 'undefined') {
+            WujiAppLauncher.open(d.bundle);
+          }
+        } catch (err) { console.warn('[studio] open failed', err); }
+        return;
+      }
+
+      if (d.type !== 'iwuji:control') return;
 
       switch (d.action) {
         case 'power-on': powerOn(); break;
@@ -2579,9 +2604,9 @@
         return e.target;
       }
 
-      document.addEventListener('pointerdown', e => {
-        if (e.pointerType !== 'mouse') return;
-        if (e.button !== 0) return;
+            document.addEventListener('pointerdown', e => {
+        /* 鼠标只允许左键；触屏全都接 */
+        if (e.pointerType === 'mouse' && e.button !== 0) return;
         if (DesktopDrag.state === 'dragging') return;
 
         const real = realTargetOf(e);
@@ -2610,11 +2635,17 @@
         const dx = e.clientX - startX;
         const dy = e.clientY - startY;
 
-        if (!dragging && Math.hypot(dx, dy) > THRESHOLD) {
+        if (!dragging) {
+          if (Math.hypot(dx, dy) < THRESHOLD) return;
+
+          /* 方向判定：水平占优 → 放弃滚动，让 bindAppGesture 处理返回 */
+          if (Math.abs(dx) > Math.abs(dy) * 1.2) {
+            scroller = null;
+            return;
+          }
           dragging = true;
           scroller.style.cursor = 'grabbing';
         }
-        if (!dragging) return;
 
         scroller.scrollTop = startScrollTop - dy;
         scroller.scrollLeft = startScrollLeft - dx;
@@ -2626,9 +2657,7 @@
           lastY = e.clientY;
           lastT = now;
         }
-
-        e.preventDefault();
-      }, { passive: false });
+      }, { passive: true });
 
       function endDrag() {
         if (!scroller) return;

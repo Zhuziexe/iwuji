@@ -324,7 +324,7 @@
     name: '设置',
     icon: './assets/settings.svg',
     initialRoute: 'home',
-    version: '1.1.3',
+    version: '1.1.4',
     styles: `
       .settings-page {
         position: absolute;
@@ -1556,7 +1556,11 @@
 
               <div class="settings-section">
                 <div class="settings-row">
-                  <span>应用和数据</span>
+                  <span>应用</span>
+                  <span class="settings-row__value" id="storageAppCode">计算中...</span>
+                </div>
+                <div class="settings-row">
+                  <span>数据</span>
                   <span class="settings-row__value" id="storageAppData">计算中...</span>
                 </div>
                 <div class="settings-row">
@@ -1573,25 +1577,40 @@
           const fillEl = root.querySelector('#storageFill');
           const usedEl = root.querySelector('#storageUsed');
           const freeEl = root.querySelector('#storageFree');
-          const appDataEl = root.querySelector('#storageAppData');
+          const codeEl = root.querySelector('#storageAppCode');
+          const dataEl = root.querySelector('#storageAppData');
 
           const TOTAL_BYTES = 64 * 1024 * 1024 * 1024;
           const SYSTEM_BYTES = 4.3 * 1024 * 1024 * 1024;
 
           async function update() {
-            let appBytes = 0;
+            /* 1. 应用数据（AppStorage） */
+            let dataBytes = 0;
             try {
               const usage = await AppStorage.usageAll();
               for (const k in usage) {
-                appBytes += (usage[k] && usage[k].bytes) || 0;
+                dataBytes += (usage[k] && usage[k].bytes) || 0;
               }
             } catch (e) {
               console.warn('[storage] usageAll failed', e);
             }
 
+            /* 2. 应用代码（wujios-appcode） */
+            let codeBytes = 0;
+            try {
+              const rows = await WujiAppCode.list();
+              for (const r of rows) {
+                if (r && r.code) {
+                  try { codeBytes += new Blob([r.code]).size; } catch { }
+                }
+              }
+            } catch (e) {
+              console.warn('[storage] appcode list failed', e);
+            }
+
             if (!root.isConnected) return;
 
-            const used = SYSTEM_BYTES + appBytes;
+            const used = SYSTEM_BYTES + codeBytes + dataBytes;
             const free = Math.max(0, TOTAL_BYTES - used);
             const pct = Math.min(100, (used / TOTAL_BYTES) * 100);
 
@@ -1600,7 +1619,8 @@
             usedEl.textContent = '已使用 ' + formatBytes(used);
             freeEl.textContent = '可用 ' + formatBytes(free);
 
-            appDataEl.textContent = formatBytes(appBytes);
+            codeEl.textContent = formatBytes(codeBytes);
+            dataEl.textContent = formatBytes(dataBytes);
           }
 
           update();
@@ -1708,8 +1728,17 @@
 
               <div class="settings-section">
                 <div class="settings-row">
-                  <span>存储</span>
-                  <span class="settings-row__value" id="appStorageUsage">计算中...</span>
+                  <span>总计</span>
+                  <span class="settings-row__value" id="appStorageTotal">计算中...</span>
+                </div>
+                ${isSystem ? '' : `
+                <div class="settings-row">
+                  <span>应用</span>
+                  <span class="settings-row__value" id="appCodeSize">计算中...</span>
+                </div>`}
+                <div class="settings-row">
+                  <span>数据</span>
+                  <span class="settings-row__value" id="appDataSize">计算中...</span>
                 </div>
               </div>
             </div>
@@ -1719,8 +1748,11 @@
         mount(root, ctx) {
           const bundle = ctx.data?.bundle;
           const btn = root.querySelector('#appUninstallBtn');
-          const usageEl = root.querySelector('#appStorageUsage');
+          const totalEl = root.querySelector('#appStorageTotal');
+          const codeEl = root.querySelector('#appCodeSize');
+          const dataEl = root.querySelector('#appDataSize');
 
+          /* ---------- 卸载（原逻辑） ---------- */
           if (bundle && btn && !btn.disabled) {
             let busy = false;
 
@@ -1759,16 +1791,36 @@
             });
           }
 
-          if (bundle && usageEl) {
-            AppStorage.for(bundle).size()
-              .then(bytes => {
-                if (!usageEl.isConnected) return;
-                usageEl.textContent = '已使用 ' + formatBytes(bytes);
-              })
-              .catch(err => {
-                console.warn('[settings] 读取存储失败', bundle, err);
-                if (usageEl.isConnected) usageEl.textContent = '—';
-              });
+          /* ---------- 存储统计 ---------- */
+          if (bundle) {
+            (async () => {
+              /* 1. 数据大小（AppStorage） */
+              let dataBytes = 0;
+              try {
+                dataBytes = await AppStorage.for(bundle).size();
+              } catch (e) {
+                console.warn('[settings] 读取数据大小失败', bundle, e);
+              }
+
+              /* 2. 代码大小（只在市场/侧载应用时算） */
+              let codeBytes = 0;
+              if (codeEl) {
+                try {
+                  const rec = await WujiAppCode.get(bundle);
+                  if (rec && rec.code) {
+                    codeBytes = new Blob([rec.code]).size;
+                  }
+                } catch (e) {
+                  console.warn('[settings] 读取代码大小失败', bundle, e);
+                }
+              }
+
+              if (!root.isConnected) return;
+
+              if (codeEl)  codeEl.textContent  = formatBytes(codeBytes);
+              if (dataEl)  dataEl.textContent  = formatBytes(dataBytes);
+              if (totalEl) totalEl.textContent = formatBytes(codeBytes + dataBytes);
+            })();
           }
         },
       },
