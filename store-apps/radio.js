@@ -142,7 +142,7 @@
         gap: 2px;
       }
       .rd-item__name {
-        font-size: 14px;
+        font-size: 16px;
         font-weight: 600;
         color: var(--wj-text);
         overflow: hidden;
@@ -150,7 +150,7 @@
         white-space: nowrap;
       }
       .rd-item__meta {
-        font-size: 11px;
+        font-size: 14px;
         color: var(--wj-text-dim);
         overflow: hidden;
         text-overflow: ellipsis;
@@ -159,7 +159,7 @@
 
       .rd-item__status {
         flex: 0 0 auto;
-        font-size: 11px;
+        font-size: 12px;
         color: var(--wj-primary, #3a6ff0);
         font-weight: 600;
         letter-spacing: .3px;
@@ -207,7 +207,7 @@
         gap: 1px;
       }
       .rd-player__name {
-        font-size: 13px;
+        font-size: 14px;
         font-weight: 600;
         color: var(--wj-text);
         overflow: hidden;
@@ -215,7 +215,7 @@
         white-space: nowrap;
       }
       .rd-player__status {
-        font-size: 11px;
+        font-size: 12px;
         color: var(--wj-text-dim);
         letter-spacing: .3px;
       }

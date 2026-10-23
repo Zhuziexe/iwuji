@@ -523,7 +523,7 @@
         letter-spacing: .3px;
       }
       .stk-status {
-        font-size: 11px;
+        font-size: 12px;
         color: var(--wj-text-muted);
         display: flex;
         align-items: center;
@@ -590,13 +590,13 @@
         min-width: 0;
       }
       .stk-name {
-        font-size: 14px;
+        font-size: 16px;
         font-weight: 600;
         color: var(--wj-text);
         line-height: 1.2;
       }
       .stk-code {
-        font-size: 10px;
+        font-size: 12px;
         color: var(--wj-text-dim);
         font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
       }
@@ -615,7 +615,7 @@
         transition: color .4s;
       }
       .stk-change {
-        font-size: 11px;
+        font-size: 12px;
         font-variant-numeric: tabular-nums;
         font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
       }
@@ -664,7 +664,7 @@
         letter-spacing: .2px;
       }
       .stk-d-code {
-        font-size: 11px;
+        font-size: 12px;
         color: var(--wj-text-dim);
         font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
       }
@@ -698,7 +698,7 @@
         grid-template-columns: repeat(3, 1fr);
         gap: 4px 10px;
         padding: 8px 14px 14px;
-        font-size: 11px;
+        font-size: 12px;
         font-variant-numeric: tabular-nums;
       }
       .stk-d-meta > span {
