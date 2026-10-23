@@ -179,7 +179,14 @@
             el.addEventListener('click', () => {
               const theme = STORE_THEMES().find(t => t.id === el.dataset.id);
               if (!theme) return;
-              ctx.push('detail', { theme });
+
+              const thumb = el.querySelector('.theme-card__thumb');
+              const rect = (thumb || el).getBoundingClientRect();
+
+              ctx.push('detail', { theme }, {
+                transition: 'zoom',
+                origin: { x: rect.left, y: rect.top, w: rect.width, h: rect.height },
+              });
             });
           });
         },
@@ -211,7 +218,14 @@
             el.addEventListener('click', () => {
               const theme = STORE_THEMES().find(t => t.id === el.dataset.id);
               if (!theme) return;
-              ctx.push('detail', { theme });
+
+              const thumb = el.querySelector('.theme-card__thumb');
+              const rect = (thumb || el).getBoundingClientRect();
+
+              ctx.push('detail', { theme }, {
+                transition: 'zoom',
+                origin: { x: rect.left, y: rect.top, w: rect.width, h: rect.height },
+              });
             });
           });
         },
@@ -219,6 +233,7 @@
 
       detail: {
         name: 'detail',
+        transition: 'zoom',
         render(routeCtx) {
           const theme = routeCtx.data?.theme;
           if (!theme) return `<div class="theme-page"><div class="theme-end">主题不存在</div></div>`;
@@ -265,12 +280,12 @@
           refresh();
 
           const runDownload = () => new Promise(resolve => {
-            const DURATION = 3000;
+            const DURATION = 600;
             const START = performance.now();
             const tick = () => {
               const p = Math.min(1, (performance.now() - START) / DURATION);
               fill.style.width = (p * 100).toFixed(1) + '%';
-              label.textContent = `下载中 ${Math.round(p * 100)}%`;
+              label.textContent = `下载中...`;
               if (p < 1) requestAnimationFrame(tick);
               else resolve();
             };

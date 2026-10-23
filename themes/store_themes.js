@@ -94,4 +94,102 @@ window.STORE_THEMES = [
       </svg>`
     ),
   },
+  {
+    id: 'ink',
+    name: '墨',
+    author: 'Wuji',
+    version: '1.0.0',
+    description: '极简墨色',
+    longdescription: '纯黑底色，两团缓慢漂浮的墨色光晕。适合不打扰的日常使用。',
+    src: 'themes/ink/theme.js',
+    storeimg: 'data:image/svg+xml;utf8,' + encodeURIComponent(
+      `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 80">
+        <rect width="60" height="80" fill="#08080a"/>
+        <radialGradient id="i1" cx="30%" cy="30%" r="40%">
+          <stop offset="0%" stop-color="#5a5a62" stop-opacity=".6"/>
+          <stop offset="100%" stop-color="#5a5a62" stop-opacity="0"/>
+        </radialGradient>
+        <radialGradient id="i2" cx="70%" cy="75%" r="35%">
+          <stop offset="0%" stop-color="#3a3a42" stop-opacity=".55"/>
+          <stop offset="100%" stop-color="#3a3a42" stop-opacity="0"/>
+        </radialGradient>
+        <rect width="60" height="80" fill="url(#i1)"/>
+        <rect width="60" height="80" fill="url(#i2)"/>
+      </svg>`
+    ),
+  },
+  {
+    id: 'cyber',
+    name: '赛博朋克',
+    author: 'Wuji',
+    version: '1.0.0',
+    description: '霓虹网格',
+    longdescription: '深紫背景、霓虹青与粉色光晕、滚动的透视网格和扫描线。时钟用青色发光显示。',
+    src: 'themes/cyber/theme.js',
+    storeimg: 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(
+      '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 80">' +
+        '<defs>' +
+          '<linearGradient id="c" x1="0" y1="0" x2="0" y2="1">' +
+            '<stop offset="0%"  stop-color="#0a0014"/>' +
+            '<stop offset="100%" stop-color="#1a0030"/>' +
+          '</linearGradient>' +
+          '<radialGradient id="g1" cx="10%" cy="10%" r="45%">' +
+            '<stop offset="0%" stop-color="#00e5ff" stop-opacity=".8"/>' +
+            '<stop offset="100%" stop-color="#00e5ff" stop-opacity="0"/>' +
+          '</radialGradient>' +
+          '<radialGradient id="g2" cx="90%" cy="90%" r="45%">' +
+            '<stop offset="0%" stop-color="#ff3d9a" stop-opacity=".8"/>' +
+            '<stop offset="100%" stop-color="#ff3d9a" stop-opacity="0"/>' +
+          '</radialGradient>' +
+        '</defs>' +
+        '<rect width="60" height="80" fill="url(#c)"/>' +
+        '<rect width="60" height="80" fill="url(#g1)"/>' +
+        '<rect width="60" height="80" fill="url(#g2)"/>' +
+        '<g stroke="#00e5ff" stroke-width=".3" opacity=".5">' +
+          '<line x1="0" y1="55" x2="60" y2="55"/>' +
+          '<line x1="0" y1="62" x2="60" y2="62"/>' +
+          '<line x1="0" y1="70" x2="60" y2="70"/>' +
+          '<line x1="15" y1="55" x2="5"  y2="80"/>' +
+          '<line x1="30" y1="55" x2="30" y2="80"/>' +
+          '<line x1="45" y1="55" x2="55" y2="80"/>' +
+        '</g>' +
+      '</svg>'
+    ),
+  },
+  {
+    id: 'firefly',
+    name: '萤火虫',
+    author: 'Wuji',
+    version: '1.0.0',
+    description: '萤火虫森林',
+    longdescription: '墨绿渐变夜空、底部雾气、十几只缓慢飘动的萤火虫。安静而不喧闹。',
+    src: 'themes/firefly/theme.js',
+    storeimg: 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(
+      '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 80">' +
+        '<defs>' +
+          '<linearGradient id="f" x1="0" y1="0" x2="0" y2="1">' +
+            '<stop offset="0%"  stop-color="#0a1410"/>' +
+            '<stop offset="50%" stop-color="#102018"/>' +
+            '<stop offset="100%" stop-color="#0a1810"/>' +
+          '</linearGradient>' +
+          '<radialGradient id="fog" cx="50%" cy="100%" r="50%">' +
+            '<stop offset="0%" stop-color="#6e9666" stop-opacity=".3"/>' +
+            '<stop offset="100%" stop-color="#6e9666" stop-opacity="0"/>' +
+          '</radialGradient>' +
+        '</defs>' +
+        '<rect width="60" height="80" fill="url(#f)"/>' +
+        '<circle cx="12" cy="20" r="2"   fill="#b4ff8c" opacity=".9"/>' +
+        '<circle cx="12" cy="20" r="5"   fill="#b4ff8c" opacity=".2"/>' +
+        '<circle cx="42" cy="30" r="1.6" fill="#b4ff8c" opacity=".85"/>' +
+        '<circle cx="42" cy="30" r="4"   fill="#b4ff8c" opacity=".15"/>' +
+        '<circle cx="25" cy="48" r="1.8" fill="#b4ff8c" opacity=".8"/>' +
+        '<circle cx="25" cy="48" r="4.5" fill="#b4ff8c" opacity=".15"/>' +
+        '<circle cx="48" cy="58" r="1.4" fill="#b4ff8c" opacity=".7"/>' +
+        '<circle cx="48" cy="58" r="3.5" fill="#b4ff8c" opacity=".12"/>' +
+        '<circle cx="10" cy="68" r="1.6" fill="#b4ff8c" opacity=".75"/>' +
+        '<circle cx="10" cy="68" r="4"   fill="#b4ff8c" opacity=".15"/>' +
+        '<rect y="50" width="60" height="30" fill="url(#fog)"/>' +
+      '</svg>'
+    ),
+  },
 ];

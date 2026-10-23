@@ -379,7 +379,7 @@ WujiApps.register({
         refreshBtn();
 
         const runDownloadProgress = () => {
-          const DURATION = 3000;
+          const DURATION = 1500;
           const START = performance.now();
 
           return new Promise(resolve => {

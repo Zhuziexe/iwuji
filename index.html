@@ -15,16 +15,12 @@
       --key-w: 14px;
     }
 
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
 
-    html,
-    body {
+    html, body {
       width: 100%;
       height: 100%;
       overflow: hidden;
-      font-family: var(--wj-font);
       -webkit-font-smoothing: antialiased;
       -webkit-text-size-adjust: none !important;
       -moz-text-size-adjust: none !important;
@@ -33,9 +29,7 @@
       color: #fff;
     }
 
-    html {
-      font-size: 16px !important;
-    }
+    html { font-size: 16px !important; }
 
     body {
       display: flex;
@@ -50,10 +44,10 @@
         "PingFang SC", "Microsoft YaHei", sans-serif;
     }
 
+    /* ============ 标题栏 ============ */
     .titlebar {
       flex: 0 0 auto;
-      flex-wrap: wrap;
-      min-height: var(--bar-h);
+      height: var(--bar-h);
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -62,7 +56,8 @@
       background: #1a1d24;
       border-bottom: 1px solid #2a2f3a;
       user-select: none;
-      z-index: 10;
+      position: relative;
+      z-index: 100;
     }
 
     .titlebar .title {
@@ -77,6 +72,7 @@
 
     .tb-actions {
       display: flex;
+      align-items: center;
       gap: 8px;
       flex-shrink: 0;
     }
@@ -92,55 +88,130 @@
       border-radius: 6px;
       cursor: pointer;
       white-space: nowrap;
-      transition: background .15s, transform .05s, color .15s, border-color .15s;
+      transition: background .15s, transform .05s, color .15s;
+      -webkit-tap-highlight-color: transparent;
     }
 
-    .tb-btn:hover {
-      background: rgba(138, 212, 255, .18);
+    .tb-btn:hover { background: rgba(138, 212, 255, .18); }
+    .tb-btn:active { transform: translateY(1px); }
+    .tb-btn:disabled { opacity: .4; cursor: not-allowed; }
+
+    .tb-btn--icon {
+      width: 32px;
+      height: 32px;
+      padding: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .tb-btn--icon svg {
+      width: 16px;
+      height: 16px;
+      display: block;
+    }
+    .tb-btn--icon.is-open {
+      background: rgba(138, 212, 255, .22);
+      border-color: rgba(138, 212, 255, .55);
     }
 
-    .tb-btn:active {
-      transform: translateY(1px);
+    /* ============ 下拉菜单 ============ */
+    .tb-menu {
+      position: absolute;
+      top: calc(100% + 4px);
+      right: 12px;
+      z-index: 100;
+      min-width: 200px;
+      padding: 6px;
+      border-radius: 10px;
+      background: #20242d;
+      border: 1px solid #2f3540;
+      box-shadow:
+        0 12px 32px rgba(0, 0, 0, .45),
+        0 0 0 1px rgba(0, 0, 0, .3);
+      display: flex;
+      flex-direction: column;
+      gap: 1px;
+      animation: tbMenuIn .14s cubic-bezier(.2, .7, .3, 1);
+    }
+    .tb-menu[hidden] { display: none; }
+
+    @keyframes tbMenuIn {
+      from { opacity: 0; transform: translateY(-4px) scale(.97); }
+      to   { opacity: 1; transform: translateY(0) scale(1); }
     }
 
-    .tb-btn:disabled {
+    .tb-menu__item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      width: 100%;
+      padding: 9px 12px;
+      border: 0;
+      border-radius: 6px;
+      background: transparent;
+      color: #d0d6e1;
+      font: inherit;
+      font-size: 13px;
+      line-height: 1;
+      text-align: left;
+      text-decoration: none;
+      white-space: nowrap;
+      cursor: pointer;
+      transition: background .12s, color .12s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .tb-menu__item:hover {
+      background: rgba(138, 212, 255, .10);
+      color: #e9ecf2;
+    }
+    .tb-menu__item:active {
+      background: rgba(138, 212, 255, .16);
+    }
+    .tb-menu__item:disabled {
       opacity: .4;
       cursor: not-allowed;
     }
 
-    .tb-btn--danger {
+    .tb-menu__item--danger { color: #ff9fb5; }
+    .tb-menu__item--danger:hover {
+      background: rgba(224, 53, 107, .12);
       color: #ff9fb5;
-      background: rgba(224, 53, 107, .08);
-      border-color: rgba(224, 53, 107, .35);
     }
 
-    .tb-btn--danger:hover {
-      background: rgba(224, 53, 107, .18);
+    .tb-menu__hint {
+      color: #6b7280;
+      font-size: 12px;
+      font-weight: 400;
+      transition: color .12s;
+    }
+    .tb-menu__item:hover .tb-menu__hint { color: #8ad4ff; }
+
+    .tb-menu__state {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: .3px;
+      color: #6b7280;
+      transition: color .15s;
+    }
+    .tb-menu__state.is-on { color: #5bd67f; }
+
+    .tb-menu__sep {
+      height: 1px;
+      margin: 4px 6px;
+      background: #2f3540;
     }
 
-    .tb-btn--wake {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      color: #8a94a6;
-      background: transparent;
-      border-color: rgba(138, 148, 166, .35);
+    /* 窄屏：菜单铺满 */
+    @media (max-width: 380px) {
+      .tb-menu {
+        left: 12px;
+        right: 12px;
+        min-width: 0;
+      }
     }
 
-    .tb-btn--wake:hover {
-      background: rgba(138, 148, 166, .10);
-    }
-
-    .tb-btn--wake.is-on {
-      color: #5bd67f;
-      background: rgba(91, 214, 127, .16);
-      border-color: rgba(91, 214, 127, .55);
-    }
-
-    .tb-btn--wake.is-on:hover {
-      background: rgba(91, 214, 127, .26);
-    }
-    
+    /* ============ 舞台 ============ */
     .stage {
       flex: 1 1 auto;
       min-height: 0;
@@ -188,7 +259,6 @@
       transform-origin: center center;
       transform: translate(-50%, -50%) scale(1);
       will-change: transform;
-
       -webkit-text-size-adjust: none;
       -moz-text-size-adjust: none;
       text-size-adjust: none;
@@ -279,14 +349,9 @@
         0 0 16px rgba(74, 125, 255, .8);
     }
 
-    .hw-key--power {
-      height: 72px;
-    }
-
+    .hw-key--power { height: 72px; }
     .hw-key--vol-up,
-    .hw-key--vol-down {
-      height: 58px;
-    }
+    .hw-key--vol-down { height: 58px; }
 
     .device:fullscreen,
     .device:-webkit-full-screen {
@@ -310,8 +375,12 @@
       aspect-ratio: 3 / 4;
     }
 
-    .device::backdrop {
-      background: #000;
+    .device::backdrop { background: #000; }
+
+    /* ============ 窄屏 ============ */
+    @media (max-width: 480px) {
+      .titlebar { padding: 0 12px; }
+      .stage { padding: 10px calc(10px + 12px); }
     }
   </style>
 </head>
@@ -320,11 +389,52 @@
 
   <header class="titlebar">
     <span class="title">iWuji</span>
+
     <div class="tb-actions">
-      <button class="tb-btn" id="manualBtn" type="button">说明书</button>
-      <button class="tb-btn tb-btn--danger" id="clearDataBtn" type="button">清除数据</button>
-      <button class="tb-btn tb-btn--wake" id="wakeBtn" type="button">不息屏</button>
-      <button class="tb-btn" id="fsBtn" type="button">全屏</button>
+      <button class="tb-btn tb-btn--icon" id="fsBtn" type="button"
+              title="全屏" aria-label="全屏">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M4 9V5a1 1 0 0 1 1-1h4"/>
+          <path d="M20 9V5a1 1 0 0 0-1-1h-4"/>
+          <path d="M4 15v4a1 1 0 0 0 1 1h4"/>
+          <path d="M20 15v4a1 1 0 0 1-1 1h-4"/>
+        </svg>
+      </button>
+
+      <button class="tb-btn tb-btn--icon" id="menuBtn" type="button"
+              title="菜单" aria-label="菜单" aria-haspopup="menu" aria-expanded="false">
+        <svg viewBox="0 0 24 24" fill="currentColor">
+          <circle cx="5" cy="12" r="1.8"/>
+          <circle cx="12" cy="12" r="1.8"/>
+          <circle cx="19" cy="12" r="1.8"/>
+        </svg>
+      </button>
+    </div>
+
+    <div class="tb-menu" id="tbMenu" hidden role="menu">
+      <a class="tb-menu__item" href="./studio.html"
+         target="_blank" rel="noopener" role="menuitem">
+        <span>iWuji Studio</span>
+        <span class="tb-menu__hint">↗</span>
+      </a>
+
+      <div class="tb-menu__sep"></div>
+
+      <button class="tb-menu__item" id="manualBtn" type="button" role="menuitem">
+        <span>说明书</span>
+      </button>
+      <button class="tb-menu__item" id="wakeBtn" type="button" role="menuitem">
+        <span>不息屏</span>
+        <span class="tb-menu__state" id="wakeState">关</span>
+      </button>
+
+      <div class="tb-menu__sep"></div>
+
+      <button class="tb-menu__item tb-menu__item--danger"
+              id="clearDataBtn" type="button" role="menuitem">
+        <span>清除数据</span>
+      </button>
     </div>
   </header>
 
@@ -358,14 +468,21 @@
     const deviceEl = document.getElementById('device');
     const screenEl = document.getElementById('screen');
     const osFrame = document.getElementById('osFrame');
+
     const fsBtn = document.getElementById('fsBtn');
-    const clearBtn = document.getElementById('clearDataBtn');
+    const menuBtn = document.getElementById('menuBtn');
+    const tbMenu = document.getElementById('tbMenu');
+    const manualBtn = document.getElementById('manualBtn');
     const wakeBtn = document.getElementById('wakeBtn');
+    const clearDataBtn = document.getElementById('clearDataBtn');
 
     const powerKey = document.getElementById('powerKey');
     const volUpKey = document.getElementById('volUpKey');
     const volDownKey = document.getElementById('volDownKey');
 
+    /* =========================================================
+       iframe 缩放
+       ========================================================= */
     function fit() {
       const r = screenEl.getBoundingClientRect();
       if (!r.width || !r.height) return;
@@ -386,6 +503,9 @@
       } catch { }
     }
 
+    /* =========================================================
+       全屏
+       ========================================================= */
     fsBtn.addEventListener('click', async () => {
       try {
         if (!document.fullscreenElement) await deviceEl.requestFullscreen();
@@ -393,14 +513,66 @@
       } catch (err) { console.error(err); }
     });
 
-    clearBtn.addEventListener('click', () => {
+    /* =========================================================
+       标题栏下拉菜单
+       ========================================================= */
+    function openMenu() {
+      tbMenu.hidden = false;
+      menuBtn.classList.add('is-open');
+      menuBtn.setAttribute('aria-expanded', 'true');
+    }
+
+    function closeMenu() {
+      tbMenu.hidden = true;
+      menuBtn.classList.remove('is-open');
+      menuBtn.setAttribute('aria-expanded', 'false');
+    }
+
+    function toggleMenu() {
+      if (tbMenu.hidden) openMenu();
+      else closeMenu();
+    }
+
+    menuBtn.addEventListener('click', e => {
+      e.stopPropagation();
+      toggleMenu();
+    });
+
+    /* 点击菜单外部关闭（pointerdown 早于 click，先关闭避免误触） */
+    document.addEventListener('pointerdown', e => {
+      if (tbMenu.hidden) return;
+      if (menuBtn.contains(e.target)) return;
+      if (tbMenu.contains(e.target)) return;
+      closeMenu();
+    }, true);
+
+    /* Esc 关闭 */
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape' && !tbMenu.hidden) closeMenu();
+    });
+
+    /* 点击菜单项后关闭（不息屏是开关，不关闭） */
+    tbMenu.querySelectorAll('.tb-menu__item').forEach(el => {
+      el.addEventListener('click', () => {
+        if (el.id === 'wakeBtn') return;
+        closeMenu();
+      });
+    });
+
+    /* =========================================================
+       清除数据
+       ========================================================= */
+    clearDataBtn.addEventListener('click', () => {
       if (!confirm('确定清除 iWuji 的全部用户数据？')) return;
       sendToOS('clear-data');
     });
 
-    /* ---------- 不息屏（Screen Wake Lock） ---------- */
+    /* =========================================================
+       不息屏（Screen Wake Lock）
+       ========================================================= */
     const WAKE_KEY = 'iwuji:wakelock';
     const wakeSupported = 'wakeLock' in navigator;
+    const wakeStateEl = document.getElementById('wakeState');
 
     let wakeLock = null;
     let wakeEnabled = true;
@@ -416,20 +588,26 @@
     }
 
     function updateWakeBtn() {
-      wakeBtn.classList.toggle('is-on', wakeEnabled);
-
       if (!wakeSupported) {
-        wakeBtn.title = '当前浏览器不支持屏幕常亮';
+        wakeBtn.disabled = true;
+        if (wakeStateEl) {
+          wakeStateEl.textContent = '不支持';
+          wakeStateEl.classList.remove('is-on');
+        }
         return;
       }
+
       if (!wakeEnabled) {
-        wakeBtn.title = '点击开启屏幕常亮';
+        if (wakeStateEl) {
+          wakeStateEl.textContent = '关';
+          wakeStateEl.classList.remove('is-on');
+        }
         return;
       }
-      if (wakeLock) {
-        wakeBtn.title = '屏幕常亮已激活，点击关闭';
-      } else {
-        wakeBtn.title = '屏幕常亮已开启（当前未激活，切回页面后自动恢复）';
+
+      if (wakeStateEl) {
+        wakeStateEl.textContent = wakeLock ? '开' : '开（待激活）';
+        wakeStateEl.classList.toggle('is-on', !!wakeLock);
       }
     }
 
@@ -464,26 +642,24 @@
       wakeEnabled = !wakeEnabled;
       try { localStorage.setItem(WAKE_KEY, wakeEnabled ? '1' : '0'); } catch { }
 
-      if (wakeEnabled) {
-        await requestWake();
-      } else {
-        await releaseWake();
-      }
+      if (wakeEnabled) await requestWake();
+      else await releaseWake();
+
       updateWakeBtn();
     });
 
-    // 页面从后台切回前台，重新请求（系统在切后台时自动释放锁）
     document.addEventListener('visibilitychange', () => {
       if (document.visibilityState === 'visible' && wakeEnabled) {
         requestWake();
       }
     });
 
-    // 页面加载后自动请求
     if (wakeEnabled) requestWake();
     updateWakeBtn();
 
-    /* ---------- 电源键：短按 / 长按 ---------- */
+    /* =========================================================
+       电源键：短按 / 长按
+       ========================================================= */
     let pressStartAt = 0;
     let longPressTimer = null;
     let longPressed = false;
@@ -515,7 +691,9 @@
       longPressed = false;
     });
 
-    /* ---------- 音量键：按下 / 松开 ---------- */
+    /* =========================================================
+       音量键：按下 / 松开
+       ========================================================= */
     function bindVolumeKey(el, dir) {
       const pressAction = dir === 'up' ? 'hw:vol-up-press' : 'hw:vol-down-press';
       const releaseAction = dir === 'up' ? 'hw:vol-up-release' : 'hw:vol-down-release';
@@ -532,7 +710,9 @@
     bindVolumeKey(volUpKey, 'up');
     bindVolumeKey(volDownKey, 'down');
 
-    /* 键盘快捷键：Ctrl+Alt+P = 电源短按 */
+    /* =========================================================
+       键盘快捷键：Ctrl+Alt+P = 电源短按
+       ========================================================= */
     window.addEventListener('keydown', e => {
       if ((e.ctrlKey || e.metaKey) && e.altKey && e.key.toLowerCase() === 'p') {
         e.preventDefault();
