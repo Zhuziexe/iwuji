@@ -162,6 +162,16 @@ window.WUJI_MARKET_APPS = [
     src: './store-apps/wujiquan.js',
   },
   {
+    bundle: 'com.wujinb.aihot',
+    name: 'AI新闻',
+    icon: './assets/aihot.svg',
+    version: '1.0.2',
+    author: 'Wuji',
+    description: 'AI新闻官方正版',
+    longdescription: '精选AI新闻',
+    src: './store-apps/aihot.js',
+  },
+  {
     bundle: 'com.wujinb.dice',
     name: '骰子',
     icon: './assets/dice.svg',

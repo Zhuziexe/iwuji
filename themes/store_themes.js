@@ -192,4 +192,47 @@ window.STORE_THEMES = [
       '</svg>'
     ),
   },
+  {
+    id: 'neon',
+    name: '霓虹雨',
+    author: 'Wuji',
+    version: '1.0.0',
+    description: '城市霓虹夜雨',
+    longdescription: '深紫夜空，粉色与青色霓虹雨丝垂落，底部有霓虹反光。夜行风格。',
+    src: 'themes/neon/theme.js',
+    storeimg: 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(
+      '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 80">' +
+        '<defs>' +
+          '<linearGradient id="b" x1="0" y1="0" x2="0" y2="1">' +
+            '<stop offset="0%" stop-color="#0a0510"/>' +
+            '<stop offset="60%" stop-color="#150a1e"/>' +
+            '<stop offset="100%" stop-color="#1a0a20"/>' +
+          '</linearGradient>' +
+          '<radialGradient id="g1" cx="20%" cy="100%" r="50%">' +
+            '<stop offset="0%" stop-color="#ff2d78" stop-opacity=".4"/>' +
+            '<stop offset="100%" stop-color="#ff2d78" stop-opacity="0"/>' +
+          '</radialGradient>' +
+          '<radialGradient id="g2" cx="80%" cy="100%" r="50%">' +
+            '<stop offset="0%" stop-color="#00e5ff" stop-opacity=".4"/>' +
+            '<stop offset="100%" stop-color="#00e5ff" stop-opacity="0"/>' +
+          '</radialGradient>' +
+        '</defs>' +
+        '<rect width="60" height="80" fill="url(#b)"/>' +
+        '<rect width="60" height="80" fill="url(#g1)"/>' +
+        '<rect width="60" height="80" fill="url(#g2)"/>' +
+        '<g stroke="#ff2d78" stroke-width=".4" stroke-linecap="round" opacity=".7">' +
+          '<line x1="8" y1="5" x2="8" y2="22"/>' +
+          '<line x1="22" y1="12" x2="22" y2="28"/>' +
+          '<line x1="35" y1="3" x2="35" y2="20"/>' +
+          '<line x1="48" y1="18" x2="48" y2="35"/>' +
+        '</g>' +
+        '<g stroke="#00e5ff" stroke-width=".4" stroke-linecap="round" opacity=".7">' +
+          '<line x1="15" y1="30" x2="15" y2="50"/>' +
+          '<line x1="28" y1="38" x2="28" y2="58"/>' +
+          '<line x1="42" y1="25" x2="42" y2="45"/>' +
+          '<line x1="55" y1="42" x2="55" y2="62"/>' +
+        '</g>' +
+      '</svg>'
+    ),
+  },
 ];
