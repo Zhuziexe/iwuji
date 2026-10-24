@@ -247,7 +247,7 @@ WujiApps.register({
         `;
       },
 
-            mount(root, ctx) {
+      mount(root, ctx) {
         const listEl = root.querySelector('#marketList');
 
         /* ---------- 判断单个应用的状态 ---------- */

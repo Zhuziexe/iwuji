@@ -2166,6 +2166,7 @@
           dir = Math.abs(dx) > Math.abs(dy) ? 'h' : 'v';
 
           if (dir === 'h') {
+            _suppressClicksUntil = performance.now() + 500;
             /* 当前路由禁用返回手势 → 忽略本次滑动 */
             if (currentNav && currentNav.isGestureBlocked?.()) {
               dragging = false;
@@ -2258,8 +2259,10 @@
         if (e.target.tagName === 'IFRAME') return;
         const t = e.touches[0];
         if (!t) return;
-        moveGesture(t.clientX, t.clientY, null);
-      }, { passive: true });
+        moveGesture(t.clientX, t.clientY, () => {
+          if (e.cancelable) e.preventDefault();
+        });
+      }, { passive: false });
 
       appScreen.addEventListener('touchend', endGesture);
       appScreen.addEventListener('touchcancel', endGesture);
