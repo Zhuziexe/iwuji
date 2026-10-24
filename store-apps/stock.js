@@ -491,12 +491,54 @@
     }
   }
 
+  /* =========== 自适应字号辅助 =========== */
+
+  // 可继续缩小的最小字号（px）
+  const MIN_META_FONT = 8;
+
+  // 从 CSS 基准字号开始，逐步缩小直到文本放下或到达下限。
+  // 若已经处理过，不重复测量。
+  function measureAndShrink(el) {
+    if (!el) return;
+
+    // 重置回 CSS 基准字号
+    el.style.fontSize = '';
+
+    const base = parseFloat(getComputedStyle(el).fontSize) || 14;
+    let size = base;
+
+    // scrollWidth > clientWidth 即溢出；+0.5 抵消亚像素舍入
+    while (el.scrollWidth > el.clientWidth + 0.5 && size > MIN_META_FONT) {
+      size -= 0.5;
+      el.style.fontSize = `${size}px`;
+    }
+  }
+
+  // 文本变化时才重新测量；文本不变不重复操作（避免闪烁和多余 reflow）
+  function fitMetaText(el, text) {
+    if (!el) return;
+    if (el.textContent === text) return;
+
+    el.textContent = text;
+    el.style.fontSize = '';
+
+    // 元素尚未完成布局，等下一帧再测
+    if (el.clientWidth < 1) {
+      requestAnimationFrame(() => {
+        if (el.isConnected) measureAndShrink(el);
+      });
+      return;
+    }
+
+    measureAndShrink(el);
+  }
+
   WujiApps.registerInstalled({
     bundlename: BUNDLE,
     name: '吴际财富',
     icon: './assets/stock.svg',
     initialRoute: 'home',
-    version: '1.1.2',
+    version: '1.1.6',
 
     styles: `
       .stk-page {
@@ -517,13 +559,13 @@
         padding: 6px 12px 4px;
       }
       .stk-title {
-        font-size: 16px;
+        font-size: 18px;
         font-weight: 700;
         color: var(--wj-text);
         letter-spacing: .3px;
       }
       .stk-status {
-        font-size: 12px;
+        font-size: 14px;
         color: var(--wj-text-muted);
         display: flex;
         align-items: center;
@@ -534,8 +576,8 @@
       }
       .stk-status:active { background: var(--wj-bg-alt); }
       .stk-status__dot {
-        width: 6px;
-        height: 6px;
+        width: 8px;
+        height: 8px;
         border-radius: 50%;
         background: var(--wj-text-dim, #999);
         transition: background .3s;
@@ -590,13 +632,13 @@
         min-width: 0;
       }
       .stk-name {
-        font-size: 16px;
+        font-size: 18px;
         font-weight: 600;
         color: var(--wj-text);
         line-height: 1.2;
       }
       .stk-code {
-        font-size: 12px;
+        font-size: 14px;
         color: var(--wj-text-dim);
         font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
       }
@@ -615,7 +657,7 @@
         transition: color .4s;
       }
       .stk-change {
-        font-size: 12px;
+        font-size: 14px;
         font-variant-numeric: tabular-nums;
         font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
       }
@@ -664,7 +706,7 @@
         letter-spacing: .2px;
       }
       .stk-d-code {
-        font-size: 12px;
+        font-size: 14px;
         color: var(--wj-text-dim);
         font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
       }
@@ -695,10 +737,10 @@
       .stk-d-meta {
         flex: 0 0 auto;
         display: grid;
-        grid-template-columns: repeat(3, 1fr);
+        grid-template-columns: repeat(3, minmax(0, 1fr));
         gap: 4px 10px;
         padding: 8px 14px 14px;
-        font-size: 12px;
+        font-size: 14px;
         font-variant-numeric: tabular-nums;
       }
       .stk-d-meta > span {
@@ -717,9 +759,19 @@
         font-weight: 500;
         color: var(--wj-text-muted);
         font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-variant-numeric: tabular-nums;
+
+        font-size: 14px;        /* 基准字号，JS 会在此基础上缩小 */
+        line-height: 1.2;
+
+        min-width: 0;
+        flex: 0 1 auto;
+
+        /* 单行显示，溢出时由 JS 缩小字号；极端情况才裁 */
+        white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
-        white-space: nowrap;
+
         text-align: right;
       }
     `,
@@ -950,11 +1002,11 @@
                 `(${pct >= 0 ? '+' : ''}${fmt(pct)}%)`;
               changeEl.className = `stk-change ${cls}`;
 
-              if (metaEls.open) metaEls.open.textContent = fmt(q.open);
-              if (metaEls.high) metaEls.high.textContent = fmt(q.high);
-              if (metaEls.low) metaEls.low.textContent = fmt(q.low);
-              if (metaEls.prev) metaEls.prev.textContent = fmt(q.prevClose);
-              if (metaEls.vol) metaEls.vol.textContent = fmtVol(q.volume);
+              fitMetaText(metaEls.open, fmt(q.open));
+              fitMetaText(metaEls.high, fmt(q.high));
+              fitMetaText(metaEls.low, fmt(q.low));
+              fitMetaText(metaEls.prev, fmt(q.prevClose));
+              fitMetaText(metaEls.vol, fmtVol(q.volume));
             }
 
             const hist = historyCache.get(code);
@@ -987,6 +1039,16 @@
           }
 
           chartEl.addEventListener('click', onChartClick);
+
+          // 字体加载完后可能引起宽度变化，重测一次
+          if (document.fonts && document.fonts.ready) {
+            document.fonts.ready.then(() => {
+              if (disposed) return;
+              Object.values(metaEls).forEach(el => {
+                if (el) measureAndShrink(el);
+              });
+            }).catch(() => {});
+          }
 
           ensureHistory(code);
           ensurePolling();

@@ -148,7 +148,7 @@
     name: '吴际小鸡',
     icon: ICON_URL,
     initialRoute: 'home',
-    version: '1.0.0',
+    version: '1.0.1',
 
     /* 开机：巡检一次 */
     onBoot() {
@@ -227,7 +227,7 @@
         padding: 8px 14px;
         background: #fff;
         border-radius: 14px;
-        font-size: 12px;
+        font-size: 16px;
         color: #5d4037;
         box-shadow: 0 4px 12px rgba(93,64,55,.18);
         white-space: nowrap;
@@ -266,7 +266,7 @@
       }
       .chick-stat__label {
         flex: 0 0 32px;
-        font-size: 11px;
+        font-size: 14px;
         color: #8d6e63;
         font-weight: 600;
       }
@@ -288,7 +288,7 @@
       .chick-stat__val {
         flex: 0 0 28px;
         text-align: right;
-        font-size: 11px;
+        font-size: 14px;
         color: #8d6e63;
         font-variant-numeric: tabular-nums;
       }
@@ -296,7 +296,7 @@
       .chick-status {
         flex: 0 0 auto;
         text-align: center;
-        font-size: 13px;
+        font-size: 16px;
         color: #5d4037;
         padding: 4px 18px 10px;
         font-weight: 500;
@@ -314,7 +314,7 @@
         border: 0;
         border-radius: 14px;
         font: inherit;
-        font-size: 15px;
+        font-size: 18px;
         font-weight: 600;
         color: #fff;
         cursor: pointer;
