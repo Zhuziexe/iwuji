@@ -247,7 +247,7 @@ WujiApps.register({
         `;
       },
 
-      mount(root, ctx) {
+            mount(root, ctx) {
         const listEl = root.querySelector('#marketList');
 
         /* ---------- 判断单个应用的状态 ---------- */
@@ -288,13 +288,8 @@ WujiApps.register({
             return;
           }
 
-          /* 先统计状态 */
-          const withState = apps.map(app => ({
-            app,
-            state: getAppState(app),
-          }));
+          const withState = apps.map(app => ({ app, state: getAppState(app) }));
 
-          /* 可更新的排最前，其余保持 apps.js 里的原始顺序 */
           withState.sort((a, b) => {
             const rank = s => s.hasUpdate ? 0 : 1;
             return rank(a.state) - rank(b.state);
@@ -332,15 +327,40 @@ WujiApps.register({
           });
         };
 
-        const apps = window.WUJI_MARKET_APPS;
+        /* ---------- 异步加载目录 ---------- */
+        let apps = [];
+        let disposed = false;
 
-        if (!Array.isArray(apps)) {
+        async function loadApps() {
           listEl.className = 'market-empty';
-          listEl.textContent = '未找到应用目录';
-          return;
+          listEl.textContent = '加载中...';
+
+          try {
+            const res = await fetch(`store/apps.json?t=${Date.now()}`, {
+              cache: 'no-store',
+            });
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            const raw = await res.json();
+            apps = Array.isArray(raw)
+              ? raw
+              : (raw && Array.isArray(raw.apps) ? raw.apps : []);
+          } catch (e) {
+            console.warn('[market] load failed', e);
+            apps = [];
+          }
+
+          if (disposed || !root.isConnected) return;
+
+          if (!apps.length) {
+            listEl.className = 'market-empty';
+            listEl.textContent = '未找到应用目录';
+            return;
+          }
+
+          renderList(apps);
         }
 
-        renderList(apps);
+        loadApps();
 
         /* ---------- 安装 / 卸载后实时刷新 ---------- */
         const off = WujiApps.on(evt => {
@@ -349,13 +369,14 @@ WujiApps.register({
             off();
             return;
           }
-          /* 只有当前在列表页时才重绘，避免在详情页时列表被打断 */
-          if (ctx.nav.current?.route?.name === 'home') {
-            renderList(apps);
-          }
+          if (!apps.length) return;
+          renderList(apps);
         });
 
-        return () => off();
+        return () => {
+          disposed = true;
+          off();
+        };
       },
     },
 

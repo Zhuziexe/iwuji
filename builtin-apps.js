@@ -10,9 +10,7 @@ const BUILTIN_APPS = [
     { bundlename: 'com.wujios.themes', name: '主题', icon: './assets/themes.svg', src: 'apps/themes.js' },
 ];
 
-const PRELOAD_SCRIPTS = [
-    'store/apps.js',
-];
+const PRELOAD_SCRIPTS = [];
 
 window.BUILTIN_APPS = BUILTIN_APPS;
 window.PRELOAD_SCRIPTS = PRELOAD_SCRIPTS;

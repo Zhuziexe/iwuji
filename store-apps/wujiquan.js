@@ -47,7 +47,7 @@
     name: '吴际圈',
     icon: './assets/wujiquan.svg',
     initialRoute: 'home',
-    version: '1.0.0',
+    version: '1.0.1',
 
     styles: `
       .wq-page {
@@ -67,12 +67,6 @@
         justify-content: space-between;
         gap: 10px;
         padding: 8px 14px 6px;
-      }
-      .wq-title {
-        font-size: 20px;
-        font-weight: 700;
-        color: var(--wj-text);
-        letter-spacing: .3px;
       }
       .wq-compose-btn {
         flex: 0 0 auto;
@@ -267,7 +261,7 @@
           return `
             <div class="wq-page">
               <div class="wq-header">
-                <div class="wq-title">吴际圈</div>
+                <h2 class="wj-title">吴际圈</h2>
                 <button class="wq-compose-btn" id="wqComposeBtn" type="button">发帖</button>
               </div>
               <div class="wq-list" id="wqList">

@@ -510,6 +510,8 @@
           pointerState.locked = Math.abs(dx) > Math.abs(dy) ? 'h' : 'v';
           if (pointerState.locked === 'v') return;
 
+          _suppressClicksUntil = performance.now() + 500;
+
           if (!pointerState.captured) {
             try {
               desktopViewportEl.setPointerCapture(e.pointerId);
@@ -536,6 +538,8 @@
         if (e.pointerId !== pointerState.pointerId) return;
 
         if (pointerState.locked === 'h') {
+          _suppressClicksUntil = performance.now() + 300;
+
           const w = desktopViewportEl.offsetWidth;
           const dx = pointerState.dx;
           const threshold = w / 4;
@@ -555,7 +559,10 @@
       desktopViewportEl.addEventListener('pointercancel', e => {
         if (!pointerState) return;
         if (e.pointerId !== pointerState.pointerId) return;
-        if (pointerState.locked === 'h') goToPage(currentPage);
+        if (pointerState.locked === 'h') {
+          _suppressClicksUntil = performance.now() + 300;
+          goToPage(currentPage);
+        }
         pointerState = null;
       });
     })();
@@ -618,12 +625,34 @@
         ghostEl = appEl.cloneNode(true);
         ghostEl.classList.add('desktop-ghost');
         ghostEl.removeAttribute('data-dragging');
-        ghostEl.style.left = rect.left + 'px';
+        ghostEl.style.left = rect.left + 'px';        // ① 先在原位
         ghostEl.style.top = rect.top + 'px';
         ghostEl.style.width = rect.width + 'px';
         ghostEl.style.height = rect.height + 'px';
         (document.getElementById('os') || document.body).appendChild(ghostEl);
-        moveGhost(x, y);
+
+        const ghostRef = ghostEl;
+        const gw = ghostRef.offsetWidth;              // append 后才能读到
+        const gh = ghostRef.offsetHeight;
+
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            if (!ghostRef.isConnected) return;
+            ghostRef.style.transition =
+              'left 150ms linear, ' +
+              'top 150ms linear, ' +
+              'filter .18s linear';
+            ghostRef.style.left = (x - gw / 2) + 'px';
+            ghostRef.style.top = (y - gh / 2) + 'px';
+
+            setTimeout(() => {
+              if (ghostRef.isConnected) ghostRef.style.transition = '';
+            }, 170);
+          });
+        });
+
+        // ★ 删掉原来的 moveGhost(x, y);  —— 瞬移就是它造成的
+
         suppressClickUntil = performance.now() + SUPPRESS_MS;
         createPreview(appEl);
         createShield();
@@ -771,6 +800,37 @@
         }
       }
 
+      function flyGhostBack(cb) {
+        if (state !== 'dragging' || !ghostEl) { cb && cb(); return; }
+
+        const ghost = ghostEl;
+        const src = sourceEl;
+
+        /* 冻结拖拽状态：后续 pointermove/up 不会干扰动画 */
+        state = 'returning';
+        ghostEl = null;
+        clearEdge();
+        clearWatchdog();
+        destroyShield();
+        destroyPreview();
+
+        suppressClickUntil = performance.now() + SUPPRESS_MS;
+
+        if (src) {
+          const r = src.getBoundingClientRect();
+          ghost.style.transition =
+            'left 200ms cubic-bezier(.2,.7,.3,1), ' +
+            'top 200ms cubic-bezier(.2,.7,.3,1)';
+          ghost.style.left = r.left + 'px';
+          ghost.style.top = r.top + 'px';
+        }
+
+        setTimeout(() => {
+          if (ghost.isConnected) ghost.remove();
+          cb && cb();
+        }, 210);
+      }
+
       function clearEdge() {
         if (edgeTimer) { clearTimeout(edgeTimer); edgeTimer = null; }
         edgeDir = 0;
@@ -797,8 +857,6 @@
         destroyShield();
         destroyPreview();
 
-        if (ghostEl) { ghostEl.remove(); ghostEl = null; }
-        if (sourceEl) { try { delete sourceEl.dataset.dragging; } catch { } }
         sourceEl = null;
 
         desktopViewportEl.querySelectorAll('.is-drop-target')
@@ -814,7 +872,8 @@
         if (hitSlot) {
           const si = +hitSlot.dataset.pageIndex;
           const sj = +hitSlot.dataset.slotIndex;
-          if (si === currentPage) {
+          const total = DesktopLayout.pageCount();
+          if (si >= 0 && si < total) {
             toPageIndex = si;
             toSlotIndex = sj;
             located = true;
@@ -844,21 +903,41 @@
           toPageIndex === draggedFrom.pageIndex &&
           toSlotIndex === draggedFrom.slotIndex;
 
-        if (!samePos) {
+        let targetRect = null;
+
+        if (!samePos && draggedFrom) {
           const pagesBefore = DesktopLayout.snapshot();
-          const targetPage = pagesBefore[toPageIndex];
-          const targetSlot = targetPage?.slots?.[toSlotIndex];
+          const targetSlot = pagesBefore[toPageIndex]?.slots?.[toSlotIndex];
           const targetFilled = !!(targetSlot && targetSlot.bundle);
 
-          if (!targetFilled) {
-            const focusPageId = targetPage?.pageId;
-
+          if (targetFilled) {
+            /* ★ 目标被占 → 不动数据，ghost 飞回原槽位 */
+            if (draggedFrom.pageIndex === currentPage) {
+              const srcSlotEl = desktopViewportEl.querySelector(
+                `.slot[data-page-index="${draggedFrom.pageIndex}"][data-slot-index="${draggedFrom.slotIndex}"]`
+              );
+              if (srcSlotEl) targetRect = srcSlotEl.getBoundingClientRect();
+            }
+            /* 跨页被拒 → targetRect 留 null，下面走"直接重建"分支 */
+          } else {
+            /* 目标空 → 正常移动 */
             DesktopLayout.move(draggedBundle, toPageIndex, toSlotIndex);
 
-            if (focusPageId) {
-              const pagesAfter = DesktopLayout.snapshot();
-              const newIndex = pagesAfter.findIndex(p => p.pageId === focusPageId);
-              if (newIndex >= 0) currentPage = newIndex;
+            /* cleanupEmptyPages 可能删了空页、索引前移 → 用真实落点 */
+            const landed = DesktopLayout.findBundle(draggedBundle);
+            if (landed) {
+              toPageIndex = landed.pageIndex;
+              toSlotIndex = landed.slotIndex;
+            }
+
+            if (toPageIndex !== currentPage) {
+              currentPage = toPageIndex;
+              targetRect = null;            /* 跨页 → 不飞行，直接重建 */
+            } else {
+              const targetSlotEl = desktopViewportEl.querySelector(
+                `.slot[data-page-index="${toPageIndex}"][data-slot-index="${toSlotIndex}"]`
+              );
+              if (targetSlotEl) targetRect = targetSlotEl.getBoundingClientRect();
             }
           }
         }
@@ -870,9 +949,32 @@
         clearWatchdog();
         releasePointer();
 
-        renderHome();
-        state = 'idle';
-        suppressClickUntil = performance.now() + SUPPRESS_MS;
+        /* 交出 ghost 的所有权 */
+        const ghost = ghostEl;
+        ghostEl = null;
+
+        /* ★ 有目标 slot → 飞行动画；否则直接移除 */
+        if (ghost && targetRect && !samePos) {
+          const gr = ghost.getBoundingClientRect();
+          const dx = (targetRect.left + targetRect.width / 2) - (gr.left + gr.width / 2);
+          const dy = (targetRect.top + targetRect.height / 2) - (gr.top + gr.height / 2);
+
+          ghost.style.transition =
+            'transform .24s linear, filter .22s linear, opacity .18s linear';
+          ghost.style.transform = `translate(${dx}px, ${dy}px) scale(1)`;
+
+          setTimeout(() => {
+            if (ghost.isConnected) ghost.remove();
+            renderHome();
+            state = 'idle';
+            suppressClickUntil = performance.now() + SUPPRESS_MS;
+          }, 240);
+        } else {
+          if (ghost) ghost.remove();
+          renderHome();
+          state = 'idle';
+          suppressClickUntil = performance.now() + SUPPRESS_MS;
+        }
       }
 
       function cancelDrag() {
@@ -928,15 +1030,23 @@
             const bundle = targetApp.dataset.bundle;
             if (!bundle || !WujiApps.isInstalled(bundle)) return;
 
-            const el = desktopViewportEl.querySelector(
-              `.app[data-bundle="${bundle}"]`
-            );
-            const anchorRect = el
-              ? el.getBoundingClientRect()
+            const el = desktopViewportEl.querySelector(`.app[data-bundle="${bundle}"]`);
+            const anchorRect = el ? el.getBoundingClientRect()
               : targetApp.getBoundingClientRect();
 
-            cancelDrag();
-            showUninstallMenu(bundle, anchorRect);
+            flyGhostBack(() => {
+              if (sourceEl) { try { delete sourceEl.dataset.dragging; } catch { } }
+              sourceEl = null;
+              draggedBundle = null;
+              draggedFrom = null;
+              edgeFirstFired = false;
+              releasePointer();
+              desktopViewportEl.querySelectorAll('.is-drop-target')
+                .forEach(x => x.classList.remove('is-drop-target'));
+              renderHome();
+              state = 'idle';
+              showUninstallMenu(bundle, anchorRect);
+            });
           }, Math.max(0, UNINSTALL_HOLD_MS - HOLD_MS));
         }, HOLD_MS);
       }, { passive: true });
@@ -1053,8 +1163,13 @@
         appMenuCloseHandler = null;
       }
       if (appMenuEl) {
-        appMenuEl.remove();
+        const el = appMenuEl;
         appMenuEl = null;
+
+        el.classList.remove('is-open');
+        setTimeout(() => {
+          if (el.isConnected) el.remove();
+        }, 180);
       }
     }
 
@@ -1093,8 +1208,10 @@
       const vh = window.innerHeight;
 
       let left = anchorRect.right + GAP;
+      let originX = 'left';
       if (left + menuRect.width > vw - EDGE) {
         left = anchorRect.left - menuRect.width - GAP;
+        originX = 'right';
       }
       if (left < EDGE) left = EDGE;
       if (left + menuRect.width > vw - EDGE) {
@@ -1106,6 +1223,16 @@
 
       menu.style.left = left + 'px';
       menu.style.top = top + 'px';
+
+      /* ★ 从锚点方向缩放：菜单在图标右侧 → origin 左上；左侧 → origin 右上 */
+      menu.style.transformOrigin = `top ${originX}`;
+
+      /* ★ 下一帧进入"打开"状态，触发 transition */
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          if (menu && menu.isConnected) menu.classList.add('is-open');
+        });
+      });
 
       menu.querySelector('.app-menu__item').addEventListener('click', () => {
         hideAppMenu();
@@ -2132,7 +2259,7 @@
         const t = e.touches[0];
         if (!t) return;
         moveGesture(t.clientX, t.clientY, null);
-      }, { passive: true });         
+      }, { passive: true });
 
       appScreen.addEventListener('touchend', endGesture);
       appScreen.addEventListener('touchcancel', endGesture);
@@ -2604,7 +2731,7 @@
         return e.target;
       }
 
-            document.addEventListener('pointerdown', e => {
+      document.addEventListener('pointerdown', e => {
         /* 鼠标只允许左键；触屏全都接 */
         if (e.pointerType === 'mouse' && e.button !== 0) return;
         if (DesktopDrag.state === 'dragging') return;

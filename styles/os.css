@@ -619,13 +619,8 @@ img {
   position: fixed;
   pointer-events: none;
   z-index: 900;
-  transform: scale(1.12);
-  opacity: .95;
+  opacity: 1;
   will-change: left, top;
-}
-
-.desktop-ghost .app__icon {
-  filter: drop-shadow(0 12px 24px rgba(0, 0, 0, .35));
 }
 
 .desktop-drag-preview {
@@ -651,9 +646,9 @@ img {
 .app-menu {
   position: fixed;
   z-index: 1000;
-  background: rgba(255, 255, 255, .72);
-  backdrop-filter: blur(24px) saturate(180%);
-  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  background: rgba(255, 255, 255, .5);
+  backdrop-filter: blur(3px) saturate(105%);
+  -webkit-backdrop-filter: blur(3px) saturate(105%);
   border: .5px solid rgba(255, 255, 255, .55);
   border-radius: 14px;
   box-shadow:
@@ -661,9 +656,22 @@ img {
     0 2px 8px rgba(0, 0, 0, .06);
   padding: 6px;
   min-width: 140px;
-  animation: appMenuIn .16s cubic-bezier(.2, .7, .3, 1);
   user-select: none;
   -webkit-user-select: none;
+
+  opacity: 0;
+  transform: scale(.85) translateY(-4px);
+  transform-origin: top left;
+  transition:
+    opacity .18s cubic-bezier(.2, .7, .3, 1),
+    transform .22s cubic-bezier(.2, .7, .3, 1);
+  pointer-events: none;
+}
+
+.app-menu.is-open {
+  opacity: 1;
+  transform: scale(1) translateY(0);
+  pointer-events: auto;
 }
 
 .app-menu__item {
@@ -1422,7 +1430,6 @@ img {
   text-shadow: 0 1px 5px rgba(0, 0, 0, .25);
 }
 
-/* ================= 横幅通知 ================= */
 .wj-banner {
   position: absolute;
   top: 34px;

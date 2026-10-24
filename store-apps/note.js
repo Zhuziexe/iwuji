@@ -68,7 +68,7 @@
     name: '备忘录',
     icon: './assets/note.svg',
     initialRoute: 'home',
-    version: '1.0.4',
+    version: '1.0.5',
     styles: `
       /* ==================== 主页 ==================== */
       .note-page {
@@ -95,15 +95,6 @@
         flex-direction: column;
         justify-content: center;
         gap: 0;
-      }
-
-      .note-header__title {
-        font-size: 24px;
-        font-weight: 700;
-        color: var(--wj-text);
-        letter-spacing: .3px;
-        line-height: 1.2;
-        margin: 0;
       }
 
       .note-hint {
@@ -365,7 +356,7 @@
             <div class="note-page">
               <div class="note-header">
                 <div class="note-header__text">
-                  <h1 class="note-header__title">全部备忘</h1>
+                  <h2 class="wj-title">全部备忘</h2>
                   <div class="note-hint">长按删除</div>
                 </div>
                 <button class="note-add-btn" id="noteAddBtn" type="button" aria-label="新建">

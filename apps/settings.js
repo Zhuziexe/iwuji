@@ -340,15 +340,6 @@
         flex-direction: column;
         gap: 12px;
       }
-
-      .settings-title {
-        font-size: 22px;
-        font-weight: 700;
-        color: var(--wj-text);
-        margin-bottom: 2px;
-        flex: 0 0 auto;
-      }
-
       .settings-section {
         flex: 0 0 auto;
         border-radius: 14px;
@@ -1203,7 +1194,7 @@
         render() {
           return `
             <div class="settings-page">
-              <div class="settings-title">设置</div>
+              <div class="wj-title">设置</div>
 
               <div class="settings-section">
                 <div class="settings-item" data-act="about">
@@ -1336,7 +1327,7 @@
         render() {
           return `
             <div class="settings-page">
-              <div class="settings-title">关于本机</div>
+              <div class="wj-title">关于本机</div>
 
               <div class="settings-about-card">
                 <div class="settings-about-card__title">WujiOS</div>
@@ -1472,7 +1463,7 @@
         render() {
           return `
             <div class="settings-page">
-              <div class="settings-title">WLAN</div>
+              <div class="wj-title">WLAN</div>
 
               <div class="settings-section">
                 <div class="settings-row">
@@ -1495,7 +1486,7 @@
         render() {
           return `
             <div class="settings-page">
-              <div class="settings-title">蓝牙</div>
+              <div class="wj-title">蓝牙</div>
 
               <div class="settings-section">
                 <div class="settings-row">
@@ -1518,7 +1509,7 @@
         render() {
           return `
             <div class="settings-page">
-              <div class="settings-title">移动数据</div>
+              <div class="wj-title">移动数据</div>
 
               <div class="settings-section">
                 <div class="settings-row">
@@ -1541,7 +1532,7 @@
         render() {
           return `
             <div class="settings-page">
-              <div class="settings-title">存储</div>
+              <div class="wj-title">存储</div>
 
               <div class="storage-card">
                 <div class="storage-percent" id="storagePercent">--%</div>
@@ -1633,7 +1624,7 @@
         render() {
           return `
             <div class="settings-page">
-              <div class="settings-title">应用管理</div>
+              <div class="wj-title">应用管理</div>
               <div class="settings-section" id="appManageList"></div>
             </div>
           `;
@@ -1831,7 +1822,7 @@
         render() {
           return `
             <div class="settings-page">
-              <div class="settings-title">生物识别和密码</div>
+              <div class="wj-title">生物识别和密码</div>
               <div class="settings-section" id="bioList"></div>
             </div>
           `;
@@ -1898,7 +1889,7 @@
 
           return `
             <div class="settings-page">
-              <div class="settings-title">铃声和音量</div>
+              <div class="wj-title">铃声和音量</div>
 
               <div class="settings-section"
                    style="padding:14px 18px;gap:12px;display:flex;flex-direction:column;">
@@ -2012,7 +2003,7 @@
             ?? Store.get('wujios.brightness', 80);
           return `
             <div class="settings-page">
-              <div class="settings-title">显示和亮度</div>
+              <div class="wj-title">显示和亮度</div>
 
               <div class="settings-section"
                    style="padding:14px 18px;gap:12px;display:flex;flex-direction:column;">
@@ -2194,7 +2185,7 @@
 
           return `
             <div class="settings-page">
-              <div class="settings-title">桌面和个性化</div>
+              <div class="wj-title">桌面和个性化</div>
 
               <div class="settings-section">
                 <div class="settings-item" data-act="themes">
@@ -2221,7 +2212,7 @@
           const sys = Array.isArray(window.SYSTEM_THEMES) ? window.SYSTEM_THEMES : [];
           return `
             <div class="settings-page">
-              <div class="settings-title">主题</div>
+              <div class="wj-title">主题</div>
 
               <div style="font-size:15px;font-weight:600;color:var(--wj-text);">系统主题</div>
               <div class="theme-grid" id="sysThemeGrid">
@@ -2536,7 +2527,7 @@
         render() {
           return `
             <div class="settings-page">
-              <div class="settings-title">备份和恢复</div>
+              <div class="wj-title">备份和恢复</div>
 
               <div class="settings-section" style="padding:0;overflow:hidden;">
                 <div class="backup-hero">
@@ -2641,7 +2632,7 @@
         render() {
           return `
             <div class="settings-page">
-              <div class="settings-title">开发者选项</div>
+              <div class="wj-title">开发者选项</div>
 
               <div class="settings-section">
                 <div class="settings-item" id="sideloadPick">

@@ -169,47 +169,6 @@ window.WujiAppInstaller = (() => {
 
       return { ok: true, action: existing ? 'updated' : 'installed', version: nextVersion };
     },
-
-    /* ---------- 检查更新 ---------- */
-    async checkUpdates() {
-      const market = window.WUJI_MARKET_APPS;
-      if (!Array.isArray(market)) return [];
-
-      const out = [];
-      for (const m of market) {
-        const bundle = m.bundle || m.bundlename;
-        if (!bundle) continue;
-        const local = this.get(bundle);
-        if (!local) continue;                          // 未安装不算更新
-        if (cmpVer(local.version, m.version) < 0) {
-          out.push({
-            bundle,
-            name:  m.name || bundle,
-            from:  local.version,
-            to:    m.version,
-            meta:  m,
-          });
-        }
-      }
-      return out;
-    },
-
-    async updateAll() {
-      const list = await this.checkUpdates();
-      const results = [];
-      for (const item of list) {
-        try {
-          const r = await this.install(item.meta);
-          results.push({ bundle: item.bundle, ...r });
-        } catch (e) {
-          results.push({ bundle: item.bundle, ok: false, action: 'error', error: e });
-        }
-      }
-      return results;
-    },
-
-    /* ---------- 卸载 ---------- */
-
     /**
      * 卸载应用，清空 AppStorage 私有数据 + IDB 代码 + 通知 + 桌面图标。
      */

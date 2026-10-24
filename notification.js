@@ -205,13 +205,14 @@ window.WujiNotification = (() => {
       </div>
     `;
 
-    /* 复位 */
     if (bannerTimer) { clearTimeout(bannerTimer); bannerTimer = null; }
-    bannerEl.style.transition = '';
+
+    bannerEl.style.transition = 'none';
+    bannerEl.classList.remove('is-show');
     bannerEl.style.transform = '';
     bannerEl.style.opacity = '';
-    bannerEl.classList.remove('is-show');
     void bannerEl.offsetWidth;
+    bannerEl.style.transition = '';
     bannerEl.classList.add('is-show');
 
     const silent =
@@ -250,19 +251,24 @@ window.WujiNotification = (() => {
       const W = window.innerWidth + 60;
       const H = 140;
 
-      bannerEl.style.transition = 'transform .28s cubic-bezier(.2,.7,.3,1)';
+      bannerEl.style.transition =
+        'transform .28s cubic-bezier(.2,.7,.3,1), opacity .22s ease';
 
       if (dirX === 0) {
         bannerEl.style.transform = `translateY(${-H}px)`;
       } else {
         bannerEl.style.transform = `translateX(${dirX * W}px)`;
       }
+      bannerEl.style.opacity = '0';
 
       setTimeout(() => {
+        /* ★ 先关过渡 → 移除 is-show → 清 inline → 强制重排 → 恢复过渡 */
+        bannerEl.style.transition = 'none';
         bannerEl.classList.remove('is-show');
-        bannerEl.style.transition = '';
         bannerEl.style.transform = '';
         bannerEl.style.opacity = '';
+        void bannerEl.offsetWidth;
+        bannerEl.style.transition = '';
       }, 260);
     }
 
