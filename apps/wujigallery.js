@@ -3,7 +3,7 @@ WujiApps.register({
   name: '应用市场',
   icon: './assets/wujigallery.svg',
   initialRoute: 'home',
-  version: '1.0.3',
+  version: '1.0.4',
   styles: `
     /* ---------------- 列表页 ---------------- */
     .market-page {
@@ -30,21 +30,22 @@ WujiApps.register({
       gap: 10px;
     }
 
-.market-row {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 14px 16px;
-  border-radius: 14px;
-  background: var(--wj-bg-alt);
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
-  transition: background .15s, transform .08s;
-}
-.market-row:active {
-  background: #dae2f0;
-  transform: scale(.99);
-}
+    .market-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 16px;
+      border-radius: 14px;
+      background: var(--wj-bg-alt);
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      transition: background .15s, transform .08s;
+    }
+    .market-row:active {
+      background: #dae2f0;
+      transform: scale(.99);
+    }
+
     .market-row__icon {
       width: 52px;
       height: 52px;
@@ -64,6 +65,7 @@ WujiApps.register({
     }
 
     .market-row__name {
+      flex: 1 1 auto;
       font-size: var(--wj-fs-md);
       color: var(--wj-text);
       font-weight: 500;
@@ -71,6 +73,20 @@ WujiApps.register({
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
+    }
+
+    /* 只有「可更新」才显示徽章 */
+    .market-row__badge--update {
+      flex: 0 0 auto;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: .3px;
+      padding: 3px 9px;
+      border-radius: 999px;
+      background: var(--wj-primary);
+      color: #fff;
+      white-space: nowrap;
+      box-shadow: 0 2px 8px rgba(58, 111, 240, .35);
     }
 
     .market-empty,
@@ -82,6 +98,7 @@ WujiApps.register({
       letter-spacing: .5px;
     }
 
+    /* ---------------- 详情页 ---------------- */
     .market-detail {
       position: absolute;
       inset: 0;
@@ -233,24 +250,74 @@ WujiApps.register({
       mount(root, ctx) {
         const listEl = root.querySelector('#marketList');
 
-        const renderList = apps => {
+        /* ---------- 判断单个应用的状态 ---------- */
+        const getAppState = (app) => {
+          const installed = WujiApps.has(app.bundle) && WujiApps.isInstalled(app.bundle);
+          if (!installed) {
+            return { installed: false, hasUpdate: false, localVersion: '' };
+          }
+
+          const rec = WujiAppInstaller.get(app.bundle);
+          const reg = WujiApps.get(app.bundle);
+
+          const norm = v => String(v == null ? '' : v).trim();
+          const localVersion = norm(
+            (rec && rec.version) ||
+            (reg && reg.version) ||
+            ''
+          );
+          const marketVersion = norm(app.version);
+
+          let hasUpdate = false;
+          if (localVersion && marketVersion) {
+            try {
+              hasUpdate = WujiAppInstaller.cmpVer(localVersion, marketVersion) < 0;
+            } catch {
+              hasUpdate = localVersion !== marketVersion;
+            }
+          }
+
+          return { installed: true, hasUpdate, localVersion };
+        };
+
+        /* ---------- 渲染列表 ---------- */
+        const renderList = (apps) => {
           if (!apps || !apps.length) {
             listEl.className = 'market-empty';
             listEl.innerHTML = '没有更多了';
             return;
           }
 
+          /* 先统计状态 */
+          const withState = apps.map(app => ({
+            app,
+            state: getAppState(app),
+          }));
+
+          /* 可更新的排最前，其余保持 apps.js 里的原始顺序 */
+          withState.sort((a, b) => {
+            const rank = s => s.hasUpdate ? 0 : 1;
+            return rank(a.state) - rank(b.state);
+          });
+
           listEl.className = '';
           listEl.innerHTML = `
             <div class="market-list">
-              ${apps.map(app => `
+              ${withState.map(({ app, state }) => {
+                const badge = state.hasUpdate
+                  ? '<span class="market-row__badge--update">更新</span>'
+                  : '';
+
+                return `
                 <div class="market-row" data-bundle="${escapeHtml(app.bundle)}">
                   <div class="market-row__icon">
                     <img src="${escapeHtml(app.icon || '')}" alt="">
                   </div>
                   <div class="market-row__name">${escapeHtml(app.name || app.bundle)}</div>
+                  ${badge}
                 </div>
-              `).join('')}
+              `;
+              }).join('')}
             </div>
             <div class="market-end">没有更多了</div>
           `;
@@ -267,12 +334,28 @@ WujiApps.register({
 
         const apps = window.WUJI_MARKET_APPS;
 
-        if (Array.isArray(apps)) {
-          renderList(apps);
-        } else {
+        if (!Array.isArray(apps)) {
           listEl.className = 'market-empty';
           listEl.textContent = '未找到应用目录';
+          return;
         }
+
+        renderList(apps);
+
+        /* ---------- 安装 / 卸载后实时刷新 ---------- */
+        const off = WujiApps.on(evt => {
+          if (evt.type !== 'registered' && evt.type !== 'unregistered') return;
+          if (!root.isConnected) {
+            off();
+            return;
+          }
+          /* 只有当前在列表页时才重绘，避免在详情页时列表被打断 */
+          if (ctx.nav.current?.route?.name === 'home') {
+            renderList(apps);
+          }
+        });
+
+        return () => off();
       },
     },
 
@@ -360,8 +443,17 @@ WujiApps.register({
             return;
           }
 
-          // ---- 状态 2：装了，版本一致 ----
-          if (currentVersion && currentVersion === targetVersion) {
+          // ---- 状态 2：装了，版本一致或本地更新 ----
+          let cmp = 0;
+          if (currentVersion && targetVersion) {
+            try {
+              cmp = WujiAppInstaller.cmpVer(currentVersion, targetVersion);
+            } catch {
+              cmp = currentVersion === targetVersion ? 0 : -1;
+            }
+          }
+
+          if (cmp >= 0) {
             label.textContent = '已安装';
             btn.disabled = true;
             btn.classList.remove('is-progress');
@@ -369,7 +461,7 @@ WujiApps.register({
             return;
           }
 
-          // ---- 状态 3：装了，但版本不同 ----
+          // ---- 状态 3：装了，但市场版更新 ----
           label.textContent = '更新';
           btn.disabled = false;
           btn.classList.remove('is-progress');

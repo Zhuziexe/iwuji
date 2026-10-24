@@ -11,7 +11,7 @@
     name: '骰子',
     icon: './assets/dice.svg',
     initialRoute: 'home',
-    version: '1.0.0',
+    version: '1.0.1',
 
     styles: `
       .dice-page {

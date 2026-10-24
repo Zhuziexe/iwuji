@@ -165,7 +165,7 @@ window.WUJI_MARKET_APPS = [
     bundle: 'com.wujinb.dice',
     name: '骰子',
     icon: './assets/dice.svg',
-    version: '1.0.0',
+    version: '1.0.1',
     author: 'Wuji',
     description: '骰子官方正版',
     longdescription: '一个骰子，生成1~6随机数',

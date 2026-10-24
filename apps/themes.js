@@ -30,7 +30,7 @@
     name: '主题',
     icon: './assets/themes.svg',
     initialRoute: 'home',
-    version: '1.0.0',
+    version: '1.0.1',
 
     styles: `
       .theme-page {
@@ -49,9 +49,9 @@
 
       .theme-section { display: flex; flex-direction: column; gap: 10px; }
       .theme-section__head { display: flex; align-items: center; justify-content: space-between; }
-      .theme-section__title { font-size: 17px; font-weight: 600; color: var(--wj-text); }
+      .theme-section__title { font-size: 18px; font-weight: 600; color: var(--wj-text); }
       .theme-section__more {
-        font-size: 13px; color: var(--wj-text-dim); cursor: pointer;
+        font-size: 16px; color: var(--wj-text-dim); cursor: pointer;
         padding: 4px 8px; border-radius: 8px;
         -webkit-tap-highlight-color: transparent; transition: background .15s;
       }
@@ -82,7 +82,7 @@
       .theme-mine-entry {
         display: flex; align-items: center; justify-content: space-between;
         padding: 14px 16px; border-radius: 14px; background: var(--wj-bg-alt);
-        color: var(--wj-text); font-size: 15px; font-weight: 500;
+        color: var(--wj-text); font-size: 16px; font-weight: 500;
         cursor: pointer; -webkit-tap-highlight-color: transparent;
       }
       .theme-mine-entry:active { transform: scale(.99); }

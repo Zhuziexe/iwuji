@@ -103,15 +103,6 @@ window.DesktopLayout = (() => {
       const d = ensureData();
       let dirty = false;
 
-      d.pages.forEach(p => {
-        p.slots.forEach((b, i) => {
-          if (b && !WujiApps.get(b)) {
-            p.slots[i] = '';
-            dirty = true;
-          }
-        });
-      });
-
       const onDesktop = new Set();
       d.pages.forEach(p => p.slots.forEach(s => { if (s) onDesktop.add(s); }));
 
