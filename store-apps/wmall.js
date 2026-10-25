@@ -36,7 +36,7 @@
     name: '吴际商城',
     icon: './assets/wmall.svg',
     initialRoute: 'home',
-    version: '1.0.6',
+    version: '1.0.7',
     styles: `
   .wmall-page {
     position: absolute;
@@ -226,16 +226,16 @@
   .wmall-chips__list {
     display: flex;
     flex-wrap: wrap;
-    gap: 6px;
+    gap: 4px;
   }
 
   .wmall-chip {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
-    padding: 3px 11px 3px 3px;
+    gap: 4px;
+    padding: 3px 10px 3px 3px;
     border: 2px solid var(--wj-border, #e6e9ef);
-    border-radius: 1399px;
+    border-radius: 999px;
     background: var(--wj-bg-alt);
     color: var(--wj-text);
     font: inherit;

@@ -643,8 +643,8 @@ ${routesCode}
   /* =========================================================
      预览区外壳
      ========================================================= */
-  const DESIGN_W = 300;
-  const DESIGN_H = 400;
+  const DESIGN_W = 420;
+  const DESIGN_H = 560;
   const LONG_PRESS_MS = 650;
 
   const studioScreenEl = document.getElementById('studioScreen');

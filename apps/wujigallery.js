@@ -27,7 +27,7 @@ WujiApps.register({
       display: flex;
       align-items: center;
       gap: 17px;
-      padding: 20px 22px;
+      padding: 10px 12px;
       border-radius: 20px;
       background: var(--wj-bg-alt);
       cursor: pointer;

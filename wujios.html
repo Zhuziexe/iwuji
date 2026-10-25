@@ -569,7 +569,7 @@
 
     const DesktopDrag = (() => {
       const HOLD_MS = 400;
-      const UNINSTALL_HOLD_MS = 1200;
+      const UNINSTALL_HOLD_MS = 1600;
       const MOVE_CANCEL = 14;
       const EDGE_ZONE = 44;
       const EDGE_HOLD_MS = 600;
@@ -592,6 +592,8 @@
       let activePointerId = null;
       let watchdogTimer = null;
       let longPressMenuTimer = null;
+      let grabOffsetX = 0;
+      let grabOffsetY = 0;
 
       let suppressClickUntil = 0;
 
@@ -622,36 +624,34 @@
         }
 
         const rect = appEl.getBoundingClientRect();
+
+        grabOffsetX = x - rect.left;
+        grabOffsetY = y - rect.top;
+
         ghostEl = appEl.cloneNode(true);
         ghostEl.classList.add('desktop-ghost');
         ghostEl.removeAttribute('data-dragging');
-        ghostEl.style.left = rect.left + 'px';        // ① 先在原位
+        ghostEl.style.left = rect.left + 'px';
         ghostEl.style.top = rect.top + 'px';
         ghostEl.style.width = rect.width + 'px';
         ghostEl.style.height = rect.height + 'px';
+        ghostEl.style.transformOrigin = 'center center';
+        ghostEl.style.transform = 'scale(1)';
         (document.getElementById('os') || document.body).appendChild(ghostEl);
 
         const ghostRef = ghostEl;
-        const gw = ghostRef.offsetWidth;              // append 后才能读到
-        const gh = ghostRef.offsetHeight;
 
         requestAnimationFrame(() => {
           requestAnimationFrame(() => {
             if (!ghostRef.isConnected) return;
-            ghostRef.style.transition =
-              'left 150ms linear, ' +
-              'top 150ms linear, ' +
-              'filter .18s linear';
-            ghostRef.style.left = (x - gw / 2) + 'px';
-            ghostRef.style.top = (y - gh / 2) + 'px';
+            ghostRef.style.transition = 'transform 150ms linear';
+            ghostRef.style.transform = 'scale(1.08)';
 
             setTimeout(() => {
               if (ghostRef.isConnected) ghostRef.style.transition = '';
             }, 170);
           });
         });
-
-        // ★ 删掉原来的 moveGhost(x, y);  —— 瞬移就是它造成的
 
         suppressClickUntil = performance.now() + SUPPRESS_MS;
         createPreview(appEl);
@@ -665,10 +665,8 @@
 
       function moveGhost(x, y) {
         if (!ghostEl) return;
-        const w = ghostEl.offsetWidth;
-        const h = ghostEl.offsetHeight;
-        ghostEl.style.left = (x - w / 2) + 'px';
-        ghostEl.style.top = (y - h / 2) + 'px';
+        ghostEl.style.left = (x - grabOffsetX) + 'px';
+        ghostEl.style.top = (y - grabOffsetY) + 'px';
       }
 
       function createPreview(appEl) {
@@ -806,7 +804,6 @@
         const ghost = ghostEl;
         const src = sourceEl;
 
-        /* 冻结拖拽状态：后续 pointermove/up 不会干扰动画 */
         state = 'returning';
         ghostEl = null;
         clearEdge();
@@ -819,16 +816,18 @@
         if (src) {
           const r = src.getBoundingClientRect();
           ghost.style.transition =
-            'left 200ms cubic-bezier(.2,.7,.3,1), ' +
-            'top 200ms cubic-bezier(.2,.7,.3,1)';
+            'left 150ms linear, ' +
+            'top 150ms linear, ' +
+            'transform 150ms linear';
           ghost.style.left = r.left + 'px';
           ghost.style.top = r.top + 'px';
+          ghost.style.transform = 'scale(1)';
         }
 
         setTimeout(() => {
           if (ghost.isConnected) ghost.remove();
           cb && cb();
-        }, 210);
+        }, 160);
       }
 
       function clearEdge() {
@@ -2492,7 +2491,7 @@
         void bar.offsetWidth;
       }
 
-      const DURATION = 20000;
+      const DURATION = 10000;
       const start = performance.now();
 
       await new Promise(resolve => {
@@ -2506,7 +2505,7 @@
         requestAnimationFrame(tick);
       });
 
-      Store.set('wujios.lastbootversion', '1.0.114');
+      Store.set('wujios.lastbootversion', '1.0.115');
 
       await sleep(400);
 
@@ -2528,9 +2527,9 @@
 
       if (lastVersion === null) {
         /* 首次开机：直接写版本，正常开机 */
-        Store.set('wujios.lastbootversion', '1.0.114');
-      } else if (lastVersion !== '1.0.114') {
-        /* 已有旧版本号且不是 1.0.114 → 更新 */
+        Store.set('wujios.lastbootversion', '1.0.115');
+      } else if (lastVersion !== '1.0.115') {
+        /* 已有旧版本号且不是 1.0.115 → 更新 */
         await runUpdate();
         return;
       }
