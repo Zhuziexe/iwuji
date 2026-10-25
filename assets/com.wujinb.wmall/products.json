@@ -11,7 +11,7 @@
           "id": "blue",
           "text": "牛逼蓝",
           "image": "./assets/com.wujinb.wmall/iwuji_blue.png",
-          "buyable": false
+          "buyable": true
         },
         {
           "id": "white",
@@ -23,7 +23,7 @@
           "id": "black",
           "text": "牛逼黑",
           "image": "./assets/com.wujinb.wmall/iwuji_black.png",
-          "buyable": true
+          "buyable": false
         }
       ],
       "specs": [
@@ -79,7 +79,7 @@
       "icon": "./assets/com.wujinb.wmall/iwuji_baohuke.png",
       "name": "iWuji透明保护壳",
       "price": 39,
-      "buyable": false
+      "buyable": true
     }
   ]
 }
