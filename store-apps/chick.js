@@ -3,9 +3,7 @@
   const ICON_URL = './assets/chick.svg';
   const NOTIF_ID = 1001;
 
-  // 每小时衰减速率
   const DECAY = { hunger: 8, clean: 5, mood: 6 };
-
   const clamp = v => Math.max(0, Math.min(100, v));
 
   function db() { return AppStorage.for(BUNDLE); }
@@ -40,6 +38,7 @@
         hunger: 70,
         clean: 70,
         mood: 70,
+        outfit: { hat: false, scarf: false },
       };
       await db().set('pet', pet);
       return pet;
@@ -53,6 +52,13 @@
       pet.mood = clamp((pet.mood || 0) - DECAY.mood * hours);
       pet.lastUpdate = now;
     }
+
+    if (!pet.outfit || typeof pet.outfit !== 'object') {
+      pet.outfit = { hat: false, scarf: false };
+    }
+    if (typeof pet.outfit.hat   !== 'boolean') pet.outfit.hat = false;
+    if (typeof pet.outfit.scarf !== 'boolean') pet.outfit.scarf = false;
+
     return pet;
   }
 
@@ -96,7 +102,6 @@
     await savePet(pet);
   }
 
-  /* ---------------- 时段问候 ---------------- */
   function getGreeting() {
     const h = new Date().getHours();
     if (h >= 6  && h < 9)  return '早安！今天也要加油哦';
@@ -108,11 +113,6 @@
     return '这么晚还不睡？我先睡了…';
   }
 
-  /* ---------------- 小鸡日记 ----------------
-     只保存一条记录：{ text, timestamp, read }
-     read=false 时首页按钮显示红点
-     打开日记页时标记为已读
-     ---------------------------------------- */
   const EVENTS = [
     '小鸡在窗边看到了一只蝴蝶，盯了好久',
     '小鸡学会了一个新动作，得意地跳来跳去',
@@ -161,11 +161,11 @@
     return text;
   }
 
-  /* ---------------- 小鸡 SVG ---------------- */
   function chickSVG(pet) {
     const s = stateOf(pet);
     const happy = s === 'happy';
     const sad = s === 'sad';
+    const outfit = pet.outfit || {};
 
     const eyes = happy
       ? `<path d="M36 32 Q42 26 48 32" stroke="#1c2536" stroke-width="3" fill="none" stroke-linecap="round"/>
@@ -189,6 +189,26 @@
       ? `<text x="78" y="24" font-size="16" font-weight="700" fill="#e0356b">!</text>`
       : '';
 
+    const hat = outfit.hat ? `
+      <g class="chick-hat">
+        <rect x="26" y="16" width="48" height="5" rx="2.5" fill="#2c5ad0"/>
+        <path d="M30 16 Q30 2 50 2 Q70 2 70 16 Z" fill="#3a6ff0"/>
+        <circle cx="50" cy="3" r="3.5" fill="#ffd93b"/>
+      </g>
+    ` : '';
+
+    const scarf = outfit.scarf ? `
+      <g class="chick-scarf">
+        <path d="M26 49 Q50 61 74 49 L74 55 Q50 67 26 55 Z"
+              fill="#d64550"/>
+        <path d="M28 50 Q50 60.5 72 50"
+              stroke="#eb6b73" stroke-width="1.2"
+              stroke-linecap="round" fill="none" opacity="0.5"/>
+        <path d="M30 54 Q25 63 27 71 Q28 75 31 74 Q33 72 32 66 Q30 60 33 54 Z"
+              fill="#d64550"/>
+      </g>
+    ` : '';
+
     return `
       <svg viewBox="0 0 100 100" class="chick-svg">
         <ellipse cx="50" cy="62" rx="32" ry="30" fill="#FFD93B"/>
@@ -196,6 +216,8 @@
         <path d="M38 14 Q42 6 46 14 Q50 6 54 14 Q58 6 62 14" fill="#e0356b"/>
         <ellipse cx="16" cy="60" rx="8" ry="14" fill="#FFD93B" transform="rotate(-15 16 60)"/>
         <ellipse cx="84" cy="60" rx="8" ry="14" fill="#FFD93B" transform="rotate(15 84 60)"/>
+        ${hat}
+        ${scarf}
         ${eyes}
         ${mouth}
         <line x1="38" y1="90" x2="38" y2="97" stroke="#FF9500" stroke-width="3" stroke-linecap="round"/>
@@ -211,14 +233,13 @@
     name: '吴际小鸡',
     icon: ICON_URL,
     initialRoute: 'home',
-    version: '1.0.3',
+    version: '1.0.6',
 
     onBoot() {
       checkPetStatus().catch(() => { });
     },
 
     onShutdown() {
-      // 无定时器需要清理
     },
 
     styles: `
@@ -248,6 +269,11 @@
         color: #5d4037;
         letter-spacing: .3px;
       }
+      .chick-header-actions {
+        display: flex;
+        gap: 8px;
+        flex: 0 0 auto;
+      }
       .chick-diary-btn {
         position: relative;
         flex: 0 0 auto;
@@ -257,7 +283,7 @@
         background: rgba(93, 64, 55, 0.1);
         color: #5d4037;
         font: inherit;
-        font-size: var(--wj-fs-sm);
+        font-size: var(--wj-fs-md);
         font-weight: 500;
         cursor: pointer;
         -webkit-tap-highlight-color: transparent;
@@ -450,7 +476,6 @@
       .chick-btn--clean { background: linear-gradient(180deg, #64b5f6, #3a6ff0); }
       .chick-btn--play  { background: linear-gradient(180deg, #f06292, #e0356b); }
 
-      /* ---------- 日记页 ---------- */
       .chick-diary-page {
         position: absolute;
         inset: 0;
@@ -494,6 +519,66 @@
         color: #5d4037;
         line-height: 1.6;
       }
+
+      .chick-wardrobe-page {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        background: linear-gradient(160deg, #fff8e1 0%, #ffe082 100%);
+        padding-top: var(--statusbar-h);
+        overflow-y: auto;
+        user-select: none;
+        -webkit-user-select: none;
+      }
+      .chick-wardrobe-header {
+        flex: 0 0 auto;
+        padding: 14px 25px 6px;
+      }
+      .chick-wardrobe-grid {
+        flex: 1 1 auto;
+        padding: 20px 25px;
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
+        align-content: start;
+      }
+      .chick-wardrobe-card {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+        padding: 24px 16px;
+        border-radius: 20px;
+        background: #fff;
+        box-shadow: 0 6px 17px rgba(93, 64, 55, .1);
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+        transition: transform .1s, box-shadow .15s, border-color .15s;
+        border: 2px solid transparent;
+      }
+      .chick-wardrobe-card:active { transform: scale(.97); }
+      .chick-wardrobe-card.is-on {
+        border-color: #e0356b;
+        box-shadow: 0 6px 20px rgba(224, 53, 107, .25);
+      }
+      .chick-wardrobe-icon {
+        font-size: 48px;
+        line-height: 1;
+      }
+      .chick-wardrobe-name {
+        font-size: var(--wj-fs-lg);
+        font-weight: 600;
+        color: #5d4037;
+      }
+      .chick-wardrobe-state {
+        font-size: var(--wj-fs-sm);
+        color: #8d6e63;
+      }
+      .chick-wardrobe-card.is-on .chick-wardrobe-state {
+        color: #e0356b;
+        font-weight: 600;
+      }
     `,
 
     routes: {
@@ -505,10 +590,13 @@
             <div class="chick-page">
               <div class="chick-header">
                 <div class="chick-title">吴际小鸡</div>
-                <button class="chick-diary-btn" id="chickDiaryBtn" type="button">
-                  日记 ›
-                  <span class="chick-diary-dot" id="chickDiaryDot"></span>
-                </button>
+                <div class="chick-header-actions">
+                  <button class="chick-diary-btn" id="chickWardrobeBtn" type="button">衣柜</button>
+                  <button class="chick-diary-btn" id="chickDiaryBtn" type="button">
+                    日记
+                    <span class="chick-diary-dot" id="chickDiaryDot"></span>
+                  </button>
+                </div>
               </div>
 
               <div class="chick-stage" id="chickStage">
@@ -564,6 +652,7 @@
           const stageEl = root.querySelector('#chickStage');
           const diaryBtn = root.querySelector('#chickDiaryBtn');
           const diaryDot = root.querySelector('#chickDiaryDot');
+          const wardrobeBtn = root.querySelector('#chickWardrobeBtn');
 
           let pet = null;
           let disposed = false;
@@ -589,8 +678,13 @@
             if (!pet || disposed) return;
 
             const s = stateOf(pet);
-            if (s !== lastRenderState) {
-              lastRenderState = s;
+            const outfitSig =
+              (pet.outfit && pet.outfit.hat ? '1' : '0') +
+              (pet.outfit && pet.outfit.scarf ? '1' : '0');
+            const sig = s + '|' + outfitSig;
+
+            if (sig !== lastRenderState) {
+              lastRenderState = sig;
               chickBodyEl.innerHTML = chickSVG(pet);
             }
 
@@ -670,11 +764,26 @@
           });
 
           diaryBtn?.addEventListener('click', () => {
-            /* 点击即视为已读 → 立刻隐藏红点，同时持久化 read */
             if (diaryDot) diaryDot.classList.remove('is-show');
             markDiaryRead().catch(() => { });
             if (navigator.vibrate) { try { navigator.vibrate(6); } catch { } }
             ctx.push('diary');
+          });
+
+          wardrobeBtn?.addEventListener('click', () => {
+            if (navigator.vibrate) { try { navigator.vibrate(6); } catch { } }
+            ctx.push('wardrobe');
+          });
+
+          /* ★ 从其他路由（衣柜 / 日记）返回 home 时，重新读 DB 的 outfit 并重绘 */
+          const offNav = ctx.nav.onChange(async () => {
+            if (disposed) return;
+            if (ctx.nav.current?.route?.name !== 'home') return;
+            const fresh = await loadPet({ create: false });
+            if (!fresh || !pet) return;
+            pet.outfit = fresh.outfit || pet.outfit;
+            lastRenderState = '';
+            render();
           });
 
           function onStageDown(e) {
@@ -741,7 +850,6 @@
             render();
             syncNotification(pet);
 
-            /* 进入时若已有未读日记 → 显示红点 */
             try {
               const existing = await loadDiary();
               if (!disposed && diaryDot && existing && !existing.read) {
@@ -749,12 +857,10 @@
               }
             } catch { }
 
-            /* 时段问候 */
             setTimeout(() => {
               if (!disposed) showBubble(getGreeting());
             }, 300);
 
-            /* 随机事件：只更新日记 + 红点，不再冒泡播报 */
             try {
               const evt = await maybeTriggerEvent();
               if (evt && !disposed && diaryDot) {
@@ -776,12 +882,26 @@
           })();
 
           return () => {
+            offNav();
             disposed = true;
             clearTimeout(bubbleTimer);
             clearInterval(tickTimer);
             clearTimeout(tapWindowTimer);
             clearTimeout(longPressTimer);
-            if (pet) savePet(pet).catch(() => { });
+
+            /* ★ 合并保存：数值用内存最新值，outfit 用 DB 最新值（衣柜可能改过） */
+            if (pet) {
+              db().get('pet', null).then(fresh => {
+                const base = (fresh && typeof fresh === 'object')
+                  ? fresh
+                  : { ...pet };
+                base.hunger = pet.hunger;
+                base.clean = pet.clean;
+                base.mood = pet.mood;
+                base.lastUpdate = Date.now();
+                return db().set('pet', base);
+              }).catch(() => { });
+            }
           };
         },
       },
@@ -832,6 +952,68 @@
               </div>
             `;
           })();
+        },
+      },
+
+      wardrobe: {
+        name: 'wardrobe',
+
+        render() {
+          return `
+            <div class="chick-wardrobe-page">
+              <div class="chick-wardrobe-header">
+                <div class="chick-title">小鸡衣柜</div>
+              </div>
+              <div class="chick-wardrobe-grid" id="chickWardrobeGrid"></div>
+            </div>
+          `;
+        },
+
+        mount(root) {
+          const grid = root.querySelector('#chickWardrobeGrid');
+
+          const ITEMS = [
+            { key: 'hat',   name: '帽子', icon: '🎩' },
+            { key: 'scarf', name: '围巾', icon: '🧣' },
+          ];
+
+          let disposed = false;
+
+          async function renderGrid() {
+            const pet = await loadPet({ create: true });
+            if (!pet || !root.isConnected || disposed) return;
+
+            const outfit = pet.outfit || {};
+
+            grid.innerHTML = ITEMS.map(item => `
+              <div class="chick-wardrobe-card ${outfit[item.key] ? 'is-on' : ''}"
+                   data-key="${item.key}">
+                <div class="chick-wardrobe-icon">${item.icon}</div>
+                <div class="chick-wardrobe-name">${item.name}</div>
+                <div class="chick-wardrobe-state">${outfit[item.key] ? '已穿上' : '点击穿上'}</div>
+              </div>
+            `).join('');
+
+            grid.querySelectorAll('.chick-wardrobe-card').forEach(el => {
+              el.addEventListener('click', async () => {
+                const key = el.dataset.key;
+                const current = await loadPet({ create: true });
+                if (!current) return;
+
+                if (!current.outfit) current.outfit = { hat: false, scarf: false };
+                current.outfit[key] = !current.outfit[key];
+
+                await savePet(current);
+                if (navigator.vibrate) { try { navigator.vibrate(6); } catch { } }
+
+                renderGrid();
+              });
+            });
+          }
+
+          renderGrid();
+
+          return () => { disposed = true; };
         },
       },
     },
