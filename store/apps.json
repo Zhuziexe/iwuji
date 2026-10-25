@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-10-24",
+  "updatedAt": "2026-10-25",
   "apps": [
     { "bundle": "com.wujios.calendar", "name": "日历", "icon": "./assets/calendar.svg", "version": "1.0.1", "author": "Wuji", "description": "日历官方正版", "longdescription": "WujiOS系统日历", "src": "./store-apps/calendar.js" },
     { "bundle": "com.wujinb.wmall", "name": "吴际商城", "icon": "./assets/wmall.svg", "image": "./assets/com.wujios.wujigallery/wmall.png", "version": "1.0.7", "author": "Wuji", "description": "吴际商城官方正版", "longdescription": "吴际商城，购买 iWuji 系列产品。", "src": "./store-apps/wmall.js" },
