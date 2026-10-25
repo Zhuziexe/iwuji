@@ -6,6 +6,20 @@
   const DECAY = { hunger: 8, clean: 5, mood: 6 };
   const clamp = v => Math.max(0, Math.min(100, v));
 
+  /* 服装定义：价格单位 = 鸡蛋数 */
+  const OUTFIT_ITEMS = [
+    { key: 'hat',     name: '帽子', price: 3 },
+    { key: 'scarf',   name: '围巾', price: 3 },
+    { key: 'glasses', name: '眼镜', price: 5 },
+    { key: 'nbhat',   name: '牛逼帽', price: 6 },
+  ];
+
+  const EGG_INTERVAL = 12 * 3600000;
+
+  function defaultOutfit() {
+    return { hat: false, scarf: false, glasses: false, nbhat: false };
+  }
+
   function db() { return AppStorage.for(BUNDLE); }
 
   function stateOf(pet) {
@@ -38,7 +52,11 @@
         hunger: 70,
         clean: 70,
         mood: 70,
-        outfit: { hat: false, scarf: false },
+        outfit: defaultOutfit(),
+        owned: defaultOutfit(),
+        eggs: 0,
+        eggOnStage: false,
+        lastEggAt: 0,
       };
       await db().set('pet', pet);
       return pet;
@@ -53,11 +71,20 @@
       pet.lastUpdate = now;
     }
 
-    if (!pet.outfit || typeof pet.outfit !== 'object') {
-      pet.outfit = { hat: false, scarf: false };
+    /* 兼容旧数据 */
+    if (!pet.outfit || typeof pet.outfit !== 'object') pet.outfit = defaultOutfit();
+    if (!pet.owned  || typeof pet.owned  !== 'object') pet.owned  = defaultOutfit();
+    if (typeof pet.eggs !== 'number') pet.eggs = 0;
+    if (typeof pet.eggOnStage !== 'boolean') pet.eggOnStage = false;
+    if (typeof pet.lastEggAt !== 'number') pet.lastEggAt = 0;
+
+    /* 逐键校验；旧数据里已穿过的视为已拥有 */
+    for (const it of OUTFIT_ITEMS) {
+      if (typeof pet.outfit[it.key] !== 'boolean') pet.outfit[it.key] = false;
+      if (typeof pet.owned[it.key]  !== 'boolean') {
+        pet.owned[it.key] = pet.outfit[it.key] === true;
+      }
     }
-    if (typeof pet.outfit.hat   !== 'boolean') pet.outfit.hat = false;
-    if (typeof pet.outfit.scarf !== 'boolean') pet.outfit.scarf = false;
 
     return pet;
   }
@@ -161,6 +188,7 @@
     return text;
   }
 
+  /* ---------- 小鸡 SVG ---------- */
   function chickSVG(pet) {
     const s = stateOf(pet);
     const happy = s === 'happy';
@@ -189,13 +217,21 @@
       ? `<text x="78" y="24" font-size="16" font-weight="700" fill="#e0356b">!</text>`
       : '';
 
-    const hat = outfit.hat ? `
+    const hatSVG = outfit.nbhat ? `
+      <g class="chick-nbhat">
+        <rect x="24" y="16" width="52" height="6" rx="3" fill="#1e40af"/>
+        <path d="M28 16 Q28 0 50 0 Q72 0 72 16 Z" fill="#2563eb"/>
+        <text x="50" y="12" text-anchor="middle"
+              font-family="Arial, sans-serif" font-size="11"
+              font-weight="900" fill="#ffffff" letter-spacing="0">NB</text>
+      </g>
+    ` : (outfit.hat ? `
       <g class="chick-hat">
         <rect x="26" y="16" width="48" height="5" rx="2.5" fill="#2c5ad0"/>
         <path d="M30 16 Q30 2 50 2 Q70 2 70 16 Z" fill="#3a6ff0"/>
         <circle cx="50" cy="3" r="3.5" fill="#ffd93b"/>
       </g>
-    ` : '';
+    ` : '');
 
     const scarf = outfit.scarf ? `
       <g class="chick-scarf">
@@ -209,6 +245,19 @@
       </g>
     ` : '';
 
+    const glasses = outfit.glasses ? `
+      <g class="chick-glasses">
+        <circle cx="42" cy="32" r="9" fill="none" stroke="#5d4037" stroke-width="2.2"/>
+        <circle cx="58" cy="32" r="9" fill="none" stroke="#5d4037" stroke-width="2.2"/>
+        <line x1="51" y1="32" x2="49" y2="32"
+              stroke="#5d4037" stroke-width="2.2" stroke-linecap="round"/>
+        <line x1="33" y1="30" x2="27" y2="27"
+              stroke="#5d4037" stroke-width="2.2" stroke-linecap="round"/>
+        <line x1="67" y1="30" x2="73" y2="27"
+              stroke="#5d4037" stroke-width="2.2" stroke-linecap="round"/>
+      </g>
+    ` : '';
+
     return `
       <svg viewBox="0 0 100 100" class="chick-svg">
         <ellipse cx="50" cy="62" rx="32" ry="30" fill="#FFD93B"/>
@@ -216,9 +265,10 @@
         <path d="M38 14 Q42 6 46 14 Q50 6 54 14 Q58 6 62 14" fill="#e0356b"/>
         <ellipse cx="16" cy="60" rx="8" ry="14" fill="#FFD93B" transform="rotate(-15 16 60)"/>
         <ellipse cx="84" cy="60" rx="8" ry="14" fill="#FFD93B" transform="rotate(15 84 60)"/>
-        ${hat}
+        ${hatSVG}
         ${scarf}
         ${eyes}
+        ${glasses}
         ${mouth}
         <line x1="38" y1="90" x2="38" y2="97" stroke="#FF9500" stroke-width="3" stroke-linecap="round"/>
         <line x1="62" y1="90" x2="62" y2="97" stroke="#FF9500" stroke-width="3" stroke-linecap="round"/>
@@ -228,12 +278,25 @@
     `;
   }
 
+  /* ---------- 蛋 SVG ---------- */
+  function eggSVG() {
+    return `
+      <svg viewBox="0 0 30 40" class="chick-egg-on-stage-svg">
+        <ellipse cx="15" cy="22" rx="11" ry="15" fill="#fff8e1" stroke="#f5d76e" stroke-width="1.8"/>
+        <ellipse cx="11" cy="15" rx="2.5" ry="4" fill="#ffffff" opacity="0.75"/>
+        <circle cx="19" cy="28" r="1.2" fill="#f5d76e" opacity="0.7"/>
+        <circle cx="13" cy="30" r="1" fill="#f5d76e" opacity="0.7"/>
+        <circle cx="17" cy="20" r="0.9" fill="#f5d76e" opacity="0.7"/>
+      </svg>
+    `;
+  }
+
   WujiApps.registerInstalled({
     bundlename: BUNDLE,
     name: '吴际小鸡',
     icon: ICON_URL,
     initialRoute: 'home',
-    version: '1.0.6',
+    version: '1.1.3',
 
     onBoot() {
       checkPetStatus().catch(() => { });
@@ -269,10 +332,44 @@
         color: #5d4037;
         letter-spacing: .3px;
       }
+      .chick-header-right {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 6px;
+        flex: 0 0 auto;
+      }
+      .chick-egg-counter {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 3px 10px;
+        border-radius: 999px;
+        background: rgba(93, 64, 55, 0.1);
+        color: #5d4037;
+        font-size: var(--wj-fs-md);
+        font-weight: 600;
+        font-variant-numeric: tabular-nums;
+        transition: transform .15s;
+        align-self: stretch;
+        justify-content: center;
+      }
+      .chick-egg-counter__icon {
+        font-size: var(--wj-fs-md);
+        line-height: 1;
+      }
+      .chick-egg-counter.is-bump {
+        animation: eggBump .35s cubic-bezier(.3,.7,.4,1);
+      }
+      @keyframes eggBump {
+        0%   { transform: scale(1); }
+        50%  { transform: scale(1.22); }
+        100% { transform: scale(1); }
+      }
+
       .chick-header-actions {
         display: flex;
         gap: 8px;
-        flex: 0 0 auto;
       }
       .chick-diary-btn {
         position: relative;
@@ -350,6 +447,34 @@
         100% { transform: rotate(0deg); }
       }
 
+      /* 舞台上的鸡蛋 */
+      .chick-egg-on-stage {
+        position: absolute;
+        right: 15%;
+        bottom: 20%;
+        width: 44px;
+        height: 58px;
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+        z-index: 2;
+        animation: eggWiggle 2.4s ease-in-out infinite;
+      }
+      @keyframes eggWiggle {
+        0%, 100% { transform: rotate(0deg); }
+        25%      { transform: rotate(-3deg); }
+        75%      { transform: rotate(3deg); }
+      }
+      .chick-egg-on-stage-svg {
+        width: 100%;
+        height: 100%;
+        display: block;
+        filter: drop-shadow(0 4px 8px rgba(93,64,55,.15));
+        transition: transform .1s;
+      }
+      .chick-egg-on-stage:active .chick-egg-on-stage-svg {
+        transform: scale(.9);
+      }
+
       .chick-heart {
         position: absolute;
         left: 50%;
@@ -403,10 +528,10 @@
 
       .chick-stats {
         flex: 0 0 auto;
-        padding: 0 25px 11px;
+        padding: 0 25px;
         display: flex;
         flex-direction: column;
-        gap: 11px;
+        gap: 6px;
       }
       .chick-stat {
         display: flex;
@@ -447,7 +572,7 @@
         text-align: center;
         font-size: var(--wj-fs-lg);
         color: #5d4037;
-        padding: 6px 25px 14px;
+        padding: 6px 10px 14px;
         font-weight: 500;
       }
 
@@ -459,7 +584,7 @@
       }
       .chick-btn {
         flex: 1 1 0;
-        padding: 20px 0;
+        padding: 10px 0;
         border: 0;
         border-radius: 20px;
         font: inherit;
@@ -520,6 +645,7 @@
         line-height: 1.6;
       }
 
+      /* ---------- 衣柜页 ---------- */
       .chick-wardrobe-page {
         position: absolute;
         inset: 0;
@@ -534,13 +660,17 @@
       .chick-wardrobe-header {
         flex: 0 0 auto;
         padding: 14px 25px 6px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
       }
       .chick-wardrobe-grid {
         flex: 1 1 auto;
-        padding: 20px 25px;
+        padding: 16px 20px 24px;
         display: grid;
         grid-template-columns: repeat(2, 1fr);
-        gap: 16px;
+        gap: 14px;
         align-content: start;
       }
       .chick-wardrobe-card {
@@ -548,7 +678,7 @@
         flex-direction: column;
         align-items: center;
         gap: 10px;
-        padding: 24px 16px;
+        padding: 14px 12px;
         border-radius: 20px;
         background: #fff;
         box-shadow: 0 6px 17px rgba(93, 64, 55, .1);
@@ -562,22 +692,47 @@
         border-color: #e0356b;
         box-shadow: 0 6px 20px rgba(224, 53, 107, .25);
       }
-      .chick-wardrobe-icon {
-        font-size: 48px;
-        line-height: 1;
+      .chick-wardrobe-preview {
+        width: 100%;
+        max-width: 96px;
+        aspect-ratio: 1;
+        border-radius: 14px;
+        background: linear-gradient(160deg, #fff8e1 0%, #ffe082 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+      }
+      .chick-wardrobe-preview .chick-svg {
+        width: 100%;
+        height: 100%;
+        animation: none;
+        padding: 6px;
+        box-sizing: border-box;
       }
       .chick-wardrobe-name {
-        font-size: var(--wj-fs-lg);
+        font-size: var(--wj-fs-md);
         font-weight: 600;
         color: #5d4037;
       }
-      .chick-wardrobe-state {
+      .chick-wardrobe-action {
+        padding: 6px 14px;
+        border: 0;
+        border-radius: 999px;
+        background: rgba(93, 64, 55, 0.1);
+        color: #5d4037;
+        font: inherit;
         font-size: var(--wj-fs-sm);
-        color: #8d6e63;
-      }
-      .chick-wardrobe-card.is-on .chick-wardrobe-state {
-        color: #e0356b;
         font-weight: 600;
+        white-space: nowrap;
+        transition: background .15s, color .15s, opacity .15s;
+      }
+      .chick-wardrobe-card.is-on .chick-wardrobe-action {
+        background: #e0356b;
+        color: #fff;
+      }
+      .chick-wardrobe-action.is-locked {
+        opacity: 0.55;
       }
     `,
 
@@ -590,12 +745,18 @@
             <div class="chick-page">
               <div class="chick-header">
                 <div class="chick-title">吴际小鸡</div>
-                <div class="chick-header-actions">
-                  <button class="chick-diary-btn" id="chickWardrobeBtn" type="button">衣柜</button>
-                  <button class="chick-diary-btn" id="chickDiaryBtn" type="button">
-                    日记
-                    <span class="chick-diary-dot" id="chickDiaryDot"></span>
-                  </button>
+                <div class="chick-header-right">
+                  <div class="chick-egg-counter" id="chickEggCounter">
+                    <span class="chick-egg-counter__icon">🥚</span>
+                    <span class="chick-egg-counter__count" id="chickEggCount">0</span>
+                  </div>
+                  <div class="chick-header-actions">
+                    <button class="chick-diary-btn" id="chickWardrobeBtn" type="button">衣柜</button>
+                    <button class="chick-diary-btn" id="chickDiaryBtn" type="button">
+                      日记
+                      <span class="chick-diary-dot" id="chickDiaryDot"></span>
+                    </button>
+                  </div>
                 </div>
               </div>
 
@@ -653,6 +814,8 @@
           const diaryBtn = root.querySelector('#chickDiaryBtn');
           const diaryDot = root.querySelector('#chickDiaryDot');
           const wardrobeBtn = root.querySelector('#chickWardrobeBtn');
+          const eggCountEl = root.querySelector('#chickEggCount');
+          const eggCounterEl = root.querySelector('#chickEggCounter');
 
           let pet = null;
           let disposed = false;
@@ -674,13 +837,26 @@
             }, 1600);
           }
 
+          function updateEggCounter(animate) {
+            if (eggCountEl && pet) {
+              eggCountEl.textContent = String(pet.eggs || 0);
+            }
+            if (animate && eggCounterEl) {
+              eggCounterEl.classList.remove('is-bump');
+              void eggCounterEl.offsetWidth;
+              eggCounterEl.classList.add('is-bump');
+            }
+          }
+
           function render() {
             if (!pet || disposed) return;
 
             const s = stateOf(pet);
-            const outfitSig =
-              (pet.outfit && pet.outfit.hat ? '1' : '0') +
-              (pet.outfit && pet.outfit.scarf ? '1' : '0');
+                        const outfitSig =
+              (pet.outfit && pet.outfit.hat     ? '1' : '0') +
+              (pet.outfit && pet.outfit.scarf   ? '1' : '0') +
+              (pet.outfit && pet.outfit.glasses ? '1' : '0') +
+              (pet.outfit && pet.outfit.nbhat   ? '1' : '0');
             const sig = s + '|' + outfitSig;
 
             if (sig !== lastRenderState) {
@@ -696,8 +872,81 @@
             moodVal.textContent = Math.round(pet.mood);
 
             statusEl.textContent = stateText(pet);
+            updateEggCounter(false);
+            renderEggOnStage();
           }
 
+          /* ---------- 舞台上的蛋 ---------- */
+          function renderEggOnStage() {
+            stageEl.querySelectorAll('.chick-egg-on-stage').forEach(el => el.remove());
+            if (!pet || !pet.eggOnStage) return;
+
+            const egg = document.createElement('div');
+            egg.className = 'chick-egg-on-stage';
+            egg.innerHTML = eggSVG();
+            egg.addEventListener('click', onCollectEgg);
+            stageEl.appendChild(egg);
+          }
+
+          function onCollectEgg(e) {
+            const eggEl = e.currentTarget;
+            if (!pet || !pet.eggOnStage) return;
+            if (eggEl.dataset.collecting === '1') return;
+            eggEl.dataset.collecting = '1';
+
+            const rect = eggEl.getBoundingClientRect();
+            const targetEl = eggCounterEl;
+            if (!targetEl) {
+              eggEl.remove();
+              return;
+            }
+            const targetRect = targetEl.getBoundingClientRect();
+
+            const clone = eggEl.cloneNode(true);
+            clone.dataset.collecting = '0';
+            clone.style.cssText = `
+              position: fixed;
+              left: ${rect.left}px;
+              top: ${rect.top}px;
+              width: ${rect.width}px;
+              height: ${rect.height}px;
+              margin: 0;
+              z-index: 200;
+              pointer-events: none;
+              animation: none;
+              will-change: transform, opacity;
+            `;
+            document.body.appendChild(clone);
+            eggEl.style.visibility = 'hidden';
+
+            const dx = (targetRect.left + targetRect.width / 2) - (rect.left + rect.width / 2);
+            const dy = (targetRect.top + targetRect.height / 2) - (rect.top + rect.height / 2);
+
+            requestAnimationFrame(() => {
+              requestAnimationFrame(() => {
+                clone.style.transition = 'transform .55s cubic-bezier(.4,0,.2,1), opacity .3s ease-in .3s';
+                clone.style.transform = `translate(${dx}px, ${dy}px) scale(.4)`;
+                clone.style.opacity = '0.6';
+              });
+            });
+
+            if (navigator.vibrate) { try { navigator.vibrate(10); } catch { } }
+
+            setTimeout(() => {
+              if (clone.isConnected) clone.remove();
+              if (eggEl.isConnected) eggEl.remove();
+
+              if (pet) {
+                pet.eggs = (pet.eggs || 0) + 1;
+                pet.eggOnStage = false;
+                savePet(pet).catch(() => { });
+                updateEggCounter(true);
+                showBubble('收藏了一颗蛋！');
+              }
+            }, 600);
+          }
+
+          /* ---------- 小鸡动作 ---------- */
           function jump() {
             const svg = chickBodyEl.querySelector('.chick-svg');
             if (!svg) return;
@@ -775,13 +1024,15 @@
             ctx.push('wardrobe');
           });
 
-          /* ★ 从其他路由（衣柜 / 日记）返回 home 时，重新读 DB 的 outfit 并重绘 */
+          /* 返回 home 时重新同步 outfit / owned / eggs */
           const offNav = ctx.nav.onChange(async () => {
             if (disposed) return;
             if (ctx.nav.current?.route?.name !== 'home') return;
             const fresh = await loadPet({ create: false });
             if (!fresh || !pet) return;
             pet.outfit = fresh.outfit || pet.outfit;
+            pet.owned  = fresh.owned  || pet.owned;
+            if (typeof fresh.eggs === 'number') pet.eggs = fresh.eggs;
             lastRenderState = '';
             render();
           });
@@ -789,6 +1040,7 @@
           function onStageDown(e) {
             if (e.target.closest('.chick-btn')) return;
             if (e.target.closest('.chick-diary-btn')) return;
+            if (e.target.closest('.chick-egg-on-stage')) return;
             if (e.pointerType === 'mouse' && e.button !== 0) return;
 
             longPressFired = false;
@@ -805,6 +1057,7 @@
           function onStageUp(e) {
             if (e.target.closest('.chick-btn')) return;
             if (e.target.closest('.chick-diary-btn')) return;
+            if (e.target.closest('.chick-egg-on-stage')) return;
 
             clearTimeout(longPressTimer);
             longPressTimer = null;
@@ -847,6 +1100,17 @@
           (async () => {
             pet = await loadPet({ create: true });
             if (disposed) return;
+
+            /* 下蛋：距上次 >= EGG_INTERVAL 且舞台上没有未收集的蛋 */
+            try {
+              const since = Date.now() - (pet.lastEggAt || 0);
+              if (!pet.eggOnStage && since >= EGG_INTERVAL) {
+                pet.eggOnStage = true;
+                pet.lastEggAt = Date.now();
+                await savePet(pet);
+              }
+            } catch { }
+
             render();
             syncNotification(pet);
 
@@ -889,12 +1153,9 @@
             clearTimeout(tapWindowTimer);
             clearTimeout(longPressTimer);
 
-            /* ★ 合并保存：数值用内存最新值，outfit 用 DB 最新值（衣柜可能改过） */
             if (pet) {
               db().get('pet', null).then(fresh => {
-                const base = (fresh && typeof fresh === 'object')
-                  ? fresh
-                  : { ...pet };
+                const base = (fresh && typeof fresh === 'object') ? fresh : { ...pet };
                 base.hunger = pet.hunger;
                 base.clean = pet.clean;
                 base.mood = pet.mood;
@@ -963,6 +1224,10 @@
             <div class="chick-wardrobe-page">
               <div class="chick-wardrobe-header">
                 <div class="chick-title">小鸡衣柜</div>
+                <div class="chick-egg-counter">
+                  <span class="chick-egg-counter__icon">🥚</span>
+                  <span class="chick-egg-counter__count" id="chickWardrobeEggCount">0</span>
+                </div>
               </div>
               <div class="chick-wardrobe-grid" id="chickWardrobeGrid"></div>
             </div>
@@ -971,44 +1236,88 @@
 
         mount(root) {
           const grid = root.querySelector('#chickWardrobeGrid');
-
-          const ITEMS = [
-            { key: 'hat',   name: '帽子', icon: '🎩' },
-            { key: 'scarf', name: '围巾', icon: '🧣' },
-          ];
+          const eggCountEl = root.querySelector('#chickWardrobeEggCount');
 
           let disposed = false;
+
+          function previewSVG(key) {
+            const previewOutfit = defaultOutfit();
+            previewOutfit[key] = true;
+            return chickSVG({
+              hunger: 80, clean: 80, mood: 80,
+              outfit: previewOutfit,
+            });
+          }
+
+          function actionLabel(item, pet) {
+            if (!pet.owned[item.key]) return `🥚 ${item.price} 购买`;
+            if (pet.outfit[item.key]) return '取消使用';
+            return '使用';
+          }
 
           async function renderGrid() {
             const pet = await loadPet({ create: true });
             if (!pet || !root.isConnected || disposed) return;
 
-            const outfit = pet.outfit || {};
+            if (eggCountEl) eggCountEl.textContent = String(pet.eggs || 0);
 
-            grid.innerHTML = ITEMS.map(item => `
-              <div class="chick-wardrobe-card ${outfit[item.key] ? 'is-on' : ''}"
-                   data-key="${item.key}">
-                <div class="chick-wardrobe-icon">${item.icon}</div>
-                <div class="chick-wardrobe-name">${item.name}</div>
-                <div class="chick-wardrobe-state">${outfit[item.key] ? '已穿上' : '点击穿上'}</div>
-              </div>
-            `).join('');
+            grid.innerHTML = OUTFIT_ITEMS.map(item => {
+              const on = pet.outfit[item.key];
+              const owned = pet.owned[item.key];
+              const canAfford = (pet.eggs || 0) >= item.price;
+              const lockedCls = (!owned && !canAfford) ? ' is-locked' : '';
+
+              return `
+                <div class="chick-wardrobe-card ${on ? 'is-on' : ''}"
+                     data-key="${item.key}">
+                  <div class="chick-wardrobe-preview">${previewSVG(item.key)}</div>
+                  <div class="chick-wardrobe-name">${item.name}</div>
+                  <button class="chick-wardrobe-action${lockedCls}" type="button">
+                    ${actionLabel(item, pet)}
+                  </button>
+                </div>
+              `;
+            }).join('');
 
             grid.querySelectorAll('.chick-wardrobe-card').forEach(el => {
-              el.addEventListener('click', async () => {
-                const key = el.dataset.key;
-                const current = await loadPet({ create: true });
-                if (!current) return;
-
-                if (!current.outfit) current.outfit = { hat: false, scarf: false };
-                current.outfit[key] = !current.outfit[key];
-
-                await savePet(current);
-                if (navigator.vibrate) { try { navigator.vibrate(6); } catch { } }
-
-                renderGrid();
-              });
+              el.addEventListener('click', () => handleAction(el.dataset.key));
             });
+          }
+
+          async function handleAction(key) {
+            if (disposed) return;
+            const item = OUTFIT_ITEMS.find(it => it.key === key);
+            if (!item) return;
+
+            const current = await loadPet({ create: true });
+            if (!current) return;
+
+            if (!current.owned) current.owned = defaultOutfit();
+            if (!current.outfit) current.outfit = defaultOutfit();
+
+            if (!current.owned[key]) {
+              /* 购买 */
+              if ((current.eggs || 0) < item.price) {
+                if (navigator.vibrate) { try { navigator.vibrate([20, 40, 20]); } catch { } }
+                return;
+              }
+              current.eggs = current.eggs - item.price;
+              current.owned[key] = true;
+              current.outfit[key] = false;
+              if (navigator.vibrate) { try { navigator.vibrate(15); } catch { } }
+            } else if (current.outfit[key]) {
+              /* 取消使用 */
+              current.outfit[key] = false;
+              if (navigator.vibrate) { try { navigator.vibrate(6); } catch { } }
+            } else {
+              current.outfit[key] = true;
+              if (key === 'nbhat') current.outfit.hat   = false;
+              if (key === 'hat')   current.outfit.nbhat = false;
+              if (navigator.vibrate) { try { navigator.vibrate(8); } catch { } }
+            }
+
+            await savePet(current);
+            await renderGrid();
           }
 
           renderGrid();
