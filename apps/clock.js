@@ -487,7 +487,7 @@
       .ov-slider__fill {
         position: absolute;
         left: 0; top: 0; bottom: 0;
-        width: 87px;
+        width: 88px;
         border-radius: 1399px;
         background: rgba(255, 255, 255, .22);
         transition: width .05s linear;
@@ -576,11 +576,11 @@
               ? 'transform .2s cubic-bezier(.2,.7,.3,1)'
               : 'none';
             knobEl.style.transform = `translateX(${pos}px)`;
-            fillEl.style.width = (pos + 62) + 'px';
+            fillEl.style.width = (pos + 88) + 'px';
           }
 
           function computeMax() {
-            maxX = Math.max(0, sliderEl.clientWidth - knobEl.offsetWidth - 8);
+            maxX = Math.max(0, sliderEl.clientWidth - knobEl.offsetWidth - 12);
           }
 
           function onDown(e) {
@@ -801,7 +801,7 @@
 
           /* ---- 0~59 循环滚轮 ---- */
           function buildWheel(el, initialIndex, onSelect) {
-            const H = 44;
+            const H = 62;
             const COUNT = 60;
             const REPEAT = 5;
             const TOTAL = COUNT * REPEAT;
@@ -827,7 +827,7 @@
             const children = [...inner.children];
 
             function render(animate) {
-              const h = el.clientHeight || 132;
+              const h = el.clientHeight || 186;
               const base = h / 2 - H / 2;
               inner.style.transition = animate
                 ? 'transform .28s cubic-bezier(.2,.7,.3,1)'
