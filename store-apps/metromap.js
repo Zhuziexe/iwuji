@@ -19,7 +19,7 @@
     name: '地铁图',
     icon: './assets/metromap.svg',
     initialRoute: 'home',
-    version: '1.0.3',
+    version: '1.0.4',
     styles: `
       .mm-page {
         position: absolute;
@@ -31,25 +31,25 @@
         background: var(--wj-bg);
         display: flex;
         flex-direction: column;
-        gap: 14px;
+        gap: 20px;
       }
 
       .mm-list {
         display: flex;
         flex-direction: column;
-        gap: 10px;
+        gap: 14px;
       }
 
       .mm-item {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        gap: 12px;
-        padding: 17px 16px;
-        border-radius: 14px;
+        gap: 17px;
+        padding: 24px 22px;
+        border-radius: 20px;
         background: var(--wj-bg-alt);
         color: var(--wj-text);
-        font-size: 16px;
+        font-size: var(--wj-fs-lg);
         font-weight: 500;
         letter-spacing: .3px;
         cursor: pointer;
@@ -65,19 +65,19 @@
       }
 
       .mm-item__arrow {
-        flex: 0 0 16px;
-        width: 16px;
-        height: 16px;
+        flex: 0 0 22px;
+        width: 22px;
+        height: 22px;
         color: var(--wj-text-dim);
         display: block;
       }
 
       .mm-end {
         text-align: center;
-        font-size: var(--wj-fs-xs, 12px);
+        font-size: var(--wj-fs-xs, 17px);
         color: var(--wj-text-dim);
         letter-spacing: .5px;
-        padding: 8px 0 4px;
+        padding: 11px 0 6px;
       }
 
       /* ==================== 地图页 ==================== */
@@ -94,8 +94,8 @@
         flex: 0 0 auto;
         display: flex;
         align-items: center;
-        gap: 8px;
-        padding: var(--statusbar-h) 12px 8px;
+        gap: 11px;
+        padding: var(--statusbar-h) 17px 11px;
         background: var(--wj-bg);
         border-bottom: .5px solid var(--wj-border, #e6e9ef);
         z-index: 2;
@@ -103,8 +103,8 @@
 
       .mm-back {
         flex: 0 0 auto;
-        width: 34px;
-        height: 34px;
+        width: 48px;
+        height: 48px;
         padding: 0;
         border: 0;
         border-radius: 50%;
@@ -122,15 +122,15 @@
         background: #dae2f0;
       }
       .mm-back svg {
-        width: 18px;
-        height: 18px;
+        width: 25px;
+        height: 25px;
         display: block;
       }
 
       .mm-map__title {
         flex: 1 1 auto;
         min-width: 0;
-        font-size: 17px;
+        font-size: var(--wj-fs-xl);
         font-weight: 600;
         color: var(--wj-text);
         letter-spacing: .5px;
@@ -141,15 +141,15 @@
 
       .mm-zoom {
         flex: 0 0 auto;
-        width: 34px;
-        height: 34px;
+        width: 48px;
+        height: 48px;
         padding: 0;
         border: 0;
         border-radius: 50%;
         background: var(--wj-bg-alt);
         color: var(--wj-text);
         font: inherit;
-        font-size: 20px;
+        font-size: var(--wj-fs-2xl);
         font-weight: 600;
         line-height: 1;
         display: flex;
@@ -211,8 +211,8 @@
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        gap: 12px;
-        font-size: 14px;
+        gap: 17px;
+        font-size: var(--wj-fs-md);
         color: var(--wj-text-muted);
         letter-spacing: .5px;
         pointer-events: none;
@@ -224,10 +224,10 @@
       }
 
       .mm-spinner {
-        width: 34px;
-        height: 34px;
+        width: 48px;
+        height: 48px;
         box-sizing: border-box;
-        border: 3px solid rgba(58, 111, 240, .18);
+        border: 4px solid rgba(58, 111, 240, .18);
         border-top-color: #3a6ff0;
         border-radius: 50%;
         animation: mm-spin .8s linear infinite;

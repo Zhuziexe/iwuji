@@ -315,7 +315,7 @@
     name: '开地铁游戏',
     icon: './assets/metro.png',
     initialRoute: 'home',
-    version: '1.0.1',
+    version: '1.0.2',
     styles: `
       .metro-page {
         position: absolute;
@@ -341,8 +341,8 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
-        padding: 14px 20px 8px;
-        font-size: 16px;
+        padding: 20px 28px 11px;
+        font-size: var(--wj-fs-lg);
         font-weight: 700;
         color: #1c2536;
         z-index: 10;
@@ -352,12 +352,12 @@
       .metro-score {
         display: inline-flex;
         align-items: baseline;
-        gap: 8px;
+        gap: 11px;
         color: #1c2536;
-        text-shadow: 0 1px 2px rgba(255, 255, 255, .6);
+        text-shadow: 0 1px 3px rgba(255, 255, 255, .6);
       }
       .metro-score b {
-        font-size: 30px;
+        font-size: 42px;
         color: #e0356b;
         font-weight: 800;
         letter-spacing: -.5px;
@@ -365,18 +365,18 @@
       .metro-lives {
         display: flex;
         align-items: center;
-        gap: 6px;
+        gap: 8px;
         font-size: 0;
       }
       .metro-heart {
-        width: 26px;
-        height: 26px;
+        width: 36px;
+        height: 36px;
         display: block;
         transition: transform .2s ease;
       }
       .metro-heart.is-on {
         fill: #e0356b;
-        filter: drop-shadow(0 2px 3px rgba(224, 53, 107, .55));
+        filter: drop-shadow(0 3px 4px rgba(224, 53, 107, .55));
       }
       .metro-heart.is-off {
         fill: rgba(28, 37, 54, .18);
@@ -395,8 +395,8 @@
         inset: 0;
         background: repeating-linear-gradient(
           to right,
-          transparent 0px, transparent 55px,
-          rgba(255, 255, 255, .30) 55px, rgba(255, 255, 255, .30) 57px
+          transparent 0px, transparent 77px,
+          rgba(255, 255, 255, .30) 77px, rgba(255, 255, 255, .30) 80px
         );
         animation: metroSpeed .28s linear infinite;
         pointer-events: none;
@@ -413,13 +413,13 @@
         position: absolute;
         top: 8%;
         right: 12%;
-        width: 68px;
-        height: 68px;
+        width: 95px;
+        height: 95px;
         border-radius: 50%;
         background: radial-gradient(circle at 35% 35%, #fff6cc 0%, #ffd93b 45%, #ffb800 100%);
         box-shadow:
-          0 0 32px rgba(255, 217, 59, .75),
-          0 0 64px rgba(255, 200, 60, .4);
+          0 0 45px rgba(255, 217, 59, .75),
+          0 0 90px rgba(255, 200, 60, .4);
         z-index: 0;
         pointer-events: none;
       }
@@ -438,7 +438,7 @@
       .cloud {
         position: absolute;
         background: #ffffff;
-        border-radius: 999px;
+        border-radius: 1399px;
         filter: blur(0.3px);
       }
       .cloud::before,
@@ -468,7 +468,7 @@
         left: 0;
         display: flex;
         align-items: flex-end;
-        gap: 8px;
+        gap: 11px;
         pointer-events: none;
         will-change: transform;
       }
@@ -484,12 +484,12 @@
 
 .metro-far .b {
   background-color: rgba(70, 110, 160, 0.28);
-  border-radius: 3px 3px 0 0;
+  border-radius: 4px 4px 0 0;
 }
 
 .metro-near .b {
   background-color: rgba(50, 85, 135, 0.55);
-  border-radius: 4px 4px 0 0;
+  border-radius: 6px 6px 0 0;
 }
 
       /* ---------- 地面 ---------- */
@@ -512,11 +512,11 @@
         left: 0;
         right: 0;
         bottom: 12%;
-        height: 26px;
+        height: 36px;
         background-image: repeating-linear-gradient(
           to right,
-          #6a5540 0px, #6a5540 12px,
-          transparent 12px, transparent 44px
+          #6a5540 0px, #6a5540 17px,
+          transparent 17px, transparent 62px
         );
         z-index: 4;
         will-change: background-position;
@@ -527,10 +527,10 @@
         position: absolute;
         left: 0;
         right: 0;
-        bottom: calc(12% + 6px);
-        height: 14px;
-        border-top: 4px solid #b8c0cc;
-        border-bottom: 4px solid #8a95a6;
+        bottom: calc(12% + 8px);
+        height: 20px;
+        border-top: 6px solid #b8c0cc;
+        border-bottom: 6px solid #8a95a6;
         z-index: 5;
         pointer-events: none;
       }
@@ -540,8 +540,8 @@
         position: absolute;
         left: 0;
         right: 0;
-        bottom: calc(12% + 26px);
-        height: 80px;
+        bottom: calc(12% + 36px);
+        height: 112px;
         pointer-events: none;
         z-index: 6;
       }
@@ -549,8 +549,8 @@
         position: absolute;
         left: 0;
         bottom: 0;
-        width: 60px;
-        height: 70px;
+        width: 84px;
+        height: 98px;
         will-change: transform;
       }
       .metro-station__inner {
@@ -572,12 +572,12 @@
       }
       @keyframes metroOk {
         0%   { filter: drop-shadow(0 0 0 rgba(52, 199, 89, 0)); }
-        35%  { filter: drop-shadow(0 0 16px rgba(52, 199, 89, 1)); transform: scale(1.15); }
+        35%  { filter: drop-shadow(0 0 22px rgba(52, 199, 89, 1)); transform: scale(1.15); }
         100% { filter: drop-shadow(0 0 0 rgba(52, 199, 89, 0)); }
       }
       @keyframes metroBad {
         0%   { filter: drop-shadow(0 0 0 rgba(224, 53, 107, 0)); }
-        15%  { transform: rotate(-11deg); filter: drop-shadow(0 0 16px rgba(224, 53, 107, 1)); }
+        15%  { transform: rotate(-11deg); filter: drop-shadow(0 0 22px rgba(224, 53, 107, 1)); }
         45%  { transform: rotate(11deg); }
         70%  { transform: rotate(-6deg); }
         100% { transform: rotate(0); filter: drop-shadow(0 0 0 rgba(224, 53, 107, 0)); }
@@ -586,10 +586,10 @@
       /* ---------- 地铁 ---------- */
       .metro-train {
         position: absolute;
-        left: 110px;
-        bottom: calc(12% + 18px);
-        width: 72px;
-        height: 52px;
+        left: 154px;
+        bottom: calc(12% + 25px);
+        width: 101px;
+        height: 73px;
         transform: translateX(-50%);
         z-index: 7;
         pointer-events: none;
@@ -610,37 +610,37 @@
       .metro-train__body {
         position: absolute;
         left: 0;
-        bottom: 10px;
-        width: 72px;
-        height: 34px;
+        bottom: 14px;
+        width: 101px;
+        height: 48px;
         background: linear-gradient(to bottom, #4a80ff 0%, #3a6ff0 100%);
-        border-radius: 9px 11px 9px 9px;
+        border-radius: 13px 15px 13px 13px;
         display: flex;
         align-items: center;
         justify-content: center;
-        gap: 5px;
+        gap: 7px;
         box-shadow:
           inset 0 -7px 0 rgba(0, 0, 0, .18),
-          0 4px 10px rgba(0, 0, 0, .25);
+          0 6px 14px rgba(0, 0, 0, .25);
       }
       .metro-train__body::before,
       .metro-train__body::after {
         content: '';
         position: absolute;
         bottom: -8px;
-        width: 11px;
-        height: 11px;
+        width: 15px;
+        height: 15px;
         border-radius: 50%;
         background: #1c2536;
-        box-shadow: inset 0 2px 3px rgba(255, 255, 255, .2);
+        box-shadow: inset 0 3px 4px rgba(255, 255, 255, .2);
       }
-      .metro-train__body::before { left: 10px; }
-      .metro-train__body::after  { right: 10px; }
+      .metro-train__body::before { left: 14px; }
+      .metro-train__body::after  { right: 14px; }
 
       .metro-train__win {
-        width: 14px;
-        height: 14px;
-        border-radius: 3px;
+        width: 20px;
+        height: 20px;
+        border-radius: 4px;
         background: linear-gradient(to bottom, #d8ecff 0%, #a8c8ea 100%);
         box-shadow: inset 0 -2px 0 rgba(0, 0, 0, .06);
       }
@@ -650,41 +650,41 @@
         right: -4px;
         top: 50%;
         transform: translateY(-50%);
-        width: 7px;
-        height: 13px;
+        width: 10px;
+        height: 18px;
         border-radius: 50%;
         background: radial-gradient(circle at 30% 40%, #ffe9a8 0%, #ffb800 60%, #d78c00 100%);
         box-shadow:
-          0 0 10px rgba(255, 200, 60, .9),
-          0 0 20px rgba(255, 200, 60, .4);
+          0 0 14px rgba(255, 200, 60, .9),
+          0 0 28px rgba(255, 200, 60, .4);
       }
 
       /* ============ 速度条 ============ */
       .metro-speed {
         flex: 0 0 auto;
-        padding: 12px 20px 0;
+        padding: 17px 28px 0;
         display: flex;
         flex-direction: column;
-        gap: 6px;
+        gap: 8px;
         z-index: 10;
       }
       .metro-speed__bar {
-        height: 8px;
-        border-radius: 4px;
+        height: 11px;
+        border-radius: 6px;
         background: rgba(28, 37, 54, .14);
         overflow: hidden;
-        box-shadow: inset 0 1px 2px rgba(0, 0, 0, .08);
+        box-shadow: inset 0 1px 3px rgba(0, 0, 0, .08);
       }
       .metro-speed__fill {
         height: 100%;
         width: 0;
-        border-radius: 4px;
+        border-radius: 6px;
         background: linear-gradient(to right, #34c759 0%, #ffb800 55%, #e0356b 100%);
         transition: width .12s linear;
       }
       .metro-speed__label {
         text-align: right;
-        font-size: 15px;
+        font-size: var(--wj-fs-lg);
         font-weight: 700;
         color: #1c2536;
         font-variant-numeric: tabular-nums;
@@ -692,8 +692,8 @@
         transition: color .2s ease;
       }
       .metro-speed__label span {
-        font-size: 24px;
-        margin-right: 4px;
+        font-size: var(--wj-fs-3xl);
+        margin-right: 6px;
         color: #1c2536;
         transition: color .2s ease;
       }
@@ -705,26 +705,26 @@
       .metro-controls {
         flex: 0 0 auto;
         display: flex;
-        gap: 12px;
-        padding: 12px 20px calc(16px + env(safe-area-inset-bottom, 0px));
+        gap: 17px;
+        padding: 17px 28px calc(22px + env(safe-area-inset-bottom, 0px));
         z-index: 10;
       }
       .metro-btn {
         flex: 1 1 0;
-        padding: 18px 20px;
+        padding: 25px 28px;
         border: 0;
-        border-radius: 18px;
+        border-radius: 25px;
         font: inherit;
-        font-size: 19px;
+        font-size: var(--wj-fs-2xl);
         font-weight: 700;
-        letter-spacing: 2px;
+        letter-spacing: 3px;
         color: #fff;
         cursor: pointer;
         transition: transform .08s ease, filter .1s;
         -webkit-tap-highlight-color: transparent;
         user-select: none;
         -webkit-user-select: none;
-        box-shadow: 0 6px 16px rgba(0, 0, 0, .22);
+        box-shadow: 0 8px 22px rgba(0, 0, 0, .22);
       }
       .metro-btn--brake {
         background: linear-gradient(to bottom, #ff6a95 0%, #e0356b 100%);
@@ -745,11 +745,11 @@
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        gap: 16px;
-        padding: 30px;
+        gap: 22px;
+        padding: 42px;
         background: rgba(20, 30, 50, .55);
-        backdrop-filter: blur(14px) saturate(140%);
-        -webkit-backdrop-filter: blur(14px) saturate(140%);
+        backdrop-filter: blur(20px) saturate(140%);
+        -webkit-backdrop-filter: blur(20px) saturate(140%);
         z-index: 20;
         opacity: 0;
         visibility: hidden;
@@ -761,32 +761,32 @@
         visibility: visible;
       }
       .metro-overlay__title {
-        font-size: 30px;
+        font-size: 42px;
         font-weight: 800;
         color: #fff;
-        letter-spacing: 2px;
+        letter-spacing: 3px;
       }
       .metro-overlay__desc {
-        font-size: 16px;
+        font-size: var(--wj-fs-lg);
         color: rgba(255, 255, 255, .85);
         line-height: 1.6;
-        max-width: 280px;
+        max-width: 392px;
       }
       .metro-overlay__btn {
-        margin-top: 10px;
-        padding: 14px 48px;
+        margin-top: 14px;
+        padding: 20px 67px;
         border: 0;
-        border-radius: 999px;
+        border-radius: 1399px;
         background: #3a6ff0;
         color: #fff;
         font: inherit;
-        font-size: 18px;
+        font-size: var(--wj-fs-xl);
         font-weight: 600;
         letter-spacing: 1px;
         cursor: pointer;
         transition: transform .08s, filter .15s;
         -webkit-tap-highlight-color: transparent;
-        box-shadow: 0 8px 22px rgba(58, 111, 240, .5);
+        box-shadow: 0 11px 31px rgba(58, 111, 240, .5);
       }
       .metro-overlay__btn:active { transform: scale(.96); }
 

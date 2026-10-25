@@ -37,7 +37,7 @@
     name: '吴际电台',
     icon: ICON_URL,
     initialRoute: 'home',
-    version: '1.0.0',
+    version: '1.0.1',
 
     onShutdown() {
       if (activeAudio) {
@@ -66,17 +66,17 @@
         display: flex;
         align-items: center;
         justify-content: space-between;
-        gap: 10px;
-        padding: 8px 14px 6px;
+        gap: 14px;
+        padding: 11px 20px 8px;
       }
       .rd-title {
-        font-size: 20px;
+        font-size: var(--wj-fs-2xl);
         font-weight: 700;
         color: var(--wj-text);
         letter-spacing: .3px;
       }
       .rd-count {
-        font-size: 12px;
+        font-size: var(--wj-fs-xs);
         color: var(--wj-text-dim);
         font-variant-numeric: tabular-nums;
       }
@@ -87,23 +87,23 @@
         overflow-y: auto;
         -webkit-overflow-scrolling: touch;
         overscroll-behavior: contain;
-        padding: 0 14px;
+        padding: 0 20px;
         /* 底部留出播放条的高度，避免最后一项被遮 */
-        padding-bottom: 92px;
+        padding-bottom: 129px;
       }
 
       .rd-list {
         display: flex;
         flex-direction: column;
-        gap: 6px;
+        gap: 8px;
       }
 
       .rd-item {
         display: flex;
         align-items: center;
-        gap: 10px;
-        padding: 10px 12px;
-        border-radius: 12px;
+        gap: 14px;
+        padding: 14px 17px;
+        border-radius: 17px;
         background: var(--wj-bg-alt);
         cursor: pointer;
         transition: background .15s, transform .08s;
@@ -116,16 +116,16 @@
       }
 
       .rd-item__icon {
-        flex: 0 0 36px;
-        width: 36px;
-        height: 36px;
-        border-radius: 10px;
+        flex: 0 0 50px;
+        width: 50px;
+        height: 50px;
+        border-radius: 14px;
         background: linear-gradient(135deg, #5856d6, #3a6ff0);
         display: flex;
         align-items: center;
         justify-content: center;
         color: #fff;
-        font-size: 18px;
+        font-size: var(--wj-fs-xl);
         overflow: hidden;
       }
       .rd-item__icon img {
@@ -139,10 +139,10 @@
         min-width: 0;
         display: flex;
         flex-direction: column;
-        gap: 2px;
+        gap: 3px;
       }
       .rd-item__name {
-        font-size: 16px;
+        font-size: var(--wj-fs-lg);
         font-weight: 600;
         color: var(--wj-text);
         overflow: hidden;
@@ -150,7 +150,7 @@
         white-space: nowrap;
       }
       .rd-item__meta {
-        font-size: 14px;
+        font-size: var(--wj-fs-md);
         color: var(--wj-text-dim);
         overflow: hidden;
         text-overflow: ellipsis;
@@ -159,7 +159,7 @@
 
       .rd-item__status {
         flex: 0 0 auto;
-        font-size: 12px;
+        font-size: var(--wj-fs-xs);
         color: var(--wj-primary, #3a6ff0);
         font-weight: 600;
         letter-spacing: .3px;
@@ -174,27 +174,27 @@
         z-index: 10;
         display: flex;
         align-items: center;
-        gap: 10px;
-        padding: 10px 14px calc(10px + env(safe-area-inset-bottom, 0px));
+        gap: 14px;
+        padding: 14px 20px calc(14px + env(safe-area-inset-bottom, 0px));
         background: var(--wj-bg);
         border-top: 1px solid var(--wj-border, #e6e9ef);
-        box-shadow: 0 -4px 16px rgba(0,0,0,.06);
+        box-shadow: 0 -4px 22px rgba(0,0,0,.06);
         transform: translateY(100%);
         transition: transform .25s ease;
       }
       .rd-player.is-show { transform: translateY(0); }
 
       .rd-player__icon {
-        flex: 0 0 36px;
-        width: 36px;
-        height: 36px;
-        border-radius: 10px;
+        flex: 0 0 50px;
+        width: 50px;
+        height: 50px;
+        border-radius: 14px;
         background: linear-gradient(135deg, #5856d6, #3a6ff0);
         display: flex;
         align-items: center;
         justify-content: center;
         color: #fff;
-        font-size: 18px;
+        font-size: var(--wj-fs-xl);
         overflow: hidden;
       }
       .rd-player__icon img { width: 100%; height: 100%; object-fit: cover; }
@@ -207,7 +207,7 @@
         gap: 1px;
       }
       .rd-player__name {
-        font-size: 14px;
+        font-size: var(--wj-fs-md);
         font-weight: 600;
         color: var(--wj-text);
         overflow: hidden;
@@ -215,7 +215,7 @@
         white-space: nowrap;
       }
       .rd-player__status {
-        font-size: 12px;
+        font-size: var(--wj-fs-xs);
         color: var(--wj-text-dim);
         letter-spacing: .3px;
       }
@@ -223,8 +223,8 @@
 
       .rd-player__btn {
         flex: 0 0 auto;
-        width: 38px;
-        height: 38px;
+        width: 53px;
+        height: 53px;
         padding: 0;
         border: 0;
         border-radius: 50%;
@@ -236,7 +236,7 @@
         justify-content: center;
         -webkit-tap-highlight-color: transparent;
       }
-      .rd-player__btn svg { width: 16px; height: 16px; display: block; }
+      .rd-player__btn svg { width: 22px; height: 22px; display: block; }
       .rd-player__btn--stop { background: var(--wj-bg-alt); color: var(--wj-text-muted); }
       .rd-player__btn:active { transform: scale(.92); }
 
@@ -246,32 +246,32 @@
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        gap: 14px;
-        padding: 60px 24px;
+        gap: 20px;
+        padding: 84px 34px;
         text-align: center;
       }
       .rd-spinner {
-        width: 32px;
-        height: 32px;
+        width: 45px;
+        height: 45px;
         border-radius: 50%;
-        border: 3px solid rgba(58,111,240,.18);
+        border: 4px solid rgba(58,111,240,.18);
         border-top-color: #3a6ff0;
         animation: rd-spin .85s linear infinite;
       }
       @keyframes rd-spin { to { transform: rotate(360deg); } }
       .rd-state__text {
-        font-size: 14px;
+        font-size: var(--wj-fs-md);
         color: var(--wj-text-muted);
         line-height: 1.6;
       }
       .rd-state__retry {
-        padding: 10px 24px;
+        padding: 14px 34px;
         border: 0;
-        border-radius: 999px;
+        border-radius: 1399px;
         background: var(--wj-primary, #3a6ff0);
         color: #fff;
         font: inherit;
-        font-size: 14px;
+        font-size: var(--wj-fs-md);
         font-weight: 600;
         cursor: pointer;
         -webkit-tap-highlight-color: transparent;
@@ -281,13 +281,13 @@
       .rd-toast {
         position: absolute;
         left: 50%;
-        bottom: 100px;
-        transform: translateX(-50%) translateY(10px);
-        padding: 8px 18px;
-        border-radius: 999px;
+        bottom: 140px;
+        transform: translateX(-50%) translateY(14px);
+        padding: 11px 25px;
+        border-radius: 1399px;
         background: rgba(0,0,0,.78);
         color: #fff;
-        font-size: 12px;
+        font-size: var(--wj-fs-xs);
         letter-spacing: .5px;
         white-space: nowrap;
         pointer-events: none;

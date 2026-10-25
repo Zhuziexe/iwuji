@@ -395,7 +395,7 @@
       AudioEngine.sfxGameOver();
       showOverlay(
         '时间到！',
-        `本次得分 <b style="color:#e0356b;font-size:24px;display:inline-block;margin-top:6px;">${S.score}</b>`,
+        `本次得分 <b style="color:#e0356b;font-size: var(--wj-fs-3xl);display:inline-block;margin-top:8px;">${S.score}</b>`,
         '再来一次'
       );
       return;
@@ -511,7 +511,7 @@
     name: '接住星星',
     icon: './assets/catchstars.svg',
     initialRoute: 'home',
-    version: '1.0.2',
+    version: '1.0.3',
 
     onBoot() {
     },
@@ -547,8 +547,8 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
-        padding: 14px 20px 8px;
-        font-size: 16px;
+        padding: 20px 28px 11px;
+        font-size: var(--wj-fs-lg);
         font-weight: 700;
         color: #1c2536;
         z-index: 10;
@@ -558,22 +558,22 @@
       .star-score {
         display: inline-flex;
         align-items: baseline;
-        gap: 6px;
-        text-shadow: 0 1px 2px rgba(255, 255, 255, .6);
+        gap: 8px;
+        text-shadow: 0 1px 3px rgba(255, 255, 255, .6);
       }
       .star-score b {
-        font-size: 28px;
+        font-size: 39px;
         color: #e0356b;
         font-weight: 800;
         letter-spacing: -.5px;
       }
       .star-time {
-        font-size: 22px;
+        font-size: var(--wj-fs-3xl);
         font-weight: 800;
         color: #1c2536;
         font-variant-numeric: tabular-nums;
         letter-spacing: 1px;
-        text-shadow: 0 1px 2px rgba(255, 255, 255, .6);
+        text-shadow: 0 1px 3px rgba(255, 255, 255, .6);
         transition: color .25s;
       }
       .star-time.is-low {
@@ -597,13 +597,13 @@
         position: absolute;
         top: 10%;
         right: 12%;
-        width: 60px;
-        height: 60px;
+        width: 84px;
+        height: 84px;
         border-radius: 50%;
         background: radial-gradient(circle at 35% 35%, #fff6cc 0%, #ffd93b 45%, #ffb800 100%);
         box-shadow:
-          0 0 28px rgba(255, 217, 59, .7),
-          0 0 56px rgba(255, 200, 60, .35);
+          0 0 39px rgba(255, 217, 59, .7),
+          0 0 78px rgba(255, 200, 60, .35);
         z-index: 0;
         pointer-events: none;
       }
@@ -620,7 +620,7 @@
       .star-cloud {
         position: absolute;
         background: #ffffff;
-        border-radius: 999px;
+        border-radius: 1399px;
         filter: blur(0.3px);
       }
       .star-cloud::before,
@@ -652,7 +652,7 @@
         left: 0;
         right: 0;
         top: -6px;
-        height: 8px;
+        height: 11px;
         background: radial-gradient(circle at 30% 50%, #7ed48a 0%, transparent 70%),
                     radial-gradient(circle at 70% 50%, #7ed48a 0%, transparent 70%);
       }
@@ -673,22 +673,22 @@
         justify-content: center;
         line-height: 1;
         will-change: transform;
-        filter: drop-shadow(0 2px 4px rgba(0, 0, 0, .18));
+        filter: drop-shadow(0 3px 6px rgba(0, 0, 0, .18));
       }
       .star-item.is-star {
-        filter: drop-shadow(0 2px 6px rgba(255, 200, 60, .55));
+        filter: drop-shadow(0 3px 8px rgba(255, 200, 60, .55));
       }
       .star-item.is-poop {
-        filter: drop-shadow(0 2px 4px rgba(80, 50, 20, .35));
+        filter: drop-shadow(0 3px 6px rgba(80, 50, 20, .35));
       }
 
       /* ============ 玩家 ============ */
       .star-player {
         position: absolute;
         left: 0;
-        bottom: 18px;
-        width: 52px;
-        height: 52px;
+        bottom: 25px;
+        width: 73px;
+        height: 73px;
         z-index: 5;
         pointer-events: none;
         will-change: transform;
@@ -699,9 +699,9 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 46px;
+        font-size: 64px;
         line-height: 1;
-        filter: drop-shadow(0 4px 8px rgba(0, 0, 0, .25));
+        filter: drop-shadow(0 6px 11px rgba(0, 0, 0, .25));
         animation: starPlayerBob 1.6s ease-in-out infinite;
       }
       @keyframes starPlayerBob {
@@ -713,17 +713,17 @@
       .star-controls {
         flex: 0 0 auto;
         display: flex;
-        gap: 12px;
-        padding: 12px 20px calc(16px + env(safe-area-inset-bottom, 0px));
+        gap: 17px;
+        padding: 17px 28px calc(22px + env(safe-area-inset-bottom, 0px));
         z-index: 10;
       }
       .star-btn {
         flex: 1 1 0;
-        height: 64px;
+        height: 90px;
         border: 0;
-        border-radius: 18px;
+        border-radius: 25px;
         font: inherit;
-        font-size: 28px;
+        font-size: 39px;
         font-weight: 700;
         color: #fff;
         cursor: pointer;
@@ -731,7 +731,7 @@
         -webkit-tap-highlight-color: transparent;
         user-select: none;
         -webkit-user-select: none;
-        box-shadow: 0 6px 16px rgba(0, 0, 0, .22);
+        box-shadow: 0 8px 22px rgba(0, 0, 0, .22);
         background: linear-gradient(to bottom, #6a8dff 0%, #3a6ff0 100%);
       }
       .star-btn.is-active {
@@ -747,11 +747,11 @@
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        gap: 16px;
-        padding: 30px;
+        gap: 22px;
+        padding: 42px;
         background: rgba(20, 30, 50, .55);
-        backdrop-filter: blur(14px) saturate(140%);
-        -webkit-backdrop-filter: blur(14px) saturate(140%);
+        backdrop-filter: blur(20px) saturate(140%);
+        -webkit-backdrop-filter: blur(20px) saturate(140%);
         z-index: 20;
         opacity: 0;
         visibility: hidden;
@@ -763,32 +763,32 @@
         visibility: visible;
       }
       .star-overlay__title {
-        font-size: 30px;
+        font-size: 42px;
         font-weight: 800;
         color: #fff;
-        letter-spacing: 2px;
+        letter-spacing: 3px;
       }
       .star-overlay__desc {
-        font-size: 15px;
+        font-size: var(--wj-fs-lg);
         color: rgba(255, 255, 255, .9);
         line-height: 1.65;
-        max-width: 280px;
+        max-width: 392px;
       }
       .star-overlay__btn {
-        margin-top: 10px;
-        padding: 14px 48px;
+        margin-top: 14px;
+        padding: 20px 67px;
         border: 0;
-        border-radius: 999px;
+        border-radius: 1399px;
         background: #3a6ff0;
         color: #fff;
         font: inherit;
-        font-size: 18px;
+        font-size: var(--wj-fs-xl);
         font-weight: 600;
         letter-spacing: 1px;
         cursor: pointer;
         transition: transform .08s, filter .15s;
         -webkit-tap-highlight-color: transparent;
-        box-shadow: 0 8px 22px rgba(58, 111, 240, .5);
+        box-shadow: 0 11px 31px rgba(58, 111, 240, .5);
       }
       .star-overlay__btn:active { transform: scale(.96); }
 

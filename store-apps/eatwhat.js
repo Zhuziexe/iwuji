@@ -42,7 +42,7 @@
     name: '今天吃什么',
     icon: ICON_URL,
     initialRoute: 'home',
-    version: '1.0.0',
+    version: '1.0.1',
 
     styles: `
       .ew-page {
@@ -60,11 +60,11 @@
         display: flex;
         align-items: center;
         justify-content: space-between;
-        gap: 10px;
-        padding: 8px 14px 4px;
+        gap: 14px;
+        padding: 11px 20px 6px;
       }
       .ew-title {
-        font-size: 20px;
+        font-size: var(--wj-fs-xl);
         font-weight: 700;
         color: var(--wj-text);
         letter-spacing: .3px;
@@ -76,13 +76,13 @@
 
       .ew-roll-btn {
         flex: 0 0 auto;
-        padding: 5px 12px;
+        padding: 7px 17px;
         border: 0;
-        border-radius: 999px;
+        border-radius: 1399px;
         background: var(--wj-primary, #3a6ff0);
         color: #fff;
         font: inherit;
-        font-size: 14px;
+        font-size: var(--wj-fs-md);
         font-weight: 600;
         letter-spacing: .3px;
         cursor: pointer;
@@ -95,8 +95,8 @@
       .ew-filters {
         flex: 0 0 auto;
         display: flex;
-        gap: 6px;
-        padding: 4px 14px 6px;
+        gap: 8px;
+        padding: 6px 20px 8px;
         overflow-x: auto;
         touch-action: pan-x;
         -webkit-overflow-scrolling: touch;
@@ -106,15 +106,15 @@
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        padding: 5px 12px;
-        min-height: 26px;
+        padding: 7px 17px;
+        min-height: 36px;
         box-sizing: border-box;
         border: 1px solid var(--wj-border, #e6e9ef);
-        border-radius: 999px;
+        border-radius: 1399px;
         background: transparent;
         color: var(--wj-text-muted);
         font: inherit;
-        font-size: 14px;
+        font-size: var(--wj-fs-md);
         font-weight: 500;
         line-height: 1;
         cursor: pointer;
@@ -134,14 +134,14 @@
         overflow-y: auto;
         -webkit-overflow-scrolling: touch;
         overscroll-behavior: contain;
-        padding: 6px 14px 16px;
+        padding: 8px 20px 22px;
       }
 
       .ew-empty {
         text-align: center;
-        padding: 40px 16px;
+        padding: 56px 22px;
         color: var(--wj-text-dim);
-        font-size: 14px;
+        font-size: var(--wj-fs-md);
         line-height: 1.6;
       }
 
@@ -149,10 +149,10 @@
         position: relative;
         display: flex;
         align-items: center;
-        gap: 10px;
-        padding: 10px 12px;
-        margin-bottom: 8px;
-        border-radius: 14px;
+        gap: 14px;
+        padding: 14px 17px;
+        margin-bottom: 11px;
+        border-radius: 20px;
         background: var(--wj-bg-alt);
         cursor: pointer;
         transition: transform .08s, background .15s;
@@ -166,23 +166,23 @@
         gap: 0;
         padding: 0;
         overflow: hidden;
-        border-radius: 18px;
+        border-radius: 25px;
         background: transparent;
-        box-shadow: 0 10px 26px rgba(0,0,0,.15);
-        margin-bottom: 12px;
+        box-shadow: 0 14px 36px rgba(0,0,0,.15);
+        margin-bottom: 17px;
       }
       .ew-card.is-big:active { transform: scale(.98); }
 
       .ew-card__emoji {
-        flex: 0 0 44px;
-        width: 44px;
-        height: 44px;
-        border-radius: 12px;
+        flex: 0 0 62px;
+        width: 62px;
+        height: 62px;
+        border-radius: 17px;
         background: var(--grad);
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 24px;
+        font-size: var(--wj-fs-3xl);
         line-height: 1;
         box-shadow: inset 0 0 0 1px rgba(255,255,255,.25);
       }
@@ -190,9 +190,9 @@
       .ew-card.is-big .ew-card__emoji {
         flex: 0 0 auto;
         width: 100%;
-        height: 100px;
+        height: 140px;
         border-radius: 0;
-        font-size: 60px;
+        font-size: 84px;
         box-shadow: none;
       }
 
@@ -201,12 +201,12 @@
         min-width: 0;
       }
       .ew-card.is-big .ew-card__body {
-        padding: 10px 14px 12px;
+        padding: 14px 20px 17px;
         background: var(--wj-bg-alt);
       }
 
       .ew-card__name {
-        font-size: 16px;
+        font-size: var(--wj-fs-lg);
         font-weight: 700;
         color: var(--wj-text);
         letter-spacing: .3px;
@@ -214,17 +214,17 @@
         text-overflow: ellipsis;
         white-space: nowrap;
       }
-      .ew-card.is-big .ew-card__name { font-size: 20px; }
+      .ew-card.is-big .ew-card__name { font-size: var(--wj-fs-2xl); }
 
       .ew-card__meta {
-        margin-top: 2px;
-        font-size: 12px;
+        margin-top: 3px;
+        font-size: var(--wj-fs-xs);
         color: var(--wj-text-dim);
         display: flex;
-        gap: 5px;
+        gap: 7px;
         flex-wrap: wrap;
       }
-      .ew-card.is-big .ew-card__meta { font-size: 14px; margin-top: 4px; }
+      .ew-card.is-big .ew-card__meta { font-size: var(--wj-fs-md); margin-top: 6px; }
 
       .ew-detail {
         position: absolute;
@@ -239,88 +239,88 @@
         overflow-y: auto;
         -webkit-overflow-scrolling: touch;
         overscroll-behavior: contain;
-        padding-bottom: 20px;
+        padding-bottom: 28px;
       }
       .ew-detail__hero {
         width: 100%;
-        height: 140px;
+        height: 196px;
         background: var(--grad);
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 78px;
+        font-size: 109px;
         line-height: 1;
         padding-top: var(--statusbar-h);
         box-sizing: border-box;
       }
-      .ew-detail__head { padding: 14px 18px 0; }
+      .ew-detail__head { padding: 20px 25px 0; }
       .ew-detail__name {
-        font-size: 24px;
+        font-size: var(--wj-fs-3xl);
         font-weight: 700;
         color: var(--wj-text);
         letter-spacing: .3px;
       }
       .ew-detail__meta {
-        margin-top: 4px;
-        font-size: 14px;
+        margin-top: 6px;
+        font-size: var(--wj-fs-md);
         color: var(--wj-text-dim);
         display: flex;
-        gap: 5px;
+        gap: 7px;
         flex-wrap: wrap;
       }
-      .ew-section { padding: 14px 18px 0; }
+      .ew-section { padding: 20px 25px 0; }
       .ew-section__title {
-        font-size: 16px;
+        font-size: var(--wj-fs-lg);
         font-weight: 700;
         color: var(--wj-text);
-        margin-bottom: 8px;
+        margin-bottom: 11px;
         letter-spacing: .3px;
       }
       .ew-ing {
         display: flex;
         flex-direction: column;
-        gap: 5px;
+        gap: 7px;
       }
       .ew-ing__row {
         display: flex;
         align-items: baseline;
-        gap: 8px;
-        font-size: 14px;
+        gap: 11px;
+        font-size: var(--wj-fs-md);
         color: var(--wj-text);
-        padding: 8px 12px;
+        padding: 11px 17px;
         background: var(--wj-bg-alt);
-        border-radius: 10px;
+        border-radius: 14px;
       }
       .ew-ing__row::before {
         content: '·';
         color: var(--wj-primary, #3a6ff0);
         font-weight: 700;
-        font-size: 16px;
+        font-size: var(--wj-fs-lg);
         line-height: 1;
       }
       .ew-steps {
         display: flex;
         flex-direction: column;
-        gap: 8px;
+        gap: 11px;
         counter-reset: step;
       }
       .ew-step {
         display: flex;
-        gap: 10px;
-        font-size: 14px;
+        gap: 14px;
+        font-size: var(--wj-fs-md);
         line-height: 1.55;
         color: var(--wj-text);
         counter-increment: step;
       }
       .ew-step::before {
         content: counter(step);
-        flex: 0 0 22px;
-        width: 22px;
-        height: 22px;
+        flex: 0 0 31px;
+        width: 31px;
+        height: 31px;
         border-radius: 50%;
         background: var(--wj-primary, #3a6ff0);
         color: #fff;
-        font-size: 11px;
+        font-size: var(--wj-fs-xs);
         font-weight: 700;
         display: flex;
         align-items: center;
@@ -462,7 +462,7 @@
 
             bodyEl.innerHTML = `
               ${renderCard(currentPick, { big: true })}
-              <div class="ew-section__title" style="padding:0 2px 8px;">其他选择</div>
+              <div class="ew-section__title" style="padding:0 3px 11px;">其他选择</div>
               ${rest.map(m => renderCard(m)).join('')}
             `;
 

@@ -68,7 +68,7 @@
     name: '备忘录',
     icon: './assets/note.svg',
     initialRoute: 'home',
-    version: '1.0.5',
+    version: '1.0.6',
     styles: `
       /* ==================== 主页 ==================== */
       .note-page {
@@ -84,8 +84,8 @@
         flex: 0 0 auto;
         display: flex;
         align-items: center;
-        gap: 12px;
-        padding: 10px 16px 8px;
+        gap: 17px;
+        padding: 14px 22px 11px;
       }
 
       .note-header__text {
@@ -98,7 +98,7 @@
       }
 
       .note-hint {
-        font-size: 14px;
+        font-size: var(--wj-fs-md);
         color: var(--wj-text-dim);
         letter-spacing: .3px;
         line-height: 1.15;
@@ -106,8 +106,8 @@
 
       .note-add-btn {
         flex: 0 0 auto;
-        width: 44px;
-        height: 44px;
+        width: 62px;
+        height: 62px;
         padding: 0;
         border: 0;
         border-radius: 50%;
@@ -127,8 +127,8 @@
         background: #e2aa00;
       }
       .note-add-btn svg {
-        width: 22px;
-        height: 22px;
+        width: 31px;
+        height: 31px;
         display: block;
         pointer-events: none;
       }
@@ -147,7 +147,7 @@
 
       .note-card {
         padding: 12px 14px;              /* ★ 14/16 → 12/14 更紧凑 */
-        border-radius: 14px;
+        border-radius: 20px;
         background: var(--wj-bg-alt);
         cursor: pointer;
         transition: transform .12s ease, background .15s ease;
@@ -188,7 +188,7 @@
       }
 
       .note-empty {
-        padding: 80px 20px;
+        padding: 112px 28px;
         text-align: center;
         color: var(--wj-text-dim);
         font-size: 15px;                 /* ★ 14 → 15 */
@@ -259,25 +259,25 @@
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        padding: calc(var(--statusbar-h) + 20px) 30px 40px;
+        padding: calc(var(--statusbar-h) + 28px) 42px 56px;
         background: var(--wj-bg);
-        gap: 10px;
+        gap: 14px;
       }
 
       .note-confirm__icon {
         width: 68px;                     /* ★ 64 → 68 */
-        height: 68px;
+        height: 95px;
         border-radius: 50%;
         background: #ffe4ec;
         color: #e0356b;
         display: flex;
         align-items: center;
         justify-content: center;
-        margin-bottom: 8px;
+        margin-bottom: 11px;
       }
       .note-confirm__icon svg {
         width: 32px;                     /* ★ 30 → 32 */
-        height: 32px;
+        height: 45px;
         display: block;
       }
 
@@ -295,8 +295,8 @@
         color: var(--wj-text-muted);
         text-align: center;
         word-break: break-all;
-        max-width: 300px;
-        padding: 0 4px;
+        max-width: 420px;
+        padding: 0 6px;
       }
       .note-confirm__msg strong {
         color: var(--wj-text);
@@ -304,18 +304,18 @@
       }
 
       .note-confirm__actions {
-        margin-top: 24px;
+        margin-top: 34px;
         display: flex;
-        gap: 12px;
+        gap: 17px;
         width: 100%;
-        max-width: 280px;
+        max-width: 392px;
       }
 
       .note-confirm__btn {
         flex: 1 1 0;
         padding: 14px 20px;              /* ★ 13 → 14 */
         border: 0;
-        border-radius: 999px;
+        border-radius: 1399px;
         font: inherit;
         font-size: 16px;                 /* ★ 15 → 16 */
         font-weight: 600;

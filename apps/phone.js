@@ -43,18 +43,18 @@
         display: flex;
         flex-direction: column;
         background: var(--wj-bg, #fff);
-        padding-top: var(--statusbar-h, 26px);
+        padding-top: var(--statusbar-h, 36px);
         overflow: hidden;
         box-sizing: border-box;
         user-select: none;
         -webkit-user-select: none;
 
-        --key-size: min(72px, 18vw, 15vh);
+        --key-size: min(101px, 18vw, 15vh);
       }
 
 .phone-display {
   flex: 0 0 auto;
-  padding: 12px 24px 4px;
+  padding: 17px 34px 6px;
   overflow-x: auto;
   overflow-y: hidden;
   scrollbar-width: none;
@@ -73,13 +73,13 @@
   word-break: normal;
   max-width: none;
 
-  font-size: 30px;
+  font-size: 42px;
   font-weight: 600;
   color: var(--wj-text, #101828);
-  letter-spacing: 1.5px;
+  letter-spacing: 2px;
   font-variant-numeric: tabular-nums;
   line-height: 1.2;
-  min-height: 38px;
+  min-height: 53px;
 }
 .phone-number:empty::before {
   content: '输入号码';
@@ -91,14 +91,14 @@
         flex: 1 1 auto;
         min-height: 0;
         width: 100%;
-        max-width: 340px;
+        max-width: 476px;
         margin: 0 auto;
-        padding: 0 20px;
+        padding: 0 28px;
         box-sizing: border-box;
         display: grid;
         grid-template-columns: repeat(3, minmax(0, 1fr));
         grid-template-rows: repeat(4, minmax(0, 1fr));
-        gap: 6px;
+        gap: 8px;
         place-items: center;
         overflow: hidden;
       }
@@ -111,7 +111,7 @@
         background: var(--wj-bg-alt, #eef1f6);
         color: var(--wj-text, #101828);
         font: inherit;
-        font-size: clamp(20px, 5.6vw, 28px);
+        font-size: clamp(28px, 5.6vw, 39px);
         font-weight: 500;
         display: flex;
         flex-direction: column;
@@ -127,9 +127,9 @@
       .phone-key:active { transform: scale(.93); background: #dce3ef; }
 
       .phone-key__sub {
-        font-size: clamp(7px, 2.4vw, 9px);
+        font-size: clamp(10px, 2.4vw, 13px);
         font-weight: 700;
-        letter-spacing: 1.2px;
+        letter-spacing: 2px;
         color: var(--wj-text-dim, #9aa4b8);
         margin-top: 1px;
         line-height: 1;
@@ -141,12 +141,12 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        padding: 4px 24px calc(16px + env(safe-area-inset-bottom, 0px));
+        padding: 6px 34px calc(22px + env(safe-area-inset-bottom, 0px));
       }
 
       .phone-dial-btn {
-        width: clamp(56px, 18vw, 68px);
-        height: clamp(56px, 18vw, 68px);
+        width: clamp(78px, 18vw, 95px);
+        height: clamp(78px, 18vw, 95px);
         border-radius: 50%;
         border: 0;
         background: #34c759;
@@ -155,7 +155,7 @@
         align-items: center;
         justify-content: center;
         cursor: pointer;
-        box-shadow: 0 6px 18px rgba(52, 199, 89, .35);
+        box-shadow: 0 8px 25px rgba(52, 199, 89, .35);
         transition: transform .08s ease, filter .12s ease;
         -webkit-tap-highlight-color: transparent;
       }
@@ -164,11 +164,11 @@
 
       .phone-back-btn {
         position: absolute;
-        right: 24px;
+        right: 34px;
         top: 50%;
         transform: translateY(-50%);
-        width: 52px;
-        height: 52px;
+        width: 73px;
+        height: 73px;
         border-radius: 50%;
         border: 0;
         background: transparent;
@@ -184,7 +184,7 @@
       }
       .phone-back-btn.is-visible { opacity: 1; pointer-events: auto; }
       .phone-back-btn:active { transform: translateY(-50%) scale(.9); }
-      .phone-back-btn svg { width: 24px; height: 24px; display: block; }
+      .phone-back-btn svg { width: 34px; height: 34px; display: block; }
 
       .ov-call {
         position: absolute;
@@ -193,11 +193,11 @@
         flex-direction: column;
         align-items: center;
         justify-content: space-between;
-        padding: calc(80px + var(--statusbar-h, 26px)) 30px
-                 calc(48px + env(safe-area-inset-bottom, 0px));
+        padding: calc(112px + var(--statusbar-h, 36px)) 42px
+                 calc(67px + env(safe-area-inset-bottom, 0px));
         background: rgba(12, 18, 36, .78);
-        backdrop-filter: blur(26px) saturate(150%);
-        -webkit-backdrop-filter: blur(26px) saturate(150%);
+        backdrop-filter: blur(36px) saturate(150%);
+        -webkit-backdrop-filter: blur(36px) saturate(150%);
         color: #fff;
         text-align: center;
         box-sizing: border-box;
@@ -209,42 +209,42 @@
         display: flex;
         flex-direction: column;
         align-items: center;
-        gap: 14px;
+        gap: 20px;
         width: 100%;
         min-width: 0;
       }
 
       .ov-call__number {
-        font-size: 32px;
+        font-size: 45px;
         font-weight: 600;
-        letter-spacing: 2px;
+        letter-spacing: 3px;
         color: #fff;
-        text-shadow: 0 2px 12px rgba(0, 0, 0, .35);
+        text-shadow: 0 3px 17px rgba(0, 0, 0, .35);
         font-variant-numeric: tabular-nums;
         word-break: break-all;
         max-width: 100%;
       }
 
       .ov-call__status {
-        font-size: 17px;
+        font-size: var(--wj-fs-xl);
         font-weight: 400;
         color: rgba(255, 255, 255, .72);
-        letter-spacing: 2px;
+        letter-spacing: 3px;
         transition: font-size .2s ease, color .2s ease;
-        min-height: 24px;
+        min-height: 34px;
       }
       .ov-call__status.is-active {
         font-family: 'Consolas', 'SF Mono', monospace;
-        font-size: 22px;
+        font-size: var(--wj-fs-3xl);
         font-weight: 600;
         color: #fff;
         font-variant-numeric: tabular-nums;
-        letter-spacing: 1.5px;
+        letter-spacing: 2px;
       }
 
       .ov-call__hangup {
-  width: 72px;
-  height: 72px;
+  width: 101px;
+  height: 101px;
   border-radius: 50%;
   border: 0;
   background: #ff3b30;
@@ -253,7 +253,7 @@
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  box-shadow: 0 8px 24px rgba(255, 59, 48, .45);
+  box-shadow: 0 11px 34px rgba(255, 59, 48, .45);
   transition: transform .08s ease, filter .12s ease;
   -webkit-tap-highlight-color: transparent;
 
@@ -262,7 +262,7 @@
   -webkit-user-select: none;
 }
       .ov-call__hangup:active { transform: scale(.92); filter: brightness(.9); }
-      .ov-call__hangup svg { width: 34px; height: 34px; display: block; }
+      .ov-call__hangup svg { width: 48px; height: 48px; display: block; }
     `,
 
     overlays: [

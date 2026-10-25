@@ -63,7 +63,7 @@
     name: '牛逼新闻',
     icon: ICON_URL,
     initialRoute: 'home',
-    version: '1.0.2',
+    version: '1.0.3',
 
     styles: `
       .nw-page {
@@ -80,10 +80,10 @@
         flex: 0 0 auto;
         display: flex;
         align-items: center;
-        padding: 8px 14px 6px;
+        padding: 11px 20px 8px;
       }
       .nw-title {
-        font-size: 20px;
+        font-size: var(--wj-fs-2xl);
         font-weight: 700;
         color: var(--wj-text);
         letter-spacing: .3px;
@@ -95,21 +95,21 @@
         overflow-y: auto;
         -webkit-overflow-scrolling: touch;
         overscroll-behavior: contain;
-        padding: 0 14px 16px;
+        padding: 0 20px 22px;
       }
 
       .nw-list {
         display: flex;
         flex-direction: column;
-        gap: 8px;
+        gap: 11px;
       }
 
       .nw-item {
         display: flex;
         align-items: flex-start;
-        gap: 10px;
-        padding: 12px 12px;
-        border-radius: 14px;
+        gap: 14px;
+        padding: 17px 17px;
+        border-radius: 20px;
         background: var(--wj-bg-alt);
         cursor: pointer;
         transition: transform .08s, background .15s, opacity .2s;
@@ -119,10 +119,10 @@
       .nw-item.is-read { opacity: .55; }
 
       .nw-rank {
-        flex: 0 0 22px;
-        width: 22px;
+        flex: 0 0 31px;
+        width: 31px;
         padding-top: 1px;
-        font-size: 16px;
+        font-size: var(--wj-fs-lg);
         font-weight: 700;
         text-align: center;
         color: var(--wj-text-dim);
@@ -137,11 +137,11 @@
         min-width: 0;
         display: flex;
         flex-direction: column;
-        gap: 4px;
+        gap: 6px;
       }
 
       .nw-item__title {
-        font-size: 16px;
+        font-size: var(--wj-fs-lg);
         font-weight: 600;
         line-height: 1.42;
         color: var(--wj-text);
@@ -153,17 +153,17 @@
       }
 
       .nw-item__hot {
-        font-size: 12px;
+        font-size: var(--wj-fs-xs);
         color: var(--wj-text-dim);
         font-variant-numeric: tabular-nums;
         letter-spacing: .3px;
       }
 
       .nw-thumb {
-        flex: 0 0 64px;
-        width: 64px;
-        height: 64px;
-        border-radius: 10px;
+        flex: 0 0 90px;
+        width: 90px;
+        height: 90px;
+        border-radius: 14px;
         overflow: hidden;
         background: var(--wj-bg);
         display: flex;
@@ -180,9 +180,9 @@
       .nw-meta {
         flex: 0 0 auto;
         text-align: center;
-        font-size: 12px;
+        font-size: var(--wj-fs-xs);
         color: var(--wj-text-dim);
-        padding: 12px 4px 2px;
+        padding: 17px 6px 3px;
         letter-spacing: .3px;
       }
 
@@ -201,12 +201,12 @@
         overflow-x: hidden;
         -webkit-overflow-scrolling: touch;
         overscroll-behavior: contain;
-        padding-bottom: 24px;
+        padding-bottom: 34px;
       }
 
       .nw-detail__hero {
         width: 100%;
-        height: 200px;
+        height: 280px;
         background: var(--wj-bg-alt);
         overflow: hidden;
         display: flex;
@@ -224,26 +224,26 @@
       .nw-detail__hero.is-empty {
         background: linear-gradient(135deg, #e0356b, #922b21);
         color: #fff;
-        font-size: 56px;
+        font-size: 78px;
       }
 
       .nw-detail__body {
-        padding: 18px 18px 0;
+        padding: 25px 25px 0;
         display: flex;
         flex-direction: column;
-        gap: 10px;
+        gap: 14px;
       }
       .nw-detail__title {
-        font-size: 22px;
+        font-size: var(--wj-fs-3xl);
         font-weight: 700;
         line-height: 1.42;
         color: var(--wj-text);
         letter-spacing: .3px;
         word-break: break-word;
-        margin-top: 2px;
+        margin-top: 3px;
       }
       .nw-detail__hot {
-        font-size: 14px;
+        font-size: var(--wj-fs-md);
         color: var(--wj-text-dim);
         font-variant-numeric: tabular-nums;
         letter-spacing: .3px;
@@ -255,13 +255,13 @@
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        gap: 14px;
-        padding: 60px 24px;
+        gap: 20px;
+        padding: 84px 34px;
         text-align: center;
       }
       .nw-spinner {
-        width: 64px;
-        height: 64px;
+        width: 90px;
+        height: 90px;
         border-radius: 50%;
         overflow: hidden;
         object-fit: cover;
@@ -271,18 +271,18 @@
       }
       @keyframes nw-spin { to { transform: rotate(360deg); } }
       .nw-state__text {
-        font-size: 14px;
+        font-size: var(--wj-fs-md);
         color: var(--wj-text-muted);
         line-height: 1.6;
       }
       .nw-state__retry {
-        padding: 10px 24px;
+        padding: 14px 34px;
         border: 0;
-        border-radius: 999px;
+        border-radius: 1399px;
         background: var(--wj-primary, #3a6ff0);
         color: #fff;
         font: inherit;
-        font-size: 14px;
+        font-size: var(--wj-fs-md);
         font-weight: 600;
         cursor: pointer;
         -webkit-tap-highlight-color: transparent;

@@ -40,7 +40,7 @@
     name: '吴际心情',
     icon: './assets/mood.svg',
     initialRoute: 'home',
-    version:'1.0.2',
+    version:'1.0.3',
     styles: `
       .mood-page {
         position: absolute;
@@ -49,7 +49,7 @@
         flex-direction: column;
         align-items: center;
         background: #ffffff;
-        padding: calc(var(--wj-pad) + var(--statusbar-h)) 20px 24px;
+        padding: calc(var(--wj-pad) + var(--statusbar-h)) 28px 34px;
         overflow: hidden;
         user-select: none;
         -webkit-user-select: none;
@@ -57,11 +57,11 @@
 
       .mood-title {
         flex: 0 0 auto;
-        font-size: 22px;
+        font-size: var(--wj-fs-3xl);
         font-weight: 700;
         color: #000000;
         letter-spacing: .5px;
-        margin-top: 6px;
+        margin-top: 8px;
       }
 
       .mood-stage {
@@ -70,22 +70,22 @@
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        gap: 30px;
+        gap: 42px;
         width: 100%;
         min-height: 0;
       }
 
       .mood-emoji {
-        width: min(60vw, 220px);
-        height: min(60vw, 220px);
+        width: min(60vw, 308px);
+        height: min(60vw, 308px);
         border: 0;
         border-radius: 50%;
         background: #ffffff;
         box-shadow:
-          0 12px 40px rgba(0, 0, 0, .12),
-          0 2px 8px rgba(0, 0, 0, .06),
+          0 17px 56px rgba(0, 0, 0, .12),
+          0 3px 11px rgba(0, 0, 0, .06),
           inset 0 -6px 0 rgba(0, 0, 0, .04);
-        font-size: min(38vw, 140px);
+        font-size: min(38vw, 196px);
         line-height: 1;
         cursor: pointer;
         display: flex;
@@ -99,7 +99,7 @@
 
       .mood-emoji:active {
         box-shadow:
-          0 6px 20px rgba(0, 0, 0, .16),
+          0 8px 28px rgba(0, 0, 0, .16),
           inset 0 -3px 0 rgba(0, 0, 0, .06);
       }
 
@@ -118,21 +118,21 @@
       }
 
       .mood-text {
-        font-size: 20px;
+        font-size: var(--wj-fs-2xl);
         font-weight: 600;
         color: #000000;
         letter-spacing: 1px;
         text-align: center;
-        min-height: 28px;
+        min-height: 39px;
         transition: opacity .18s ease;
       }
 
       .mood-hint {
         flex: 0 0 auto;
-        font-size: 12px;
+        font-size: var(--wj-fs-xs);
         color: #888888;
         letter-spacing: .5px;
-        padding-bottom: 8px;
+        padding-bottom: 11px;
         user-select: none;
         -webkit-user-select: none;
       }

@@ -50,17 +50,17 @@
     name: '每日喝水',
     icon: './assets/dailywater.svg',
     initialRoute: 'home',
-    version: '1.0.2',
+    version: '1.0.3',
     styles: `
       .dw-page {
         position: absolute;
         inset: 0;
         overflow: hidden;
-        padding: calc(var(--statusbar-h) + 10px) 16px 16px;
+        padding: calc(var(--statusbar-h) + 14px) 22px 22px;
         background: var(--wj-bg);
         display: flex;
         flex-direction: column;
-        gap: 6px;
+        gap: 8px;
         user-select: none;
         -webkit-user-select: none;
       }
@@ -70,11 +70,11 @@
         flex: 0 0 auto;
         align-self: stretch;
         text-align: left;
-        font-size: 20px;
+        font-size: var(--wj-fs-2xl);
         font-weight: 700;
         color: var(--wj-text);
         letter-spacing: .5px;
-        padding: 2px 4px 0;
+        padding: 3px 6px 0;
       }
 
       /* ==================== 水瓶 ==================== */
@@ -85,7 +85,7 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        padding: 4px 0;
+        padding: 6px 0;
       }
 
       /* ★ 用容器比例决定瓶子大小：任何手机都放得下 */
@@ -102,7 +102,7 @@
       .dw-bottle__cap {
         flex: 0 0 7%;
         width: 36%;
-        border-radius: 4px 4px 1px 1px;
+        border-radius: 6px 6px 1px 1px;
         background: linear-gradient(180deg, #a0b0c5 0%, #7c8a9e 100%);
         box-shadow: inset 0 1px 0 rgba(255, 255, 255, .35);
       }
@@ -111,8 +111,8 @@
         flex: 0 0 8%;
         width: 31%;
         background: #eaf1fb;
-        border-left: 2px solid #b6c2d6;
-        border-right: 2px solid #b6c2d6;
+        border-left: 3px solid #b6c2d6;
+        border-right: 3px solid #b6c2d6;
         box-sizing: border-box;
       }
 
@@ -123,12 +123,12 @@
         min-height: 0;
         height: 85%;
         background: #eef3ff;
-        border: 2.5px solid #b6c2d6;
-        border-radius: 8px 8px 26px 26px;
+        border: 4px solid #b6c2d6;
+        border-radius: 11px 11px 36px 36px;
         overflow: hidden;
         box-shadow:
-          inset 0 0 24px rgba(120, 150, 200, .10),
-          0 8px 22px rgba(80, 120, 180, .14);
+          inset 0 0 34px rgba(120, 150, 200, .10),
+          0 11px 31px rgba(80, 120, 180, .14);
         box-sizing: border-box;
       }
 
@@ -151,9 +151,9 @@
         left: 0;
         right: 0;
         top: 0;
-        height: 6px;
+        height: 8px;
         background: rgba(255, 255, 255, .55);
-        filter: blur(3px);
+        filter: blur(4px);
         pointer-events: none;
       }
 
@@ -164,7 +164,7 @@
         top: 7%;
         width: 12%;
         height: 72%;
-        border-radius: 8px;
+        border-radius: 11px;
         background: linear-gradient(180deg,
           rgba(255, 255, 255, .70) 0%,
           rgba(255, 255, 255, .16) 80%,
@@ -178,20 +178,20 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        gap: 22px;
-        padding: 4px 0 0;
+        gap: 31px;
+        padding: 6px 0 0;
       }
 
       .dw-btn {
-        width: 46px;
-        height: 46px;
-        padding: 0 0 3px;
+        width: 64px;
+        height: 64px;
+        padding: 0 0 4px;
         border: 0;
         border-radius: 50%;
         background: var(--wj-bg-alt);
         color: var(--wj-text);
         font: inherit;
-        font-size: 26px;
+        font-size: var(--wj-fs-4xl);
         font-weight: 400;
         line-height: 1;
         display: flex;
@@ -216,18 +216,18 @@
         display: inline-flex;
         align-items: baseline;
         justify-content: center;
-        min-width: 86px;
+        min-width: 120px;
         color: var(--wj-text);
         font-variant-numeric: tabular-nums;
         line-height: 1;
       }
       .dw-count b {
-        font-size: 40px;
+        font-size: 56px;
         font-weight: 700;
         letter-spacing: -1.5px;
       }
       .dw-count span {
-        font-size: 18px;
+        font-size: var(--wj-fs-xl);
         font-weight: 500;
         color: var(--wj-text-dim);
         margin-left: 1px;
@@ -236,13 +236,13 @@
       /* ==================== 昨日 ==================== */
       .dw-yesterday {
         flex: 0 0 auto;
-        height: 18px;
-        line-height: 18px;
-        font-size: 13px;
+        height: 25px;
+        line-height: 25px;
+        font-size: var(--wj-fs-sm);
         color: var(--wj-text-muted);
         letter-spacing: .3px;
         text-align: center;
-        margin-bottom: 2px;
+        margin-bottom: 3px;
       }
       .dw-yesterday[hidden] {
         visibility: hidden;   /* 用 visibility 占位，避免高度抖动 */

@@ -185,7 +185,7 @@
         display: none;
         flex-direction: column;
         align-items: center;
-        padding: 18px 20px 0;
+        padding: 25px 28px 0;
         box-sizing: border-box;
       }
       .clock-tab.is-active { display: flex; }
@@ -193,11 +193,11 @@
       .clock-title {
         flex: 0 0 auto;
         align-self: flex-start;
-        font-size: 22px;
+        font-size: var(--wj-fs-3xl);
         font-weight: 700;
         color: var(--wj-text);
         letter-spacing: .5px;
-        margin-bottom: 4px;
+        margin-bottom: 6px;
       }
 
       /* ============ 时钟页 ============ */
@@ -210,17 +210,17 @@
         justify-content: center;
       }
       .clock-dial {
-        width: min(76vw, 300px);
-        height: min(76vw, 300px);
+        width: min(76vw, 420px);
+        height: min(76vw, 420px);
         display: block;
       }
       .clock-time {
         flex: 0 0 auto;
-        margin: 18px 0 14px;
+        margin: 25px 0 20px;
         font-family: 'Consolas', 'SF Mono', monospace;
-        font-size: 32px;
+        font-size: 45px;
         font-weight: 600;
-        letter-spacing: 2px;
+        letter-spacing: 3px;
         font-variant-numeric: tabular-nums;
         color: var(--wj-text);
       }
@@ -242,33 +242,33 @@
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        gap: 26px;
-        padding-bottom: 12px;
+        gap: 36px;
+        padding-bottom: 17px;
       }
 
       /* 两轮卡片 */
       .timer-wheel-card {
         position: relative;
-        width: 240px;
-        height: 132px;
-        border-radius: 22px;
+        width: 336px;
+        height: 185px;
+        border-radius: 31px;
         background: var(--wj-bg-alt);
         overflow: hidden;
         touch-action: none;
         display: flex;
         align-items: center;
         justify-content: center;
-        gap: 4px;
+        gap: 6px;
       }
       .timer-wheel-card::after {
         content: '';
         position: absolute;
-        left: 16px;
-        right: 16px;
+        left: 22px;
+        right: 22px;
         top: 50%;
-        height: 44px;
+        height: 62px;
         transform: translateY(-50%);
-        border-radius: 12px;
+        border-radius: 17px;
         background: rgba(58, 111, 240, .10);
         pointer-events: none;
         z-index: 0;
@@ -276,7 +276,7 @@
 
       .timer-wheel {
         position: relative;
-        width: 82px;
+        width: 115px;
         height: 100%;
         overflow: hidden;
         z-index: 1;
@@ -288,10 +288,10 @@
         will-change: transform;
       }
       .timer-wheel__item {
-        height: 44px;
-        line-height: 44px;
+        height: 62px;
+        line-height: 62px;
         text-align: center;
-        font-size: 27px;
+        font-size: var(--wj-fs-4xl);
         font-weight: 700;
         color: var(--wj-text-dim);
         font-variant-numeric: tabular-nums;
@@ -305,7 +305,7 @@
       .timer-wheel__sep {
         position: relative;
         z-index: 1;
-        font-size: 26px;
+        font-size: var(--wj-fs-4xl);
         font-weight: 700;
         color: var(--wj-text);
         line-height: 1;
@@ -314,20 +314,20 @@
       }
 
       .timer-btn {
-        min-width: 180px;
-        padding: 16px 28px;
+        min-width: 252px;
+        padding: 22px 39px;
         border: 0;
-        border-radius: 999px;
+        border-radius: 1399px;
         font: inherit;
-        font-size: 17px;
+        font-size: var(--wj-fs-xl);
         font-weight: 600;
-        letter-spacing: 2px;
+        letter-spacing: 3px;
         cursor: pointer;
         transition: transform .1s ease, filter .15s ease, opacity .15s;
         -webkit-tap-highlight-color: transparent;
         color: #fff;
         background: #3a6ff0;
-        box-shadow: 0 8px 22px rgba(58, 111, 240, .38);
+        box-shadow: 0 11px 31px rgba(58, 111, 240, .38);
       }
       .timer-btn:active { transform: scale(.97); }
 
@@ -337,20 +337,20 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        gap: 34px;
-        padding-bottom: 16px;
+        gap: 48px;
+        padding-bottom: 22px;
       }
 
       .timer-ring-col {
         display: flex;
         flex-direction: column;
         align-items: center;
-        gap: 16px;
+        gap: 22px;
       }
 
       .timer-ring {
-        width: min(46vw, 190px);
-        height: min(46vw, 190px);
+        width: min(46vw, 266px);
+        height: min(46vw, 266px);
         display: block;
       }
       .timer-ring__progress {
@@ -359,7 +359,7 @@
 
       .timer-ring__time {
         font-family: 'Consolas', 'SF Mono', monospace;
-        font-size: 26px;
+        font-size: var(--wj-fs-4xl);
         font-weight: 700;
         color: var(--wj-text);
         font-variant-numeric: tabular-nums;
@@ -369,17 +369,17 @@
       .timer-actions {
         display: flex;
         flex-direction: column;
-        gap: 16px;
+        gap: 22px;
       }
 
       .timer-round-btn {
-        width: 62px;
-        height: 62px;
+        width: 87px;
+        height: 87px;
         border-radius: 50%;
         border: 0;
         background: var(--wj-bg-alt);
         color: var(--wj-text);
-        font-size: 24px;
+        font-size: var(--wj-fs-3xl);
         line-height: 1;
         display: flex;
         align-items: center;
@@ -392,7 +392,7 @@
       .timer-round-btn:active:not(:disabled) { transform: scale(.92); }
       .timer-round-btn:disabled { opacity: .35; cursor: default; }
       .timer-round-btn--primary { background: #3a6ff0; color: #fff; }
-      .timer-round-btn svg { width: 24px; height: 24px; display: block; }
+      .timer-round-btn svg { width: 34px; height: 34px; display: block; }
 
       .clock-tabs {
         position: relative;
@@ -400,7 +400,7 @@
         flex: 0 0 auto;
         display: flex;
         border-top: 1px solid rgba(0, 0, 0, .07);
-        padding: 4px 0 calc(6px + env(safe-area-inset-bottom, 0px));
+        padding: 6px 0 calc(8px + env(safe-area-inset-bottom, 0px));
         background: var(--wj-bg);
       }
 
@@ -410,21 +410,21 @@
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        gap: 2px;
-        padding: 8px 0;
+        gap: 3px;
+        padding: 11px 0;
         border: 0;
         background: transparent;
         color: var(--wj-text-dim);
         font: inherit;
-        font-size: 11px;
+        font-size: var(--wj-fs-xs);
         font-weight: 500;
         cursor: pointer;
         transition: color .15s ease;
         -webkit-tap-highlight-color: transparent;
       }
       .clock-tab-btn__icon {
-        width: 22px;
-        height: 22px;
+        width: 31px;
+        height: 31px;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -443,11 +443,11 @@
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        gap: 18px;
-        padding: 40px 30px calc(48px + env(safe-area-inset-bottom, 0px));
+        gap: 25px;
+        padding: 56px 42px calc(67px + env(safe-area-inset-bottom, 0px));
         background: rgba(12, 18, 36, .72);
-        backdrop-filter: blur(26px) saturate(150%);
-        -webkit-backdrop-filter: blur(26px) saturate(150%);
+        backdrop-filter: blur(36px) saturate(150%);
+        -webkit-backdrop-filter: blur(36px) saturate(150%);
         color: #fff;
         text-align: center;
         user-select: none;
@@ -455,40 +455,40 @@
       }
 
       .ov-timeout__title {
-        font-size: 24px;
+        font-size: var(--wj-fs-3xl);
         font-weight: 700;
-        letter-spacing: 2px;
-        text-shadow: 0 2px 10px rgba(0, 0, 0, .4);
+        letter-spacing: 3px;
+        text-shadow: 0 3px 14px rgba(0, 0, 0, .4);
       }
 
       .ov-timeout__count {
         font-family: 'Consolas', 'SF Mono', monospace;
-        font-size: 72px;
+        font-size: 101px;
         font-weight: 700;
-        letter-spacing: 3px;
+        letter-spacing: 4px;
         font-variant-numeric: tabular-nums;
         color: #fff;
         text-shadow:
-          0 4px 18px rgba(0, 0, 0, .45),
-          0 0 40px rgba(120, 160, 255, .35);
+          0 6px 25px rgba(0, 0, 0, .45),
+          0 0 56px rgba(120, 160, 255, .35);
       }
 
       .ov-slider {
         position: relative;
-        width: min(320px, 84vw);
-        height: 62px;
-        border-radius: 999px;
+        width: min(448px, 84vw);
+        height: 87px;
+        border-radius: 1399px;
         background: rgba(255, 255, 255, .14);
         border: 1px solid rgba(255, 255, 255, .16);
         overflow: hidden;
-        margin-top: 26px;
+        margin-top: 36px;
         box-shadow: inset 0 1px 0 rgba(255, 255, 255, .14);
       }
       .ov-slider__fill {
         position: absolute;
         left: 0; top: 0; bottom: 0;
-        width: 62px;
-        border-radius: 999px;
+        width: 87px;
+        border-radius: 1399px;
         background: rgba(255, 255, 255, .22);
         transition: width .05s linear;
         pointer-events: none;
@@ -499,18 +499,18 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 15px;
+        font-size: var(--wj-fs-lg);
         font-weight: 500;
         color: rgba(255, 255, 255, .82);
-        letter-spacing: 2px;
+        letter-spacing: 3px;
         pointer-events: none;
       }
       .ov-slider__knob {
         position: absolute;
-        left: 4px;
-        top: 4px;
-        width: 54px;
-        height: 54px;
+        left: 6px;
+        top: 6px;
+        width: 76px;
+        height: 76px;
         border-radius: 50%;
         background: #fff;
         color: #3a6ff0;
@@ -519,11 +519,11 @@
         justify-content: center;
         cursor: grab;
         touch-action: none;
-        box-shadow: 0 6px 18px rgba(0, 0, 0, .3);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, .3);
         will-change: transform;
       }
       .ov-slider__knob:active { cursor: grabbing; }
-      .ov-slider__knob svg { width: 24px; height: 24px; display: block; }
+      .ov-slider__knob svg { width: 34px; height: 34px; display: block; }
     `,
 
     overlays: [

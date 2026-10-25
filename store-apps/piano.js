@@ -126,7 +126,7 @@
     name: '迷你钢琴',
     icon: './assets/piano.svg',
     initialRoute: 'home',
-    version: '1.0.5',
+    version: '1.0.6',
 
     onShutdown() {
       disposeCtx();
@@ -145,11 +145,11 @@
 
       .piano-header {
         flex: 0 0 auto;
-        padding: 10px 14px;
+        padding: 14px 20px;
         border-bottom: 1px solid var(--wj-border, #e6e9ef);
       }
       .piano-title {
-        font-size: 18px;
+        font-size: var(--wj-fs-xl);
         font-weight: 700;
         color: var(--wj-text);
         letter-spacing: .3px;
@@ -163,20 +163,20 @@
         overflow-y: hidden;
         -webkit-overflow-scrolling: touch;
         overscroll-behavior: contain;
-        padding: 10px;
+        padding: 14px;
         box-sizing: border-box;
         touch-action: pan-x;
       }
-      .piano-scroll::-webkit-scrollbar { height: 3px; }
+      .piano-scroll::-webkit-scrollbar { height: 4px; }
       .piano-scroll::-webkit-scrollbar-thumb {
         background: var(--wj-border-strong, #c9d3e6);
-        border-radius: 2px;
+        border-radius: 3px;
       }
 
       .piano-track {
-        --kw: 60px;
-        --bw: 36px;
-        --gap: 3px;
+        --kw: 84px;
+        --bw: 50px;
+        --gap: 4px;
         display: flex;
         flex-direction: column;
         height: 100%;
@@ -194,9 +194,9 @@
 
       .piano-drag-zone {
         flex: 0 0 auto;
-        height: 40px;
-        margin-top: 8px;
-        border-radius: 6px;
+        height: 56px;
+        margin-top: 11px;
+        border-radius: 8px;
         background: var(--wj-bg-alt, #f0f3f8);
         cursor: grab;
         touch-action: pan-x;
@@ -224,11 +224,11 @@
         flex-direction: column;
         align-items: center;
         justify-content: flex-end;
-        padding-bottom: 14px;
-        border-radius: 8px;
+        padding-bottom: 20px;
+        border-radius: 11px;
         background: #ffffff;
         color: #333;
-        box-shadow: inset 0 -3px 0 #d6dbe7, 0 1px 3px rgba(0, 0, 0, .1);
+        box-shadow: inset 0 -3px 0 #d6dbe7, 0 1px 4px rgba(0, 0, 0, .1);
       }
       .piano-white.is-pending { background: #eef3fa; }
       .piano-white.is-pressed {
@@ -237,7 +237,7 @@
         transform: translateY(1px);
       }
       .piano-white__num {
-        font-size: 16px;
+        font-size: var(--wj-fs-lg);
         font-weight: 700;
         color: #555;
         line-height: 1;
@@ -249,9 +249,9 @@
         z-index: 2;
         width: var(--bw);
         height: 60%;
-        border-radius: 0 0 5px 5px;
+        border-radius: 0 0 7px 7px;
         background: #2a2a2a;
-        box-shadow: inset 0 -3px 0 #000, 0 2px 5px rgba(0, 0, 0, .35);
+        box-shadow: inset 0 -3px 0 #000, 0 3px 7px rgba(0, 0, 0, .35);
       }
       .piano-black.is-pending { background: #3a3a3a; }
       .piano-black.is-pressed {

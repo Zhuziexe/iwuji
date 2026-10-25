@@ -13,22 +13,23 @@
   --wj-font: "Segoe UI",
              "PingFang SC", "Microsoft YaHei", sans-serif;
 
-  /* 字号：整体提升一档 */
-  --wj-fs-xs: 12px;
-  --wj-fs-sm: 16px;
-  --wj-fs-md: 18px;
-  --wj-fs-lg: 24px;
-  --wj-fs-xl: 28px;
+  --wj-fs-2xs: 16px;
+  --wj-fs-xs:  18px;
+  --wj-fs-sm:  20px;
+  --wj-fs-md:  22px;
+  --wj-fs-lg:  24px;
+  --wj-fs-xl:  28px;
+  --wj-fs-2xl: 32px;
+  --wj-fs-3xl: 36px;
+  --wj-fs-4xl: 42px;
+  
+  --wj-gap-xs: 10px;
+  --wj-gap-sm: 14px;
+  --wj-gap:    18px;
+  --wj-gap-lg: 24px;
+  --wj-pad:    18px;   
 
-  /* 间距 */
-  --wj-gap-xs: 8px;
-  --wj-gap-sm: 10px;
-  --wj-gap:    14px;
-  --wj-gap-lg: 20px;
-  --wj-pad:    18px;
-
-  /* 圆角 */
-  --wj-radius-sm: 10px;
-  --wj-radius:    12px;
-  --wj-radius-lg: 16px;
+  --wj-radius-sm: 14px;
+  --wj-radius:    18px;
+  --wj-radius-lg: 22px;
 }

@@ -12,7 +12,7 @@ WujiApps.register({
       display: flex;
       flex-direction: column;
       background: var(--wj-bg, #fff);
-      padding-top: var(--statusbar-h, 26px);
+      padding-top: var(--statusbar-h, 36px);
       overflow: hidden;
       user-select: none;
       -webkit-user-select: none;
@@ -26,13 +26,13 @@ WujiApps.register({
       flex-direction: column;
       align-items: flex-end;
       justify-content: flex-end;
-      gap: 2px;
-      padding: 4px 16px 8px;
+      gap: 3px;
+      padding: 6px 22px 11px;
       overflow: hidden;
     }
 
     .calc-expr {
-      font-size: 14px;
+      font-size: var(--wj-fs-md);
       line-height: 1.15;
       font-weight: 600;
       color: var(--wj-text-dim, #9aa4b8);
@@ -65,18 +65,18 @@ WujiApps.register({
     /* ---------------- 键盘：更大按钮、更小间距 ---------------- */
     .calc-pad {
       flex: 0 0 auto;
-      height: clamp(280px, 48vh, 380px);
+      height: clamp(392px, 48vh, 532px);
       display: grid;
       grid-template-columns: repeat(4, minmax(0, 1fr));
       grid-template-rows: repeat(5, minmax(0, 1fr));
-      gap: 6px;
-      padding: 6px 8px calc(10px + env(safe-area-inset-bottom, 0px));
+      gap: 8px;
+      padding: 8px 11px calc(14px + env(safe-area-inset-bottom, 0px));
       box-sizing: border-box;
     }
 
     .calc-key {
       border: 0;
-      border-radius: 16px;
+      border-radius: 22px;
       background: var(--wj-bg-alt, #eef1f6);
       color: var(--wj-text, #101828);
       font: inherit;
@@ -98,7 +98,7 @@ WujiApps.register({
 
     .calc-key--fn {
       color: var(--wj-text-muted, #5b6478);
-      font-size: 23px;
+      font-size: var(--wj-fs-3xl);
       font-weight: 700;
     }
 
@@ -106,7 +106,7 @@ WujiApps.register({
     .calc-key--eq {
       background: #3a6ff0;
       color: #fff;
-      font-size: 30px;
+      font-size: 42px;
       font-weight: 700;
     }
     .calc-key--op:active,
@@ -115,7 +115,7 @@ WujiApps.register({
     .calc-key--op.is-active {
       background: var(--wj-bg, #fff);
       color: #3a6ff0;
-      box-shadow: inset 0 0 0 2.5px #3a6ff0;
+      box-shadow: inset 0 0 0 4px #3a6ff0;
     }
 
     .calc-key--wide { grid-column: span 2; }

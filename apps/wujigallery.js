@@ -12,30 +12,23 @@ WujiApps.register({
       overflow-y: auto;
       -webkit-overflow-scrolling: touch;
       overscroll-behavior: contain;
-      padding: 18px 16px 28px;
-      padding-top: calc(18px + var(--statusbar-h));
+      padding: 25px 22px 39px;
+      padding-top: calc(25px + var(--statusbar-h));
       background: var(--wj-bg);
-    }
-
-    .market-title {
-      font-size: var(--wj-fs-lg);
-      font-weight: 600;
-      color: var(--wj-text);
-      margin-bottom: var(--wj-gap);
     }
 
     .market-list {
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      gap: 14px;
     }
 
     .market-row {
       display: flex;
       align-items: center;
-      gap: 12px;
-      padding: 14px 16px;
-      border-radius: 14px;
+      gap: 17px;
+      padding: 20px 22px;
+      border-radius: 20px;
       background: var(--wj-bg-alt);
       cursor: pointer;
       -webkit-tap-highlight-color: transparent;
@@ -47,10 +40,10 @@ WujiApps.register({
     }
 
     .market-row__icon {
-      width: 52px;
-      height: 52px;
-      flex: 0 0 52px;
-      border-radius: 12px;
+      width: 73px;
+      height: 73px;
+      flex: 0 0 73px;
+      border-radius: 17px;
       overflow: hidden;
       background: var(--wj-bg-alt);
       display: flex;
@@ -78,15 +71,15 @@ WujiApps.register({
     /* 只有「可更新」才显示徽章 */
     .market-row__badge--update {
       flex: 0 0 auto;
-      font-size: 11px;
+      font-size: var(--wj-fs-xs);
       font-weight: 600;
       letter-spacing: .3px;
-      padding: 3px 9px;
-      border-radius: 999px;
+      padding: 4px 13px;
+      border-radius: 1399px;
       background: var(--wj-primary);
       color: #fff;
       white-space: nowrap;
-      box-shadow: 0 2px 8px rgba(58, 111, 240, .35);
+      box-shadow: 0 3px 11px rgba(58, 111, 240, .35);
     }
 
     .market-empty,
@@ -94,7 +87,7 @@ WujiApps.register({
       text-align: center;
       font-size: var(--wj-fs-xs);
       color: var(--wj-text-dim);
-      padding: 22px 0 4px;
+      padding: 31px 0 6px;
       letter-spacing: .5px;
     }
 
@@ -114,21 +107,21 @@ WujiApps.register({
       -webkit-overflow-scrolling: touch;
       overscroll-behavior: contain;
       padding-top: var(--statusbar-h);
-      padding-bottom: 12px;
+      padding-bottom: 17px;
     }
 
     .market-detail__header {
       display: flex;
       align-items: center;
-      gap: 14px;
-      padding: 20px 18px 10px;
+      gap: 20px;
+      padding: 28px 25px 14px;
     }
 
     .market-detail__icon {
-      width: 64px;
-      height: 64px;
-      flex: 0 0 64px;
-      border-radius: 14px;
+      width: 90px;
+      height: 90px;
+      flex: 0 0 90px;
+      border-radius: 20px;
       overflow: hidden;
       background: var(--wj-bg-alt);
       display: flex;
@@ -143,7 +136,7 @@ WujiApps.register({
     }
 
     .market-detail__name {
-      font-size: 22px;
+      font-size: var(--wj-fs-3xl);
       font-weight: 600;
       color: var(--wj-text);
       letter-spacing: .3px;
@@ -151,12 +144,12 @@ WujiApps.register({
     .market-detail__meta {
       font-size: var(--wj-fs-xs);
       color: var(--wj-text-dim);
-      margin-top: 4px;
+      margin-top: 6px;
     }
 
     .market-detail__hero {
-      margin: 16px 18px 0;
-      border-radius: 14px;
+      margin: 22px 25px 0;
+      border-radius: 20px;
       overflow: hidden;
       background: var(--wj-bg-alt);
     }
@@ -166,7 +159,7 @@ WujiApps.register({
     }
 
     .market-detail__desc {
-      padding: 16px 18px 0;
+      padding: 22px 25px 0;
       font-size: var(--wj-fs-sm);
       color: var(--wj-text-muted);
       line-height: 1.6;
@@ -175,7 +168,7 @@ WujiApps.register({
 
     .market-detail__footer {
       flex: 0 0 auto;
-      padding: 12px 18px calc(12px + env(safe-area-inset-bottom, 0px));
+      padding: 17px 25px calc(17px + env(safe-area-inset-bottom, 0px));
       border-top: .5px solid var(--wj-border);
       background: var(--wj-bg);
     }
@@ -184,14 +177,14 @@ WujiApps.register({
       position: relative;
       display: block;
       width: 100%;
-      height: 48px;
+      height: 67px;
       padding: 0;
       border: 0;
-      border-radius: 999px;
+      border-radius: 1399px;
       background: var(--wj-primary);
       color: #fff;
       font: inherit;
-      font-size: 16px;
+      font-size: var(--wj-fs-lg);
       font-weight: 600;
       cursor: pointer;
       overflow: hidden;
@@ -241,7 +234,7 @@ WujiApps.register({
       render() {
         return `
           <div class="market-page">
-            <h2 class="market-title">应用市场</h2>
+            <h2 class="wj-title">应用市场</h2>
             <div id="marketList" class="market-empty">加载中...</div>
           </div>
         `;

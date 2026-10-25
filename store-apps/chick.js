@@ -148,7 +148,7 @@
     name: '吴际小鸡',
     icon: ICON_URL,
     initialRoute: 'home',
-    version: '1.0.1',
+    version: '1.0.2',
 
     /* 开机：巡检一次 */
     onBoot() {
@@ -174,10 +174,10 @@
 
       .chick-header {
         flex: 0 0 auto;
-        padding: 10px 18px 4px;
+        padding: 14px 25px 6px;
       }
       .chick-title {
-        font-size: 20px;
+        font-size: var(--wj-fs-2xl);
         font-weight: 700;
         color: #5d4037;
         letter-spacing: .3px;
@@ -198,8 +198,8 @@
       }
 
       .chick-svg {
-        width: 140px;
-        height: 140px;
+        width: 196px;
+        height: 196px;
         display: block;
         animation: chickBreathe 2.8s ease-in-out infinite;
         transition: transform .2s;
@@ -222,14 +222,14 @@
         position: absolute;
         top: 10%;
         left: 50%;
-        transform: translateX(-50%) translateY(4px);
+        transform: translateX(-50%) translateY(6px);
         z-index: 10;
-        padding: 8px 14px;
+        padding: 11px 20px;
         background: #fff;
-        border-radius: 14px;
-        font-size: 16px;
+        border-radius: 20px;
+        font-size: var(--wj-fs-lg);
         color: #5d4037;
-        box-shadow: 0 4px 12px rgba(93,64,55,.18);
+        box-shadow: 0 6px 17px rgba(93,64,55,.18);
         white-space: nowrap;
         opacity: 0;
         transition: opacity .25s, transform .25s;
@@ -247,48 +247,48 @@
         margin-left: -6px;
         width: 0;
         height: 0;
-        border-left: 6px solid transparent;
-        border-right: 6px solid transparent;
-        border-top: 6px solid #fff;
+        border-left: 8px solid transparent;
+        border-right: 8px solid transparent;
+        border-top: 8px solid #fff;
       }
 
       .chick-stats {
         flex: 0 0 auto;
-        padding: 0 18px 8px;
+        padding: 0 25px 11px;
         display: flex;
         flex-direction: column;
-        gap: 8px;
+        gap: 11px;
       }
       .chick-stat {
         display: flex;
         align-items: center;
-        gap: 10px;
+        gap: 14px;
       }
       .chick-stat__label {
-        flex: 0 0 32px;
-        font-size: 14px;
+        flex: 0 0 45px;
+        font-size: var(--wj-fs-md);
         color: #8d6e63;
         font-weight: 600;
       }
       .chick-stat__bar {
         flex: 1 1 auto;
-        height: 8px;
-        border-radius: 4px;
+        height: 11px;
+        border-radius: 6px;
         background: rgba(93, 64, 55, .12);
         overflow: hidden;
       }
       .chick-stat__fill {
         height: 100%;
-        border-radius: 4px;
+        border-radius: 6px;
         transition: width .4s cubic-bezier(.2,.7,.3,1);
       }
       .chick-stat__fill--hunger { background: #FF9500; }
       .chick-stat__fill--clean  { background: #3a6ff0; }
       .chick-stat__fill--mood   { background: #e0356b; }
       .chick-stat__val {
-        flex: 0 0 28px;
+        flex: 0 0 39px;
         text-align: right;
-        font-size: 14px;
+        font-size: var(--wj-fs-md);
         color: #8d6e63;
         font-variant-numeric: tabular-nums;
       }
@@ -296,31 +296,31 @@
       .chick-status {
         flex: 0 0 auto;
         text-align: center;
-        font-size: 16px;
+        font-size: var(--wj-fs-lg);
         color: #5d4037;
-        padding: 4px 18px 10px;
+        padding: 6px 25px 14px;
         font-weight: 500;
       }
 
       .chick-actions {
         flex: 0 0 auto;
         display: flex;
-        gap: 8px;
-        padding: 0 14px calc(14px + env(safe-area-inset-bottom, 0px));
+        gap: 11px;
+        padding: 0 20px calc(20px + env(safe-area-inset-bottom, 0px));
       }
       .chick-btn {
         flex: 1 1 0;
-        padding: 14px 0;
+        padding: 20px 0;
         border: 0;
-        border-radius: 14px;
+        border-radius: 20px;
         font: inherit;
-        font-size: 18px;
+        font-size: var(--wj-fs-xl);
         font-weight: 600;
         color: #fff;
         cursor: pointer;
         transition: transform .08s, filter .15s;
         -webkit-tap-highlight-color: transparent;
-        box-shadow: 0 4px 12px rgba(93,64,55,.18);
+        box-shadow: 0 6px 17px rgba(93,64,55,.18);
       }
       .chick-btn:active { transform: scale(.95); filter: brightness(.92); }
       .chick-btn--feed  { background: linear-gradient(180deg, #ffb74d, #ff9500); }

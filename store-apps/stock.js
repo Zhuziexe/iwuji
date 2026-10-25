@@ -538,7 +538,7 @@
     name: '吴际财富',
     icon: './assets/stock.svg',
     initialRoute: 'home',
-    version: '1.1.6',
+    version: '1.1.7',
 
     styles: `
       .stk-page {
@@ -556,35 +556,35 @@
         display: flex;
         align-items: center;
         justify-content: space-between;
-        padding: 6px 12px 4px;
+        padding: 8px 17px 6px;
       }
       .stk-title {
-        font-size: 18px;
+        font-size: var(--wj-fs-xl);
         font-weight: 700;
         color: var(--wj-text);
         letter-spacing: .3px;
       }
       .stk-status {
-        font-size: 14px;
+        font-size: var(--wj-fs-md);
         color: var(--wj-text-muted);
         display: flex;
         align-items: center;
-        gap: 5px;
-        padding: 4px 6px;
-        border-radius: 8px;
+        gap: 7px;
+        padding: 6px 8px;
+        border-radius: 11px;
         -webkit-tap-highlight-color: transparent;
       }
       .stk-status:active { background: var(--wj-bg-alt); }
       .stk-status__dot {
-        width: 8px;
-        height: 8px;
+        width: 11px;
+        height: 11px;
         border-radius: 50%;
         background: var(--wj-text-dim, #999);
         transition: background .3s;
       }
       .stk-status.live .stk-status__dot {
         background: #f85149;
-        box-shadow: 0 0 6px #f85149;
+        box-shadow: 0 0 8px #f85149;
         animation: stk-pulse 2s infinite;
       }
       @keyframes stk-pulse {
@@ -598,17 +598,17 @@
         overflow-y: auto;
         -webkit-overflow-scrolling: touch;
         overscroll-behavior: contain;
-        padding: 4px 12px 12px;
+        padding: 6px 17px 17px;
         display: flex;
         flex-direction: column;
-        gap: 8px;
+        gap: 11px;
       }
 
       .stk-row {
         flex: 0 0 auto;
         background: var(--wj-bg-alt);
-        border-radius: 12px;
-        padding: 10px 12px 8px;
+        border-radius: 17px;
+        padding: 14px 17px 11px;
         cursor: pointer;
         -webkit-tap-highlight-color: transparent;
         transition: transform .08s, filter .12s;
@@ -622,8 +622,8 @@
         display: flex;
         justify-content: space-between;
         align-items: flex-start;
-        gap: 8px;
-        margin-bottom: 4px;
+        gap: 11px;
+        margin-bottom: 6px;
       }
       .stk-row__name {
         display: flex;
@@ -632,13 +632,13 @@
         min-width: 0;
       }
       .stk-name {
-        font-size: 18px;
+        font-size: var(--wj-fs-xl);
         font-weight: 600;
         color: var(--wj-text);
         line-height: 1.2;
       }
       .stk-code {
-        font-size: 14px;
+        font-size: var(--wj-fs-md);
         color: var(--wj-text-dim);
         font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
       }
@@ -649,7 +649,7 @@
         gap: 1px;
       }
       .stk-price {
-        font-size: 18px;
+        font-size: var(--wj-fs-xl);
         font-weight: 700;
         line-height: 1.15;
         font-variant-numeric: tabular-nums;
@@ -657,7 +657,7 @@
         transition: color .4s;
       }
       .stk-change {
-        font-size: 14px;
+        font-size: var(--wj-fs-md);
         font-variant-numeric: tabular-nums;
         font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
       }
@@ -668,7 +668,7 @@
       .stk-spark {
         display: block;
         width: 100%;
-        height: 28px;
+        height: 39px;
         pointer-events: none;
       }
 
@@ -687,26 +687,26 @@
         display: flex;
         align-items: flex-start;
         justify-content: space-between;
-        gap: 10px;
-        padding: 10px 14px 4px;
+        gap: 14px;
+        padding: 14px 20px 6px;
       }
 
       .stk-d-name-group {
         display: flex;
         flex-direction: column;
-        gap: 2px;
+        gap: 3px;
         min-width: 0;
-        padding-top: 2px;
+        padding-top: 3px;
       }
       .stk-d-name {
-        font-size: 20px;
+        font-size: var(--wj-fs-2xl);
         font-weight: 700;
         color: var(--wj-text);
         line-height: 1.15;
         letter-spacing: .2px;
       }
       .stk-d-code {
-        font-size: 14px;
+        font-size: var(--wj-fs-md);
         color: var(--wj-text-dim);
         font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
       }
@@ -714,15 +714,15 @@
         display: flex;
         flex-direction: column;
         align-items: flex-end;
-        gap: 2px;
+        gap: 3px;
       }
-      .stk-d-price .stk-price { font-size: 22px; }
+      .stk-d-price .stk-price { font-size: var(--wj-fs-3xl); }
 
       .stk-d-chart-wrap {
         flex: 1 1 auto;
         min-height: 0;
         position: relative;
-        margin: 4px 10px 0;
+        margin: 6px 14px 0;
       }
       .stk-d-chart-wrap canvas {
         position: absolute;
@@ -738,9 +738,9 @@
         flex: 0 0 auto;
         display: grid;
         grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: 4px 10px;
-        padding: 8px 14px 14px;
-        font-size: 14px;
+        gap: 6px 14px;
+        padding: 11px 20px 20px;
+        font-size: var(--wj-fs-md);
         font-variant-numeric: tabular-nums;
       }
       .stk-d-meta > span {
@@ -748,7 +748,7 @@
         justify-content: space-between;
         align-items: baseline;
         min-width: 0;
-        gap: 4px;
+        gap: 6px;
       }
       .stk-d-meta i {
         font-style: normal;
@@ -761,7 +761,7 @@
         font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
         font-variant-numeric: tabular-nums;
 
-        font-size: 14px;        /* 基准字号，JS 会在此基础上缩小 */
+        font-size: 22px;        /* 基准字号，JS 会在此基础上缩小 */
         line-height: 1.2;
 
         min-width: 0;
@@ -770,7 +770,7 @@
         /* 单行显示，溢出时由 JS 缩小字号；极端情况才裁 */
         white-space: nowrap;
         overflow: hidden;
-        text-overflow: ellipsis;
+        text-overflow: clip;
 
         text-align: right;
       }

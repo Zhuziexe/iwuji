@@ -8,7 +8,7 @@
     name: '日历',
     icon: './assets/calendar.svg',
     initialRoute: 'home',
-    version: '1.0.0',
+    version: '1.0.1',
 
     styles: `
       .cal-page {
@@ -17,8 +17,8 @@
         display: flex;
         flex-direction: column;
         background: #ffffff;
-        padding: calc(14px + var(--statusbar-h)) 16px
-                 calc(20px + env(safe-area-inset-bottom, 0px));
+        padding: calc(20px + var(--statusbar-h)) 22px
+                 calc(28px + env(safe-area-inset-bottom, 0px));
         overflow: hidden;
         user-select: none;
         -webkit-user-select: none;
@@ -29,12 +29,12 @@
       .cal-title {
         flex: 0 0 auto;
         align-self: flex-start;
-        font-size: 22px;
+        font-size: var(--wj-fs-3xl);
         font-weight: 700;
         color: #000000;
         letter-spacing: .5px;
-        margin-top: 6px;
-        margin-bottom: 14px;
+        margin-top: 8px;
+        margin-bottom: 20px;
       }
 
       /* ---------------- 月份栏 ---------------- */
@@ -42,14 +42,14 @@
         flex: 0 0 auto;
         display: flex;
         align-items: center;
-        gap: 8px;
-        padding: 0 2px 12px;
+        gap: 11px;
+        padding: 0 3px 17px;
       }
 
       .cal-month {
         flex: 1 1 auto;
         min-width: 0;
-        font-size: 19px;
+        font-size: var(--wj-fs-2xl);
         font-weight: 600;
         color: #101828;
         letter-spacing: .3px;
@@ -61,13 +61,13 @@
 
       .cal-today-btn {
         flex: 0 0 auto;
-        padding: 6px 12px;
+        padding: 8px 17px;
         border: 0;
-        border-radius: 999px;
+        border-radius: 1399px;
         background: #f2f5fa;
         color: #3a6ff0;
         font: inherit;
-        font-size: 12px;
+        font-size: var(--wj-fs-xs);
         font-weight: 600;
         letter-spacing: .3px;
         cursor: pointer;
@@ -78,8 +78,8 @@
 
       .cal-nav-btn {
         flex: 0 0 auto;
-        width: 34px;
-        height: 34px;
+        width: 48px;
+        height: 48px;
         border: 0;
         border-radius: 50%;
         background: #f2f5fa;
@@ -93,22 +93,22 @@
         -webkit-tap-highlight-color: transparent;
       }
       .cal-nav-btn:active { background: #e2e8f2; transform: scale(.92); }
-      .cal-nav-btn svg { width: 18px; height: 18px; display: block; }
+      .cal-nav-btn svg { width: 25px; height: 25px; display: block; }
 
       /* ---------------- 星期行 ---------------- */
       .cal-weekdays {
         flex: 0 0 auto;
         display: grid;
         grid-template-columns: repeat(7, minmax(0, 1fr));
-        gap: 2px;
-        padding: 0 2px 6px;
-        font-size: 12px;
+        gap: 3px;
+        padding: 0 3px 8px;
+        font-size: var(--wj-fs-xs);
         font-weight: 600;
         color: #9aa4b8;
         letter-spacing: .3px;
         text-align: center;
       }
-      .cal-weekdays span { padding: 4px 0; }
+      .cal-weekdays span { padding: 6px 0; }
       .cal-weekdays span:first-child,
       .cal-weekdays span:last-child { color: #e0356b; }
 
@@ -119,17 +119,17 @@
         display: grid;
         grid-template-columns: repeat(7, minmax(0, 1fr));
         grid-template-rows: repeat(6, minmax(0, 1fr));
-        gap: 2px;
-        padding: 0 2px;
+        gap: 3px;
+        padding: 0 3px;
       }
 
       .cal-day {
         border: 0;
         background: transparent;
-        border-radius: 12px;
+        border-radius: 17px;
         color: #101828;
         font: inherit;
-        font-size: clamp(14px, 4.2vw, 17px);
+        font-size: clamp(20px, 4.2vw, 24px);
         font-weight: 500;
         font-variant-numeric: tabular-nums;
         cursor: pointer;
@@ -160,7 +160,7 @@
         background: #3a6ff0;
         color: #ffffff;
         font-weight: 700;
-        box-shadow: 0 4px 12px rgba(58, 111, 240, .32);
+        box-shadow: 0 6px 17px rgba(58, 111, 240, .32);
       }
     `,
 

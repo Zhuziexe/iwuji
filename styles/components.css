@@ -1,6 +1,6 @@
 .wj-title {
-  font-size: var(--wj-fs-lg);
+  font-size: var(--wj-fs-xl);
   color: var(--wj-text);
-  margin-bottom: 6px;
+  margin-bottom: 8px;
   font-weight: 600;
 }

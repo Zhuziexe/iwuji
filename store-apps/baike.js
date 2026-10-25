@@ -54,7 +54,7 @@
     name: '牛奶百科',
     icon: ICON_URL,
     initialRoute: 'home',
-    version: '1.0.4',
+    version: '1.0.5',
 
     styles: `
       .bk-page {
@@ -69,10 +69,10 @@
 
       .bk-header {
         flex: 0 0 auto;
-        padding: 8px 14px 4px;
+        padding: 11px 20px 6px;
       }
       .bk-title {
-        font-size: 20px;
+        font-size: var(--wj-fs-2xl);
         font-weight: 700;
         color: var(--wj-text);
         letter-spacing: .3px;
@@ -81,20 +81,20 @@
       .bk-search {
         flex: 0 0 auto;
         display: flex;
-        gap: 8px;
-        padding: 6px 14px 10px;
+        gap: 11px;
+        padding: 8px 20px 14px;
       }
       .bk-input {
         flex: 1 1 auto;
         min-width: 0;
-        height: 38px;
-        padding: 0 12px;
+        height: 53px;
+        padding: 0 17px;
         border: 1px solid var(--wj-border, #e6e9ef);
-        border-radius: 10px;
+        border-radius: 14px;
         background: var(--wj-bg-alt);
         color: var(--wj-text);
         font: inherit;
-        font-size: 14px;
+        font-size: var(--wj-fs-md);
         outline: none;
         box-sizing: border-box;
       }
@@ -103,14 +103,14 @@
 
       .bk-search-btn {
         flex: 0 0 auto;
-        height: 38px;
-        padding: 0 16px;
+        height: 53px;
+        padding: 0 22px;
         border: 0;
-        border-radius: 10px;
+        border-radius: 14px;
         background: var(--wj-primary, #3a6ff0);
         color: #fff;
         font: inherit;
-        font-size: 14px;
+        font-size: var(--wj-fs-md);
         font-weight: 600;
         cursor: pointer;
         transition: transform .1s, filter .15s;
@@ -124,33 +124,33 @@
         overflow-y: auto;
         -webkit-overflow-scrolling: touch;
         overscroll-behavior: contain;
-        padding: 0 14px 16px;
+        padding: 0 20px 22px;
       }
 
       .bk-section-title {
-        font-size: 13px;
+        font-size: var(--wj-fs-sm);
         font-weight: 600;
         color: var(--wj-text-muted);
         letter-spacing: .3px;
-        padding: 4px 2px 8px;
+        padding: 6px 3px 11px;
       }
 
       .bk-hot-grid {
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 8px;
+        gap: 11px;
       }
       .bk-hot-item {
         display: flex;
         align-items: center;
         justify-content: center;
-        padding: 14px 10px;
+        padding: 20px 14px;
         border: 1px solid var(--wj-border, #e6e9ef);
-        border-radius: 12px;
+        border-radius: 17px;
         background: var(--wj-bg-alt);
         color: var(--wj-text);
         font: inherit;
-        font-size: 14px;
+        font-size: var(--wj-fs-md);
         font-weight: 500;
         cursor: pointer;
         transition: background .15s, transform .08s;
@@ -172,12 +172,12 @@
         overflow-x: hidden;
         -webkit-overflow-scrolling: touch;
         overscroll-behavior: contain;
-        padding-bottom: 24px;
+        padding-bottom: 34px;
       }
 
       .bk-hero {
         width: 100%;
-        height: 140px;
+        height: 196px;
         background: var(--wj-bg-alt);
         overflow: hidden;
         display: flex;
@@ -195,29 +195,29 @@
       .bk-hero.is-empty {
         background: linear-gradient(135deg, #3a6ff0, #2c5ad0);
         color: #fff;
-        font-size: 48px;
+        font-size: 67px;
       }
 
-      .bk-detail__head { padding: 16px 18px 0; }
+      .bk-detail__head { padding: 22px 25px 0; }
       .bk-word {
-        font-size: 22px;
+        font-size: var(--wj-fs-3xl);
         font-weight: 700;
         color: var(--wj-text);
         letter-spacing: .3px;
-        margin-top: 4px;
+        margin-top: 6px;
       }
 
       .bk-summary {
-        padding: 12px 18px 0;
-        font-size: 14px;
+        padding: 17px 25px 0;
+        font-size: var(--wj-fs-md);
         line-height: 1.65;
         color: var(--wj-text);
         word-break: break-word;
       }
 
       .bk-video-card {
-        margin: 14px 18px 0;
-        border-radius: 14px;
+        margin: 20px 25px 0;
+        border-radius: 20px;
         background: var(--wj-bg-alt);
         overflow: hidden;
         cursor: pointer;
@@ -245,11 +245,11 @@
       }
       .bk-video-play {
         position: absolute;
-        width: 48px;
-        height: 48px;
+        width: 67px;
+        height: 67px;
         border-radius: 50%;
         background: rgba(0,0,0,.55);
-        backdrop-filter: blur(6px);
+        backdrop-filter: blur(8px);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -260,14 +260,14 @@
         display: block;
         width: 0;
         height: 0;
-        border-left: 12px solid #fff;
-        border-top: 7px solid transparent;
-        border-bottom: 7px solid transparent;
-        margin-left: 3px;
+        border-left: 17px solid #fff;
+        border-top: 10px solid transparent;
+        border-bottom: 10px solid transparent;
+        margin-left: 4px;
       }
       .bk-video-title {
-        padding: 10px 14px;
-        font-size: 13px;
+        padding: 14px 20px;
+        font-size: var(--wj-fs-sm);
         color: var(--wj-text);
         font-weight: 500;
         overflow: hidden;
@@ -278,10 +278,10 @@
       /* ---------- 播放器（普通 / 全屏共用控制条样式） ---------- */
       .bk-vp {
         position: relative;
-        margin: 14px 18px 0;
+        margin: 20px 25px 0;
         aspect-ratio: 16 / 9;
         background: #000;
-        border-radius: 14px;
+        border-radius: 20px;
         overflow: hidden;
       }
       .bk-vp__video {
@@ -297,11 +297,11 @@
         left: 0;
         right: 0;
         bottom: 0;
-        padding: 8px 10px calc(8px + env(safe-area-inset-bottom, 0px));
+        padding: 11px 14px calc(11px + env(safe-area-inset-bottom, 0px));
         background: linear-gradient(to top, rgba(0,0,0,.78), rgba(0,0,0,0) 100%);
         display: flex;
         align-items: center;
-        gap: 10px;
+        gap: 14px;
         z-index: 2;
         transition: opacity .2s ease;
       }
@@ -311,8 +311,8 @@
       }
       .bk-vp__btn {
         flex: 0 0 auto;
-        width: 34px;
-        height: 34px;
+        width: 48px;
+        height: 48px;
         padding: 0;
         border: 0;
         border-radius: 50%;
@@ -325,14 +325,14 @@
         -webkit-tap-highlight-color: transparent;
       }
       .bk-vp__btn:active { background: rgba(255,255,255,.32); }
-      .bk-vp__btn svg { width: 14px; height: 14px; display: block; }
+      .bk-vp__btn svg { width: 20px; height: 20px; display: block; }
 
       /* ★ 进度条：34px 触摸区，圆点可拖 */
       .bk-vp__progress {
         position: relative;
         flex: 1 1 auto;
         min-width: 0;
-        height: 34px;
+        height: 48px;
         display: flex;
         align-items: center;
         cursor: pointer;
@@ -346,10 +346,10 @@
         left: 0;
         right: 0;
         top: 50%;
-        height: 4px;
+        height: 6px;
         margin-top: -2px;
         background: rgba(255,255,255,.28);
-        border-radius: 2px;
+        border-radius: 3px;
         overflow: hidden;
         pointer-events: none;
       }
@@ -360,7 +360,7 @@
         bottom: 0;
         width: 0;
         background: var(--wj-primary, #3a6ff0);
-        border-radius: 2px;
+        border-radius: 3px;
         pointer-events: none;
       }
       /* ★ 白色圆点 */
@@ -368,13 +368,13 @@
         position: absolute;
         top: 50%;
         left: 0;
-        width: 18px;
-        height: 18px;
+        width: 25px;
+        height: 25px;
         margin-top: -9px;
         margin-left: -9px;
         border-radius: 50%;
         background: #ffffff;
-        box-shadow: 0 2px 6px rgba(0,0,0,.45), 0 0 0 1px rgba(255,255,255,.4);
+        box-shadow: 0 3px 8px rgba(0,0,0,.45), 0 0 0 1px rgba(255,255,255,.4);
         pointer-events: none;
         will-change: left;
         transition: transform .08s ease;
@@ -384,7 +384,7 @@
       }
       .bk-vp__time {
         flex: 0 0 auto;
-        font-size: 11px;
+        font-size: var(--wj-fs-xs);
         color: #fff;
         font-variant-numeric: tabular-nums;
         letter-spacing: .3px;
@@ -425,11 +425,11 @@
   left: 0;
   right: 0;
   bottom: 0;
-  padding: 10px 12px;
+  padding: 14px 17px;
   background: linear-gradient(to top, rgba(0,0,0,.82), transparent);
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 14px;
   z-index: 3;
   transition: opacity .2s ease;
 }
@@ -447,13 +447,13 @@
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        gap: 14px;
-        padding: 60px 24px;
+        gap: 20px;
+        padding: 84px 34px;
         text-align: center;
       }
       .bk-spinner {
-        width: 64px;
-        height: 64px;
+        width: 90px;
+        height: 90px;
         border-radius: 50%;
         overflow: hidden;
         object-fit: cover;
@@ -463,18 +463,18 @@
       }
       @keyframes bk-spin { to { transform: rotate(360deg); } }
       .bk-state__text {
-        font-size: 14px;
+        font-size: var(--wj-fs-md);
         color: var(--wj-text-muted);
         line-height: 1.6;
       }
       .bk-state__retry {
-        padding: 10px 24px;
+        padding: 14px 34px;
         border: 0;
-        border-radius: 999px;
+        border-radius: 1399px;
         background: var(--wj-primary, #3a6ff0);
         color: #fff;
         font: inherit;
-        font-size: 14px;
+        font-size: var(--wj-fs-md);
         font-weight: 600;
         cursor: pointer;
         -webkit-tap-highlight-color: transparent;

@@ -168,7 +168,7 @@
           <span class="boot-os">OS</span>
         </div>
         <div class="boot-powered">—Powered by—<br /><span
-            style="font-weight: 500;font-size: 16px;letter-spacing: 0.2px;">OpenWuji</span>
+            style="font-weight: 500;font-size: var(--wj-fs-lg);letter-spacing: 0.2px;">OpenWuji</span>
         </div>
       </div>
     </div>
@@ -181,7 +181,7 @@
       </div>
       <div class="update-powered">
         —Powered by—<br />
-        <span style="font-weight: 500;font-size: 16px;letter-spacing: 0.2px;">OpenWuji</span>
+        <span style="font-weight: 500;font-size: var(--wj-fs-lg);letter-spacing: 0.2px;">OpenWuji</span>
       </div>
     </div>
 
@@ -1342,7 +1342,7 @@
           display: flex;
           align-items: center;
           justify-content: center;
-          font-size: 26px;
+          font-size: var(--wj-fs-4xl);
           line-height: 1;
           ${styleAttr}
           will-change: left, top, opacity;
@@ -1434,12 +1434,12 @@
         iconBox.style.cssText = `
           width: ${SZ}px;
           height: ${SZ}px;
-          border-radius: 16px;
+          border-radius: 22px;
           overflow: hidden;
           display: flex;
           align-items: center;
           justify-content: center;
-          font-size: 40px;
+          font-size: 56px;
           line-height: 1;
           ${app.iconStyle || ''}
           will-change: opacity;
@@ -1601,7 +1601,7 @@
     :host {
       position: absolute; inset: 0; display: block;
       font-family: var(--wj-font); color: var(--wj-text);
-      font-size: 16px; line-height: 1.5;
+      font-size: var(--wj-fs-lg); line-height: 1.5;
       -webkit-font-smoothing: antialiased;
       -webkit-text-size-adjust: none; text-size-adjust: none;
       -webkit-tap-highlight-color: transparent;
@@ -1620,7 +1620,7 @@
     }
     img[data-interactive] { pointer-events: auto; }
 
-    .app-page { box-shadow: -4px 0 12px rgba(0, 0, 0, .08); }
+    .app-page { box-shadow: -4px 0 17px rgba(0, 0, 0, .08); }
     .app-body {
       flex: 1 1 auto;
       padding: var(--wj-pad);

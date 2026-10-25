@@ -46,29 +46,29 @@ WujiApps.register({
     .photos-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 8px;
-      margin-top: 12px;
-      padding-bottom: 12px;
+      gap: 11px;
+      margin-top: 17px;
+      padding-bottom: 17px;
     }
 
     .photos-cell {
       aspect-ratio: 1;
-      border-radius: 12px;
+      border-radius: 17px;
       display: flex;
       align-items: center;
       justify-content: center;
       cursor: pointer;
       transition: transform .12s;
-      box-shadow: 0 4px 10px rgba(15,20,45,.12);
+      box-shadow: 0 6px 14px rgba(15,20,45,.12);
       user-select: none;
       -webkit-user-select: none;
     }
     .photos-cell:active { transform: scale(.92); }
 
     .photos-cell__emoji {
-      font-size: 36px;
+      font-size: 50px;
       line-height: 1;
-      filter: drop-shadow(0 2px 4px rgba(0,0,0,.2));
+      filter: drop-shadow(0 3px 6px rgba(0,0,0,.2));
     }
 
     .photos-detail {
@@ -78,7 +78,7 @@ WujiApps.register({
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      gap: 24px;
+      gap: 34px;
       padding: var(--wj-pad);
       background: var(--wj-bg);
       cursor: pointer;
@@ -90,18 +90,18 @@ WujiApps.register({
     .photos-detail__card {
       width: 70%;
       aspect-ratio: 1;
-      border-radius: 24px;
+      border-radius: 34px;
       display: flex;
       align-items: center;
       justify-content: center;
-      box-shadow: 0 20px 50px rgba(15,20,45,.3);
+      box-shadow: 0 28px 70px rgba(15,20,45,.3);
       /* 注意：进入 / 退出动画由 WujiNavigation 负责，这里只保留内层卡片样式 */
     }
 
     .photos-detail__emoji {
-      font-size: 96px;
+      font-size: 134px;
       line-height: 1;
-      filter: drop-shadow(0 4px 10px rgba(0,0,0,.25));
+      filter: drop-shadow(0 6px 14px rgba(0,0,0,.25));
     }
 
     .photos-detail__name {
@@ -112,11 +112,11 @@ WujiApps.register({
 
     .photos-detail__hint {
       position: absolute;
-      bottom: calc(24px + env(safe-area-inset-bottom, 0px));
+      bottom: calc(34px + env(safe-area-inset-bottom, 0px));
       left: 0;
       right: 0;
       text-align: center;
-      font-size: 12px;
+      font-size: var(--wj-fs-xs);
       color: var(--wj-text-dim);
       letter-spacing: .5px;
       pointer-events: none;

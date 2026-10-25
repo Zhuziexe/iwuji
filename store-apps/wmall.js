@@ -36,7 +36,7 @@
     name: '吴际商城',
     icon: './assets/wmall.svg',
     initialRoute: 'home',
-    version: '1.0.5',
+    version: '1.0.6',
     styles: `
   .wmall-page {
     position: absolute;
@@ -44,7 +44,7 @@
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
     overscroll-behavior: contain;
-    padding: 0 0 24px;
+    padding: 0 0 34px;
     padding-top: calc(var(--wj-pad) + var(--statusbar-h));
     background: var(--wj-bg);
     display: flex;
@@ -72,17 +72,17 @@
   .wmall-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 12px;
-    padding: 14px 14px 0;
+    gap: 17px;
+    padding: 20px 20px 0;
   }
 
   .wmall-card {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 10px;
-    padding: 14px 10px 12px;
-    border-radius: 16px;
+    gap: 14px;
+    padding: 20px 14px 17px;
+    border-radius: 22px;
     background: var(--wj-bg-alt);
     text-align: center;
     transition: transform .12s, background .15s;
@@ -93,12 +93,12 @@
   .wmall-card__icon {
     width: 100%;
     aspect-ratio: 1;
-    max-width: 90px;
-    border-radius: 14px;
+    max-width: 126px;
+    border-radius: 20px;
     overflow: hidden;
     background: #fff;
     display: flex; align-items: center; justify-content: center;
-    box-shadow: 0 2px 8px rgba(15, 20, 45, .08);
+    box-shadow: 0 3px 11px rgba(15, 20, 45, .08);
   }
   .wmall-card__icon img {
     width: 100%; height: 100%;
@@ -117,14 +117,14 @@
   }
 
   .wmall-card__price {
-    font-size: 15px;
+    font-size: var(--wj-fs-lg);
     font-weight: 600;
     color: #e0356b;
     letter-spacing: .3px;
   }
   .wmall-card__price::before {
     content: "¥";
-    font-size: 11px;
+    font-size: var(--wj-fs-xs);
     margin-right: 1px;
   }
 
@@ -132,7 +132,7 @@
     text-align: center;
     font-size: var(--wj-fs-xs);
     color: var(--wj-text-dim);
-    padding: 18px 14px 6px;
+    padding: 25px 20px 8px;
     letter-spacing: .5px;
   }
 
@@ -142,10 +142,10 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 12px;
-    padding: 60px 20px;
+    gap: 17px;
+    padding: 84px 28px;
     color: var(--wj-text-muted);
-    font-size: 15px;
+    font-size: var(--wj-fs-lg);
     letter-spacing: .5px;
   }
   .wmall-loading[hidden] { display: none !important; }
@@ -166,7 +166,7 @@
     -webkit-overflow-scrolling: touch;
     overscroll-behavior: contain;
     padding-top: var(--statusbar-h);
-    padding-bottom: 20px;
+    padding-bottom: 28px;
   }
 
   .wmall-detail__hero {
@@ -188,58 +188,58 @@
   }
 
   .wmall-detail__info {
-    padding: 16px 18px 0;
+    padding: 22px 25px 0;
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 11px;
   }
 
   .wmall-detail__name {
-    font-size: 20px;
+    font-size: var(--wj-fs-2xl);
     font-weight: 600;
     color: var(--wj-text);
     letter-spacing: .3px;
   }
 
   .wmall-detail__price {
-    font-size: 26px;
+    font-size: var(--wj-fs-4xl);
     font-weight: 700;
     letter-spacing: .5px;
   }
   .wmall-detail__price::before {
     content: "¥";
-    font-size: 15px;
+    font-size: var(--wj-fs-lg);
     font-weight: 500;
-    margin-right: 2px;
+    margin-right: 3px;
   }
   .wmall-detail__price.is-blue { color: #3a6ff0; }
 
-  .wmall-chips { margin-top: 14px; }
+  .wmall-chips { margin-top: 20px; }
 
   .wmall-chips__title {
-    font-size: 15px;
+    font-size: var(--wj-fs-lg);
     font-weight: 600;
     color: var(--wj-text);
-    margin-bottom: 8px;
+    margin-bottom: 11px;
   }
 
   .wmall-chips__list {
     display: flex;
     flex-wrap: wrap;
-    gap: 4px;
+    gap: 6px;
   }
 
   .wmall-chip {
     display: inline-flex;
     align-items: center;
-    gap: 4px;
-    padding: 2px 8px 2px 2px;
-    border: 1.5px solid var(--wj-border, #e6e9ef);
-    border-radius: 999px;
+    gap: 6px;
+    padding: 3px 11px 3px 3px;
+    border: 2px solid var(--wj-border, #e6e9ef);
+    border-radius: 1399px;
     background: var(--wj-bg-alt);
     color: var(--wj-text);
     font: inherit;
-    font-size: 13px;
+    font-size: var(--wj-fs-sm);
     font-weight: 500;
     white-space: nowrap;
     transition: border-color .15s, background .15s, color .15s, transform .1s;
@@ -247,7 +247,7 @@
   }
   .wmall-chip:active { transform: scale(.96); }
   .wmall-chip img {
-    width: 26px; height: 26px;
+    width: 36px; height: 36px;
     border-radius: 50%;
     object-fit: cover;
     background: #fff;
@@ -262,24 +262,24 @@
   }
 
   .wmall-specs {
-    margin-top: 14px;
+    margin-top: 20px;
     display: flex;
     flex-direction: column;
   }
   .wmall-specs__title {
-    font-size: 15px;
+    font-size: var(--wj-fs-lg);
     font-weight: 600;
     color: var(--wj-text);
-    margin-bottom: 4px;
+    margin-bottom: 6px;
   }
   .wmall-specs__row {
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
-    gap: 12px;
-    padding: 11px 0;
+    gap: 17px;
+    padding: 15px 0;
     border-bottom: .5px solid var(--wj-border, #e6e9ef);
-    font-size: 13px;
+    font-size: var(--wj-fs-sm);
   }
   .wmall-specs__row span {
     flex: 0 0 auto;
@@ -291,23 +291,23 @@
     text-align: right;
   }
   .wmall-specs__note {
-    font-size: 11px;
+    font-size: var(--wj-fs-xs);
     color: var(--wj-text-dim);
     line-height: 1.6;
-    margin-top: 6px;
-    padding-right: 4px;
+    margin-top: 8px;
+    padding-right: 6px;
   }
   .wmall-specs__row:has(+ .wmall-specs__note) {
     border-bottom: none;
   }
   .wmall-specs__note:has(+ .wmall-specs__row) {
     border-bottom: .5px solid var(--wj-border, #e6e9ef);
-    padding-bottom: 6px;
+    padding-bottom: 8px;
   }
 
   .wmall-detail__footer {
     flex: 0 0 auto;
-    padding: 10px 16px;
+    padding: 14px 22px;
     background: var(--wj-bg);
     border-top: .5px solid var(--wj-border, #e6e9ef);
   }
@@ -315,13 +315,13 @@
   .wmall-buy-btn {
     display: block;
     width: 100%;
-    padding: 14px 20px;
+    padding: 20px 28px;
     border: 0;
-    border-radius: 999px;
+    border-radius: 1399px;
     background: #3a6ff0;
     color: #fff;
     font: inherit;
-    font-size: 16px;
+    font-size: var(--wj-fs-lg);
     font-weight: 600;
     transition: transform .1s, background .15s, opacity .15s;
     -webkit-tap-highlight-color: transparent;
@@ -340,38 +340,38 @@
   .wmall-checkout {
     position: absolute;
     inset: 0;
-    padding: calc(var(--wj-pad) + var(--statusbar-h)) 20px 0;
+    padding: calc(var(--wj-pad) + var(--statusbar-h)) 28px 0;
     background: var(--wj-bg);
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 22px;
+    gap: 31px;
   }
 
   .wmall-checkout__title {
-    font-size: 22px;
+    font-size: var(--wj-fs-3xl);
     font-weight: 700;
     color: var(--wj-text);
     letter-spacing: 1px;
-    margin-top: 24px;
+    margin-top: 34px;
   }
 
   .wmall-checkout__amount {
-    font-size: 60px;
+    font-size: 84px;
     font-weight: 700;
     color: #3a6ff0;
     letter-spacing: 1px;
     line-height: 1;
-    margin-top: 8px;
+    margin-top: 11px;
   }
   .wmall-checkout__amount::before {
     content: "¥";
-    font-size: 30px;
+    font-size: 42px;
     font-weight: 500;
-    margin-right: 4px;
+    margin-right: 6px;
   }
   .wmall-checkout__error {
-    font-size: 15px;
+    font-size: var(--wj-fs-lg);
     font-weight: 600;
     color: #e0356b;
     letter-spacing: .5px;
@@ -383,17 +383,17 @@
   @keyframes wmall-angry {
     0%   { transform: translateX(0)    scale(1);   opacity: 0; }
     10%  { transform: translateX(-6px) scale(1.15); opacity: 1; }
-    20%  { transform: translateX(6px)  scale(1.15); }
+    20%  { transform: translateX(8px)  scale(1.15); }
     30%  { transform: translateX(-6px) scale(1.15); }
-    40%  { transform: translateX(6px)  scale(1.15); }
+    40%  { transform: translateX(8px)  scale(1.15); }
     50%  { transform: translateX(-4px) scale(1.1); }
-    60%  { transform: translateX(4px)  scale(1.1); }
+    60%  { transform: translateX(6px)  scale(1.1); }
     100% { transform: translateX(0)    scale(1); }
   }
 
   .wmall-checkout__ad {
     margin-top: auto;
-    width: calc(100% + 40px);
+    width: calc(100% + 56px);
     margin-left: -20px;
     margin-right: -20px;
     display: block;
@@ -411,16 +411,16 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 12px;
-    font-size: 15px;
+    gap: 17px;
+    font-size: var(--wj-fs-lg);
     color: var(--wj-text-muted);
     letter-spacing: .5px;
   }
   .wmall-spinner {
-    width: 34px;
-    height: 34px;
+    width: 48px;
+    height: 48px;
     box-sizing: border-box;
-    border: 3px solid rgba(58, 111, 240, .18);
+    border: 4px solid rgba(58, 111, 240, .18);
     border-top-color: #3a6ff0;
     border-radius: 50%;
     animation: wmall-spin .8s linear infinite;
@@ -443,7 +443,7 @@
         render() {
           return `
             <div class="wmall-page">
-              <h2 class="wj-title" style="margin-left: 18px;">吴际商城</h2>
+              <h2 class="wj-title" style="margin-left: 25px;">吴际商城</h2>
 
               <div class="wmall-loading" id="wjHomeLoading">
                 <div class="wmall-spinner"></div>
@@ -535,7 +535,7 @@
           if (!product) {
             return `
               <div class="wmall-detail">
-                <div class="wmall-detail__scroll" style="padding:40px 20px;text-align:center;">
+                <div class="wmall-detail__scroll" style="padding:56px 28px;text-align:center;">
                   商品不存在
                 </div>
               </div>

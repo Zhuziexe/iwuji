@@ -47,7 +47,7 @@
     name: '吴际圈',
     icon: './assets/wujiquan.svg',
     initialRoute: 'home',
-    version: '1.0.1',
+    version: '1.0.2',
 
     styles: `
       .wq-page {
@@ -65,19 +65,19 @@
         display: flex;
         align-items: center;
         justify-content: space-between;
-        gap: 10px;
-        padding: 8px 14px 6px;
+        gap: 14px;
+        padding: 11px 20px 8px;
       }
       .wq-compose-btn {
         flex: 0 0 auto;
-        height: 34px;
-        padding: 0 16px;
+        height: 48px;
+        padding: 0 22px;
         border: 0;
-        border-radius: 10px;
+        border-radius: 14px;
         background: var(--wj-primary, #3a6ff0);
         color: #fff;
         font: inherit;
-        font-size: 14px;
+        font-size: var(--wj-fs-md);
         font-weight: 600;
         cursor: pointer;
         -webkit-tap-highlight-color: transparent;
@@ -90,27 +90,27 @@
         overflow-y: auto;
         -webkit-overflow-scrolling: touch;
         overscroll-behavior: contain;
-        padding: 4px 12px 12px;
+        padding: 6px 17px 17px;
         display: flex;
         flex-direction: column;
-        gap: 8px;
+        gap: 11px;
       }
 
       .wq-post {
         flex: 0 0 auto;
         background: var(--wj-bg-alt);
-        border-radius: 12px;
-        padding: 10px 12px;
+        border-radius: 17px;
+        padding: 14px 17px;
       }
       .wq-post__head {
         display: flex;
         align-items: baseline;
-        gap: 8px;
-        margin-bottom: 4px;
+        gap: 11px;
+        margin-bottom: 6px;
         min-width: 0;
       }
       .wq-name {
-        font-size: 16px;
+        font-size: var(--wj-fs-lg);
         font-weight: 600;
         color: var(--wj-primary, #3a6ff0);
         flex: 0 1 auto;
@@ -119,13 +119,13 @@
         white-space: nowrap;
       }
       .wq-time {
-        font-size: 14px;
+        font-size: var(--wj-fs-md);
         color: var(--wj-text-dim);
         flex: 0 0 auto;
         font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
       }
       .wq-content {
-        font-size: 16px;
+        font-size: var(--wj-fs-lg);
         line-height: 1.55;
         color: var(--wj-text);
         white-space: pre-wrap;
@@ -137,30 +137,30 @@
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        gap: 14px;
-        padding: 50px 20px;
+        gap: 20px;
+        padding: 70px 28px;
         text-align: center;
-        font-size: 15px;
+        font-size: var(--wj-fs-lg);
         color: var(--wj-text-muted);
         line-height: 1.6;
       }
       .wq-spinner {
-        width: 28px;
-        height: 28px;
+        width: 39px;
+        height: 39px;
         border-radius: 50%;
-        border: 3px solid var(--wj-border, #e6e9ef);
+        border: 4px solid var(--wj-border, #e6e9ef);
         border-top-color: var(--wj-primary, #3a6ff0);
         animation: wq-spin .85s linear infinite;
       }
       @keyframes wq-spin { to { transform: rotate(360deg); } }
       .wq-retry {
-        padding: 10px 24px;
+        padding: 14px 34px;
         border: 0;
-        border-radius: 999px;
+        border-radius: 1399px;
         background: var(--wj-primary, #3a6ff0);
         color: #fff;
         font: inherit;
-        font-size: 15px;
+        font-size: var(--wj-fs-lg);
         font-weight: 600;
         cursor: pointer;
         -webkit-tap-highlight-color: transparent;
@@ -180,25 +180,25 @@
         display: flex;
         align-items: center;
         justify-content: space-between;
-        gap: 8px;
-        padding: 8px 12px;
+        gap: 11px;
+        padding: 11px 17px;
       }
       .wq-compose__title {
-        font-size: 18px;
+        font-size: var(--wj-fs-xl);
         font-weight: 600;
         color: var(--wj-text);
       }
 
       .wq-submit {
         flex: 0 0 auto;
-        height: 34px;
-        padding: 0 16px;
+        height: 48px;
+        padding: 0 22px;
         border: 0;
-        border-radius: 10px;
+        border-radius: 14px;
         background: var(--wj-primary, #3a6ff0);
         color: #fff;
         font: inherit;
-        font-size: 16px;
+        font-size: var(--wj-fs-lg);
         font-weight: 600;
         cursor: pointer;
         -webkit-tap-highlight-color: transparent;
@@ -211,8 +211,8 @@
         min-height: 0;
         display: flex;
         flex-direction: column;
-        gap: 10px;
-        padding: 4px 12px 12px;
+        gap: 14px;
+        padding: 6px 17px 17px;
       }
 
       .wq-input,
@@ -220,13 +220,13 @@
         width: 100%;
         box-sizing: border-box;
         border: 1px solid var(--wj-border, #e6e9ef);
-        border-radius: 10px;
+        border-radius: 14px;
         background: var(--wj-bg-alt);
         color: var(--wj-text);
         font: inherit;
-        font-size: 15px;
+        font-size: var(--wj-fs-lg);
         outline: none;
-        padding: 10px 12px;
+        padding: 14px 17px;
         -webkit-appearance: none;
         appearance: none;
       }
@@ -235,21 +235,21 @@
       .wq-input::placeholder,
       .wq-textarea::placeholder { color: var(--wj-text-dim); }
 
-      .wq-input { flex: 0 0 auto; height: 44px; }
+      .wq-input { flex: 0 0 auto; height: 62px; }
 
       .wq-textarea {
         flex: 1 1 auto;
-        min-height: 100px;
+        min-height: 140px;
         resize: none;
         line-height: 1.5;
       }
 
       .wq-msg {
         flex: 0 0 auto;
-        font-size: 13px;
+        font-size: var(--wj-fs-sm);
         color: #c0392b;
-        min-height: 18px;
-        padding: 0 2px;
+        min-height: 25px;
+        padding: 0 3px;
       }
     `,
 

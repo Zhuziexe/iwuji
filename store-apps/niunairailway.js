@@ -204,7 +204,7 @@
     name: '牛奶铁路',
     icon: './assets/niunairailway.svg',
     initialRoute: 'home',
-    version: '1.0.4',
+    version: '1.0.5',
 
     styles: `
       .rail-page {
@@ -213,23 +213,23 @@
         overflow-y: auto;
         -webkit-overflow-scrolling: touch;
         overscroll-behavior: contain;
-        padding: calc(var(--wj-pad) + var(--statusbar-h)) 16px 24px;
+        padding: calc(var(--wj-pad) + var(--statusbar-h)) 22px 34px;
         background: var(--wj-bg);
         display: flex;
         flex-direction: column;
-        gap: 12px;
+        gap: 17px;
       }
 
       .rail-title {
-        font-size: 22px;
+        font-size: var(--wj-fs-3xl);
         font-weight: 700;
         color: var(--wj-text);
         letter-spacing: .5px;
-        margin-top: 4px;
+        margin-top: 6px;
       }
 
       .rail-subtitle {
-        font-size: 15px;
+        font-size: var(--wj-fs-lg);
         color: var(--wj-text-muted);
         margin-top: -8px;
         letter-spacing: .3px;
@@ -239,9 +239,9 @@
       .rail-picker {
         display: flex;
         align-items: center;
-        gap: 12px;
-        padding: 16px 18px;
-        border-radius: 14px;
+        gap: 17px;
+        padding: 22px 25px;
+        border-radius: 20px;
         background: var(--wj-bg-alt);
         cursor: pointer;
         transition: background .15s, transform .08s;
@@ -255,13 +255,13 @@
       }
       .rail-picker__label {
         flex: 0 0 auto;
-        font-size: 17px;
+        font-size: var(--wj-fs-xl);
         font-weight: 600;
         color: var(--wj-text);
       }
       .rail-picker__value {
         flex: 1 1 auto;
-        font-size: 17px;
+        font-size: var(--wj-fs-xl);
         color: var(--wj-text);
         text-align: right;
         overflow: hidden;
@@ -273,15 +273,15 @@
       }
 
       .rail-btn {
-        margin-top: 8px;
+        margin-top: 11px;
         width: 100%;
-        padding: 16px;
+        padding: 22px;
         border: 0;
-        border-radius: 999px;
+        border-radius: 1399px;
         background: var(--wj-primary, #3a6ff0);
         color: #fff;
         font: inherit;
-        font-size: 18px;
+        font-size: var(--wj-fs-xl);
         font-weight: 600;
         cursor: pointer;
         transition: transform .08s, opacity .15s, background .15s;
@@ -295,29 +295,29 @@
 
       .rail-error {
         text-align: center;
-        font-size: 15px;
+        font-size: var(--wj-fs-lg);
         font-weight: 500;
         color: var(--wj-danger, #e0356b);
-        min-height: 20px;
+        min-height: 28px;
         letter-spacing: .3px;
       }
 
       .rail-grid {
         display: grid;
         grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: 10px;
+        gap: 14px;
       }
       .rail-station {
         display: flex;
         align-items: center;
         justify-content: center;
-        padding: 16px 6px;
+        padding: 22px 8px;
         border: 0;
-        border-radius: 12px;
+        border-radius: 17px;
         background: var(--wj-bg-alt);
         color: var(--wj-text);
         font: inherit;
-        font-size: 17px;
+        font-size: var(--wj-fs-xl);
         font-weight: 500;
         cursor: pointer;
         transition: transform .08s, background .15s, color .15s;
@@ -337,9 +337,9 @@
 
       .rail-end {
         text-align: center;
-        font-size: 13px;
+        font-size: var(--wj-fs-sm);
         color: var(--wj-text-dim);
-        padding: 18px 0 6px;
+        padding: 25px 0 8px;
         letter-spacing: .5px;
       }
 
@@ -348,14 +348,14 @@
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        gap: 16px;
-        padding: 60px 16px 40px;
+        gap: 22px;
+        padding: 84px 22px 56px;
       }
       .rail-loading[hidden] { display: none !important; }
 
       .rail-loading__img {
-        width: 64px;
-        height: 64px;
+        width: 90px;
+        height: 90px;
         border-radius: 50%;
         object-fit: cover;
         display: block;
@@ -363,7 +363,7 @@
       }
 
       .rail-loading__text {
-        font-size: 17px;
+        font-size: var(--wj-fs-xl);
         color: var(--wj-text-muted);
         letter-spacing: .5px;
       }
@@ -376,16 +376,16 @@
       .rail-result-body {
         display: flex;
         flex-direction: column;
-        gap: 10px;
+        gap: 14px;
       }
       .rail-result-body[hidden] { display: none !important; }
 
       .rail-card {
         display: flex;
         flex-direction: column;
-        gap: 6px;
-        padding: 16px 18px;
-        border-radius: 14px;
+        gap: 8px;
+        padding: 22px 25px;
+        border-radius: 20px;
         background: var(--wj-bg-alt);
         cursor: pointer;
         transition: transform .08s, background .15s;
@@ -396,7 +396,7 @@
         background: #dae2f0;
       }
       .rail-card__times {
-        font-size: 20px;
+        font-size: var(--wj-fs-2xl);
         font-weight: 700;
         color: var(--wj-text);
         letter-spacing: -.3px;
@@ -404,8 +404,8 @@
       .rail-card__meta {
         display: flex;
         align-items: center;
-        gap: 8px;
-        font-size: 15px;
+        gap: 11px;
+        font-size: var(--wj-fs-lg);
         color: var(--wj-text-muted);
         flex-wrap: wrap;
       }
@@ -416,17 +416,17 @@
       .rail-card__routes {
         display: flex;
         flex-wrap: wrap;
-        gap: 6px;
-        margin-top: 2px;
+        gap: 8px;
+        margin-top: 3px;
       }
       .rail-card__tag {
         display: inline-flex;
         align-items: center;
-        padding: 4px 11px;
-        border-radius: 999px;
+        padding: 6px 15px;
+        border-radius: 1399px;
         background: rgba(58, 111, 240, .10);
         color: var(--wj-primary, #3a6ff0);
-        font-size: 13px;
+        font-size: var(--wj-fs-sm);
         font-weight: 600;
         letter-spacing: .3px;
       }
@@ -434,70 +434,70 @@
       .rail-legs {
         display: flex;
         flex-direction: column;
-        gap: 12px;
+        gap: 17px;
       }
       .rail-leg {
         display: flex;
         flex-direction: column;
-        gap: 10px;
-        padding: 16px 18px;
-        border-radius: 14px;
+        gap: 14px;
+        padding: 22px 25px;
+        border-radius: 20px;
         background: var(--wj-bg-alt);
       }
       .rail-leg__head {
         display: flex;
         align-items: flex-start;
-        gap: 12px;
+        gap: 17px;
       }
       .rail-leg__icon {
-        flex: 0 0 34px;
-        width: 34px;
-        height: 34px;
+        flex: 0 0 48px;
+        width: 48px;
+        height: 48px;
         border-radius: 50%;
         background: #fff;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 17px;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, .06);
+        font-size: var(--wj-fs-xl);
+        box-shadow: 0 1px 4px rgba(0, 0, 0, .06);
       }
       .rail-leg__content {
         flex: 1 1 auto;
         min-width: 0;
         display: flex;
         flex-direction: column;
-        gap: 3px;
+        gap: 4px;
       }
       .rail-leg__route {
-        font-size: 17px;
+        font-size: var(--wj-fs-xl);
         font-weight: 600;
         color: var(--wj-text);
       }
       .rail-leg__time {
-        font-size: 14px;
+        font-size: var(--wj-fs-md);
         color: var(--wj-text-muted);
         letter-spacing: .3px;
       }
       .rail-leg__stops {
         position: relative;
-        padding-left: 46px;
+        padding-left: 64px;
       }
       .rail-leg__stops::before {
         content: '';
         position: absolute;
-        left: 16px;
-        top: 8px;
-        bottom: 8px;
-        width: 2px;
+        left: 22px;
+        top: 11px;
+        bottom: 11px;
+        width: 3px;
         background: var(--wj-border, #e6e9ef);
         border-radius: 1px;
       }
       .rail-stop {
         display: flex;
         align-items: baseline;
-        gap: 10px;
-        padding: 6px 0;
-        font-size: 15px;
+        gap: 14px;
+        padding: 8px 0;
+        font-size: var(--wj-fs-lg);
         color: var(--wj-text-muted);
         position: relative;
       }
@@ -507,11 +507,11 @@
         left: -34px;
         top: 50%;
         transform: translateY(-50%);
-        width: 9px;
-        height: 9px;
+        width: 13px;
+        height: 13px;
         border-radius: 50%;
         background: #fff;
-        border: 2px solid var(--wj-border, #e6e9ef);
+        border: 3px solid var(--wj-border, #e6e9ef);
         box-sizing: border-box;
       }
       .rail-stop--endpoint {
@@ -524,7 +524,7 @@
       }
       .rail-stop__time {
         flex: 0 0 auto;
-        min-width: 48px;
+        min-width: 67px;
         font-variant-numeric: tabular-nums;
         color: var(--wj-text-dim);
       }
@@ -541,9 +541,9 @@
 
       .rail-empty {
         text-align: center;
-        padding: 40px 16px;
+        padding: 56px 22px;
         color: var(--wj-text-muted);
-        font-size: 16px;
+        font-size: var(--wj-fs-lg);
         line-height: 1.6;
       }
     `,

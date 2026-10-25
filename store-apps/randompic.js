@@ -11,7 +11,7 @@
     name: '随机图片',
     icon: ICON_URL,
     initialRoute: 'home',
-    version: '1.0.0',
+    version: '1.0.1',
 
     styles: `
       .rp-page {
@@ -51,7 +51,7 @@
         left: 0;
         right: 0;
         bottom: 0;
-        height: 120px;
+        height: 168px;
         background: linear-gradient(to top, rgba(0,0,0,.65), transparent);
         pointer-events: none;
         z-index: 2;
@@ -60,23 +60,23 @@
 
       .rp-refresh {
         position: absolute;
-        right: 16px;
-        bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+        right: 22px;
+        bottom: calc(28px + env(safe-area-inset-bottom, 0px));
         z-index: 5;
-        width: 52px;
-        height: 52px;
+        width: 73px;
+        height: 73px;
         padding: 0;
         border: 0;
         border-radius: 50%;
         background: rgba(255,255,255,.16);
-        backdrop-filter: blur(12px);
-        -webkit-backdrop-filter: blur(12px);
+        backdrop-filter: blur(17px);
+        -webkit-backdrop-filter: blur(17px);
         color: #fff;
         cursor: pointer;
         display: flex;
         align-items: center;
         justify-content: center;
-        box-shadow: 0 4px 14px rgba(0,0,0,.35);
+        box-shadow: 0 6px 20px rgba(0,0,0,.35);
         transition: background .15s, transform .1s, opacity .25s ease;
         -webkit-tap-highlight-color: transparent;
       }
@@ -86,8 +86,8 @@
       }
       .rp-refresh:disabled { cursor: default; }
       .rp-refresh svg {
-        width: 22px;
-        height: 22px;
+        width: 31px;
+        height: 31px;
         display: block;
         transition: transform .3s;
       }
@@ -111,19 +111,19 @@
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        gap: 14px;
+        gap: 20px;
         color: rgba(255,255,255,.85);
-        font-size: 13px;
+        font-size: var(--wj-fs-sm);
         letter-spacing: .5px;
         background: #0f1116;
         z-index: 3;
       }
 
       .rp-spinner {
-        width: 32px;
-        height: 32px;
+        width: 45px;
+        height: 45px;
         border-radius: 50%;
-        border: 3px solid rgba(255,255,255,.18);
+        border: 4px solid rgba(255,255,255,.18);
         border-top-color: #fff;
         animation: rp-spin .85s linear infinite;
       }
@@ -135,26 +135,26 @@
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        gap: 16px;
+        gap: 22px;
         background: #0f1116;
         color: rgba(255,255,255,.85);
-        font-size: 14px;
+        font-size: var(--wj-fs-md);
         text-align: center;
-        padding: 30px;
+        padding: 42px;
         z-index: 3;
       }
       .rp-error__icon {
-        font-size: 44px;
+        font-size: 62px;
         opacity: .4;
       }
       .rp-error__retry {
-        padding: 10px 28px;
+        padding: 14px 39px;
         border: 0;
-        border-radius: 999px;
+        border-radius: 1399px;
         background: rgba(255,255,255,.14);
         color: #fff;
         font: inherit;
-        font-size: 14px;
+        font-size: var(--wj-fs-md);
         font-weight: 600;
         cursor: pointer;
         -webkit-tap-highlight-color: transparent;
@@ -164,14 +164,14 @@
       .rp-toast {
         position: absolute;
         left: 50%;
-        bottom: 90px;
-        transform: translateX(-50%) translateY(10px);
-        padding: 8px 18px;
-        border-radius: 999px;
+        bottom: 126px;
+        transform: translateX(-50%) translateY(14px);
+        padding: 11px 25px;
+        border-radius: 1399px;
         background: rgba(0,0,0,.72);
-        backdrop-filter: blur(8px);
+        backdrop-filter: blur(11px);
         color: #fff;
-        font-size: 12px;
+        font-size: var(--wj-fs-xs);
         letter-spacing: .5px;
         white-space: nowrap;
         pointer-events: none;
