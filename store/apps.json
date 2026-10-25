@@ -18,7 +18,7 @@
     { "bundle": "com.wujios.note", "name": "备忘录", "icon": "./assets/note.svg", "version": "1.0.6", "author": "Wuji", "description": "备忘录官方正版", "longdescription": "WujiOS系统备忘录", "src": "./store-apps/note.js" },
     { "bundle": "com.wujinb.catchstars", "name": "接住星星", "icon": "./assets/catchstars.svg", "version": "1.0.3", "author": "Wuji", "description": "接住星星官方正版", "longdescription": "60 秒内移动笑脸接住掉落的星星，别被屎砸到。", "src": "./store-apps/catchstars.js" },
     { "bundle": "com.wujinb.wujiquan", "name": "吴际圈", "icon": "./assets/wujiquan.svg", "version": "1.0.2", "author": "Wuji", "description": "吴际圈官方正版", "longdescription": "你的生活兴趣社区", "src": "./store-apps/wujiquan.js" },
-    { "bundle": "com.wujinb.aihot", "name": "AI新闻", "icon": "./assets/aihot.svg", "version": "1.0.4", "author": "Wuji", "description": "AI新闻官方正版", "longdescription": "精选AI新闻", "src": "./store-apps/aihot.js" },
+    { "bundle": "com.wujinb.aihot", "name": "AI新闻", "icon": "./assets/aihot.svg", "version": "1.0.5", "author": "Wuji", "description": "AI新闻官方正版", "longdescription": "精选AI新闻", "src": "./store-apps/aihot.js" },
     { "bundle": "com.wujinb.dice", "name": "骰子", "icon": "./assets/dice.svg", "version": "1.0.2", "author": "Wuji", "description": "骰子官方正版", "longdescription": "一个骰子，生成1~6随机数", "src": "./store-apps/dice.js" },
     { "bundle": "com.wujinb.stock", "name": "吴际财富", "icon": "./assets/stock.svg", "version": "1.1.7", "author": "Wuji", "description": "吴际财富官方正版", "longdescription": "吴际财富官方正版", "src": "./store-apps/stock.js" },
     { "bundle": "com.niunai.niunairailway", "name": "牛奶铁路", "icon": "./assets/niunairailway.svg", "version": "1.0.5", "author": "Niunai", "description": "牛奶铁路官方正版", "longdescription": "牛奶铁路，查询高铁/火车路线", "src": "./store-apps/niunairailway.js" },

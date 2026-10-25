@@ -71,7 +71,7 @@
   async function fetchItems(cat) {
     const params = new URLSearchParams({
       mode: 'selected',
-      window: '24h',
+      window: '7d',
       limit: String(PAGE_SIZE),
       by: 'timeline',
     });
@@ -109,7 +109,7 @@
     bundlename: BUNDLE,
     name: 'AI新闻',
     icon: './assets/aihot.svg',
-    version: '1.0.4',
+    version: '1.0.5',
     initialRoute: 'home',
 
     styles: `
