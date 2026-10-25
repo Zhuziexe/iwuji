@@ -2481,6 +2481,55 @@
       try { WujiApps.boot(); } catch (e) { console.error(e); }
     }
 
+    async function updateAllMarketApps() {
+      let market;
+      try {
+        const res = await fetch('store/apps.json?t=' + Date.now(), { cache: 'no-store' });
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const raw = await res.json();
+        market = Array.isArray(raw) ? raw : (raw && Array.isArray(raw.apps) ? raw.apps : []);
+      } catch (e) {
+        console.warn('[update] 获取市场失败', e);
+        return [];
+      }
+
+      const installed = new Set(
+        WujiAppInstaller.list().map(a => a.bundle).filter(Boolean)
+      );
+
+      const results = [];
+      for (const m of market) {
+        if (!m.bundle || !installed.has(m.bundle)) continue;
+
+        const local = WujiAppInstaller.get(m.bundle);
+        if (!local) continue;
+
+        let cmp = 0;
+        try {
+          cmp = WujiAppInstaller.cmpVer(local.version, m.version);
+        } catch {
+          cmp = String(local.version) === String(m.version) ? 0 : -1;
+        }
+        if (cmp >= 0) continue;
+
+        try {
+          const r = await WujiAppInstaller.install({
+            bundle: m.bundle,
+            name: m.name,
+            icon: m.icon,
+            version: m.version,
+            author: m.author,
+            description: m.description,
+            src: m.src,
+          });
+          results.push({ bundle: m.bundle, ...r });
+        } catch (e) {
+          results.push({ bundle: m.bundle, ok: false, error: e });
+        }
+      }
+      return results;
+    }
+
     async function runUpdate() {
       setPower('updating');
 
@@ -2494,7 +2543,7 @@
       const DURATION = 10000;
       const start = performance.now();
 
-      await new Promise(resolve => {
+      const progressPromise = new Promise(resolve => {
         const tick = now => {
           if (!bar || !bar.isConnected) return resolve();
           const p = Math.min(1, (now - start) / DURATION);
@@ -2505,18 +2554,28 @@
         requestAnimationFrame(tick);
       });
 
+      const [, appResults] = await Promise.all([
+        progressPromise,
+        updateAllMarketApps().catch(e => {
+          console.warn('[update] 应用更新失败', e);
+          return [];
+        }),
+      ]);
+
+      if (appResults.length) {
+        const ok = appResults.filter(r => r.ok).length;
+        console.log(`[update] 市场应用更新完成：${ok}/${appResults.length}`);
+      }
+
       Store.set('wujios.lastbootversion', '1.0.115');
 
       await sleep(400);
-
       setPower('shuttingdown');
       await sleep(800);
-
       setPower('off');
       await new Promise(r =>
         requestAnimationFrame(() => requestAnimationFrame(r))
       );
-
       await doBoot();
     }
 
