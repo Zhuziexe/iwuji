@@ -109,7 +109,7 @@
     bundlename: BUNDLE,
     name: 'AI新闻',
     icon: './assets/aihot.svg',
-    version: '1.0.2',
+    version: '1.0.3',
     initialRoute: 'home',
 
     styles: `
@@ -425,7 +425,7 @@
                 currentCat = cat;
                 renderCats();
                 load();
-                if (navigator.vibrate) { try { navigator.vibrate(6); } catch {} }
+                if (navigator.vibrate) { try { navigator.vibrate(6); } catch { } }
               });
             });
           }
@@ -478,7 +478,7 @@
                 const idx = +el.dataset.idx;
                 const item = items[idx];
                 if (!item) return;
-                if (navigator.vibrate) { try { navigator.vibrate(6); } catch {} }
+                if (navigator.vibrate) { try { navigator.vibrate(6); } catch { } }
                 ctx.push('detail', { item });
               });
             });
@@ -531,13 +531,33 @@
           refreshBtn.addEventListener('click', () => {
             if (loading) return;
             load(true);
-            if (navigator.vibrate) { try { navigator.vibrate(8); } catch {} }
+            if (navigator.vibrate) { try { navigator.vibrate(8); } catch { } }
           });
 
+          const blockSwipe = () => { root.dataset.blockBackGesture = '1'; };
+          const releaseSwipe = () => { delete root.dataset.blockBackGesture; };
+
+          catsEl.addEventListener('touchstart', blockSwipe, { capture: true, passive: true });
+          catsEl.addEventListener('touchend', releaseSwipe, { passive: true });
+          catsEl.addEventListener('touchcancel', releaseSwipe, { passive: true });
+          catsEl.addEventListener('pointerdown', blockSwipe, { capture: true });
+          catsEl.addEventListener('pointerup', releaseSwipe);
+          catsEl.addEventListener('pointercancel', releaseSwipe);
+          catsEl.addEventListener('pointerleave', releaseSwipe);
           renderCats();
           load();
 
-          return () => { disposed = true; };
+          return () => {
+            disposed = true;
+            catsEl.removeEventListener('touchstart', blockSwipe, true);
+            catsEl.removeEventListener('touchend', releaseSwipe);
+            catsEl.removeEventListener('touchcancel', releaseSwipe);
+            catsEl.removeEventListener('pointerdown', blockSwipe, true);
+            catsEl.removeEventListener('pointerup', releaseSwipe);
+            catsEl.removeEventListener('pointercancel', releaseSwipe);
+            catsEl.removeEventListener('pointerleave', releaseSwipe);
+            delete root.dataset.blockBackGesture;
+          };
         },
       },
 
