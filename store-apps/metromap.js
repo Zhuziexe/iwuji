@@ -2,11 +2,11 @@
   const BUNDLE = 'com.wujinb.metromap';
 
   const CITIES = [
-    { id: 'shanghai', name: '上海', map: './assets/com.wujinb.metromap/shanghai.png' },
-    { id: 'beijing', name: '北京', map: './assets/com.wujinb.metromap/beijing.png' },
-    { id: 'qingdao', name: '青岛', map: './assets/com.wujinb.metromap/qingdao.jpg' },
-    { id: 'chengdu', name: '成都', map: './assets/com.wujinb.metromap/chengdu.jpg' },
-    { id: 'shenzhen', name: '深圳', map: './assets/com.wujinb.metromap/shenzhen.jpg' },
+    { id: 'shanghai', name: '上海', map: 'https://githubproxy.cc/https://raw.githubusercontent.com/zhuziexe/iwuji/HEAD/assets/com.wujinb.metromap/shanghai.jpg' },
+    { id: 'beijing', name: '北京', map: 'https://githubproxy.cc/https://raw.githubusercontent.com/zhuziexe/iwuji/HEAD/assets/com.wujinb.metromap/beijing.jpg' },
+    { id: 'qingdao', name: '青岛', map: 'https://githubproxy.cc/https://raw.githubusercontent.com/zhuziexe/iwuji/HEAD/assets/com.wujinb.metromap/qingdao.jpg' },
+    { id: 'chengdu', name: '成都', map: 'https://githubproxy.cc/https://raw.githubusercontent.com/zhuziexe/iwuji/HEAD/assets/com.wujinb.metromap/chengdu.jpg' },
+    { id: 'shenzhen', name: '深圳', map: 'https://githubproxy.cc/https://raw.githubusercontent.com/zhuziexe/iwuji/HEAD/assets/com.wujinb.metromap/shenzhen.jpg' },
   ];
 
   const SVG_ARROW = `<svg class="mm-item__arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg>`;
@@ -19,7 +19,7 @@
     name: '地铁图',
     icon: './assets/metromap.svg',
     initialRoute: 'home',
-    version: '1.0.4',
+    version: '1.0.5',
     styles: `
       .mm-page {
         position: absolute;
