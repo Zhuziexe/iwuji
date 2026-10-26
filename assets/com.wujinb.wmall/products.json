@@ -11,7 +11,7 @@
           "id": "blue",
           "text": "牛逼蓝",
           "image": "./assets/com.wujinb.wmall/iwuji_blue.png",
-          "buyable": true
+          "buyable": false
         },
         {
           "id": "white",
@@ -63,7 +63,7 @@
           "id": "blue",
           "text": "牛逼蓝",
           "image": "./assets/com.wujinb.wmall/wujibuds_blue.png",
-          "buyable": true
+          "buyable": false
         }
       ]
     },
