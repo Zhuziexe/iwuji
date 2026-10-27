@@ -14,6 +14,7 @@
         left: 50%;
         bottom: calc(90px + env(safe-area-inset-bottom, 0px));
         transform: translate(-50%, 8px);
+        width: max-content;
         max-width: 80%;
         padding: 14px 26px;
         border-radius: 1399px;
