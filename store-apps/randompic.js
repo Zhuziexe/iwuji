@@ -11,7 +11,7 @@
     name: '随机图片',
     icon: ICON_URL,
     initialRoute: 'home',
-    version: '1.0.1',
+    version: '1.0.2',
 
     styles: `
       .rp-page {
@@ -160,29 +160,6 @@
         -webkit-tap-highlight-color: transparent;
       }
       .rp-error__retry:active { background: rgba(255,255,255,.24); }
-
-      .rp-toast {
-        position: absolute;
-        left: 50%;
-        bottom: 126px;
-        transform: translateX(-50%) translateY(14px);
-        padding: 11px 25px;
-        border-radius: 1399px;
-        background: rgba(0,0,0,.72);
-        backdrop-filter: blur(11px);
-        color: #fff;
-        font-size: var(--wj-fs-xs);
-        letter-spacing: .5px;
-        white-space: nowrap;
-        pointer-events: none;
-        opacity: 0;
-        transition: opacity .22s, transform .22s;
-        z-index: 6;
-      }
-      .rp-toast.is-show {
-        opacity: 1;
-        transform: translateX(-50%) translateY(0);
-      }
     `,
 
     routes: {
@@ -200,8 +177,6 @@
               <button class="rp-refresh" id="rpRefreshBtn" type="button" aria-label="换一换">
                 ${ICON_REFRESH}
               </button>
-
-              <div class="rp-toast" id="rpToast"></div>
             </div>
           `;
         },
@@ -213,17 +188,7 @@
 
           let disposed = false;
           let loading = false;
-          let toastTimer = null;
           let firstLoadDone = false;
-
-          function toast(msg, ms = 1800) {
-            const el = root.querySelector('#rpToast');
-            if (!el) return;
-            el.textContent = msg;
-            el.classList.add('is-show');
-            clearTimeout(toastTimer);
-            toastTimer = setTimeout(() => el.classList.remove('is-show'), ms);
-          }
 
           function setLoading(on) {
             loading = on;
@@ -301,7 +266,7 @@
                   { duration: 300, easing: 'ease-out' }
                 );
               } else {
-                toast('图片加载失败');
+                WujiToast.show('图片加载失败');
                 if (!firstLoadDone) {
                   showError('图片加载失败，请检查网络后重试');
                 }
@@ -349,7 +314,6 @@
           return () => {
             disposed = true;
             window.removeEventListener('keydown', onKeydown);
-            clearTimeout(toastTimer);
           };
         },
       },

@@ -227,8 +227,8 @@
       </g>
     ` : (outfit.hat ? `
       <g class="chick-hat">
-        <rect x="26" y="16" width="48" height="5" rx="2.5" fill="#2c5ad0"/>
-        <path d="M30 16 Q30 2 50 2 Q70 2 70 16 Z" fill="#3a6ff0"/>
+        <rect x="26" y="16" width="48" height="5" rx="2.5" fill="#8ae580"/>
+        <path d="M30 16 Q30 2 50 2 Q70 2 70 16 Z" fill="#38c129"/>
         <circle cx="50" cy="3" r="3.5" fill="#ffd93b"/>
       </g>
     ` : '');
@@ -296,7 +296,7 @@
     name: '吴际小鸡',
     icon: ICON_URL,
     initialRoute: 'home',
-    version: '1.1.3',
+    version: '1.1.4',
 
     onBoot() {
       checkPetStatus().catch(() => { });

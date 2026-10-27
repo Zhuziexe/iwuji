@@ -1377,37 +1377,10 @@
           let tapCount = 0;
           let tapTimer = null;
 
-          /* ---- toast ---- */
-          let toastEl = null;
-          let toastTimer = null;
-
-          function showToast(msg, ms = 1600) {
-            if (!toastEl) {
-              toastEl = document.createElement('div');
-              toastEl.style.cssText =
-                'position:absolute;left:50%;bottom:90px;transform:translate(-50%,11px);' +
-                'padding:14px 28px;border-radius:1399px;background:rgba(0,0,0,.85);' +
-                'color:#fff;font-size: var(--wj-fs-sm);font-weight:500;letter-spacing:.3px;' +
-                'white-space:nowrap;pointer-events:none;opacity:0;z-index:850;' +
-                'transition:opacity .2s ease, transform .2s ease;' +
-                'box-shadow:0 6px 22px rgba(0,0,0,.25);';
-              root.appendChild(toastEl);
-            }
-            toastEl.textContent = msg;
-            void toastEl.offsetWidth;
-            toastEl.style.opacity = '1';
-            toastEl.style.transform = 'translate(-50%,0)';
-            clearTimeout(toastTimer);
-            toastTimer = setTimeout(() => {
-              toastEl.style.opacity = '0';
-              toastEl.style.transform = 'translate(-50%,11px)';
-            }, ms);
-          }
-
           if (versionEl) {
             versionEl.addEventListener('click', () => {
               if (Store.get('devMode.enabled', false)) {
-                showToast('已经处于开发者模式');
+                WujiToast.show('已经处于开发者模式');
                 return;
               }
 
@@ -1419,7 +1392,7 @@
                 tapCount = 0;
                 clearTimeout(tapTimer);
                 Store.set('devMode.enabled', true);
-                showToast('开发者模式已开启', 2500);
+                WujiToast.show('开发者模式已开启', 2500);
                 if (navigator.vibrate) {
                   try { navigator.vibrate([20, 40, 20]); } catch { }
                 }
@@ -1451,8 +1424,6 @@
             clearTimeout(t1);
             clearTimeout(t2);
             clearTimeout(tapTimer);
-            clearTimeout(toastTimer);
-            if (toastEl) { toastEl.remove(); toastEl = null; }
           };
         },
       },
