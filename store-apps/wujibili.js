@@ -1,7 +1,7 @@
 (() => {
   // ==================== 常量 ====================
   const BUNDLE = 'com.wujinb.wujibili';
-  const PROXY = 'https://proxy.corsfix.com/?';
+  const PROXY = 'https://api.cors.lol/?url=';
   const API_RCMD = 'https://api.bilibili.com/x/web-interface/wbi/index/top/feed/rcmd';
   const API_SEARCH = 'https://api.bilibili.com/x/web-interface/wbi/search/type';
   const PS = 12;
@@ -91,7 +91,7 @@
     name: '吴际哔哩',
     icon: './assets/wujibili.svg',
     initialRoute: 'home',
-    version: '1.0.0',
+    version: '1.0.2',
 
     styles: `
       .bli-page {
