@@ -1,7 +1,7 @@
 (() => {
   // ==================== 常量 ====================
   const BUNDLE = 'com.wujinb.wujibili';
-  const PROXY = 'https://proxy.cors.dev/';
+  const PROXY = 'https://wujibili.pages.dev/proxy?target=';
   const API_RCMD = 'https://api.bilibili.com/x/web-interface/wbi/index/top/feed/rcmd';
   const API_SEARCH = 'https://api.bilibili.com/x/web-interface/wbi/search/type';
   const PS = 12;
@@ -36,7 +36,7 @@
   let wbiKeysCache = { keys: null, at: 0 };
 
   async function fetchJson(url, opts = {}) {
-    const res = await fetch(PROXY + url, {
+    const res = await fetch(PROXY + encodeURIComponent(url), {
       headers: {
         'Referer': 'https://www.bilibili.com/',
         'User-Agent': UA,
@@ -91,7 +91,7 @@
     name: '吴际哔哩',
     icon: './assets/wujibili.svg',
     initialRoute: 'home',
-    version: '1.0.3',
+    version: '1.0.4',
 
     styles: `
       .bli-page {
