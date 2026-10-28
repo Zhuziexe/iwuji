@@ -202,7 +202,13 @@ window.WujiNavigation = class WujiNavigation {
       nav: this,
       push: (r, d, opts) => this.push(r, d, opts),   /* ★ 透传选项 */
       pop: (result) => this.pop(result),             /* ★ 透传回传值 */
-      close: () => this.destroy(),
+      close: () => {
+        if (window.WujiAppLauncher && typeof window.WujiAppLauncher.close === 'function') {
+          window.WujiAppLauncher.close();
+        } else {
+          this.destroy();
+        }
+      },
     };
 
     el.innerHTML = route.render ? route.render(routeCtx) : '';
