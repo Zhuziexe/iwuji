@@ -80,6 +80,13 @@
       "name": "iWuji透明保护壳",
       "price": 39,
       "buyable": true
+    },
+    {
+      "id": "nb_baohuke",
+      "icon": "./assets/com.wujinb.wmall/nb_baohuke.png",
+      "name": "牛逼素皮保护壳",
+      "price": 109,
+      "buyable": true
     }
   ]
 }

@@ -13,6 +13,7 @@ const OUT_OF_STOCK_CHANCE = {
   'wujibuds:blue':0.6,
   'charger':      0.2,
   'case':         0.1,
+  'nb_baohuke':   0.2
 };
 
 const raw = fs.readFileSync(FILE, 'utf8');
