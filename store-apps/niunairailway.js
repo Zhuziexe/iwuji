@@ -18,6 +18,9 @@
     '南京南':   { stopId: 'cn-china-railway_NKH', lat: 31.970797, lon: 118.793050 },
     '北京西':   { stopId: 'cn-china-railway_BXP', lat: 39.893670, lon: 116.315100 },
     '青岛':     { stopId: 'cn-china-railway_QDK', lat: 36.063100, lon: 120.307460 },
+    '苏州北': { stopId: 'cn-china-railway_OHH', lat: 31.42372,  lon: 120.63892  },
+    '郑州东': { stopId: 'cn-china-railway_ZAF', lat: 34.760193, lon: 113.773254 },
+    '娄底南': { stopId:'cn-china-railway_UOQ', lat: 27.666258, lon: 112.00847 },
   };
 
   const STATION_ORDER = Object.keys(STATIONS);
@@ -204,7 +207,7 @@
     name: '牛奶铁路',
     icon: './assets/niunairailway.svg',
     initialRoute: 'home',
-    version: '1.0.5',
+    version: '1.0.6',
 
     styles: `
       .rail-page {
@@ -221,7 +224,7 @@
       }
 
       .rail-title {
-        font-size: var(--wj-fs-3xl);
+        font-size: var(--wj-fs-2xl);
         font-weight: 700;
         color: var(--wj-text);
         letter-spacing: .5px;

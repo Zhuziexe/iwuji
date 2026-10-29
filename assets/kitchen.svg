@@ -1,0 +1,19 @@
+<svg width="256" height="256" viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg">
+  <!-- 背景 -->
+  <rect width="256" height="256" fill="#5BC0EB"/>
+
+  <!-- 锅盖提手 -->
+  <rect x="112" y="66" width="32" height="16" rx="8" fill="#FFFFFF"/>
+
+  <!-- 锅盖（圆顶弧形） -->
+  <path d="M 58 110 Q 58 74 128 74 Q 198 74 198 110 Z" fill="#FFFFFF"/>
+
+  <!-- 锅身（桶形，上下同宽，底部圆润） -->
+  <path d="M 64 116 L 192 116 L 192 178 Q 192 208 128 208 Q 64 208 64 178 Z" fill="#FFFFFF"/>
+
+  <!-- 左侧耳把手（变细 + 上移） -->
+  <path d="M 64 128 Q 40 128 40 140 Q 40 152 64 152 Z" fill="#FFFFFF"/>
+
+  <!-- 右侧耳把手（变细 + 上移） -->
+  <path d="M 192 128 Q 216 128 216 140 Q 216 152 192 152 Z" fill="#FFFFFF"/>
+</svg>

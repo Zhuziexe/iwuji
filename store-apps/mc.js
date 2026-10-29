@@ -25,6 +25,13 @@
   const HEIGHT = 14;
   const SAVE_KEY = 'world';
   const HOTBAR_KEY = 'hotbar';
+  const WORLD_SEED = 12345;
+
+  function hash2d(x, z, seed) {
+    let h = (x * 374761393 + z * 668265263 + seed * 2147483647) | 0;
+    h = ((h ^ (h >> 13)) * 1274126177) | 0;
+    return ((h ^ (h >> 16)) >>> 0) / 4294967296;
+  }
 
   const BLOCK_IDS = {
     GRASS: 1, DIRT: 2, STONE: 3, WOOD: 4,
@@ -59,7 +66,7 @@
     name: '吴际MC',
     icon: './assets/mc.svg',
     initialRoute: 'main',
-    version: '1.4.3',
+    version: '1.4.5',
 
     styles: `
       .mc-wrap { position: absolute; inset: 0; background: #000; overflow: hidden; }
@@ -395,6 +402,16 @@
 
           const db = AppStorage.for(BUNDLE);
 
+          (async () => {
+            try {
+              const old = await db.get(SAVE_KEY, null);
+              if (old && old.version !== 2) {
+                await db.remove(SAVE_KEY);
+                console.log('[mc] 旧存档已废弃，已清除');
+              }
+            } catch { }
+          })();
+
           let disposed = false;
           let game = null;
 
@@ -659,6 +676,7 @@
 
     const db = AppStorage.for(BUNDLE);
     const world = new Map();
+    const edits = new Map(); 
     const KEY_SHIFT_Y = 4;
     function key(x, y, z) {
       return ((z * SIZE + x) << KEY_SHIFT_Y) | y;
@@ -670,6 +688,7 @@
     }
 
     function seedTerrain() {
+      // ---- 1. 基础地形 ----
       for (let x = 0; x < SIZE; x++) {
         for (let z = 0; z < SIZE; z++) {
           const biome = Math.sin(x * 0.06) * 0.8 + Math.cos(z * 0.07) * 0.6;
@@ -703,34 +722,38 @@
         }
       }
 
-      const treeAttempts = 40;
-      for (let i = 0; i < treeAttempts; i++) {
-        const tx = Math.floor(Math.random() * (SIZE - 4)) + 2;
-        const tz = Math.floor(Math.random() * (SIZE - 4)) + 2;
-        let groundY = -1;
-        for (let y = HEIGHT - 1; y >= 0; y--) {
-          if (world.has(key(tx, y, tz))) { groundY = y; break; }
-        }
-        if (groundY < 0) continue;
-        const surface = world.get(key(tx, groundY, tz));
-        if (surface !== BLOCK_IDS.GRASS) continue;
+      for (let tx = 2; tx < SIZE - 2; tx++) {
+        for (let tz = 2; tz < SIZE - 2; tz++) {
+          if (hash2d(tx, tz, WORLD_SEED) > 0.015) continue;
 
-        const trunkH = 4 + Math.floor(Math.random() * 2);
-        for (let j = 1; j <= trunkH; j++) {
-          world.set(key(tx, groundY + j, tz), BLOCK_IDS.WOOD);
-        }
-        const topY = groundY + trunkH;
-        for (let dx = -2; dx <= 2; dx++) {
-          for (let dy = -1; dy <= 2; dy++) {
-            for (let dz = -2; dz <= 2; dz++) {
-              const dist = Math.sqrt(dx * dx + dz * dz);
-              if (dist > 2.2) continue;
-              if (dy === 2 && dist > 1.5) continue;
-              const lx = tx + dx, ly = topY + dy, lz = tz + dz;
-              if (lx < 0 || lx >= SIZE || lz < 0 || lz >= SIZE) continue;
-              if (ly < 0 || ly >= HEIGHT) continue;
-              if (world.has(key(lx, ly, lz))) continue;
-              world.set(key(lx, ly, lz), BLOCK_IDS.LEAVES);
+          let groundY = -1;
+          for (let y = HEIGHT - 1; y >= 0; y--) {
+            if (world.has(key(tx, y, tz))) { groundY = y; break; }
+          }
+          if (groundY < 0) continue;
+
+          const surface = world.get(key(tx, groundY, tz));
+          if (surface !== BLOCK_IDS.GRASS) continue;
+
+          const trunkH = 4 + Math.floor(hash2d(tx, tz, WORLD_SEED + 1) * 2);
+
+          for (let j = 1; j <= trunkH; j++) {
+            world.set(key(tx, groundY + j, tz), BLOCK_IDS.WOOD);
+          }
+
+          const topY = groundY + trunkH;
+          for (let dx = -2; dx <= 2; dx++) {
+            for (let dy = -1; dy <= 2; dy++) {
+              for (let dz = -2; dz <= 2; dz++) {
+                const dist = Math.sqrt(dx * dx + dz * dz);
+                if (dist > 2.2) continue;
+                if (dy === 2 && dist > 1.5) continue;
+                const lx = tx + dx, ly = topY + dy, lz = tz + dz;
+                if (lx < 0 || lx >= SIZE || lz < 0 || lz >= SIZE) continue;
+                if (ly < 0 || ly >= HEIGHT) continue;
+                if (world.has(key(lx, ly, lz))) continue;
+                world.set(key(lx, ly, lz), BLOCK_IDS.LEAVES);
+              }
             }
           }
         }
@@ -882,26 +905,20 @@
       player.pos.set(cx, 1, cx);
     }
     findSpawn();
-    
+
     let loaded = false;
     (async () => {
       try {
         const saved = await db.get(SAVE_KEY, null);
-        if (saved && typeof saved === 'object') {
-          const blocks = saved.blocks && typeof saved.blocks === 'object' ? saved.blocks : saved;
-          world.clear();
-          for (const k in blocks) {
-            if (typeof blocks[k] !== 'number') continue;
-            let numKey;
-            if (k.indexOf(',') !== -1) {
-              // 旧格式 "x,y,z" → 整数 key
-              const [x, y, z] = k.split(',').map(Number);
-              numKey = key(x, y, z);
-            } else {
-              // 新格式 "33282" → 33282
-              numKey = Number(k);
-            }
-            if (!isNaN(numKey)) world.set(numKey, blocks[k]);
+        // ★ 只认新格式；旧格式（没有 version 或 version !== 2）直接忽略，世界保持 seedTerrain 初始状态
+        if (saved && saved.version === 2 && saved.edits && typeof saved.edits === 'object') {
+          for (const k in saved.edits) {
+            const numKey = Number(k);
+            const id = saved.edits[k];
+            if (isNaN(numKey)) continue;
+            if (id === 0) world.delete(numKey);
+            else world.set(numKey, id);
+            edits.set(numKey, id);
           }
           rebuild();
 
@@ -918,7 +935,6 @@
         }
       } catch (e) { console.warn('[mc] 读档失败', e); }
       finally {
-        // ★ 读档完成后，强制落地检查：脚下必须有方块
         snapToGround();
         loaded = true;
       }
@@ -930,14 +946,19 @@
       saveTimer = setTimeout(async () => {
         saveTimer = null;
         if (!loaded) return;
-        const blocks = {};
-        world.forEach((v, k) => { blocks[k] = v; });
+        const editObj = {};
+        edits.forEach((v, k) => { editObj[k] = v; });
         try {
           await db.set(SAVE_KEY, {
-            blocks,
+            version: 2,
+            seed: WORLD_SEED,
+            edits: editObj,
             player: {
-              x: player.pos.x, y: Math.max(0, player.pos.y), z: player.pos.z,
-              yaw: player.yaw, pitch: player.pitch,
+              x: player.pos.x,
+              y: Math.max(0, player.pos.y),
+              z: player.pos.z,
+              yaw: player.yaw,
+              pitch: player.pitch,
             },
           });
         } catch (e) { console.warn('[mc] 保存失败', e); }
@@ -1074,7 +1095,9 @@
     function doBreak() {
       const hit = raycastBlock();
       if (!hit || hit.y === 0) return;
-      world.delete(key(hit.x, hit.y, hit.z));
+      const k = key(hit.x, hit.y, hit.z);
+      world.delete(k);
+      edits.set(k, 0);
       rebuild(); save();
       if (navigator.vibrate) { try { navigator.vibrate(10); } catch { } }
     }
@@ -1089,7 +1112,9 @@
       if (py < 0 || py >= HEIGHT) return;
       if (world.has(key(px, py, pz))) return;
       if (blockIntersectsPlayer(px, py, pz)) return;
-      world.set(key(px, py, pz), selectedId);
+      const k = key(px, py, pz);
+      world.set(k, selectedId);
+      edits.set(k, selectedId);
       rebuild(); save();
       if (navigator.vibrate) { try { navigator.vibrate(8); } catch { } }
     }
@@ -1221,13 +1246,18 @@
         if (rafId) cancelAnimationFrame(rafId);
         if (saveTimer) { clearTimeout(saveTimer); saveTimer = null; }
         if (loaded) {
-          const blocks = {};
-          world.forEach((v, k) => { blocks[k] = v; });
+          const editObj = {};
+          edits.forEach((v, k) => { editObj[k] = v; });
           db.set(SAVE_KEY, {
-            blocks,
+            version: 2,
+            seed: WORLD_SEED,
+            edits: editObj,
             player: {
-              x: player.pos.x, y: player.pos.y, z: player.pos.z,
-              yaw: player.yaw, pitch: player.pitch,
+              x: player.pos.x,
+              y: Math.max(0, player.pos.y),
+              z: player.pos.z,
+              yaw: player.yaw,
+              pitch: player.pitch,
             },
           }).catch(() => { });
         }

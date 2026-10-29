@@ -6,18 +6,33 @@
   const DECAY = { hunger: 8, clean: 5, mood: 6 };
   const clamp = v => Math.max(0, Math.min(100, v));
 
-  /* 服装定义：价格单位 = 鸡蛋数 */
   const OUTFIT_ITEMS = [
-    { key: 'hat',     name: '帽子', price: 3 },
-    { key: 'scarf',   name: '围巾', price: 3 },
-    { key: 'glasses', name: '眼镜', price: 5 },
-    { key: 'nbhat',   name: '牛逼帽', price: 6 },
+    { key: 'bowtie',      name: '领结',   price: 2 },
+    { key: 'hat',         name: '帽子',   price: 3 },
+    { key: 'scarf',       name: '围巾',   price: 3 },
+    { key: 'socks',       name: '袜子',   price: 3 },
+    { key: 'glasses',     name: '眼镜',   price: 5 },
+    { key: 'boots',       name: '靴子',   price: 5 },
+    { key: 'nbhat',       name: '牛逼帽', price: 6 },
+    { key: 'sunglasses',  name: '墨镜',   price: 8 },
+    { key: 'headphones',  name: '耳机',   price: 8 },
+  ];
+
+  const EXCLUSIVE_GROUPS = [
+    ['hat', 'nbhat', 'headphones'],
+    ['glasses', 'sunglasses'],
+    ['scarf', 'bowtie'],
+    ['socks', 'boots'], 
   ];
 
   const EGG_INTERVAL = 12 * 3600000;
 
   function defaultOutfit() {
-    return { hat: false, scarf: false, glasses: false, nbhat: false };
+    return {
+      hat: false, scarf: false, glasses: false, nbhat: false,
+      bowtie: false, socks: false, boots: false,
+      sunglasses: false, headphones: false,
+    };
   }
 
   function db() { return AppStorage.for(BUNDLE); }
@@ -188,18 +203,24 @@
     return text;
   }
 
-  /* ---------- 小鸡 SVG ---------- */
   function chickSVG(pet) {
     const s = stateOf(pet);
     const happy = s === 'happy';
     const sad = s === 'sad';
     const outfit = pet.outfit || {};
 
-    const eyes = happy
+    const hasHeadphones = outfit.headphones === true;
+    const hasSunglasses = outfit.sunglasses === true;
+    const hasBowtie     = outfit.bowtie     === true;
+    const hasBoots      = outfit.boots      === true;
+    const hasSocks      = outfit.socks      === true;
+
+    // 墨镜穿戴时，不画眼睛
+    const eyes = hasSunglasses ? '' : (happy
       ? `<path d="M36 32 Q42 26 48 32" stroke="#1c2536" stroke-width="3" fill="none" stroke-linecap="round"/>
          <path d="M52 32 Q58 26 64 32" stroke="#1c2536" stroke-width="3" fill="none" stroke-linecap="round"/>`
       : `<circle cx="42" cy="32" r="3.5" fill="#1c2536"/>
-         <circle cx="58" cy="32" r="3.5" fill="#1c2536"/>`;
+         <circle cx="58" cy="32" r="3.5" fill="#1c2536"/>`);
 
     const mouth = sad
       ? `<path d="M44 46 Q50 40 56 46" stroke="#FF9500" stroke-width="2.8" fill="none" stroke-linecap="round"/>`
@@ -217,6 +238,7 @@
       ? `<text x="78" y="24" font-size="16" font-weight="700" fill="#e0356b">!</text>`
       : '';
 
+    // ---- 头顶：牛逼帽 / 帽子 / 耳机 三选一 ----
     const hatSVG = outfit.nbhat ? `
       <g class="chick-nbhat">
         <rect x="24" y="16" width="52" height="6" rx="3" fill="#1e40af"/>
@@ -231,9 +253,19 @@
         <path d="M30 16 Q30 2 50 2 Q70 2 70 16 Z" fill="#38c129"/>
         <circle cx="50" cy="3" r="3.5" fill="#ffd93b"/>
       </g>
-    ` : '');
+    ` : (hasHeadphones ? `
+      <g class="chick-headphones">
+        <path d="M28 32 Q28 6 50 6 Q72 6 72 32"
+              stroke="#3a4050" stroke-width="4.5" fill="none" stroke-linecap="round"/>
+        <circle cx="26" cy="36" r="7.5" fill="#3a4050"/>
+        <circle cx="74" cy="36" r="7.5" fill="#3a4050"/>
+        <circle cx="26" cy="36" r="3" fill="#8ad4ff"/>
+        <circle cx="74" cy="36" r="3" fill="#8ad4ff"/>
+      </g>
+    ` : ''));
 
-    const scarf = outfit.scarf ? `
+    // ---- 颈部：围巾 / 领结 二选一 ----
+    const neckSVG = outfit.scarf ? `
       <g class="chick-scarf">
         <path d="M26 49 Q50 61 74 49 L74 55 Q50 67 26 55 Z"
               fill="#d64550"/>
@@ -243,8 +275,15 @@
         <path d="M30 54 Q25 63 27 71 Q28 75 31 74 Q33 72 32 66 Q30 60 33 54 Z"
               fill="#d64550"/>
       </g>
-    ` : '';
+    ` : (hasBowtie ? `
+      <g class="chick-bowtie">
+        <path d="M50 52 L37 45 L37 59 Z" fill="#d64550"/>
+        <path d="M50 52 L63 45 L63 59 Z" fill="#d64550"/>
+        <circle cx="50" cy="52" r="3.5" fill="#8b2530"/>
+      </g>
+    ` : '');
 
+    // ---- 眼镜 / 墨镜 ----
     const glasses = outfit.glasses ? `
       <g class="chick-glasses">
         <circle cx="42" cy="32" r="9" fill="none" stroke="#5d4037" stroke-width="2.2"/>
@@ -258,6 +297,39 @@
       </g>
     ` : '';
 
+    const sunglasses = hasSunglasses ? `
+      <g class="chick-sunglasses">
+        <rect x="33" y="27" width="15" height="10" rx="3" fill="#1c2536"/>
+        <rect x="52" y="27" width="15" height="10" rx="3" fill="#1c2536"/>
+        <line x1="48" y1="32" x2="52" y2="32" stroke="#1c2536" stroke-width="2.2"/>
+        <line x1="33" y1="29" x2="27" y2="27" stroke="#1c2536" stroke-width="2.2" stroke-linecap="round"/>
+        <line x1="67" y1="29" x2="73" y2="27" stroke="#1c2536" stroke-width="2.2" stroke-linecap="round"/>
+        <rect x="35" y="29" width="5" height="3" rx="1" fill="#4a90e2" opacity="0.5"/>
+        <rect x="54" y="29" width="5" height="3" rx="1" fill="#4a90e2" opacity="0.5"/>
+      </g>
+    ` : '';
+
+    const socks = hasSocks ? `
+      <g class="chick-socks">
+        <rect x="34" y="91" width="9" height="7" rx="1.5" fill="#e0356b"/>
+        <rect x="57" y="91" width="9" height="7" rx="1.5" fill="#e0356b"/>
+        <rect x="34" y="91" width="9" height="1.5" fill="#ffffff"/>
+        <rect x="57" y="91" width="9" height="1.5" fill="#ffffff"/>
+      </g>
+    ` : '';
+
+    const boots = hasBoots ? `
+      <g class="chick-boots">
+        <!-- 左脚：靴头朝左 -->
+        <path d="M33 90 L33 94 Q28 95 28 98 L45 98 L45 90 Z" fill="#5d4037"/>
+        <!-- 右脚：靴头朝右 -->
+        <path d="M67 90 L67 94 Q72 95 72 98 L55 98 L55 90 Z" fill="#5d4037"/>
+        <!-- 鞋口高光 -->
+        <path d="M33 90 L33 92 L45 92 L45 90 Z" fill="#8d6e63"/>
+        <path d="M55 90 L55 92 L67 92 L67 90 Z" fill="#8d6e63"/>
+      </g>
+    ` : '';
+
     return `
       <svg viewBox="0 0 100 100" class="chick-svg">
         <ellipse cx="50" cy="62" rx="32" ry="30" fill="#FFD93B"/>
@@ -266,12 +338,15 @@
         <ellipse cx="16" cy="60" rx="8" ry="14" fill="#FFD93B" transform="rotate(-15 16 60)"/>
         <ellipse cx="84" cy="60" rx="8" ry="14" fill="#FFD93B" transform="rotate(15 84 60)"/>
         ${hatSVG}
-        ${scarf}
+        ${neckSVG}
         ${eyes}
         ${glasses}
+        ${sunglasses}
         ${mouth}
-        <line x1="38" y1="90" x2="38" y2="97" stroke="#FF9500" stroke-width="3" stroke-linecap="round"/>
-        <line x1="62" y1="90" x2="62" y2="97" stroke="#FF9500" stroke-width="3" stroke-linecap="round"/>
+        <line x1="38" y1="88" x2="38" y2="95" stroke="#FF9500" stroke-width="3" stroke-linecap="round"/>
+        <line x1="62" y1="88" x2="62" y2="95" stroke="#FF9500" stroke-width="3" stroke-linecap="round"/>
+        ${socks}
+        ${boots}
         ${dirt}
         ${hungryMark}
       </svg>
@@ -296,7 +371,7 @@
     name: '吴际小鸡',
     icon: ICON_URL,
     initialRoute: 'home',
-    version: '1.1.4',
+    version: '1.2.1',
 
     onBoot() {
       checkPetStatus().catch(() => { });
@@ -1311,8 +1386,12 @@
               if (navigator.vibrate) { try { navigator.vibrate(6); } catch { } }
             } else {
               current.outfit[key] = true;
-              if (key === 'nbhat') current.outfit.hat   = false;
-              if (key === 'hat')   current.outfit.nbhat = false;
+              for (const group of EXCLUSIVE_GROUPS) {
+                if (!group.includes(key)) continue;
+                for (const other of group) {
+                  if (other !== key) current.outfit[other] = false;
+                }
+              }
               if (navigator.vibrate) { try { navigator.vibrate(8); } catch { } }
             }
 
