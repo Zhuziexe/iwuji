@@ -143,7 +143,7 @@
     name: '吴际跑分',
     icon: './assets/benchmark.svg',
     initialRoute: 'main',
-    version: '1.1.0',
+    version: '1.1.1',
 
     styles: `
       .bm-page {
@@ -152,6 +152,7 @@
         background: #0a0c12;
         padding-top: var(--statusbar-h);
         overflow-y: auto;
+        overflow-x: hidden;
         -webkit-overflow-scrolling: touch;
         overscroll-behavior: contain;
         color: #e9ecf2;
@@ -369,28 +370,36 @@
       }
 
       .bm-breakdown {
-        display: flex;
-        gap: 10px;
-      }
-      .bm-breakdown-item {
-        flex: 1;
-        background: #141822;
-        border-radius: 16px;
-        padding: 16px 10px;
-        text-align: center;
-        border: 1px solid #2a2f3a;
-      }
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));  /* ★ 关键：允许列收缩 */
+  gap: 10px;
+}
+
+.bm-breakdown-item {
+  min-width: 0;                 /* ★ flex/grid 子项必须，覆盖 min-width:auto */
+  background: #141822;
+  border-radius: 16px;
+  padding: 16px 8px;            /* 左右 10 → 8，多挤点空间 */
+  text-align: center;
+  border: 1px solid #2a2f3a;
+}
+
+.bm-breakdown-score {
+  font-size: clamp(14px, 4.4vw, var(--wj-fs-xl, 20px)); /* ★ 420 下约 18.5px */
+  font-weight: 900;
+  color: #e9ecf2;
+  font-family: ui-monospace, monospace;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+  letter-spacing: -0.2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis; 
+}
       .bm-breakdown-label {
         font-size: var(--wj-fs-sm);
         color: #6b7280;
         margin-bottom: 6px;
-      }
-      .bm-breakdown-score {
-        font-size: var(--wj-fs-xl);
-        font-weight: 900;
-        color: #e9ecf2;
-        font-family: ui-monospace, monospace;
-        font-variant-numeric: tabular-nums;
       }
       .bm-breakdown-detail {
         font-size: var(--wj-fs-xs);
