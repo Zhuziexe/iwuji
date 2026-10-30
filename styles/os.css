@@ -36,10 +36,6 @@ body {
   color: #fff;
 }
 
-/* ================= 禁用长按图片菜单（普通场景） =================
-       注意：不设置 pointer-events，避免影响应用里图片的交互。
-       真正需要"彻底阻止华为长按菜单"的场景，走 Shadow DOM 里的
-       img { pointer-events: none }，由 data-interactive 白名单恢复。 */
 img {
   -webkit-touch-callout: none;
   -webkit-user-select: none;
@@ -1651,9 +1647,9 @@ img {
   align-items: center;
   justify-content: center;
   gap: 31px;
-  background: rgba(8, 12, 20, .65);
-  backdrop-filter: blur(25px) saturate(140%);
-  -webkit-backdrop-filter: blur(25px) saturate(140%);
+  background: rgba(8, 12, 20, .45);
+  backdrop-filter: blur(3px) saturate(105%);
+  -webkit-backdrop-filter: blur(3px) saturate(105%);
   opacity: 0;
   visibility: hidden;
   transition: opacity .22s ease, visibility .22s ease;

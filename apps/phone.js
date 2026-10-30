@@ -581,7 +581,7 @@
     name: '电话',
     icon: './assets/phone.svg',
     initialRoute: 'dialer',
-    version: '2.3.0',
+    version: '2.3.1',
 
     onBoot() {
       resetState();
@@ -785,9 +785,9 @@
         justify-content: space-between;
         padding: calc(96px + var(--statusbar-h, 36px)) 42px
                  calc(64px + env(safe-area-inset-bottom, 0px));
-        background: rgba(12, 18, 36, .82);
-        backdrop-filter: blur(36px) saturate(150%);
-        -webkit-backdrop-filter: blur(36px) saturate(150%);
+        background: rgba(12, 18, 36, .6);
+        backdrop-filter: blur(3px) saturate(105%);
+        -webkit-backdrop-filter: blur(3px) saturate(105%);
         color: #fff;
         text-align: center;
         box-sizing: border-box;

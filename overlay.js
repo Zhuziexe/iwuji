@@ -12,8 +12,6 @@ window.WujiOverlay = (() => {
     hostEl.style.cssText =
       'position:absolute;inset:0;z-index:900;display:none;touch-action:none;';
 
-    /* ★ 拦截一切手势，阻止传递到系统 / 控制中心 / 通知中心
-       但放行 overlay 内部的可交互元素（滑块 knob、滑块自身） */
     const ALLOW = '.ov-slider, .ov-slider__knob, [data-overlay-interactive]';
 
     const stop = ev => {

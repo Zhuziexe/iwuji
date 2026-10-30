@@ -148,7 +148,7 @@
     name: '时钟',
     icon: './assets/clock.svg',
     initialRoute: 'home',
-    version: '1.1.3',
+    version: '1.1.4',
 
     /* ★ 开机 / 关机钩子 */
     onBoot() {
@@ -445,9 +445,9 @@
         justify-content: center;
         gap: 25px;
         padding: 56px 42px calc(67px + env(safe-area-inset-bottom, 0px));
-        background: rgba(12, 18, 36, .72);
-        backdrop-filter: blur(36px) saturate(150%);
-        -webkit-backdrop-filter: blur(36px) saturate(150%);
+        background: rgba(12, 18, 36, .6);
+        backdrop-filter: blur(3px) saturate(105%);
+        -webkit-backdrop-filter: blur(3px) saturate(105%);
         color: #fff;
         text-align: center;
         user-select: none;
