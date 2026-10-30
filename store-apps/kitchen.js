@@ -3,43 +3,45 @@
   const DB_KEY = 'state';
 
   const INGREDIENTS = [
-    { id: 'flour',      name: '面粉',  icon: '🌾', price: 5 },
-    { id: 'egg',        name: '鸡蛋',  icon: '🥚', price: 3 },
-    { id: 'milk',       name: '牛奶',  icon: '🥛', price: 4 },
-    { id: 'sugar',      name: '糖',    icon: '🍬', price: 3 },
-    { id: 'butter',     name: '黄油',  icon: '🧈', price: 6 },
-    { id: 'chocolate',  name: '巧克力',icon: '🍫', price: 8 },
-    { id: 'strawberry', name: '草莓',  icon: '🍓', price: 7 },
-    { id: 'apple',      name: '苹果',  icon: '🍎', price: 5 },
+    { id: 'flour',      name: '面粉',  icon: '🌾', price: 7 },
+    { id: 'egg',        name: '鸡蛋',  icon: '🥚', price: 4 },
+    { id: 'milk',       name: '牛奶',  icon: '🥛', price: 5 },
+    { id: 'sugar',      name: '糖',    icon: '🍬', price: 4 },
+    { id: 'butter',     name: '黄油',  icon: '🧈', price: 9 },
+    { id: 'chocolate',  name: '巧克力',icon: '🍫', price: 13 },
+    { id: 'strawberry', name: '草莓',  icon: '🍓', price: 11 },
+    { id: 'apple',      name: '苹果',  icon: '🍎', price: 7 },
   ];
 
   const RECIPES = [
-    { id: 'dough',         name: '面团',       icon: '🥖', ings: ['flour', 'milk'],                 price: 10 },
-    { id: 'milkcandy',     name: '奶糖',       icon: '🍬', ings: ['milk', 'sugar'],                 price: 10 },
-    { id: 'biscuit',       name: '饼干',       icon: '🍪', ings: ['flour', 'sugar'],                price: 12 },
-    { id: 'bread2',        name: '面包',       icon: '🍞', ings: ['flour', 'egg'],                  price: 15 },
-    { id: 'caramel',       name: '焦糖',       icon: '🍯', ings: ['butter', 'sugar'],               price: 15 },
-    { id: 'jam',           name: '苹果酱',     icon: '🍎', ings: ['apple', 'sugar'],                price: 16 },
-    { id: 'eggPudding',    name: '蛋奶布丁',   icon: '🍮', ings: ['milk', 'egg'],                   price: 18 },
-    { id: 'strawberryJam', name: '草莓酱',     icon: '🍓', ings: ['strawberry', 'sugar'],           price: 18 },
-    { id: 'hotChoco',      name: '热巧克力',   icon: '☕', ings: ['milk', 'chocolate'],             price: 20 },
-    { id: 'chocoCookie',   name: '巧克力饼干', icon: '🍪', ings: ['flour', 'chocolate'],            price: 22 },
+    // ===== 2 食材（成本 × 1.5）=====
+    { id: 'dough',         name: '面团',       icon: '🥖', ings: ['flour', 'milk'],                 price: 18 },  // 成本12 → 赚6
+    { id: 'milkcandy',     name: '奶糖',       icon: '🍬', ings: ['milk', 'sugar'],                 price: 14 },  // 成本9 → 赚5
+    { id: 'biscuit',       name: '饼干',       icon: '🍪', ings: ['flour', 'sugar'],                price: 17 },  // 成本11 → 赚6
+    { id: 'bread2',        name: '面包',       icon: '🍞', ings: ['flour', 'egg'],                  price: 17 },  // 成本11 → 赚6
+    { id: 'caramel',       name: '焦糖',       icon: '🍯', ings: ['butter', 'sugar'],               price: 20 },  // 成本13 → 赚7
+    { id: 'jam',           name: '苹果酱',     icon: '🍎', ings: ['apple', 'sugar'],                price: 17 },  // 成本11 → 赚6
+    { id: 'eggPudding',    name: '蛋奶布丁',   icon: '🍮', ings: ['milk', 'egg'],                   price: 14 },  // 成本9 → 赚5
+    { id: 'strawberryJam', name: '草莓酱',     icon: '🍓', ings: ['strawberry', 'sugar'],           price: 23 },  // 成本15 → 赚8
+    { id: 'hotChoco',      name: '热巧克力',   icon: '☕', ings: ['milk', 'chocolate'],             price: 27 },  // 成本18 → 赚9
+    { id: 'chocoCookie',   name: '巧克力饼干', icon: '🍪', ings: ['flour', 'chocolate'],            price: 30 },  // 成本20 → 赚10
 
-    { id: 'pancake',        name: '煎饼',       icon: '🥞', ings: ['flour', 'egg', 'milk'],          price: 25 },
-    { id: 'bread',          name: '黄油面包',   icon: '🥐', ings: ['flour', 'egg', 'butter'],        price: 28 },
-    { id: 'muffin',         name: '麦芬',       icon: '🧁', ings: ['flour', 'milk', 'sugar'],        price: 32 },
-    { id: 'cookie',         name: '曲奇',       icon: '🍪', ings: ['flour', 'butter', 'sugar'],      price: 30 },
-    { id: 'pie',            name: '苹果派',     icon: '🥧', ings: ['flour', 'butter', 'apple'],      price: 45 },
-    { id: 'chocoCake',      name: '巧克力蛋糕', icon: '🍫', ings: ['flour', 'egg', 'chocolate'],     price: 55 },
-    { id: 'strawberryCake', name: '草莓蛋糕',   icon: '🍰', ings: ['flour', 'sugar', 'strawberry'],  price: 55 },
-    { id: 'pudding',        name: '布丁',       icon: '🍮', ings: ['milk', 'sugar', 'egg'],          price: 35 },
-    { id: 'icecream',       name: '冰淇淋',     icon: '🍨', ings: ['milk', 'sugar', 'strawberry'],   price: 40 },
-    { id: 'smoothie',       name: '奶昔',       icon: '🥤', ings: ['milk', 'apple', 'sugar'],        price: 30 },
-    { id: 'chocoMilk',      name: '巧克力牛奶', icon: '🍫', ings: ['milk', 'chocolate', 'sugar'],    price: 38 },
-    { id: 'cake',           name: '蛋糕',       icon: '🎂', ings: ['flour', 'egg', 'sugar'],         price: 35 },
-    { id: 'applePancake',   name: '苹果煎饼',   icon: '🥞', ings: ['flour', 'egg', 'apple'],         price: 42 },
-    { id: 'duoCake',        name: '双拼蛋糕',   icon: '🎂', ings: ['flour', 'chocolate', 'strawberry'], price: 60 },
-    { id: 'strawberryChoco',name: '草莓巧克力奶',icon: '🥤',ings: ['milk', 'chocolate', 'strawberry'],price: 45 },
+    // ===== 3 食材（成本 × 1.5）=====
+    { id: 'pancake',        name: '煎饼',       icon: '🥞', ings: ['flour', 'egg', 'milk'],          price: 24 },  // 成本16 → 赚8
+    { id: 'bread',          name: '黄油面包',   icon: '🥐', ings: ['flour', 'egg', 'butter'],        price: 30 },  // 成本20 → 赚10
+    { id: 'muffin',         name: '麦芬',       icon: '🧁', ings: ['flour', 'milk', 'sugar'],        price: 24 },  // 成本16 → 赚8
+    { id: 'cookie',         name: '曲奇',       icon: '🍪', ings: ['flour', 'butter', 'sugar'],      price: 30 },  // 成本20 → 赚10
+    { id: 'pie',            name: '苹果派',     icon: '🥧', ings: ['flour', 'butter', 'apple'],      price: 35 },  // 成本23 → 赚12
+    { id: 'chocoCake',      name: '巧克力蛋糕', icon: '🍫', ings: ['flour', 'egg', 'chocolate'],     price: 36 },  // 成本24 → 赚12
+    { id: 'strawberryCake', name: '草莓蛋糕',   icon: '🍰', ings: ['flour', 'sugar', 'strawberry'],  price: 33 },  // 成本22 → 赚11
+    { id: 'pudding',        name: '布丁',       icon: '🍮', ings: ['milk', 'sugar', 'egg'],          price: 20 },  // 成本13 → 赚7
+    { id: 'icecream',       name: '冰淇淋',     icon: '🍨', ings: ['milk', 'sugar', 'strawberry'],   price: 30 },  // 成本20 → 赚10
+    { id: 'smoothie',       name: '奶昔',       icon: '🥤', ings: ['milk', 'apple', 'sugar'],        price: 24 },  // 成本16 → 赚8
+    { id: 'chocoMilk',      name: '巧克力牛奶', icon: '🍫', ings: ['milk', 'chocolate', 'sugar'],    price: 33 },  // 成本22 → 赚11
+    { id: 'cake',           name: '蛋糕',       icon: '🎂', ings: ['flour', 'egg', 'sugar'],         price: 23 },  // 成本15 → 赚8
+    { id: 'applePancake',   name: '苹果煎饼',   icon: '🥞', ings: ['flour', 'egg', 'apple'],         price: 27 },  // 成本18 → 赚9
+    { id: 'duoCake',        name: '双拼蛋糕',   icon: '🎂', ings: ['flour', 'chocolate', 'strawberry'], price: 47 }, // 成本31 → 赚16
+    { id: 'strawberryChoco',name: '草莓巧克力奶',icon: '🥤',ings: ['milk', 'chocolate', 'strawberry'],price: 44 }, // 成本29 → 赚15
   ];
 
   const SIGN_IN_REWARD = 15;
@@ -674,7 +676,7 @@
                 state.inventory[id] -= 1;
                 slots[emptyIdx] = id;
                 await setSlots(slots);
-                if (navigator.vibrate) { try { navigator.vibrate(6); } catch {} }
+                if (navigator.vibrate) { try { navigator.vibrate(6); } catch { } }
                 renderKitchen();
               });
             });
@@ -718,8 +720,8 @@
             if (navigator.vibrate) {
               try {
                 navigator.vibrate(result.type === 'new' ? [20, 30, 20, 30, 20] :
-                                  result.type === 'known' ? [10, 20, 10] : 30);
-              } catch {}
+                  result.type === 'known' ? [10, 20, 10] : 30);
+              } catch { }
             }
 
             renderKitchen();
@@ -769,7 +771,7 @@
                 await saveState(state);
                 updateCoins();
                 WujiToast.show('购买成功');
-                if (navigator.vibrate) { try { navigator.vibrate(6); } catch {} }
+                if (navigator.vibrate) { try { navigator.vibrate(6); } catch { } }
                 renderShop();
               });
             });
@@ -808,7 +810,7 @@
                 const recipeId = el.dataset.recipeId;
                 const recipe = RECIPES.find(r => r.id === recipeId);
                 if (!recipe) return;
-                if (navigator.vibrate) { try { navigator.vibrate(4); } catch {} }
+                if (navigator.vibrate) { try { navigator.vibrate(4); } catch { } }
                 ctx.push('detail', {
                   recipe,
                   unlocked: !!state.unlocked[recipeId],
@@ -828,8 +830,8 @@
                 <div class="kt-signin__title">${signed ? '今日已签到' : '每日签到'}</div>
                 <div class="kt-signin__desc">
                   ${signed
-                    ? '明天再来吧～<br>今天已经领过了'
-                    : `签到领 <strong>${SIGN_IN_REWARD}</strong> 金币<br>每天都能领一次`}
+                ? '明天再来吧～<br>今天已经领过了'
+                : `签到领 <strong>${SIGN_IN_REWARD}</strong> 金币<br>每天都能领一次`}
                 </div>
                 <button class="kt-signin__btn" id="ktSignBtn" type="button" ${signed ? 'disabled' : ''}>
                   ${signed ? '明天再来' : `领取 ${SIGN_IN_REWARD} 金币`}
@@ -844,7 +846,7 @@
                 state.coins = (state.coins || 0) + SIGN_IN_REWARD;
                 await saveState(state);
                 updateCoins();
-                if (navigator.vibrate) { try { navigator.vibrate([15, 30, 15]); } catch {} }
+                if (navigator.vibrate) { try { navigator.vibrate([15, 30, 15]); } catch { } }
                 WujiToast.show(`签到成功 +${SIGN_IN_REWARD} 金币`);
                 renderSignIn();
               });
@@ -864,7 +866,7 @@
           tabBtns.forEach(btn => {
             btn.addEventListener('click', () => {
               if (currentTab === btn.dataset.tab) return;
-              if (navigator.vibrate) { try { navigator.vibrate(4); } catch {} }
+              if (navigator.vibrate) { try { navigator.vibrate(4); } catch { } }
               switchTab(btn.dataset.tab);
             });
           });

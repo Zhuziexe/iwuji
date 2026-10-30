@@ -471,7 +471,6 @@
         line-height: 1;
       }
 
-      /* ============ 拨号按钮 ============ */
       .phone-actions {
         flex: 0 0 auto;
         position: relative;
@@ -523,7 +522,6 @@
       .phone-back-btn:active { transform: translateY(-50%) scale(.9); }
       .phone-back-btn svg { width: 32px; height: 32px; display: block; }
 
-      /* ============ 通话 overlay ============ */
       .ph-call-ov {
         position: absolute; inset: 0;
         display: flex;
