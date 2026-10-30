@@ -100,7 +100,7 @@
     name: '牛奶厨房',
     icon: './assets/kitchen.svg',
     initialRoute: 'main',
-    version: '1.2.0',
+    version: '1.2.1',
 
     styles: `
       .kt-page {
