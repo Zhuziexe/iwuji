@@ -367,7 +367,7 @@
         margin: 4px 0 0;
         padding: 3px 14px;
         border-radius: 999px;
-        background: linear-gradient(135deg, #e8f0ff 0%, #d6e2ff 100%);
+        background: linear-gradient(135deg, #d6e2ff 0%, #c8d7ff 100%);
         display: inline-flex;
         align-items: center;
         gap: 6px;
@@ -379,15 +379,14 @@
       .phone-my-number__label {
         font-size: 18px;
         font-weight: 500;
-        color: var(--wj-text-dim, #9aa4b8);
+        color: var(--wj-text-muted);
         letter-spacing: .3px;
       }
       .phone-my-number__value {
-        font-family: 'Consolas', 'SF Mono', monospace;
-        font-size: 20px;
+        font-size: 22px;
         font-weight: 700;
         letter-spacing: 1.5px;
-        color: var(--wj-text, #101828);
+        color: var(--wj-text);
         font-variant-numeric: tabular-nums;
       }
 
