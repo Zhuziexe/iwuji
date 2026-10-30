@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>iWuji 独立电话</title>
+  <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: #0f1116;
+      color: #e9ecf2;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 24px 16px;
+    }
+    .app {
+      width: 100%;
+      max-width: 420px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .card {
+      background: #1a1d24;
+      border-radius: 20px;
+      padding: 20px;
+      border: 1px solid #2a2f3a;
+    }
+    .section-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: #8ad4ff;
+      letter-spacing: .5px;
+      margin-bottom: 12px;
+      text-transform: uppercase;
+    }
+    .row { display: flex; gap: 10px; }
+    input {
+      flex: 1;
+      min-width: 0;
+      padding: 14px 16px;
+      background: #0f1116;
+      border: 1.5px solid #2a2f3a;
+      border-radius: 12px;
+      color: #e9ecf2;
+      font: inherit;
+      font-size: 18px;
+      letter-spacing: 2px;
+      outline: none;
+      transition: border-color .15s;
+    }
+    input:focus { border-color: #8ad4ff; }
+    button {
+      padding: 14px 20px;
+      border: 0;
+      border-radius: 12px;
+      font: inherit;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform .08s, opacity .15s;
+      -webkit-tap-highlight-color: transparent;
+      white-space: nowrap;
+    }
+    button:active:not(:disabled) { transform: scale(.96); }
+    button:disabled { opacity: .4; cursor: not-allowed; }
+    .btn-primary { background: #3a6ff0; color: #fff; }
+    .btn-secondary { background: #2a2f3a; color: #e9ecf2; }
+    .btn-success { background: #34c759; color: #fff; }
+    .btn-danger  { background: #ff3b30; color: #fff; }
+
+    .my-number {
+      font-size: 36px;
+      font-weight: 700;
+      letter-spacing: 3px;
+      text-align: center;
+      padding: 16px 0 8px;
+      color: #fff;
+      font-variant-numeric: tabular-nums;
+      word-break: break-all;
+    }
+    .status {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      font-size: 14px;
+      color: #8a94a6;
+      margin-top: 4px;
+    }
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #8a94a6;
+      transition: background .2s;
+    }
+    .dot.online     { background: #34c759; box-shadow: 0 0 0 3px rgba(52,199,89,.2); }
+    .dot.connecting { background: #ff9500; }
+    .dot.offline    { background: #ff3b30; }
+
+    .hint {
+      font-size: 12px;
+      color: #6b7280;
+      line-height: 1.6;
+      text-align: center;
+      padding: 0 8px;
+    }
+
+    /* ===== 全屏通话/来电 ===== */
+    .overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(12,18,36,.96);
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      padding: 80px 32px 60px;
+      z-index: 999;
+      text-align: center;
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+    }
+    .overlay.active { display: flex; }
+    .overlay__icon { font-size: 88px; line-height: 1; }
+    .overlay__number {
+      font-size: 40px;
+      font-weight: 700;
+      letter-spacing: 3px;
+      margin-top: 20px;
+      font-variant-numeric: tabular-nums;
+      word-break: break-all;
+    }
+    .overlay__status {
+      font-size: 18px;
+      color: rgba(255,255,255,.7);
+      letter-spacing: 2px;
+      margin-top: 12px;
+      min-height: 28px;
+    }
+    .overlay__actions {
+      display: flex;
+      gap: 60px;
+      justify-content: center;
+    }
+    .call-btn {
+      width: 96px;
+      height: 96px;
+      border-radius: 50%;
+      border: 0;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: transform .08s, filter .15s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .call-btn:active { transform: scale(.92); filter: brightness(.9); }
+    .call-btn svg { width: 44px; height: 44px; display: block; }
+    .call-btn--hangup { background: #ff3b30; box-shadow: 0 10px 30px rgba(255,59,48,.4); }
+    .call-btn--answer { background: #34c759; box-shadow: 0 10px 30px rgba(52,199,89,.4); }
+
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: 40px;
+      transform: translateX(-50%) translateY(10px);
+      background: rgba(0,0,0,.9);
+      color: #fff;
+      padding: 12px 24px;
+      border-radius: 999px;
+      font-size: 15px;
+      font-weight: 500;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .2s, transform .2s;
+      z-index: 1000;
+      white-space: nowrap;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  </style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- 我的号码 -->
+  <div class="card">
+    <div class="section-title">我的号码</div>
+    <div class="my-number" id="myNumber">— — —</div>
+    <div class="status">
+      <span class="dot" id="myDot"></span>
+      <span id="myStatus">连接中…</span>
+    </div>
+    <div class="row" style="margin-top: 16px;">
+      <input id="myNumberInput" type="tel" inputmode="numeric" placeholder="设置我的号码" autocomplete="off">
+      <button class="btn-secondary" id="saveNumberBtn" type="button">保存</button>
+    </div>
+  </div>
+
+  <!-- 拨号 -->
+  <div class="card">
+    <div class="section-title">拨号</div>
+    <div class="row">
+      <input id="targetInput" type="tel" inputmode="numeric" placeholder="输入对方号码" autocomplete="off">
+      <button class="btn-success" id="dialBtn" type="button">拨打</button>
+    </div>
+  </div>
+
+  <div class="hint">
+    需要 <strong>HTTPS</strong> 或 <strong>localhost</strong> 访问，允许麦克风权限。<br>
+    和 iWuji 的「电话」应用使用同一套 PeerJS 公共信令，可以互拨。
+  </div>
+
+</div>
+
+<!-- 通话/来电遮罩 -->
+<div class="overlay" id="overlay">
+  <div>
+    <div class="overlay__icon" id="ovIcon">📞</div>
+    <div class="overlay__number" id="ovNumber">—</div>
+    <div class="overlay__status" id="ovStatus">正在呼叫…</div>
+  </div>
+  <div class="overlay__actions" id="ovActions"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+<audio id="remoteAudio" autoplay playsinline style="display:none;"></audio>
+
+<script>
+(() => {
+  const STORAGE_KEY = 'iwuji_phone_standalone_id';
+  const HANGUP_SVG = `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 9c-1.6 0-3.15.25-4.6.72v3.1c0 .39-.23.74-.56.9-.98.49-1.87 1.12-2.66 1.85-.18.18-.43.28-.7.28-.28 0-.53-.11-.71-.29L.29 13.08a.956.956 0 0 1-.29-.7c0-.28.11-.53.29-.71C3.34 8.78 7.46 7 12 7s8.66 1.78 11.71 4.67c.18.18.29.43.29.71 0 .27-.11.52-.29.7l-2.48 2.48c-.18.18-.43.29-.71.29-.27 0-.52-.1-.7-.28a11.27 11.27 0 0 0-2.67-1.85.996.996 0 0 1-.56-.9v-3.1C15.15 9.25 13.6 9 12 9z"/></svg>`;
+  const ANSWER_SVG = `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6.62 10.79a15.05 15.05 0 0 0 6.59 6.59l2.2-2.2a1 1 0 0 1 1.02-.24 11.36 11.36 0 0 0 3.57.57 1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1 11.36 11.36 0 0 0 .57 3.57 1 1 0 0 1-.25 1.02z"/></svg>`;
+
+  const S = {
+    peer: null,
+    myId: '',
+    stream: null,
+    activeCall: null,
+    pendingCall: null,
+    ready: false,
+    status: 'idle',      // idle | dialing | active | incoming
+    target: '',
+    callStart: 0,
+  };
+
+  // ============ DOM ============
+  const myNumberEl   = document.getElementById('myNumber');
+  const myDotEl      = document.getElementById('myDot');
+  const myStatusEl   = document.getElementById('myStatus');
+  const myInputEl    = document.getElementById('myNumberInput');
+  const saveBtn      = document.getElementById('saveNumberBtn');
+  const targetEl     = document.getElementById('targetInput');
+  const dialBtn      = document.getElementById('dialBtn');
+  const overlayEl    = document.getElementById('overlay');
+  const ovIconEl     = document.getElementById('ovIcon');
+  const ovNumberEl   = document.getElementById('ovNumber');
+  const ovStatusEl   = document.getElementById('ovStatus');
+  const ovActionsEl  = document.getElementById('ovActions');
+  const toastEl      = document.getElementById('toast');
+  const remoteAudio  = document.getElementById('remoteAudio');
+
+  // ============ 工具 ============
+  let toastTimer = null;
+  function toast(msg, ms = 1800) {
+    toastEl.textContent = msg;
+    toastEl.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toastEl.classList.remove('show'), ms);
+  }
+
+  function pad2(n) { return String(n).padStart(2, '0'); }
+  function fmtDuration(ms) {
+    const s = Math.max(0, Math.floor(ms / 1000));
+    return `${pad2(Math.floor(s / 60))}:${pad2(s % 60)}`;
+  }
+
+  function genDefaultId() {
+    return '1' + String(Math.floor(10000 + Math.random() * 90000));
+  }
+
+  // ============ 号码持久化 ============
+  function loadSavedId() {
+    let id = '';
+    try { id = localStorage.getItem(STORAGE_KEY) || ''; } catch {}
+    if (!id) {
+      id = genDefaultId();
+      try { localStorage.setItem(STORAGE_KEY, id); } catch {}
+    }
+    return id;
+  }
+
+  function saveId(id) {
+    try { localStorage.setItem(STORAGE_KEY, id); } catch {}
+  }
+
+  // ============ 麦克风 ============
+  async function ensureMic() {
+    if (S.stream && S.stream.active) return S.stream;
+    try {
+      S.stream = await navigator.mediaDevices.getUserMedia({
+        audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
+        video: false,
+      });
+      return S.stream;
+    } catch (err) {
+      let msg = '无法获取麦克风';
+      if (err.name === 'NotAllowedError') msg = '麦克风权限被拒绝';
+      else if (err.name === 'NotFoundError') msg = '没有麦克风设备';
+      toast(msg);
+      throw err;
+    }
+  }
+
+  function attachRemote(stream) {
+    remoteAudio.srcObject = stream;
+    remoteAudio.play().catch(() => {});
+  }
+
+  function detachRemote() {
+    try { remoteAudio.srcObject = null; } catch {}
+  }
+
+  // ============ UI 更新 ============
+  function updateHeader() {
+    if (S.myId) myNumberEl.textContent = S.myId;
+    else myNumberEl.textContent = '— — —';
+
+    myDotEl.className = 'dot';
+    if (S.ready) {
+      myDotEl.classList.add('online');
+      myStatusEl.textContent = '在线';
+    } else if (S.peer) {
+      myDotEl.classList.add('connecting');
+      myStatusEl.textContent = '连接中…';
+    } else {
+      myDotEl.classList.add('offline');
+      myStatusEl.textContent = '未连接';
+    }
+  }
+
+  // ============ 通话遮罩 ============
+  let tickTimer = null;
+  let lastSig = '';
+
+  function showOverlay() {
+    overlayEl.classList.add('active');
+    renderOverlay();
+  }
+
+  function hideOverlay() {
+    overlayEl.classList.remove('active');
+    lastSig = '';
+  }
+
+  function renderOverlay() {
+    if (S.status === 'idle') { hideOverlay(); return; }
+    overlayEl.classList.add('active');
+
+    ovNumberEl.textContent = S.target || '—';
+
+    if (S.status === 'dialing') {
+      ovIconEl.textContent = '📞';
+      ovStatusEl.textContent = '正在呼叫…';
+      if (lastSig !== 'dialing') {
+        lastSig = 'dialing';
+        ovActionsEl.innerHTML = `
+          <button class="call-btn call-btn--hangup" id="ovHangup" type="button">${HANGUP_SVG}</button>
+        `;
+        ovActionsEl.querySelector('#ovHangup').onclick = hangup;
+      }
+    } else if (S.status === 'active') {
+      ovIconEl.textContent = '💬';
+      if (lastSig !== 'active') {
+        lastSig = 'active';
+        ovActionsEl.innerHTML = `
+          <button class="call-btn call-btn--hangup" id="ovHangup" type="button">${HANGUP_SVG}</button>
+        `;
+        ovActionsEl.querySelector('#ovHangup').onclick = hangup;
+      }
+      ovStatusEl.textContent = fmtDuration(Date.now() - S.callStart);
+    } else if (S.status === 'incoming') {
+      ovIconEl.textContent = '📞';
+      ovStatusEl.textContent = '来电';
+      if (lastSig !== 'incoming') {
+        lastSig = 'incoming';
+        ovActionsEl.innerHTML = `
+          <button class="call-btn call-btn--hangup" id="ovReject" type="button">${HANGUP_SVG}</button>
+          <button class="call-btn call-btn--answer" id="ovAnswer" type="button">${ANSWER_SVG}</button>
+        `;
+        ovActionsEl.querySelector('#ovReject').onclick = reject;
+        ovActionsEl.querySelector('#ovAnswer').onclick = answer;
+      }
+    }
+  }
+
+  // ============ reject 信号（与 iWuji phone.js 协议一致） ============
+  function sendReject(targetId) {
+    if (!S.peer || S.peer.destroyed || !targetId) return;
+    try {
+      const conn = S.peer.connect(targetId, { reliable: true });
+      conn.on('open', () => {
+        try { conn.send({ type: 'reject' }); } catch {}
+        setTimeout(() => { try { conn.close(); } catch {} }, 200);
+      });
+      conn.on('error', () => {});
+    } catch (e) { console.warn('[standalone] sendReject', e); }
+  }
+
+  function handleRemoteReject() {
+    if (S.status !== 'dialing' && S.status !== 'active') return;
+    const call = S.activeCall;
+    S.activeCall = null;
+    if (call) { try { call.close(); } catch {} }
+    S.status = 'idle';
+    S.target = '';
+    S.callStart = 0;
+    detachRemote();
+    hideOverlay();
+    toast('对方正忙');
+  }
+
+  // ============ Peer 生命周期 ============
+  async function initPeer(id) {
+    if (S.peer && !S.peer.destroyed) {
+      try { S.peer.destroy(); } catch {}
+    }
+    S.peer = null;
+    S.ready = false;
+    S.myId = id;
+    updateHeader();
+
+    let peer;
+    try { peer = new Peer(id); }
+    catch (e) {
+      console.warn('[standalone] new Peer failed', e);
+      toast('号码创建失败');
+      return;
+    }
+    S.peer = peer;
+
+    peer.on('open', pid => {
+      S.myId = pid;
+      S.ready = true;
+      updateHeader();
+    });
+
+    peer.on('call', call => {
+      if (S.activeCall || S.pendingCall) {
+        const callerId = call.peer;
+        try { call.close(); } catch {}
+        sendReject(callerId);
+        return;
+      }
+      S.pendingCall = call;
+      S.status = 'incoming';
+      S.target = call.peer;
+      showOverlay();
+
+      call.on('close', () => {
+        if (S.pendingCall !== call) return;
+        S.pendingCall = null;
+        S.status = 'idle';
+        S.target = '';
+        hideOverlay();
+        toast('来电已挂断');
+      });
+    });
+
+    peer.on('connection', conn => {
+      conn.on('data', data => {
+        if (data && data.type === 'reject') handleRemoteReject();
+        try { conn.close(); } catch {}
+      });
+      conn.on('error', () => {});
+    });
+
+    peer.on('error', err => {
+      console.warn('[standalone] peer error:', err.type);
+      if (err.type === 'unavailable-id') {
+        toast('号码被占用，请换一个');
+        try { peer.destroy(); } catch {}
+        S.peer = null;
+        S.ready = false;
+        updateHeader();
+      }
+    });
+
+    peer.on('disconnected', () => {
+      S.ready = false;
+      updateHeader();
+      if (peer && !peer.destroyed) { try { peer.reconnect(); } catch {} }
+    });
+
+    peer.on('close', () => {
+      S.ready = false;
+      updateHeader();
+    });
+  }
+
+  // ============ 拨号 ============
+  async function dial(target) {
+    if (!S.ready) { toast('号码未就绪'); return; }
+    if (!target) { toast('请输入号码'); return; }
+    if (target === S.myId) { toast('不能拨打自己的号码'); return; }
+    if (S.activeCall || S.pendingCall) { toast('通话中'); return; }
+
+    try { await ensureMic(); } catch { return; }
+
+    S.status = 'dialing';
+    S.target = target;
+
+    const call = S.peer.call(target, S.stream);
+    if (!call) {
+      S.status = 'idle';
+      S.target = '';
+      toast('拨打失败');
+      return;
+    }
+    S.activeCall = call;
+    showOverlay();
+
+    call.on('stream', remote => {
+      S.status = 'active';
+      S.callStart = Date.now();
+      attachRemote(remote);
+      renderOverlay();
+    });
+
+    call.on('close', () => {
+      if (S.activeCall !== call) return;
+      const wasActive = S.status === 'active';
+      S.activeCall = null;
+      S.status = 'idle';
+      S.target = '';
+      S.callStart = 0;
+      detachRemote();
+      hideOverlay();
+      if (wasActive) toast('对方已挂断');
+    });
+
+    call.on('error', err => {
+      if (S.activeCall !== call) return;
+      if (err && err.type === 'peer-unavailable') toast('对方不在线');
+      S.activeCall = null;
+      S.status = 'idle';
+      S.target = '';
+      S.callStart = 0;
+      detachRemote();
+      hideOverlay();
+    });
+  }
+
+  // ============ 接听 / 拒接 / 挂断 ============
+  async function answer() {
+    if (!S.pendingCall) return;
+    const call = S.pendingCall;
+    S.pendingCall = null;
+
+    try { await ensureMic(); }
+    catch {
+      try { call.close(); } catch {}
+      S.status = 'idle';
+      S.target = '';
+      hideOverlay();
+      return;
+    }
+
+    try { call.answer(S.stream); } catch {}
+    S.activeCall = call;
+    S.status = 'active';
+    S.callStart = Date.now();
+    renderOverlay();
+
+    call.on('stream', remote => { attachRemote(remote); });
+
+    call.on('close', () => {
+      if (S.activeCall !== call) return;
+      S.activeCall = null;
+      S.status = 'idle';
+      S.target = '';
+      S.callStart = 0;
+      detachRemote();
+      hideOverlay();
+      toast('对方已挂断');
+    });
+
+    call.on('error', () => {
+      if (S.activeCall !== call) return;
+      S.activeCall = null;
+      S.status = 'idle';
+      S.target = '';
+      S.callStart = 0;
+      detachRemote();
+      hideOverlay();
+    });
+  }
+
+  function reject() {
+    if (S.pendingCall) {
+      const call = S.pendingCall;
+      const callerId = call.peer;
+      S.pendingCall = null;
+      try { call.close(); } catch {}
+      sendReject(callerId);
+    }
+    S.status = 'idle';
+    S.target = '';
+    hideOverlay();
+  }
+
+  function hangup() {
+    const call = S.activeCall;
+    S.activeCall = null;
+    if (call) { try { call.close(); } catch {} }
+    S.status = 'idle';
+    S.target = '';
+    S.callStart = 0;
+    detachRemote();
+    hideOverlay();
+  }
+
+  // ============ 事件绑定 ============
+  dialBtn.addEventListener('click', () => {
+    const t = targetEl.value.trim();
+    if (!t) { toast('请输入号码'); return; }
+    dial(t);
+  });
+  targetEl.addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); dialBtn.click(); }
+  });
+
+  saveBtn.addEventListener('click', () => {
+    const v = myInputEl.value.trim();
+    if (!/^\d{3,15}$/.test(v)) { toast('号码需 3–15 位数字'); return; }
+    if (v === S.myId && S.ready) { toast('号码未变'); return; }
+    saveId(v);
+    toast('号码已保存，正在重连…');
+    initPeer(v);
+    myInputEl.value = '';
+  });
+  myInputEl.addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); saveBtn.click(); }
+  });
+
+  // 定时刷新通话时长
+  tickTimer = setInterval(() => {
+    if (S.status === 'active') {
+      ovStatusEl.textContent = fmtDuration(Date.now() - S.callStart);
+    }
+  }, 500);
+
+  // ============ 启动 ============
+  const initialId = loadSavedId();
+  initPeer(initialId);
+
+  // 页面关闭前挂断
+  window.addEventListener('beforeunload', () => {
+    if (S.activeCall) { try { S.activeCall.close(); } catch {} }
+    if (S.pendingCall) { try { S.pendingCall.close(); } catch {} }
+    if (S.peer) { try { S.peer.destroy(); } catch {} }
+  });
+})();
+</script>
+</body>
+</html>

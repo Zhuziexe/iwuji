@@ -1,7 +1,6 @@
 (() => {
   const BUNDLE = 'com.wujinb.aihot';
   const API_BASE = 'https://aihot.news/api/v1/items';
-  const CACHE_TTL = 5 * 60 * 1000;
   const PAGE_SIZE = 30;
 
   const CATEGORIES = [
@@ -38,34 +37,6 @@
     if (diff < 86400000) return Math.floor(diff / 3600000) + '小时前';
     if (diff < 604800000) return Math.floor(diff / 86400000) + '天前';
     return `${d.getMonth() + 1}月${d.getDate()}日`;
-  }
-
-  function cacheKey(cat) {
-    return 'cache.' + (cat || 'all');
-  }
-
-  async function loadCached(cat) {
-    try {
-      const db = AppStorage.for(BUNDLE);
-      const rec = await db.get(cacheKey(cat), null);
-      if (!rec || !rec.items) return null;
-      if (Date.now() - rec.timestamp > CACHE_TTL) return null;
-      return rec.items;
-    } catch { return null; }
-  }
-
-  async function saveCached(cat, items) {
-    try {
-      const db = AppStorage.for(BUNDLE);
-      await db.set(cacheKey(cat), { timestamp: Date.now(), items });
-    } catch { }
-  }
-
-  async function clearCached(cat) {
-    try {
-      const db = AppStorage.for(BUNDLE);
-      await db.remove(cacheKey(cat));
-    } catch { }
   }
 
   async function fetchItems(cat) {
@@ -109,7 +80,7 @@
     bundlename: BUNDLE,
     name: 'AI新闻',
     icon: './assets/aihot.svg',
-    version: '1.0.5',
+    version: '1.0.7',
     initialRoute: 'home',
 
     styles: `
@@ -161,10 +132,16 @@
         gap: 11px;
         padding: 6px 22px 11px;
         overflow-x: auto;
+        touch-action: pan-y;
         -webkit-overflow-scrolling: touch;
         scrollbar-width: none;
+        user-select: none;
+        -webkit-user-select: none;
+        cursor: grab;
       }
       .ai-cats::-webkit-scrollbar { display: none; }
+      .ai-cats.is-dragging { cursor: grabbing; }
+      .ai-cat { user-select: none; -webkit-user-select: none; }
 
       .ai-cat {
         flex: 0 0 auto;
@@ -403,6 +380,8 @@
         },
 
         mount(root, ctx) {
+          try { AppStorage.for(BUNDLE).clear().catch(() => {}); } catch {}
+
           const listEl = root.querySelector('#aiList');
           const catsEl = root.querySelector('#aiCats');
           const refreshBtn = root.querySelector('#aiRefresh');
@@ -420,6 +399,7 @@
 
             catsEl.querySelectorAll('.ai-cat').forEach(el => {
               el.addEventListener('click', () => {
+                if (drag.moved) { drag.reset(); return; }
                 const cat = el.dataset.cat;
                 if (cat === currentCat) return;
                 currentCat = cat;
@@ -446,7 +426,7 @@
                 <button class="ai-state__retry" id="aiRetry" type="button">重试</button>
               </div>
             `;
-            listEl.querySelector('#aiRetry')?.addEventListener('click', () => load(true));
+            listEl.querySelector('#aiRetry')?.addEventListener('click', () => load());
           }
 
           function renderList() {
@@ -484,33 +464,16 @@
             });
           }
 
-          async function load(force = false) {
+          async function load() {
             if (loading || disposed) return;
             loading = true;
             refreshBtn.disabled = true;
             renderLoading();
 
             try {
-              if (force) {
-                await clearCached(currentCat);
-              } else {
-                const cached = await loadCached(currentCat);
-                if (cached && cached.length && !disposed) {
-                  items = cached;
-                  renderList();
-                  loading = false;
-                  refreshBtn.disabled = false;
-                  return;
-                }
-              }
-
               const list = await fetchItems(currentCat);
               if (disposed) return;
-
               items = list;
-              await saveCached(currentCat, items);
-              if (disposed) return;
-
               renderList();
             } catch (e) {
               if (disposed) return;
@@ -530,33 +493,105 @@
 
           refreshBtn.addEventListener('click', () => {
             if (loading) return;
-            load(true);
+            load();
             if (navigator.vibrate) { try { navigator.vibrate(8); } catch { } }
           });
 
-          const blockSwipe = () => { root.dataset.blockBackGesture = '1'; };
-          const releaseSwipe = () => { delete root.dataset.blockBackGesture; };
+          const drag = (() => {
+            const MOVE_THRESHOLD = 4;
+            let startX = 0, startY = 0, startLeft = 0;
+            let moved = false;
+            let active = false;
+            let touchId = null;
+            let mouseDown = false;
 
-          catsEl.addEventListener('touchstart', blockSwipe, { capture: true, passive: true });
-          catsEl.addEventListener('touchend', releaseSwipe, { passive: true });
-          catsEl.addEventListener('touchcancel', releaseSwipe, { passive: true });
-          catsEl.addEventListener('pointerdown', blockSwipe, { capture: true });
-          catsEl.addEventListener('pointerup', releaseSwipe);
-          catsEl.addEventListener('pointercancel', releaseSwipe);
-          catsEl.addEventListener('pointerleave', releaseSwipe);
+            function begin(x, y) {
+              startX = x; startY = y;
+              startLeft = catsEl.scrollLeft;
+              moved = false; active = true;
+              catsEl.classList.add('is-dragging');
+            }
+            function move(x, y, canPrevent, e) {
+              if (!active) return;
+              const dx = x - startX, dy = y - startY;
+              if (!moved) {
+                if (Math.abs(dx) < MOVE_THRESHOLD && Math.abs(dy) < MOVE_THRESHOLD) return;
+                if (Math.abs(dy) > Math.abs(dx)) { end(); return; }
+                moved = true;
+              }
+              if (canPrevent && e.cancelable) e.preventDefault();
+              catsEl.scrollLeft = startLeft - dx;
+            }
+            function end() {
+              if (!active) return;
+              active = false; touchId = null;
+              catsEl.classList.remove('is-dragging');
+              if (moved) setTimeout(() => { moved = false; }, 0);
+            }
+
+            function onTouchStart(e) {
+              e.stopPropagation();
+              const t = e.changedTouches[0];
+              if (!t) return;
+              touchId = t.identifier;
+              begin(t.clientX, t.clientY);
+            }
+            function onTouchMove(e) {
+              e.stopPropagation();
+              if (!active) return;
+              const t = Array.from(e.changedTouches).find(x => x.identifier === touchId);
+              if (!t) return;
+              move(t.clientX, t.clientY, true, e);
+            }
+            function onTouchEnd(e) {
+              e.stopPropagation();
+              if (active) end();
+            }
+            function onMouseDown(e) {
+              if (e.button !== 0) return;
+              e.stopPropagation();
+              e.preventDefault();
+              mouseDown = true;
+              begin(e.clientX, e.clientY);
+            }
+            function onMouseMove(e) {
+              if (!mouseDown) return;
+              move(e.clientX, e.clientY, true, e);
+            }
+            function onMouseUp() {
+              if (!mouseDown) return;
+              mouseDown = false;
+              end();
+            }
+
+            catsEl.addEventListener('touchstart', onTouchStart, { capture: true, passive: false });
+            catsEl.addEventListener('touchmove', onTouchMove, { capture: true, passive: false });
+            catsEl.addEventListener('touchend', onTouchEnd, { capture: true, passive: false });
+            catsEl.addEventListener('touchcancel', onTouchEnd, { capture: true, passive: false });
+            catsEl.addEventListener('mousedown', onMouseDown, { capture: true });
+            document.addEventListener('mousemove', onMouseMove);
+            document.addEventListener('mouseup', onMouseUp);
+
+            return {
+              get moved() { return moved; },
+              reset() { moved = false; },
+              destroy() {
+                catsEl.removeEventListener('touchstart', onTouchStart, true);
+                catsEl.removeEventListener('touchmove', onTouchMove, true);
+                catsEl.removeEventListener('touchend', onTouchEnd, true);
+                catsEl.removeEventListener('touchcancel', onTouchEnd, true);
+                catsEl.removeEventListener('mousedown', onMouseDown, true);
+                document.removeEventListener('mousemove', onMouseMove);
+                document.removeEventListener('mouseup', onMouseUp);
+              },
+            };
+          })();
           renderCats();
           load();
 
           return () => {
             disposed = true;
-            catsEl.removeEventListener('touchstart', blockSwipe, true);
-            catsEl.removeEventListener('touchend', releaseSwipe);
-            catsEl.removeEventListener('touchcancel', releaseSwipe);
-            catsEl.removeEventListener('pointerdown', blockSwipe, true);
-            catsEl.removeEventListener('pointerup', releaseSwipe);
-            catsEl.removeEventListener('pointercancel', releaseSwipe);
-            catsEl.removeEventListener('pointerleave', releaseSwipe);
-            delete root.dataset.blockBackGesture;
+            drag.destroy();
           };
         },
       },

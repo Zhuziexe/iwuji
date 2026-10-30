@@ -42,7 +42,7 @@
     name: '今天吃什么',
     icon: ICON_URL,
     initialRoute: 'home',
-    version: '1.0.1',
+    version: '1.0.2',
 
     styles: `
       .ew-page {
@@ -91,16 +91,22 @@
       }
       .ew-roll-btn:active { transform: scale(.95); filter: brightness(.92); }
 
-      /* ===== 页签：chip 恢复到可点尺寸 ===== */
       .ew-filters {
         flex: 0 0 auto;
         display: flex;
         gap: 8px;
         padding: 6px 20px 8px;
         overflow-x: auto;
-        touch-action: pan-x;
+        touch-action: pan-y;
         -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        user-select: none;
+        -webkit-user-select: none;
+        cursor: grab;
       }
+      .ew-filters::-webkit-scrollbar { display: none; }
+      .ew-filters.is-dragging { cursor: grabbing; }
+      .ew-chip { user-select: none; -webkit-user-select: none; }
       .ew-chip {
         flex: 0 0 auto;
         display: inline-flex;
@@ -407,7 +413,10 @@
                       data-cat="${c}" type="button">${c}</button>
             `).join('');
             filtersEl.querySelectorAll('.ew-chip').forEach(btn => {
-              btn.addEventListener('click', () => switchCat(btn.dataset.cat));
+              btn.addEventListener('click', () => {
+                if (drag.moved) { drag.reset(); return; }
+                switchCat(btn.dataset.cat);
+              });
             });
           }
 
@@ -499,16 +508,107 @@
             }
           }
 
-          const blockSwipe = () => { root.dataset.blockBackGesture = '1'; };
-          const releaseSwipe = () => { delete root.dataset.blockBackGesture; };
+                    // ==================== chips 手动拖动 ====================
+          const drag = (() => {
+            const MOVE_THRESHOLD = 4;
+            let startX = 0, startY = 0, startLeft = 0;
+            let moved = false;
+            let active = false;
+            let touchId = null;
+            let mouseDown = false;
 
-          filtersEl.addEventListener('touchstart', blockSwipe, { capture: true, passive: true });
-          filtersEl.addEventListener('touchend', releaseSwipe, { passive: true });
-          filtersEl.addEventListener('touchcancel', releaseSwipe, { passive: true });
-          filtersEl.addEventListener('pointerdown', blockSwipe);
-          filtersEl.addEventListener('pointerup', releaseSwipe);
-          filtersEl.addEventListener('pointercancel', releaseSwipe);
-          filtersEl.addEventListener('pointerleave', releaseSwipe);
+            function begin(x, y) {
+              startX = x;
+              startY = y;
+              startLeft = filtersEl.scrollLeft;
+              moved = false;
+              active = true;
+              filtersEl.classList.add('is-dragging');
+            }
+
+            function move(x, y, canPrevent, e) {
+              if (!active) return;
+              const dx = x - startX;
+              const dy = y - startY;
+              if (!moved) {
+                if (Math.abs(dx) < MOVE_THRESHOLD && Math.abs(dy) < MOVE_THRESHOLD) return;
+                if (Math.abs(dy) > Math.abs(dx)) { end(); return; }  // 垂直方向放弃
+                moved = true;
+              }
+              if (canPrevent && e.cancelable) e.preventDefault();
+              filtersEl.scrollLeft = startLeft - dx;
+            }
+
+            function end() {
+              if (!active) return;
+              active = false;
+              touchId = null;
+              filtersEl.classList.remove('is-dragging');
+              if (moved) {
+                setTimeout(() => { moved = false; }, 0);
+              }
+            }
+
+            // ---- 触摸 ----
+            function onTouchStart(e) {
+              e.stopPropagation();
+              const t = e.changedTouches[0];
+              if (!t) return;
+              touchId = t.identifier;
+              begin(t.clientX, t.clientY);
+            }
+            function onTouchMove(e) {
+              e.stopPropagation();
+              if (!active) return;
+              const t = Array.from(e.changedTouches).find(x => x.identifier === touchId);
+              if (!t) return;
+              move(t.clientX, t.clientY, true, e);
+            }
+            function onTouchEnd(e) {
+              e.stopPropagation();
+              if (active) end();
+            }
+
+            // ---- 鼠标 ----
+            function onMouseDown(e) {
+              if (e.button !== 0) return;
+              e.stopPropagation();
+              e.preventDefault();
+              mouseDown = true;
+              begin(e.clientX, e.clientY);
+            }
+            function onMouseMove(e) {
+              if (!mouseDown) return;
+              move(e.clientX, e.clientY, true, e);
+            }
+            function onMouseUp() {
+              if (!mouseDown) return;
+              mouseDown = false;
+              end();
+            }
+
+            filtersEl.addEventListener('touchstart', onTouchStart, { capture: true, passive: false });
+            filtersEl.addEventListener('touchmove', onTouchMove, { capture: true, passive: false });
+            filtersEl.addEventListener('touchend', onTouchEnd, { capture: true, passive: false });
+            filtersEl.addEventListener('touchcancel', onTouchEnd, { capture: true, passive: false });
+            filtersEl.addEventListener('mousedown', onMouseDown, { capture: true });
+            document.addEventListener('mousemove', onMouseMove);
+            document.addEventListener('mouseup', onMouseUp);
+
+            return {
+              get moved() { return moved; },
+              reset() { moved = false; },
+              destroy() {
+                filtersEl.removeEventListener('touchstart', onTouchStart, true);
+                filtersEl.removeEventListener('touchmove', onTouchMove, true);
+                filtersEl.removeEventListener('touchend', onTouchEnd, true);
+                filtersEl.removeEventListener('touchcancel', onTouchEnd, true);
+                filtersEl.removeEventListener('mousedown', onMouseDown, true);
+                document.removeEventListener('mousemove', onMouseMove);
+                document.removeEventListener('mouseup', onMouseUp);
+              },
+            };
+          })();
 
           let lastShake = 0;
           function onMotion(e) {
@@ -535,14 +635,7 @@
           return () => {
             disposed = true;
             window.removeEventListener('devicemotion', onMotion);
-            filtersEl.removeEventListener('touchstart', blockSwipe, true);
-            filtersEl.removeEventListener('touchend', releaseSwipe);
-            filtersEl.removeEventListener('touchcancel', releaseSwipe);
-            filtersEl.removeEventListener('pointerdown', blockSwipe);
-            filtersEl.removeEventListener('pointerup', releaseSwipe);
-            filtersEl.removeEventListener('pointercancel', releaseSwipe);
-            filtersEl.removeEventListener('pointerleave', releaseSwipe);
-            delete root.dataset.blockBackGesture;
+            drag.destroy();
           };
         },
       },

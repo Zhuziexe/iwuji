@@ -18,6 +18,247 @@
     return peerJsPromise;
   }
 
+  const RING_MELODY = [
+    ['G5', 1], ['0', 1], ['E5', 1], ['E5', 1], ['0', 1], ['0', 1], ['0', 1], ['0', 1],
+    ['F5', 1], ['0', 1], ['D5', 1], ['D5', 1], ['0', 1], ['0', 1], ['0', 1], ['0', 1],
+    ['C5', 1], ['0', 1], ['D5', 1], ['0', 1], ['E5', 1], ['0', 1], ['F5', 1], ['0', 1], ['G5', 8],
+    ['A5', 1.5], ['A5', 0.5], ['A5', 1.5], ['A5', 0.5], ['A5', 4],
+    ['G5', 1.5], ['G5', 0.5], ['G5', 1.5], ['G5', 0.5], ['G5', 4],
+    ['F5', 1], ['0', 1], ['F5', 1], ['0', 1], ['E5', 1], ['0', 1], ['D5', 1], ['0', 1],
+    ['C5', 1], ['0', 1], ['0', 1], ['0', 1], ['0', 1], ['0', 1], ['0', 1], ['0', 1],
+  ];
+
+   const RING_BASS = [
+    ['C4', 2], ['E4', 2], ['G4', 2], ['E4', 2],
+    ['B3', 2], ['D4', 2], ['G4', 2], ['D4', 2],
+    ['C4', 2], ['E4', 2], ['G4', 2], ['E4', 2],
+    ['C4', 2], ['E4', 2], ['G4', 2], ['E4', 2],
+    ['C4', 2], ['F4', 2], ['A4', 2], ['F4', 2],
+    ['C4', 2], ['E4', 2], ['G4', 2], ['E4', 2],
+    ['B3', 2], ['D4', 2], ['G4', 2], ['D4', 2],
+    ['C4', 2], ['G4', 2], ['A4', 2], ['B4', 2],
+  ];
+
+  const RING_FREQ = {
+    'C4': 261.63, 'D4': 293.66, 'E4': 329.63, 'F4': 349.23, 'G4': 392.00, 'A4': 440.00, 'B4': 493.88,
+    'C5': 523.25, 'D5': 587.33, 'E5': 659.25, 'F5': 698.46, 'G5': 783.99, 'A5': 880.00, 'B5': 987.77,
+  };
+
+  const RING_STEP_SEC = 0.25;
+
+  const Ringtone = (() => {
+    let buffer = null;
+    let bufferPromise = null;
+    let source = null;
+    let playing = false;
+
+    function ensureCtx() {
+      return window.WujiAudio?.get?.() || null;
+    }
+
+    function unlock() {
+      if (window.WujiAudio?.unlock) {
+        window.WujiAudio.unlock().catch(() => {});
+      }
+    }
+
+    function schedulePiano(ctx, dest, freq, start, dur, opts = {}) {
+      const { gain = 0.2, velocity = 1 } = opts;
+      const partials = [
+        { ratio: 1.0, amp: 1.00, decay: 1.0  },
+        { ratio: 2.0, amp: 0.50, decay: 0.7  },
+        { ratio: 3.0, amp: 0.25, decay: 0.5  },
+        { ratio: 4.0, amp: 0.12, decay: 0.35 },
+        { ratio: 5.0, amp: 0.06, decay: 0.25 },
+      ];
+      const now = start;
+      const peakGain = gain * velocity;
+
+      for (const p of partials) {
+        const osc = ctx.createOscillator();
+        const g = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.value = freq * p.ratio;
+        osc.frequency.setValueAtTime(freq * p.ratio * 1.008, now);
+        osc.frequency.exponentialRampToValueAtTime(freq * p.ratio, now + 0.04);
+
+        const peak = peakGain * p.amp;
+        const decayTime = Math.min(dur * p.decay * 2.5, dur * 2.5);
+
+        g.gain.setValueAtTime(0.0001, now);
+        g.gain.exponentialRampToValueAtTime(peak, now + 0.003);
+        g.gain.exponentialRampToValueAtTime(peak * 0.4, now + decayTime * 0.3);
+        g.gain.exponentialRampToValueAtTime(peak * 0.1, now + decayTime * 0.7);
+        g.gain.exponentialRampToValueAtTime(0.0001, now + decayTime);
+
+        osc.connect(g);
+        g.connect(dest);
+        osc.start(now);
+        osc.stop(now + decayTime + 0.02);
+      }
+    }
+
+    function scheduleString(ctx, dest, freq, start, dur, opts = {}) {
+      const { gain = 0.12 } = opts;
+      const osc = ctx.createOscillator();
+      const g = ctx.createGain();
+      const f = ctx.createBiquadFilter();
+
+      osc.type = 'sawtooth';
+      osc.frequency.value = freq;
+      f.type = 'lowpass';
+      f.frequency.value = 600;
+      f.Q.value = 0.3;
+
+      const atk = 0.04;
+      const rel = Math.min(0.3, dur * 0.5);
+
+      g.gain.setValueAtTime(0.0001, start);
+      g.gain.exponentialRampToValueAtTime(gain, start + atk);
+      g.gain.setValueAtTime(gain, start + dur - rel);
+      g.gain.exponentialRampToValueAtTime(0.0001, start + dur);
+
+      osc.connect(f);
+      f.connect(g);
+      g.connect(dest);
+      osc.start(start);
+      osc.stop(start + dur + 0.02);
+    }
+
+    function createReverb(ctx) {
+      const duration = 3.0;
+      const decay = 2.2;
+      const sampleRate = ctx.sampleRate;
+      const length = sampleRate * duration;
+      const impulse = ctx.createBuffer(2, length, sampleRate);
+      for (let ch = 0; ch < 2; ch++) {
+        const data = impulse.getChannelData(ch);
+        for (let i = 0; i < length; i++) {
+          const n = i / length;
+          const direct = i < sampleRate * 0.02 ? 1 : 0;
+          data[i] = (Math.random() * 2 - 1) * Math.pow(1 - n, decay) * (0.3 + direct * 0.7);
+        }
+      }
+      const convolver = ctx.createConvolver();
+      convolver.buffer = impulse;
+      return convolver;
+    }
+
+    function getVelocity(note, dur, index) {
+      if (dur >= 4) return 1.0;
+      if (dur >= 1.5) return 0.85;
+      if (index % 8 === 0) return 0.9;
+      return 0.7;
+    }
+
+    function scheduleTrack(ctx, dest, track, start, noteFn, baseOpts) {
+      let t = 0;
+      let idx = 0;
+      for (const [note, dur] of track) {
+        if (note !== '0' && RING_FREQ[note]) {
+          const velocity = getVelocity(note, dur, idx);
+          noteFn(ctx, dest, RING_FREQ[note], start + t * RING_STEP_SEC, dur * RING_STEP_SEC - 0.015, {
+            ...baseOpts,
+            velocity,
+          });
+        }
+        t += dur;
+        idx++;
+      }
+      return t * RING_STEP_SEC;
+    }
+
+    async function renderBuffer() {
+      const ctx = ensureCtx();
+      if (!ctx) throw new Error('AudioContext 未就绪');
+
+      const sampleRate = 16000;
+      const totalSec = 18;
+      const offline = new OfflineAudioContext(1, Math.ceil(sampleRate * totalSec), sampleRate);
+
+      const master = offline.createGain();
+      master.gain.value = 0.9;
+
+      const reverb = createReverb(offline);
+      const wet = offline.createGain(); wet.gain.value = 0.5;
+      const dry = offline.createGain(); dry.gain.value = 1.0;
+
+      master.connect(dry);
+      master.connect(reverb);
+      reverb.connect(wet);
+      dry.connect(offline.destination);
+      wet.connect(offline.destination);
+
+      const start = 0.05;
+      scheduleTrack(offline, master, RING_MELODY, start, schedulePiano, { gain: 0.2 });
+      scheduleTrack(offline, master, RING_BASS, start, scheduleString, { gain: 0.12 });
+
+      return await offline.startRendering();
+    }
+
+    function getBuffer() {
+      if (buffer) return Promise.resolve(buffer);
+      if (!bufferPromise) {
+        bufferPromise = renderBuffer()
+          .then(b => { buffer = b; return b; })
+          .catch(e => { bufferPromise = null; throw e; });
+      }
+      return bufferPromise;
+    }
+
+    return {
+      unlock,
+
+      prerender() {
+        return getBuffer().catch(e => {
+          console.warn('[Ringtone] 预渲染失败', e);
+        });
+      },
+
+      async start() {
+        if (playing) return;
+        unlock();
+        playing = true;
+
+        const ctx = ensureCtx();
+        if (!ctx) { playing = false; return; }
+
+        try {
+          const buf = await getBuffer();
+          if (!playing) return;  // 等 buffer 期间被 stop 了
+
+          source = ctx.createBufferSource();
+          source.buffer = buf;
+          source.loop = true;          // ★ 硬件循环，零开销
+          source.connect(ctx.destination);
+          source.start();
+
+          if (navigator.vibrate) {
+            try { navigator.vibrate([400, 200, 400, 800]); } catch {}
+          }
+        } catch (e) {
+          console.warn('[Ringtone] 播放失败', e);
+          playing = false;
+        }
+      },
+
+      stop() {
+        if (!playing) return;
+        playing = false;
+
+        if (source) {
+          try { source.stop(); } catch {}
+          try { source.disconnect(); } catch {}
+          source = null;
+        }
+
+        if (navigator.vibrate) { try { navigator.vibrate(0); } catch {} }
+      },
+
+      get playing() { return playing; },
+    };
+  })();
+
   const S = {
     peer: null,
     myPeerId: '',
@@ -94,6 +335,7 @@
   }
 
   function handleRemoteReject() {
+    Ringtone.stop(); 
     if (S.status !== 'dialing' && S.status !== 'active') return;
     const call = S.activeCall;
     S.activeCall = null;
@@ -111,7 +353,7 @@
     if (S.peer && !S.peer.destroyed) return;
     try { await ensurePeerJs(); } catch (e) { console.warn('[phone] PeerJS 加载失败', e); return; }
 
-    const id = String(Math.floor(100000 + Math.random() * 900000));
+    const id = '1' + String(Math.floor(10000 + Math.random() * 90000));
     S.myPeerId = id;
 
     let peer;
@@ -146,6 +388,7 @@
       S.target = call.peer;
       notify();
       try { WujiOverlay.open({ bundlename: BUNDLE, name: 'call' }); } catch {}
+      Ringtone.start();
 
       call.on('close', () => {
         if (S.pendingCall !== call) return;
@@ -153,6 +396,7 @@
         S.status = 'idle';
         S.target = '';
         try { WujiOverlay.close(); } catch {}
+        Ringtone.stop();
         notify();
         try { WujiToast.show('来电已挂断'); } catch {}
       });
@@ -258,6 +502,7 @@
   }
 
   async function answer() {
+    Ringtone.stop();
     if (!S.pendingCall) return;
     const call = S.pendingCall;
     S.pendingCall = null;
@@ -304,6 +549,7 @@
   }
 
   function reject() {
+    Ringtone.stop();
     if (S.pendingCall) {
       const call = S.pendingCall;
       const callerId = call.peer;
@@ -318,6 +564,7 @@
   }
 
   function hangup() {
+    Ringtone.stop();
     const call = S.activeCall;
     S.activeCall = null;
     if (call) { try { call.close(); } catch {} }
@@ -339,11 +586,13 @@
     onBoot() {
       resetState();
       initPeer().catch(() => {});
+      Ringtone.prerender();
     },
 
     onShutdown() {
       resetState();
       destroyPeer();
+      Ringtone.stop();
       try { WujiOverlay.close(); } catch {}
     },
 
@@ -390,12 +639,12 @@
         font-variant-numeric: tabular-nums;
       }
 
-      /* ============ 号码显示 ============ */
       .phone-display {
         flex: 0 0 auto;
-        padding: 4px 24px 6px;
-        overflow-x: auto;
-        overflow-y: hidden;
+        height: 60px;
+        box-sizing: border-box;
+        padding: 2px 34px 4px;
+        overflow: hidden;
         scrollbar-width: none;
         -webkit-overflow-scrolling: touch;
         touch-action: pan-x;
@@ -403,24 +652,30 @@
       .phone-display::-webkit-scrollbar { display: none; }
 
       .phone-number {
-        display: block;
-        text-align: center;
-        white-space: nowrap;
-        font-size: 46px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        height: 54px;
+        box-sizing: border-box;
+        font-size: 42px;
         font-weight: 600;
         color: var(--wj-text, #101828);
         letter-spacing: 2px;
         font-variant-numeric: tabular-nums;
-        line-height: 1.1;
-        min-height: 50px;
+        line-height: 1;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
       }
+
       .phone-number:empty::before {
-        content: '输入号码';
+        content: '输入对方号码';
         color: var(--wj-text-dim, #9aa4b8);
         font-weight: 400;
         letter-spacing: .5px;
         font-size: 28px;
-        line-height: 50px;
+        line-height: 1;
       }
 
       /* ============ 键盘 ============ */

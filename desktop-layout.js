@@ -9,6 +9,7 @@ window.DesktopLayout = (() => {
   const VERSION = 2;
 
   let data = null;
+  let lastRemoved = null
 
   function newPageId() {
     return 'p_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7);
@@ -111,11 +112,23 @@ window.DesktopLayout = (() => {
         .filter(b => !onDesktop.has(b));
 
       for (const b of missing) {
-        let pos = findEmptySlot();
+        let pos = null;
+
+        // ★ 刚被 removeApp 清掉的，回原位
+        if (lastRemoved && lastRemoved.bundle === b) {
+          const pi = d.pages.findIndex(p => p.id === lastRemoved.pageId);
+          if (pi >= 0 && !d.pages[pi].slots[lastRemoved.slotIndex]) {
+            pos = { pageIndex: pi, slotIndex: lastRemoved.slotIndex };
+          }
+          lastRemoved = null;
+        }
+
+        if (!pos) pos = findEmptySlot();
         if (!pos) {
           d.pages.push(emptyPage());
           pos = { pageIndex: d.pages.length - 1, slotIndex: 0 };
         }
+
         d.pages[pos.pageIndex].slots[pos.slotIndex] = b;
         dirty = true;
       }
@@ -205,12 +218,20 @@ window.DesktopLayout = (() => {
 
     removeApp(bundle) {
       const d = ensureData();
-      let changed = false;
       for (const p of d.pages) {
         const i = p.slots.indexOf(bundle);
-        if (i >= 0) { p.slots[i] = ''; changed = true; }
+        if (i >= 0) {
+          lastRemoved = { bundle, pageId: p.id, slotIndex: i };
+          p.slots[i] = '';
+          persist();
+          return;
+        }
       }
-      if (changed) { cleanupEmptyPages(); persist(); }
+    },
+
+    cleanupEmptyPages() {
+      cleanupEmptyPages();
+      persist();
     },
 
     reset() {

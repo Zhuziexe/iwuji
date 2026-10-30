@@ -2292,28 +2292,36 @@
       });
     })();
 
-    const BootAudio = (() => {
+    window.WujiAudio = (() => {
       let ctx = null;
-      let unlocked = false;
-
-      function ensureCtx() {
+      function get() {
         if (ctx) return ctx;
         const AC = window.AudioContext || window.webkitAudioContext;
         if (!AC) return null;
         try { ctx = new AC(); } catch { return null; }
         return ctx;
       }
+      async function unlock() {
+        const c = get();
+        if (!c) return false;
+        if (c.state === 'suspended') {
+          try { await c.resume(); } catch { }
+        }
+        return c.state === 'running';
+      }
+      return { get, unlock, get state() { return ctx ? ctx.state : 'closed'; } };
+    })();
+
+    const BootAudio = (() => {
+      let ctx = null;
+      let unlocked = false;
+
+      function ensureCtx() {
+        return window.WujiAudio.get();
+      }
 
       function unlock() {
-        const c = ensureCtx();
-        if (!c) return;
-        if (c.state === 'suspended') {
-          c.resume()
-            .then(() => { unlocked = c.state === 'running'; })
-            .catch(() => { });
-        } else {
-          unlocked = c.state === 'running';
-        }
+        window.WujiAudio.unlock().then(ok => { unlocked = ok; }).catch(() => {});
       }
 
       function attachUnlock() {
@@ -2897,7 +2905,7 @@
         }
       }, true);
     })();
-    
+
     document.addEventListener('click', e => {
       if (performance.now() < _suppressClicksUntil) {
         e.stopPropagation();
@@ -3028,6 +3036,10 @@
       if (evt.type === 'unregistered') {
         DesktopLayout.removeApp(evt.bundle);
         renderHome();
+        setTimeout(() => {
+          DesktopLayout.cleanupEmptyPages();
+          renderHome();
+        }, 0);
       } else if (evt.type === 'registered') {
         DesktopLayout.seedFromRegistry();
         renderHome();

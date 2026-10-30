@@ -38,7 +38,7 @@
     name: '吴际沙盒',
     icon: './assets/voxel.svg',
     initialRoute: 'main',
-    version: '1.3.0',
+    version: '1.3.2',
 
     styles: `
       .vx-wrap { position: absolute; inset: 0; background: #0a1428; overflow: hidden; }
