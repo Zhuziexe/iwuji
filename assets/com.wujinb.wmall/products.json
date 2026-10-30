@@ -23,7 +23,7 @@
           "id": "black",
           "text": "牛逼黑",
           "image": "./assets/com.wujinb.wmall/iwuji_black.png",
-          "buyable": false
+          "buyable": true
         }
       ],
       "specs": [
