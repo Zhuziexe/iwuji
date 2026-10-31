@@ -401,17 +401,21 @@
     }
   }
 
-  // ============ reject 信号（与 iWuji phone.js 协议一致） ============
-  function sendReject(targetId) {
+  // ============ 信令（与 iWuji phone.js 协议一致） ============
+  function sendSignal(targetId, payload) {
     if (!S.peer || S.peer.destroyed || !targetId) return;
     try {
       const conn = S.peer.connect(targetId, { reliable: true });
       conn.on('open', () => {
-        try { conn.send({ type: 'reject' }); } catch {}
+        try { conn.send(payload); } catch {}
         setTimeout(() => { try { conn.close(); } catch {} }, 200);
       });
       conn.on('error', () => {});
-    } catch (e) { console.warn('[standalone] sendReject', e); }
+    } catch (e) { console.warn('[standalone] sendSignal', e); }
+  }
+
+  function sendReject(targetId) {
+    sendSignal(targetId, { type: 'reject' });
   }
 
   function handleRemoteReject() {
@@ -425,6 +429,32 @@
     detachRemote();
     hideOverlay();
     toast('对方正忙');
+  }
+
+  // ★ 主叫在响铃阶段取消 → 被叫视为未接
+  function handleRemoteCancel() {
+    if (S.status !== 'incoming') return;
+    const call = S.pendingCall;
+    S.pendingCall = null;
+    if (call) { try { call.close(); } catch {} }
+    S.status = 'idle';
+    S.target = '';
+    hideOverlay();
+    toast('对方已取消');
+  }
+
+  // ★ 主叫在通话中挂断 → 被叫视为正常结束
+  function handleRemoteHangup() {
+    if (S.status !== 'active') return;
+    const call = S.activeCall;
+    S.activeCall = null;
+    if (call) { try { call.close(); } catch {} }
+    S.status = 'idle';
+    S.target = '';
+    S.callStart = 0;
+    detachRemote();
+    hideOverlay();
+    toast('对方已挂断');
   }
 
   // ============ Peer 生命周期 ============
@@ -470,13 +500,16 @@
         S.status = 'idle';
         S.target = '';
         hideOverlay();
-        toast('来电已挂断');
+        toast('来电已取消');
       });
     });
 
     peer.on('connection', conn => {
       conn.on('data', data => {
-        if (data && data.type === 'reject') handleRemoteReject();
+        if (!data) return;
+        if (data.type === 'reject') handleRemoteReject();
+        else if (data.type === 'cancel') handleRemoteCancel();
+        else if (data.type === 'hangup') handleRemoteHangup();
         try { conn.close(); } catch {}
       });
       conn.on('error', () => {});
@@ -618,6 +651,9 @@
 
   function hangup() {
     const call = S.activeCall;
+    const peerId = S.target;                       // ★ 先存，后面要清空
+    const wasDialing = S.status === 'dialing';     // ★ 区分响铃阶段 / 通话中
+
     S.activeCall = null;
     if (call) { try { call.close(); } catch {} }
     S.status = 'idle';
@@ -625,6 +661,10 @@
     S.callStart = 0;
     detachRemote();
     hideOverlay();
+
+    if (peerId) {
+      sendSignal(peerId, { type: wasDialing ? 'cancel' : 'hangup' });
+    }
   }
 
   // ============ 事件绑定 ============
