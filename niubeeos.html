@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>NiubeeOS</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html,body{height:100%;overflow:hidden;background:#000;
+    font-family:"Segoe UI","PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+    user-select:none;-webkit-user-select:none;}
+  svg{display:block;width:100%;height:100%;}
+  button{font-family:inherit;}
+
+  /* ---------------- 开机画面 ---------------- */
+  #boot{
+    position:fixed;inset:0;z-index:5000;
+    background:radial-gradient(circle at 50% 38%,#1b1b2b 0%,#0a0a12 70%);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:36px;
+    transition:opacity .6s ease;
+  }
+  #boot.hide{opacity:0;pointer-events:none;}
+  .boot-face{width:180px;height:180px;animation:bob 1.7s ease-in-out infinite;
+    filter:drop-shadow(0 0 30px rgba(255,212,0,.28));}
+  @keyframes bob{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-12px) scale(1.05)}}
+  .spinner{width:46px;height:46px;border-radius:50%;
+    border:4px solid rgba(255,255,255,.12);border-top-color:#FFD400;
+    animation:spin .9s linear infinite;}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .boot-text{color:#8b8ba0;font-size:13px;letter-spacing:2px;}
+
+  /* ---------------- 桌面 ---------------- */
+  #desktop{
+    position:fixed;inset:0 0 52px 0;
+    background:linear-gradient(135deg,#1e3a8a,#6d28d9 50%,#db2777);
+    transition:background .4s ease;
+  }
+  #desktopIcons{position:absolute;top:16px;left:16px;display:flex;flex-direction:column;gap:4px;z-index:1;}
+  .d-icon{width:88px;padding:10px 4px;border:none;border-radius:8px;background:transparent;
+    color:#fff;display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;
+    text-shadow:0 1px 4px rgba(0,0,0,.7);transition:background .15s;}
+  .d-icon:hover{background:rgba(255,255,255,.16);}
+  .d-icon .ico{font-size:32px;line-height:1;}
+  .d-icon .nm{font-size:12px;}
+
+  #windows{position:absolute;inset:0;pointer-events:none;}
+
+  /* ---------------- 窗口 ---------------- */
+  .window{position:absolute;display:flex;flex-direction:column;
+    background:#f7f7fa;border-radius:12px;overflow:hidden;pointer-events:auto;
+    min-width:260px;min-height:160px;
+    box-shadow:0 24px 60px rgba(0,0,0,.5),0 0 0 1px rgba(0,0,0,.25);}
+  .titlebar{height:40px;flex:none;display:flex;align-items:center;gap:8px;
+    padding:0 4px 0 14px;background:#26262f;color:#e9e9f2;
+    touch-action:none;cursor:default;}
+  .titlebar .t-icon{font-size:15px;}
+  .titlebar .t-title{font-size:13px;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .wbtns{display:flex;gap:2px;}
+  .wb{width:34px;height:28px;border:none;background:transparent;color:#cfcfe0;
+    border-radius:6px;cursor:pointer;font-size:12px;display:grid;place-items:center;
+    transition:background .12s;}
+  .wb:hover{background:rgba(255,255,255,.14);}
+  .wb.close:hover{background:#e81123;color:#fff;}
+  .wbody{flex:1;overflow:auto;background:#fff;color:#222;position:relative;}
+
+  /* ---------------- 任务栏 ---------------- */
+  #taskbar{position:fixed;left:0;right:0;bottom:0;height:52px;z-index:1500;
+    display:flex;align-items:center;gap:6px;padding:0 8px;
+    background:rgba(18,18,26,.86);backdrop-filter:blur(16px);
+    -webkit-backdrop-filter:blur(16px);
+    border-top:1px solid rgba(255,255,255,.12);}
+  #startBtn{width:42px;height:42px;padding:3px;border:none;background:transparent;
+    border-radius:10px;cursor:pointer;transition:background .15s,transform .1s;
+    display:grid;place-items:center;}
+  #startBtn:hover{background:rgba(255,255,255,.14);}
+  #startBtn:active{transform:scale(.92);}
+  #taskApps{display:flex;gap:4px;flex:1;overflow:hidden;margin-left:4px;}
+  .task-btn{display:flex;align-items:center;gap:6px;height:36px;padding:0 12px;
+    border:none;background:rgba(255,255,255,.06);color:#e6e6f0;border-radius:8px;
+    cursor:pointer;font-size:12px;transition:.15s;white-space:nowrap;}
+  .task-btn:hover{background:rgba(255,255,255,.15);}
+  .task-btn.active{background:rgba(255,212,0,.2);box-shadow:inset 0 0 0 1px rgba(255,212,0,.55);}
+  #clockWrap{margin-left:auto;text-align:right;line-height:1.25;padding:0 10px;color:#eaeaf3;}
+  #clock{font-size:14px;font-weight:600;}
+  #date{font-size:11px;color:#9a9ab0;}
+
+  /* ---------------- 开始菜单 ---------------- */
+  #startMenu{position:fixed;left:8px;bottom:60px;width:300px;max-height:64vh;
+    z-index:1600;display:none;flex-direction:column;padding:12px;
+    background:rgba(28,28,38,.96);backdrop-filter:blur(20px);
+    -webkit-backdrop-filter:blur(20px);
+    border:1px solid rgba(255,255,255,.14);border-radius:14px;color:#fff;
+    box-shadow:0 24px 60px rgba(0,0,0,.6);transform-origin:bottom left;}
+  #startMenu.show{display:flex;animation:smIn .18s ease-out;}
+  @keyframes smIn{from{opacity:0;transform:translateY(12px) scale(.96)}to{opacity:1;transform:none}}
+  .sm-head{display:flex;align-items:center;gap:10px;padding:4px 6px 12px;
+    font-size:14px;font-weight:600;letter-spacing:.5px;}
+  .sm-face{width:26px;height:26px;flex:none;}
+  .sm-list{flex:1;overflow:auto;display:flex;flex-direction:column;gap:2px;padding-right:2px;}
+  .sm-list::-webkit-scrollbar{width:8px;}
+  .sm-list::-webkit-scrollbar-thumb{background:rgba(255,255,255,.18);border-radius:4px;}
+  .sm-item{display:flex;align-items:center;gap:12px;padding:9px 10px;border:none;
+    background:transparent;color:#e9e9f2;border-radius:8px;cursor:pointer;
+    font-size:13px;text-align:left;transition:background .12s;width:100%;}
+  .sm-item:hover{background:rgba(255,255,255,.12);}
+  .sm-ico{font-size:18px;width:22px;text-align:center;}
+  .sm-foot{border-top:1px solid rgba(255,255,255,.12);margin-top:8px;padding-top:8px;}
+  #shutdownBtn{display:flex;align-items:center;gap:10px;width:100%;padding:9px 10px;
+    border:none;background:transparent;color:#ff9b9b;border-radius:8px;
+    cursor:pointer;font-size:13px;transition:background .12s;}
+  #shutdownBtn:hover{background:rgba(232,17,35,.22);}
+
+  /* ---------------- 关机界面 ---------------- */
+  .sd{position:fixed;inset:0;z-index:6000;background:#000;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;}
+  .sd-msg{color:#bbb;font-size:16px;letter-spacing:2px;}
+  .sd-power{display:flex;flex-direction:column;align-items:center;gap:18px;}
+  #powerBtn{width:66px;height:66px;border-radius:50%;border:2px solid #3a3a48;
+    background:#15151c;color:#FFD400;font-size:26px;cursor:pointer;transition:.2s;}
+  #powerBtn:hover{border-color:#FFD400;box-shadow:0 0 28px rgba(255,212,0,.45);}
+  .sd-hint{color:#666;font-size:13px;}
+
+  /* ---------------- 各 App 样式 ---------------- */
+  /* 设置 */
+  .set{padding:16px 18px 24px;}
+  .set-title{font-size:18px;font-weight:700;margin-bottom:16px;}
+  .set-sec{margin-bottom:22px;}
+  .set-h{font-size:12px;color:#777;font-weight:600;margin-bottom:10px;letter-spacing:.5px;}
+  .wps{display:flex;gap:10px;flex-wrap:wrap;}
+  .wp{width:78px;height:52px;border-radius:9px;border:3px solid transparent;
+    cursor:pointer;transition:.15s;}
+  .wp:hover{transform:translateY(-2px);}
+  .wp.active{border-color:#FFD400;box-shadow:0 0 0 2px rgba(255,212,0,.35);}
+  .about{display:flex;align-items:center;gap:14px;}
+  .about-face{width:64px;height:64px;flex:none;}
+  .about-name{font-weight:700;font-size:14px;}
+  .about-sub{font-size:12px;color:#777;margin-top:4px;}
+
+  /* 图库 */
+  .gal{position:absolute;inset:0;padding:14px;display:flex;flex-direction:column;gap:12px;}
+  .gal-preview{flex:none;background:#f1f2f7;border-radius:12px;padding:14px;text-align:center;}
+  #galBig{font-size:60px;line-height:1.1;display:block;}
+  .gal-cap{font-size:12px;color:#8a8a9a;margin-top:6px;}
+  .gal-grid{flex:1;overflow:auto;display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(64px,1fr));
+    gap:8px;align-content:start;}
+  .gal-grid::-webkit-scrollbar{width:8px;}
+  .gal-grid::-webkit-scrollbar-thumb{background:#cfd3e0;border-radius:4px;}
+  .gal-item{aspect-ratio:1;border:2px solid transparent;background:#f7f8fc;
+    border-radius:10px;font-size:30px;cursor:pointer;display:grid;place-items:center;
+    transition:.15s;}
+  .gal-item:hover{background:#eceefb;transform:translateY(-2px);}
+  .gal-item.sel{border-color:#FFD400;background:#fffbe6;}
+
+  /* 浏览器 */
+  .br{position:absolute;inset:0;display:flex;flex-direction:column;background:#fff;}
+  .br-bar{flex:none;display:flex;gap:8px;padding:8px;background:#eef0f6;
+    border-bottom:1px solid #dfe3ee;}
+  .br-url{flex:1;height:32px;padding:0 12px;border:1px solid #d3d7e3;border-radius:16px;
+    font-size:13px;outline:none;background:#fff;color:#222;}
+  .br-url:focus{border-color:#FFD400;box-shadow:0 0 0 3px rgba(255,212,0,.25);}
+  .br-go{height:32px;padding:0 16px;border:none;border-radius:16px;background:#FFD400;
+    color:#222;font-size:13px;font-weight:600;cursor:pointer;transition:.15s;}
+  .br-go:hover{background:#ffc800;}
+  .br-frame{flex:1;width:100%;border:none;background:#fff;}
+  .br-tip{flex:none;padding:5px 10px;font-size:11px;color:#9aa0b0;background:#f7f8fb;
+    border-top:1px solid #e6e9f2;}
+
+  /* 计算器 */
+  .calc{position:absolute;inset:0;padding:12px;display:flex;flex-direction:column;gap:10px;}
+  .calc-screen{flex:none;background:#1c1c24;color:#fff;border-radius:10px;padding:12px 14px;
+    text-align:right;overflow:hidden;}
+  .calc-expr{font-size:12px;color:#8a8aa0;height:16px;overflow:hidden;white-space:nowrap;}
+  .calc-out{font-size:30px;font-weight:600;white-space:nowrap;overflow:hidden;
+    text-overflow:ellipsis;line-height:1.25;}
+  .calc-keys{flex:1;display:grid;grid-template-columns:repeat(4,1fr);gap:8px;}
+  .k{border:none;border-radius:10px;background:#eef0f5;font-size:16px;font-weight:500;
+    cursor:pointer;color:#222;transition:.1s;}
+  .k:hover{background:#dfe3ec;}
+  .k:active{transform:scale(.95);}
+  .k.op{background:#FFD400;}
+  .k.op:hover{background:#ffc800;}
+  .k.fn{background:#d8dce6;}
+  .k.fn:hover{background:#c9cede;}
+  .k.eq{background:#2b2b38;color:#FFD400;font-weight:700;}
+  .k.eq:hover{background:#3a3a4c;}
+</style>
+</head>
+<body>
+
+<!-- ============ 开机画面 ============ -->
+<div id="boot">
+  <div class="boot-face" id="bootFace"></div>
+  <div class="spinner"></div>
+  <div class="boot-text">NiubeeOS 正在启动…</div>
+</div>
+
+<!-- ============ 桌面 ============ -->
+<div id="desktop">
+  <div id="desktopIcons"></div>
+  <div id="windows"></div>
+</div>
+
+<!-- ============ 任务栏 ============ -->
+<div id="taskbar">
+  <button id="startBtn" title="开始"></button>
+  <div id="taskApps"></div>
+  <div id="clockWrap">
+    <div id="clock">--:--</div>
+    <div id="date">----/--/--</div>
+  </div>
+</div>
+
+<!-- ============ 开始菜单 ============ -->
+<div id="startMenu">
+  <div class="sm-head"><span class="sm-face" id="smFace"></span><span>NiubeeOS</span></div>
+  <div class="sm-list" id="smList"></div>
+  <div class="sm-foot">
+    <button id="shutdownBtn">⏻&nbsp;&nbsp;关机</button>
+  </div>
+</div>
+
+<script>
+/* =========================================================
+   0. 全局元素 & 笑脸 SVG
+   ========================================================= */
+const $ = (s, r = document) => r.querySelector(s);
+
+const FACE_SVG = `
+<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+  <circle cx="50" cy="50" r="44" fill="#FFD400" stroke="#000" stroke-width="6"/>
+  <ellipse cx="34" cy="39" rx="5.5" ry="9.5" fill="#000"/>
+  <ellipse cx="66" cy="39" rx="5.5" ry="9.5" fill="#000"/>
+  <path d="M16 55 Q50 100 84 55" fill="none" stroke="#000"
+        stroke-width="7.5" stroke-linecap="round"/>
+</svg>`;
+
+$('#bootFace').innerHTML = FACE_SVG;
+$('#startBtn').innerHTML = FACE_SVG;
+$('#smFace').innerHTML = FACE_SVG;
+
+/* =========================================================
+   1. 应用列表
+   ========================================================= */
+const APPS = [
+  { id: 'settings',   name: '设置',   icon: '⚙️', w: 600, h: 450 },
+  { id: 'gallery',    name: '图库',   icon: '🖼️', w: 640, h: 470 },
+  { id: 'browser',    name: '浏览器', icon: '🌐', w: 780, h: 540 },
+  { id: 'calculator', name: '计算器', icon: '🧮', w: 330, h: 460 }
+];
+
+/* =========================================================
+   2. 桌面图标 + 开始菜单列表
+   ========================================================= */
+const iconsEl = $('#desktopIcons');
+const smList  = $('#smList');
+
+APPS.forEach(app => {
+  const d = document.createElement('button');
+  d.className = 'd-icon';
+  d.innerHTML = `<span class="ico">${app.icon}</span><span class="nm">${app.name}</span>`;
+  d.onclick = () => openApp(app.id);
+  iconsEl.appendChild(d);
+
+  const s = document.createElement('button');
+  s.className = 'sm-item';
+  s.innerHTML = `<span class="sm-ico">${app.icon}</span><span>${app.name}</span>`;
+  s.onclick = () => openApp(app.id);
+  smList.appendChild(s);
+});
+
+/* =========================================================
+   3. 窗口管理
+   ========================================================= */
+const windowsById = {};
+const taskBtns = {};
+let zTop = 100;
+
+function openApp(id) {
+  hideStart();
+  if (windowsById[id]) { focusWin(windowsById[id]); return; }
+
+  const app = APPS.find(a => a.id === id);
+  const win = document.createElement('div');
+  win.className = 'window';
+  win.dataset.appId = id;
+
+  const w = Math.min(app.w, window.innerWidth - 24);
+  const h = Math.min(app.h, window.innerHeight - 100);
+  win.style.width  = w + 'px';
+  win.style.height = h + 'px';
+
+  const n = Object.keys(windowsById).length;
+  let left = (window.innerWidth - w) / 2 + (n % 3) * 26 - 26;
+  let top  = (window.innerHeight - 52 - h) / 2 + (n % 3) * 22 - 22;
+  left = Math.max(8, Math.min(left, window.innerWidth - w - 8));
+  top  = Math.max(8, Math.min(top, window.innerHeight - 52 - h - 8));
+  win.style.left = left + 'px';
+  win.style.top  = top + 'px';
+
+  win.innerHTML = `
+    <div class="titlebar">
+      <span class="t-icon">${app.icon}</span>
+      <span class="t-title">${app.name}</span>
+      <div class="wbtns">
+        <button class="wb min"   title="最小化">—</button>
+        <button class="wb max"   title="最大化">▢</button>
+        <button class="wb close" title="关闭">✕</button>
+      </div>
+    </div>
+    <div class="wbody"></div>`;
+
+  $('#windows').appendChild(win);
+
+  const body = win.querySelector('.wbody');
+  BUILDERS[id](body, win);
+
+  makeDraggable(win, win.querySelector('.titlebar'));
+  win.querySelector('.wb.close').onclick = e => { e.stopPropagation(); closeWin(win); };
+  win.querySelector('.wb.min').onclick   = e => { e.stopPropagation(); minimizeWin(win); };
+  win.querySelector('.wb.max').onclick   = e => { e.stopPropagation(); toggleMax(win); };
+  win.addEventListener('pointerdown', () => focusWin(win), true);
+
+  windowsById[id] = win;
+  createTaskBtn(app, win);
+  focusWin(win);
+}
+
+function focusWin(win) {
+  win.style.display = 'flex';
+  win.style.zIndex = ++zTop;
+  updateTaskStates();
+  hideStart();
+}
+
+function minimizeWin(win) {
+  win.style.display = 'none';
+  updateTaskStates();
+}
+
+function closeWin(win) {
+  const id = win.dataset.appId;
+  delete windowsById[id];
+  if (taskBtns[id]) { taskBtns[id].remove(); delete taskBtns[id]; }
+  win.remove();
+}
+
+function toggleMax(win) {
+  if (win.classList.contains('maximized')) {
+    win.classList.remove('maximized');
+    const p = win._prev;
+    win.style.left = p.left; win.style.top = p.top;
+    win.style.width = p.width; win.style.height = p.height;
+    win.style.borderRadius = '12px';
+  } else {
+    win._prev = {
+      left: win.style.left, top: win.style.top,
+      width: win.style.width, height: win.style.height
+    };
+    win.classList.add('maximized');
+    win.style.left = '0px'; win.style.top = '0px';
+    win.style.width = '100%'; win.style.height = '100%';
+    win.style.borderRadius = '0';
+  }
+}
+
+function createTaskBtn(app, win) {
+  const b = document.createElement('button');
+  b.className = 'task-btn';
+  b.innerHTML = `<span>${app.icon}</span><span>${app.name}</span>`;
+  b.onclick = () => {
+    if (win.style.display === 'none') { focusWin(win); }
+    else if (+win.style.zIndex === zTop) { minimizeWin(win); }
+    else { focusWin(win); }
+  };
+  $('#taskApps').appendChild(b);
+  taskBtns[app.id] = b;
+}
+
+function updateTaskStates() {
+  for (const id in windowsById) {
+    const w = windowsById[id];
+    const b = taskBtns[id];
+    if (!b) continue;
+    b.classList.toggle('active', w.style.display !== 'none' && +w.style.zIndex === zTop);
+  }
+}
+
+/* ---------- 拖拽（Pointer 事件，兼容鼠标/触屏） ---------- */
+function makeDraggable(win, handle) {
+  let dragging = false, sx = 0, sy = 0, ox = 0, oy = 0;
+
+  handle.addEventListener('pointerdown', e => {
+    if (e.target.closest('.wbtns')) return;
+    if (win.classList.contains('maximized')) return;
+
+    const parent = win.offsetParent || document.body;
+    const pr = parent.getBoundingClientRect();
+    const wr = win.getBoundingClientRect();
+    ox = wr.left - pr.left;
+    oy = wr.top - pr.top;
+    win.style.left = ox + 'px';
+    win.style.top  = oy + 'px';
+
+    dragging = true;
+    sx = e.clientX; sy = e.clientY;
+    try { handle.setPointerCapture(e.pointerId); } catch (_) {}
+    focusWin(win);
+    e.preventDefault();
+  });
+
+  handle.addEventListener('pointermove', e => {
+    if (!dragging) return;
+    const parent = win.offsetParent || document.body;
+    const maxL = parent.clientWidth  - 90;
+    const maxT = parent.clientHeight - 44;
+    let nx = ox + e.clientX - sx;
+    let ny = oy + e.clientY - sy;
+    nx = Math.max(-win.offsetWidth + 110, Math.min(nx, maxL));
+    ny = Math.max(0, Math.min(ny, maxT));
+    win.style.left = nx + 'px';
+    win.style.top  = ny + 'px';
+  });
+
+  const end = e => {
+    dragging = false;
+    try { handle.releasePointerCapture(e.pointerId); } catch (_) {}
+  };
+  handle.addEventListener('pointerup', end);
+  handle.addEventListener('pointercancel', end);
+}
+
+/* =========================================================
+   4. 开始菜单
+   ========================================================= */
+const startMenu = $('#startMenu');
+const startBtn  = $('#startBtn');
+
+function showStart() { startMenu.classList.add('show'); }
+function hideStart() { startMenu.classList.remove('show'); }
+function toggleStart() {
+  startMenu.classList.contains('show') ? hideStart() : showStart();
+}
+
+startBtn.addEventListener('click', e => { e.stopPropagation(); toggleStart(); });
+
+document.addEventListener('pointerdown', e => {
+  if (!startMenu.classList.contains('show')) return;
+  if (startMenu.contains(e.target) || startBtn.contains(e.target)) return;
+  hideStart();
+});
+
+/* =========================================================
+   5. 时钟
+   ========================================================= */
+function updateClock() {
+  const d = new Date();
+  $('#clock').textContent = d.toLocaleTimeString('zh-CN', {
+    hour12: false, hour: '2-digit', minute: '2-digit'
+  });
+  $('#date').textContent =
+    `${d.getFullYear()}/${d.getMonth() + 1}/${d.getDate()}`;
+}
+updateClock();
+setInterval(updateClock, 1000);
+
+/* =========================================================
+   6. 应用构建函数
+   ========================================================= */
+const BUILDERS = {
+  settings: buildSettings,
+  gallery: buildGallery,
+  browser: buildBrowser,
+  calculator: buildCalculator
+};
+
+/* ---------- 6.1 设置 ---------- */
+const WALLPAPERS = [
+  { name: '星夜',   css: 'linear-gradient(135deg,#1e3a8a,#6d28d9 50%,#db2777)' },
+  { name: '极光',   css: 'linear-gradient(135deg,#0f766e,#0891b2 55%,#4ade80)' },
+  { name: '日落',   css: 'linear-gradient(135deg,#f97316,#dc2626 60%,#7c2d12)' },
+  { name: '奶油',   css: 'linear-gradient(135deg,#fde68a,#fca5a5,#c4b5fd)' },
+  { name: '深空',   css: '#0d0d14' },
+  { name: '森林',   css: 'linear-gradient(135deg,#064e3b,#166534 50%,#65a30d)' }
+];
+let currentWallpaper = 0;
+
+function applyWallpaper() {
+  $('#desktop').style.background = WALLPAPERS[currentWallpaper].css;
+}
+
+function buildSettings(body) {
+  body.innerHTML = `
+    <div class="set">
+      <div class="set-title">设置</div>
+      <div class="set-sec">
+        <div class="set-h">桌面壁纸</div>
+        <div class="wps"></div>
+      </div>
+      <div class="set-sec">
+        <div class="set-h">关于本机</div>
+        <div class="about">
+          <div class="about-face">${FACE_SVG}</div>
+          <div>
+            <div class="about-name">NiubeeOS 1.0</div>
+            <div class="about-sub">Build 20240101 · 一台假装很厉害的电脑 🐮</div>
+          </div>
+        </div>
+      </div>
+    </div>`;
+
+  const wps = body.querySelector('.wps');
+  WALLPAPERS.forEach((w, i) => {
+    const b = document.createElement('button');
+    b.className = 'wp' + (i === currentWallpaper ? ' active' : '');
+    b.style.background = w.css;
+    b.title = w.name;
+    b.onclick = () => {
+      currentWallpaper = i;
+      applyWallpaper();
+      wps.querySelectorAll('.wp').forEach((el, j) =>
+        el.classList.toggle('active', j === i));
+    };
+    wps.appendChild(b);
+  });
+}
+
+/* ---------- 6.2 图库 ---------- */
+const EMOJIS = ['🐮','😺','🌈','🍕','🚀','🌻','🐙','🍩','🦄','🌙',
+                '🍉','🐸','🎈','⭐','🧋','🐳','🍄','🦊','🎸','🍭'];
+
+function buildGallery(body) {
+  body.innerHTML = `
+    <div class="gal">
+      <div class="gal-preview">
+        <span id="galBig">🐮</span>
+        <div class="gal-cap">点击下方图片查看</div>
+      </div>
+      <div class="gal-grid"></div>
+    </div>`;
+
+  const grid = body.querySelector('.gal-grid');
+  const big  = body.querySelector('#galBig');
+  const cap  = body.querySelector('.gal-cap');
+
+  EMOJIS.forEach((emoji, i) => {
+    const b = document.createElement('button');
+    b.className = 'gal-item';
+    b.textContent = emoji;
+    b.onclick = () => {
+      big.textContent = emoji;
+      cap.textContent = `图片 #${i + 1}`;
+      grid.querySelectorAll('.gal-item').forEach(el => el.classList.remove('sel'));
+      b.classList.add('sel');
+    };
+    grid.appendChild(b);
+  });
+}
+
+/* ---------- 6.3 浏览器（iframe） ---------- */
+function buildBrowser(body) {
+  body.innerHTML = `
+    <div class="br">
+      <div class="br-bar">
+        <input class="br-url" placeholder="输入网址，例如 https://example.com">
+        <button class="br-go">前往</button>
+      </div>
+      <iframe class="br-frame" referrerpolicy="no-referrer"></iframe>
+      <div class="br-tip">提示：部分网站设置了 X-Frame-Options，禁止被嵌入，可能显示空白。</div>
+    </div>`;
+
+  const frame = body.querySelector('.br-frame');
+  const input = body.querySelector('.br-url');
+
+  const welcome = `
+    <!DOCTYPE html><html><head><meta charset="utf-8">
+    <style>
+      body{margin:0;height:100vh;display:flex;flex-direction:column;
+        align-items:center;justify-content:center;gap:10px;
+        font-family:system-ui,"Microsoft YaHei",sans-serif;
+        background:linear-gradient(135deg,#fff9db,#fff);
+        color:#333;}
+      .f{font-size:60px}
+      h1{font-size:20px;margin:0}
+      p{font-size:13px;color:#888;margin:0}
+    </style></head>
+    <body>
+      <div class="f">🌐</div>
+      <h1>NiubeeOS 浏览器</h1>
+      <p>在上方地址栏输入网址，然后点击「前往」</p>
+    </body></html>`;
+  frame.srcdoc = welcome;
+
+  const go = () => {
+    let u = input.value.trim();
+    if (!u) return;
+    if (!/^https?:\/\//i.test(u)) u = 'https://' + u;
+    frame.removeAttribute('srcdoc');
+    frame.src = u;
+  };
+
+  body.querySelector('.br-go').onclick = go;
+  input.addEventListener('keydown', e => { if (e.key === 'Enter') go(); });
+}
+
+/* ---------- 6.4 计算器 ---------- */
+function buildCalculator(body) {
+  const keys = [
+    ['C','fn'], ['B','fn'], ['%','fn'], ['/','op'],
+    ['7',''], ['8',''], ['9',''], ['*','op'],
+    ['4',''], ['5',''], ['6',''], ['-','op'],
+    ['1',''], ['2',''], ['3',''], ['+','op'],
+    ['0',''], ['.',''], ['=','eq'], ['','']
+  ];
+
+  body.innerHTML = `
+    <div class="calc">
+      <div class="calc-screen">
+        <div class="calc-expr"></div>
+        <div class="calc-out">0</div>
+      </div>
+      <div class="calc-keys"></div>
+    </div>`;
+
+  const out  = body.querySelector('.calc-out');
+  const expr = body.querySelector('.calc-expr');
+  const pad  = body.querySelector('.calc-keys');
+
+  let cur = '0', prev = null, op = null, fresh = true;
+
+  const SYM = { '/': '÷', '*': '×', '-': '−', '+': '+' };
+  const fmt = n => {
+    if (!isFinite(n)) return 'Error';
+    const r = Math.round(n * 1e10) / 1e10;
+    return String(r);
+  };
+  const calc = (a, b, o) => {
+    a = parseFloat(a); b = parseFloat(b);
+    if (o === '+') return a + b;
+    if (o === '-') return a - b;
+    if (o === '*') return a * b;
+    if (o === '/') return b === 0 ? NaN : a / b;
+    return b;
+  };
+  const render = () => {
+    out.textContent = cur;
+    expr.textContent = (prev !== null && op) ? `${prev} ${SYM[op]}` : '';
+  };
+
+  function press(k) {
+    if (k === 'C') { cur = '0'; prev = null; op = null; fresh = true; }
+    else if (k === 'B') {
+      if (!fresh) cur = cur.slice(0, -1) || '0';
+    }
+    else if (k === '%') {
+      cur = fmt(parseFloat(cur || '0') / 100);
+      fresh = false;
+    }
+    else if (k === '/' || k === '*' || k === '-' || k === '+') {
+      if (op && !fresh) { cur = fmt(calc(prev, cur, op)); }
+      prev = cur; op = k; fresh = true;
+    }
+    else if (k === '=') {
+      if (op) { cur = fmt(calc(prev, cur, op)); prev = null; op = null; fresh = true; }
+    }
+    else if (k === '.') {
+      if (fresh) { cur = '0.'; fresh = false; }
+      else if (!cur.includes('.')) cur += '.';
+    }
+    else if (k >= '0' && k <= '9') {
+      if (fresh) { cur = k; fresh = false; }
+      else cur = (cur === '0' ? k : cur + k);
+      if (cur.length > 14) cur = cur.slice(0, 14);
+    }
+    render();
+  }
+
+  keys.forEach(([k, cls]) => {
+    const b = document.createElement('button');
+    b.className = 'k ' + cls;
+    if (!k) { b.style.visibility = 'hidden'; pad.appendChild(b); return; }
+    b.textContent = k === 'B' ? '⌫'
+                  : k === '/' ? '÷'
+                  : k === '*' ? '×'
+                  : k === '-' ? '−'
+                  : k;
+    b.onclick = () => press(k);
+    pad.appendChild(b);
+  });
+
+  render();
+}
+
+/* =========================================================
+   7. 关机 / 开机流程
+   ========================================================= */
+const bootScreen = $('#boot');
+let bootTimer = null;
+
+function bootUp() {
+  // 清掉旧窗口
+  $('#windows').innerHTML = '';
+  for (const k in windowsById) delete windowsById[k];
+  for (const k in taskBtns) delete taskBtns[k];
+  $('#taskApps').innerHTML = '';
+
+  // 显示开机动画
+  bootScreen.style.display = 'flex';
+  bootScreen.classList.remove('hide');
+
+  clearTimeout(bootTimer);
+  bootTimer = setTimeout(() => {
+    bootScreen.classList.add('hide');
+    setTimeout(() => { bootScreen.style.display = 'none'; }, 700);
+  }, 3200);
+}
+
+function shutdown() {
+  hideStart();
+  bootScreen.style.display = 'none';
+  bootScreen.classList.add('hide');
+
+  const ov = document.createElement('div');
+  ov.className = 'sd';
+  ov.innerHTML = `<div class="sd-msg">正在关机…</div>`;
+  document.body.appendChild(ov);
+
+  setTimeout(() => {
+    ov.innerHTML = `
+      <div class="sd-power">
+        <button id="powerBtn" title="开机">⏻</button>
+        <div class="sd-hint">已关机 · 点击电源键开机</div>
+      </div>`;
+    $('#powerBtn').onclick = () => { ov.remove(); bootUp(); };
+  }, 2000);
+}
+
+$('#shutdownBtn').onclick = shutdown;
+
+/* =========================================================
+   8. 启动
+   ========================================================= */
+applyWallpaper();
+bootUp();
+</script>
+</body>
+</html>
