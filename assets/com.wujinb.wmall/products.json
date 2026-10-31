@@ -17,7 +17,7 @@
           "id": "white",
           "text": "牛逼白",
           "image": "./assets/com.wujinb.wmall/iwuji_white.png",
-          "buyable": false
+          "buyable": true
         },
         {
           "id": "black",
@@ -57,13 +57,13 @@
           "id": "sky",
           "text": "天空蓝",
           "image": "./assets/com.wujinb.wmall/wujibuds_sky.png",
-          "buyable": true
+          "buyable": false
         },
         {
           "id": "blue",
           "text": "牛逼蓝",
           "image": "./assets/com.wujinb.wmall/wujibuds_blue.png",
-          "buyable": true
+          "buyable": false
         }
       ]
     },
@@ -86,7 +86,7 @@
       "icon": "./assets/com.wujinb.wmall/nb_baohuke.png",
       "name": "牛逼素皮保护壳",
       "price": 109,
-      "buyable": true
+      "buyable": false
     }
   ]
 }
