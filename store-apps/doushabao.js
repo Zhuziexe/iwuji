@@ -147,79 +147,6 @@
     return data.tts;
   }
 
-  /* 播放单个音频。notifyIdle=false 时播放结束不切到 idle（给后续段接管） */
-  function playAudio(url, onStateChange, { notifyIdle = true } = {}) {
-    return new Promise((resolve) => {
-      const audio = new Audio(url);
-      ttsAudio = audio;
-
-      audio.addEventListener('play', () => {
-        ttsLoading = false;
-        ttsSpeaking = true;
-        onStateChange?.('playing');
-      });
-
-      audio.addEventListener('ended', () => {
-        ttsSpeaking = false;
-        ttsAudio = null;
-        if (notifyIdle) onStateChange?.('idle');
-        resolve(true);
-      });
-
-      audio.addEventListener('error', () => {
-        ttsSpeaking = false;
-        ttsLoading = false;
-        ttsAudio = null;
-        onStateChange?.('error', '音频播放失败');
-        resolve(false);
-      });
-
-      audio.play().catch(() => {
-        ttsSpeaking = false;
-        ttsLoading = false;
-        ttsAudio = null;
-        onStateChange?.('error', '自动播放被浏览器拦截');
-        resolve(false);
-      });
-    });
-  }
-
-  /* 顺序播放多段 */
-  async function playMultiple(urls, onStateChange) {
-    for (let i = 0; i < urls.length; i++) {
-      if (!ttsAbort) return false;
-      const ok = await new Promise((resolve) => {
-        const audio = new Audio(urls[i]);
-        ttsAudio = audio;
-
-        audio.addEventListener('play', () => {
-          ttsLoading = false;
-          ttsSpeaking = true;
-          onStateChange?.('playing');
-        });
-        audio.addEventListener('ended', () => {
-          ttsAudio = null;
-          resolve(true);
-        });
-        audio.addEventListener('error', () => {
-          ttsAudio = null;
-          resolve(false);
-        });
-        audio.play().catch(() => {
-          ttsAudio = null;
-          resolve(false);
-        });
-      });
-      if (!ok) {
-        console.warn('[doushabao] 分段播放失败，继续下一段');
-      }
-    }
-
-    ttsSpeaking = false;
-    onStateChange?.('idle');
-    return true;
-  }
-
   /* 主入口：按换行切分，第一段优先请求+播放，剩余段后台并发请求 */
   async function playTts(text, { onStateChange } = {}) {
     stopTts();
@@ -664,7 +591,7 @@
     name: '豆沙包',
     icon: './assets/doushabao.svg',
     initialRoute: 'home',
-    version: '1.0.9',
+    version: '1.1.0',
 
     styles: `
       .dsb-page {

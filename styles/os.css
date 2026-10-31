@@ -415,8 +415,8 @@ img {
   align-items: stretch;
   padding: 8% 6% 5%;
   background: rgba(20, 30, 50, 0.5);
-  backdrop-filter: blur(34px) saturate(140%);
-  -webkit-backdrop-filter: blur(34px) saturate(140%);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
   opacity: 0;
   visibility: hidden;
   transition: opacity .28s ease, visibility .28s ease;
@@ -496,8 +496,6 @@ img {
   justify-content: center;
   transition: background .12s, transform .08s;
   -webkit-tap-highlight-color: transparent;
-  backdrop-filter: blur(11px);
-  -webkit-backdrop-filter: blur(11px);
 }
 
 .lock-pin-key:active {
@@ -643,8 +641,8 @@ img {
   position: fixed;
   z-index: 1000;
   background: rgba(255, 255, 255, .5);
-  backdrop-filter: blur(4px) saturate(105%);
-  -webkit-backdrop-filter: blur(4px) saturate(105%);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
   border: .5px solid rgba(255, 255, 255, .55);
   border-radius: 20px;
   box-shadow:
@@ -961,8 +959,6 @@ img {
   inset: 0;
   z-index: 599;
   background: rgba(0, 0, 0, 0.32);
-  -webkit-backdrop-filter: blur(3px) saturate(102%);
-  backdrop-filter: blur(3px) saturate(102%);
   opacity: 0;
   transition: opacity .35s cubic-bezier(.2, .7, .3, 1);
   pointer-events: none;
@@ -1230,8 +1226,6 @@ img {
   border: 1px solid rgba(255, 255, 255, .18);
   border-radius: 50%;
   background: rgba(255, 255, 255, .16);
-  backdrop-filter: blur(25px) saturate(170%);
-  -webkit-backdrop-filter: blur(25px) saturate(170%);
   color: #fff;
   display: flex;
   align-items: center;
@@ -1648,8 +1642,8 @@ img {
   justify-content: center;
   gap: 31px;
   background: rgba(8, 12, 20, .45);
-  backdrop-filter: blur(3px) saturate(105%);
-  -webkit-backdrop-filter: blur(3px) saturate(105%);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
   opacity: 0;
   visibility: hidden;
   transition: opacity .22s ease, visibility .22s ease;

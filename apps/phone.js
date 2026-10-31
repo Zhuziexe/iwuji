@@ -18,6 +18,24 @@
     return peerJsPromise;
   }
 
+  function notifyMissedCall(number) {
+    const num = String(number || '').trim();
+    if (!num) return;
+    try {
+      WujiNotification.publish({
+        bundlename: BUNDLE,
+        id: Date.now(),
+        title: '未接来电',
+        content: num,
+        showtime: true,
+        notifyuser: true,
+        clickparams: { tel: num },
+      });
+    } catch (e) {
+      console.warn('[phone] publish missed call failed', e);
+    }
+  }
+
   const RING_MELODY = [
     ['G5', 1], ['0', 1], ['E5', 1], ['E5', 1], ['0', 1], ['0', 1], ['0', 1], ['0', 1],
     ['F5', 1], ['0', 1], ['D5', 1], ['D5', 1], ['0', 1], ['0', 1], ['0', 1], ['0', 1],
@@ -28,7 +46,7 @@
     ['C5', 1], ['0', 1], ['0', 1], ['0', 1], ['0', 1], ['0', 1], ['0', 1], ['0', 1],
   ];
 
-   const RING_BASS = [
+  const RING_BASS = [
     ['C4', 2], ['E4', 2], ['G4', 2], ['E4', 2],
     ['B3', 2], ['D4', 2], ['G4', 2], ['D4', 2],
     ['C4', 2], ['E4', 2], ['G4', 2], ['E4', 2],
@@ -58,16 +76,16 @@
 
     function unlock() {
       if (window.WujiAudio?.unlock) {
-        window.WujiAudio.unlock().catch(() => {});
+        window.WujiAudio.unlock().catch(() => { });
       }
     }
 
     function schedulePiano(ctx, dest, freq, start, dur, opts = {}) {
       const { gain = 0.2, velocity = 1 } = opts;
       const partials = [
-        { ratio: 1.0, amp: 1.00, decay: 1.0  },
-        { ratio: 2.0, amp: 0.50, decay: 0.7  },
-        { ratio: 3.0, amp: 0.25, decay: 0.5  },
+        { ratio: 1.0, amp: 1.00, decay: 1.0 },
+        { ratio: 2.0, amp: 0.50, decay: 0.7 },
+        { ratio: 3.0, amp: 0.25, decay: 0.5 },
         { ratio: 4.0, amp: 0.12, decay: 0.35 },
         { ratio: 5.0, amp: 0.06, decay: 0.25 },
       ];
@@ -234,7 +252,7 @@
           source.start();
 
           if (navigator.vibrate) {
-            try { navigator.vibrate([400, 200, 400, 800]); } catch {}
+            try { navigator.vibrate([400, 200, 400, 800]); } catch { }
           }
         } catch (e) {
           console.warn('[Ringtone] 播放失败', e);
@@ -247,12 +265,12 @@
         playing = false;
 
         if (source) {
-          try { source.stop(); } catch {}
-          try { source.disconnect(); } catch {}
+          try { source.stop(); } catch { }
+          try { source.disconnect(); } catch { }
           source = null;
         }
 
-        if (navigator.vibrate) { try { navigator.vibrate(0); } catch {} }
+        if (navigator.vibrate) { try { navigator.vibrate(0); } catch { } }
       },
 
       get playing() { return playing; },
@@ -277,8 +295,8 @@
   }
 
   function resetState() {
-    if (S.activeCall) { try { S.activeCall.close(); } catch {} }
-    if (S.pendingCall) { try { S.pendingCall.close(); } catch {} }
+    if (S.activeCall) { try { S.activeCall.close(); } catch { } }
+    if (S.pendingCall) { try { S.pendingCall.close(); } catch { } }
     S.activeCall = null;
     S.pendingCall = null;
     S.status = 'idle';
@@ -298,7 +316,7 @@
       let msg = '无法获取麦克风';
       if (err.name === 'NotAllowedError') msg = '麦克风权限被拒绝';
       else if (err.name === 'NotFoundError') msg = '没有麦克风设备';
-      try { WujiToast.show(msg); } catch {}
+      try { WujiToast.show(msg); } catch { }
       throw err;
     }
   }
@@ -314,12 +332,12 @@
       document.body.appendChild(audio);
     }
     audio.srcObject = stream;
-    audio.play().catch(() => {});
+    audio.play().catch(() => { });
   }
 
   function detachRemoteAudio() {
     const audio = document.getElementById('wujiPhoneRemoteAudio');
-    if (audio) { try { audio.srcObject = null; } catch {} }
+    if (audio) { try { audio.srcObject = null; } catch { } }
   }
 
   function sendReject(targetId) {
@@ -327,26 +345,71 @@
     try {
       const conn = S.peer.connect(targetId, { reliable: true });
       conn.on('open', () => {
-        try { conn.send({ type: 'reject' }); } catch {}
-        setTimeout(() => { try { conn.close(); } catch {} }, 200);
+        try { conn.send({ type: 'reject' }); } catch { }
+        setTimeout(() => { try { conn.close(); } catch { } }, 200);
       });
-      conn.on('error', () => {});
+      conn.on('error', () => { });
     } catch (e) { console.warn('[phone] sendReject', e); }
   }
 
+  function sendSignal(targetId, payload) {
+    if (!S.peer || S.peer.destroyed || !targetId) return;
+    try {
+      const conn = S.peer.connect(targetId, { reliable: true });
+      conn.on('open', () => {
+        try { conn.send(payload); } catch { }
+        setTimeout(() => { try { conn.close(); } catch { } }, 200);
+      });
+      conn.on('error', () => { });
+    } catch (e) { console.warn('[phone] sendSignal', e); }
+  }
+
   function handleRemoteReject() {
-    Ringtone.stop(); 
+    Ringtone.stop();
     if (S.status !== 'dialing' && S.status !== 'active') return;
     const call = S.activeCall;
     S.activeCall = null;
-    if (call) { try { call.close(); } catch {} }
+    if (call) { try { call.close(); } catch { } }
     S.status = 'idle';
     S.target = '';
     S.callStart = 0;
     detachRemoteAudio();
-    try { WujiOverlay.close(); } catch {}
+    try { WujiOverlay.close(); } catch { }
     notify();
-    try { WujiToast.show('对方正忙'); } catch {}
+    try { WujiToast.show('对方正忙'); } catch { }
+  }
+
+  function handleRemoteCancel() {
+    Ringtone.stop();
+    if (S.status !== 'incoming') return;
+
+    const callerId = S.pendingCall ? S.pendingCall.peer : S.target;
+    const call = S.pendingCall;
+    S.pendingCall = null;
+    if (call) { try { call.close(); } catch { } }
+    S.status = 'idle';
+    S.target = '';
+    try { WujiOverlay.close(); } catch { }
+    notify();
+
+    notifyMissedCall(callerId);
+  }
+
+  function handleRemoteHangup() {
+    Ringtone.stop();
+    if (S.status !== 'active' && S.status !== 'dialing' && S.status !== 'incoming') return;
+
+    const call = S.activeCall || S.pendingCall;
+    S.activeCall = null;
+    S.pendingCall = null;
+    if (call) { try { call.close(); } catch { } }
+    S.status = 'idle';
+    S.target = '';
+    S.callStart = 0;
+    detachRemoteAudio();
+    try { WujiOverlay.close(); } catch { }
+    notify();
+    try { WujiToast.show('对方已挂断'); } catch { }
   }
 
   async function initPeer() {
@@ -368,18 +431,19 @@
 
     peer.on('connection', conn => {
       conn.on('data', data => {
-        if (data && data.type === 'reject') {
-          handleRemoteReject();
-        }
-        try { conn.close(); } catch {}
+        if (!data) return;
+        if (data.type === 'reject') handleRemoteReject();
+        else if (data.type === 'cancel') handleRemoteCancel();
+        else if (data.type === 'hangup') handleRemoteHangup();
+        try { conn.close(); } catch { }
       });
-      conn.on('error', () => {});
+      conn.on('error', () => { });
     });
 
     peer.on('call', call => {
       if (S.activeCall || S.pendingCall) {
         const callerId = call.peer;
-        try { call.close(); } catch {}
+        try { call.close(); } catch { }
         sendReject(callerId);
         return;
       }
@@ -387,7 +451,7 @@
       S.status = 'incoming';
       S.target = call.peer;
       notify();
-      try { WujiOverlay.open({ bundlename: BUNDLE, name: 'call' }); } catch {}
+      try { WujiOverlay.open({ bundlename: BUNDLE, name: 'call' }); } catch { }
       Ringtone.start();
 
       call.on('close', () => {
@@ -395,17 +459,17 @@
         S.pendingCall = null;
         S.status = 'idle';
         S.target = '';
-        try { WujiOverlay.close(); } catch {}
+        try { WujiOverlay.close(); } catch { }
         Ringtone.stop();
         notify();
-        try { WujiToast.show('来电已挂断'); } catch {}
+        try { WujiToast.show('来电已挂断'); } catch { }
       });
     });
 
     peer.on('error', err => {
       console.warn('[phone] peer error:', err.type);
       if (err.type === 'unavailable-id') {
-        try { peer.destroy(); } catch {}
+        try { peer.destroy(); } catch { }
         S.peer = null;
         S.ready = false;
         S.myPeerId = '';
@@ -417,7 +481,7 @@
     peer.on('disconnected', () => {
       S.ready = false;
       notify();
-      if (peer && !peer.destroyed) { try { peer.reconnect(); } catch {} }
+      if (peer && !peer.destroyed) { try { peer.reconnect(); } catch { } }
     });
 
     peer.on('close', () => {
@@ -429,9 +493,9 @@
 
   function destroyPeer() {
     resetState();
-    if (S.peer) { try { S.peer.destroy(); } catch {} S.peer = null; }
+    if (S.peer) { try { S.peer.destroy(); } catch { } S.peer = null; }
     if (S.stream) {
-      try { S.stream.getTracks().forEach(t => t.stop()); } catch {}
+      try { S.stream.getTracks().forEach(t => t.stop()); } catch { }
       S.stream = null;
     }
     S.myPeerId = '';
@@ -441,10 +505,10 @@
   }
 
   async function dial(target) {
-    if (!S.ready) { try { WujiToast.show('号码未就绪'); } catch {} return; }
+    if (!S.ready) { try { WujiToast.show('号码未就绪'); } catch { } return; }
     if (!target) return;
-    if (target === S.myPeerId) { try { WujiToast.show('不能拨打自己的号码'); } catch {} return; }
-    if (S.activeCall || S.pendingCall) { try { WujiToast.show('通话中'); } catch {} return; }
+    if (target === S.myPeerId) { try { WujiToast.show('不能拨打自己的号码'); } catch { } return; }
+    if (S.activeCall || S.pendingCall) { try { WujiToast.show('通话中'); } catch { } return; }
 
     try { await ensureMic(); } catch { return; }
 
@@ -456,13 +520,13 @@
       S.status = 'idle';
       S.target = '';
       notify();
-      try { WujiToast.show('拨打失败'); } catch {}
+      try { WujiToast.show('拨打失败'); } catch { }
       return;
     }
     S.activeCall = call;
     notify();
 
-    try { WujiOverlay.open({ bundlename: BUNDLE, name: 'call' }); } catch {}
+    try { WujiOverlay.open({ bundlename: BUNDLE, name: 'call' }); } catch { }
 
     call.on('stream', remote => {
       S.status = 'active';
@@ -479,24 +543,24 @@
       S.target = '';
       S.callStart = 0;
       detachRemoteAudio();
-      try { WujiOverlay.close(); } catch {}
+      try { WujiOverlay.close(); } catch { }
       notify();
       if (wasActive) {
-        try { WujiToast.show('对方已挂断'); } catch {}
+        try { WujiToast.show('对方已挂断'); } catch { }
       }
     });
 
     call.on('error', err => {
       if (S.activeCall !== call) return;
       if (err && err.type === 'peer-unavailable') {
-        try { WujiToast.show('对方不在线'); } catch {}
+        try { WujiToast.show('对方不在线'); } catch { }
       }
       S.activeCall = null;
       S.status = 'idle';
       S.target = '';
       S.callStart = 0;
       detachRemoteAudio();
-      try { WujiOverlay.close(); } catch {}
+      try { WujiOverlay.close(); } catch { }
       notify();
     });
   }
@@ -509,14 +573,14 @@
 
     try { await ensureMic(); }
     catch {
-      try { call.close(); } catch {}
+      try { call.close(); } catch { }
       S.status = 'idle'; S.target = '';
-      try { WujiOverlay.close(); } catch {}
+      try { WujiOverlay.close(); } catch { }
       notify();
       return;
     }
 
-    try { call.answer(S.stream); } catch {}
+    try { call.answer(S.stream); } catch { }
     S.activeCall = call;
     S.status = 'active';
     S.callStart = Date.now();
@@ -531,9 +595,9 @@
       S.target = '';
       S.callStart = 0;
       detachRemoteAudio();
-      try { WujiOverlay.close(); } catch {}
+      try { WujiOverlay.close(); } catch { }
       notify();
-      try { WujiToast.show('对方已挂断'); } catch {}
+      try { WujiToast.show('对方已挂断'); } catch { }
     });
 
     call.on('error', () => {
@@ -543,7 +607,7 @@
       S.target = '';
       S.callStart = 0;
       detachRemoteAudio();
-      try { WujiOverlay.close(); } catch {}
+      try { WujiOverlay.close(); } catch { }
       notify();
     });
   }
@@ -554,26 +618,32 @@
       const call = S.pendingCall;
       const callerId = call.peer;
       S.pendingCall = null;
-      try { call.close(); } catch {}
+      try { call.close(); } catch { }
       sendReject(callerId);
     }
     S.status = 'idle';
     S.target = '';
-    try { WujiOverlay.close(); } catch {}
+    try { WujiOverlay.close(); } catch { }
     notify();
   }
 
   function hangup() {
     Ringtone.stop();
     const call = S.activeCall;
+    const peerId = S.target;
+    const wasDialing = S.status === 'dialing';
     S.activeCall = null;
-    if (call) { try { call.close(); } catch {} }
+    if (call) { try { call.close(); } catch { } }
     S.status = 'idle';
     S.target = '';
     S.callStart = 0;
     detachRemoteAudio();
-    try { WujiOverlay.close(); } catch {}
+    try { WujiOverlay.close(); } catch { }
     notify();
+
+    if (peerId) {
+      sendSignal(peerId, { type: wasDialing ? 'cancel' : 'hangup' });
+    }
   }
 
   WujiApps.register({
@@ -581,11 +651,11 @@
     name: '电话',
     icon: './assets/phone.svg',
     initialRoute: 'dialer',
-    version: '2.3.1',
+    version: '2.3.2',
 
     onBoot() {
       resetState();
-      initPeer().catch(() => {});
+      initPeer().catch(() => { });
       Ringtone.prerender();
     },
 
@@ -593,7 +663,7 @@
       resetState();
       destroyPeer();
       Ringtone.stop();
-      try { WujiOverlay.close(); } catch {}
+      try { WujiOverlay.close(); } catch { }
     },
 
     styles: `
@@ -891,7 +961,7 @@
 
           function render() {
             if (S.status === 'idle') {
-              try { WujiOverlay.close(); } catch {}
+              try { WujiOverlay.close(); } catch { }
               return;
             }
 
@@ -910,7 +980,7 @@
                 actionsEl.querySelector('#phHangup').addEventListener('pointerup', e => {
                   if (e.pointerType === 'mouse' && e.button !== 0) return;
                   e.preventDefault();
-                  if (navigator.vibrate) { try { navigator.vibrate(15); } catch {} }
+                  if (navigator.vibrate) { try { navigator.vibrate(15); } catch { } }
                   hangup();
                 });
               }
@@ -926,7 +996,7 @@
                 actionsEl.querySelector('#phHangup').addEventListener('pointerup', e => {
                   if (e.pointerType === 'mouse' && e.button !== 0) return;
                   e.preventDefault();
-                  if (navigator.vibrate) { try { navigator.vibrate(15); } catch {} }
+                  if (navigator.vibrate) { try { navigator.vibrate(15); } catch { } }
                   hangup();
                 });
               }
@@ -947,13 +1017,13 @@
                 actionsEl.querySelector('#phReject').addEventListener('pointerup', e => {
                   if (e.pointerType === 'mouse' && e.button !== 0) return;
                   e.preventDefault();
-                  if (navigator.vibrate) { try { navigator.vibrate(15); } catch {} }
+                  if (navigator.vibrate) { try { navigator.vibrate(15); } catch { } }
                   reject();
                 });
                 actionsEl.querySelector('#phAnswer').addEventListener('pointerup', e => {
                   if (e.pointerType === 'mouse' && e.button !== 0) return;
                   e.preventDefault();
-                  if (navigator.vibrate) { try { navigator.vibrate(15); } catch {} }
+                  if (navigator.vibrate) { try { navigator.vibrate(15); } catch { } }
                   answer();
                 });
               }
@@ -1032,7 +1102,7 @@
           `;
         },
 
-        mount(root) {
+        mount(root, ctx) {
           const myNumEl = root.querySelector('#phoneMyNumber');
           const numberEl = root.querySelector('#phoneNumber');
           const backBtn = root.querySelector('#phoneBack');
@@ -1052,25 +1122,47 @@
             backBtn.classList.toggle('is-visible', number.length > 0);
           }
 
+          function setNumberFromParam(raw) {
+            if (raw == null) return false;
+            const s = String(raw).replace(/[^0-9*#]/g, '').slice(0, MAX_DIGITS);
+            if (!s) return false;
+            number = s;
+            updateNumber();
+            return true;
+          }
+
+          // ★ 首次进入：从通知带入的 tel 预填
+          setNumberFromParam(ctx?.data?.tel);
+
+          // ★ 应用已在前台时，点击通知会派发 wuji:app-params
+          function onAppParams(e) {
+            if (!e.detail || e.detail.bundle !== BUNDLE) return;
+            const p = e.detail.params || {};
+            if (p.tel && setNumberFromParam(p.tel)) {
+              if (navigator.vibrate) { try { navigator.vibrate(10); } catch { } }
+            }
+          }
+          window.addEventListener('wuji:app-params', onAppParams);
+
           function appendDigit(d) {
             if (!d) return;
             if (number.length >= MAX_DIGITS) return;
             number += d;
             updateNumber();
-            if (navigator.vibrate) { try { navigator.vibrate(6); } catch {} }
+            if (navigator.vibrate) { try { navigator.vibrate(6); } catch { } }
           }
 
           function backspace() {
             if (!number) return;
             number = number.slice(0, -1);
             updateNumber();
-            if (navigator.vibrate) { try { navigator.vibrate(6); } catch {} }
+            if (navigator.vibrate) { try { navigator.vibrate(6); } catch { } }
           }
 
           function onDial() {
             if (!number) return;
-            if (S.status !== 'idle') { try { WujiToast.show('通话中'); } catch {} return; }
-            if (navigator.vibrate) { try { navigator.vibrate(20); } catch {} }
+            if (S.status !== 'idle') { try { WujiToast.show('通话中'); } catch { } return; }
+            if (navigator.vibrate) { try { navigator.vibrate(20); } catch { } }
             dial(number);
           }
 
@@ -1104,6 +1196,7 @@
             backBtn.removeEventListener('click', backspace);
             dialBtn.removeEventListener('click', onDial);
             window.removeEventListener('keydown', onKeydown);
+            window.removeEventListener('wuji:app-params', onAppParams);
           };
         },
       },
