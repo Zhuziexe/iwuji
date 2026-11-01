@@ -16,6 +16,9 @@ window.WujiNotification = (() => {
   let osEl = null;
   let launchApp = null;
 
+  /* ★ 横幅是否支持手势；桌面版传 false → 纯展示、点击打开、3 秒自动消失 */
+  let bannerInteractive = true;
+
   /* =========================================================
      数据层 —— 内存态，不持久化
      页面刷新 / 开机后全部清空
@@ -336,6 +339,26 @@ window.WujiNotification = (() => {
       scheduleAutoHide();
     }
 
+        /* ★ 清理上一次可能残留的手势绑定 */
+    bannerEl.onpointerdown = null;
+    bannerEl.onpointermove = null;
+    bannerEl.onpointerup = null;
+    bannerEl.onpointercancel = null;
+    bannerEl.onclick = null;
+
+    /* ★ 无手势模式：只自动消失 + 点击打开 */
+    if (!bannerInteractive) {
+      bannerEl.style.transition = '';
+      bannerEl.style.transform = '';
+      bannerEl.style.opacity = '';
+      bannerEl.onclick = () => {
+        hideBannerInstant();
+        triggerLaunch(record);
+      };
+      scheduleAutoHide();
+      return;
+    }
+
     bannerEl.onpointerdown = onDown;
     bannerEl.onpointermove = onMove;
     bannerEl.onpointerup = onUp;
@@ -568,9 +591,10 @@ window.WujiNotification = (() => {
   /* =========================================================
      init
      ========================================================= */
-  function init(options) {
+   function init(options) {
     osEl = options.osEl;
     launchApp = options.openApp;
+    bannerInteractive = options.bannerInteractive !== false; 
 
     try { Store.remove('notifications'); } catch { }
 
@@ -623,5 +647,10 @@ window.WujiNotification = (() => {
     },
     openFromLeft() { window.PanelSystem?.open('nc'); },
     switchToControlCenter() { window.PanelSystem?.setPanel('cc'); },
+    onChange(fn) {
+      if (typeof fn !== 'function') return () => {};
+      listeners.add(fn);
+      return () => listeners.delete(fn);
+    },
   };
 })();

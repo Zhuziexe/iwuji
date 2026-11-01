@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -11,21 +12,22 @@
       --statusbar-h: 0px;
       --taskbar-h: 48px;
       --start-menu-w: 380px;
-      --pc-bg:        #ffffff;
-      --pc-bg-alt:    #f2f5fa;
-      --pc-border:    #e6e9ef;
-      --pc-text:      #101828;
-      --pc-text-dim:  #5b6478;
+      --pc-bg: #ffffff;
+      --pc-bg-alt: #f2f5fa;
+      --pc-border: #e6e9ef;
+      --pc-text: #101828;
+      --pc-text-dim: #5b6478;
     }
 
-    html, body {
+    html,
+    body {
       width: 100%;
       height: 100%;
       overflow: hidden;
       margin: 0;
       padding: 0;
       font-family: var(--wj-font, -apple-system, BlinkMacSystemFont, "Segoe UI",
-        "PingFang SC", "Microsoft YaHei", sans-serif);
+          "PingFang SC", "Microsoft YaHei", sans-serif);
       font-size: var(--wj-fs-md, 16px);
       background: #0f1116;
       color: var(--pc-text);
@@ -34,7 +36,12 @@
       -webkit-font-smoothing: antialiased;
       -webkit-tap-highlight-color: transparent;
     }
-    *, *::before, *::after { box-sizing: border-box; }
+
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+    }
 
     /* ============================================================
        #os = 整机容器
@@ -47,14 +54,15 @@
       background: #0f1116;
     }
 
-    #os > .pc-desktop,
-    #os > .pc-wins,
-    #os > .pc-taskbar,
-    #os > .pc-start-menu,
-    #os > #wjOverlayHost,
-    #os > #wjDialogHost {
+    #os>.pc-desktop,
+    #os>.pc-wins,
+    #os>.pc-taskbar,
+    #os>.pc-start-menu,
+    #os>#wjOverlayHost,
+    #os>#wjDialogHost {
       pointer-events: auto;
     }
+
     #os .wj-banner.is-show,
     #os .wj-toast {
       pointer-events: auto;
@@ -87,7 +95,9 @@
        ============================================================ */
     .pc-wins {
       position: absolute;
-      left: 0; top: 0; right: 0;
+      left: 0;
+      top: 0;
+      right: 0;
       bottom: var(--taskbar-h);
       z-index: 10;
       overflow: hidden;
@@ -100,19 +110,20 @@
       background: var(--pc-bg);
       border-radius: 10px;
       box-shadow:
-        0 20px 60px rgba(0, 0, 0, .45),
-        0 0 0 1px rgba(255, 255, 255, .06);
-      overflow: hidden;
+        0 20px 60px rgba(0, 0, 0, .18),
+        0 0 0 1px rgba(0, 0, 0, .06);
+      /* ★ 必须 visible，否则 -4px/-10px 的缩放手柄会被裁掉 */
+      overflow: visible;
       min-width: 320px;
       min-height: 220px;
     }
+
     .pc-win.is-focused {
       box-shadow:
         0 24px 72px rgba(0, 0, 0, .55),
         0 0 0 1px rgba(58, 111, 240, .55);
     }
 
-    /* ---------- 标题栏：显式 relative + z-index，任何情况下都不被 body 覆盖 ---------- */
     .pc-win__titlebar {
       flex: 0 0 auto;
       position: relative;
@@ -126,6 +137,8 @@
       border-bottom: 1px solid var(--wj-border, var(--pc-border));
       cursor: move;
       user-select: none;
+      border-top-left-radius: 10px;
+      border-top-right-radius: 10px;
     }
 
     .pc-win__back {
@@ -142,7 +155,10 @@
       justify-content: center;
       -webkit-tap-highlight-color: transparent;
     }
-    .pc-win__back:hover { background: rgba(0, 0, 0, .06); }
+
+    .pc-win__back:hover {
+      background: rgba(0, 0, 0, .06);
+    }
 
     .pc-win__icon {
       width: 20px;
@@ -172,6 +188,7 @@
       padding-right: 4px;
       flex: 0 0 auto;
     }
+
     .pc-win__actions button {
       width: 36px;
       height: 32px;
@@ -188,35 +205,46 @@
       -webkit-tap-highlight-color: transparent;
       transition: background .12s, color .12s;
     }
-    .pc-win__actions button:hover { background: rgba(0, 0, 0, .06); }
-    .pc-win__actions button.close:hover { background: #e0356b; color: #fff; }
 
-    /* ---------- 窗口内容区：flex column 的子项，绝不脱出文档流 ---------- */
+    .pc-win__actions button:hover {
+      background: rgba(0, 0, 0, .06);
+    }
+
+    .pc-win__actions button.close:hover {
+      background: #e0356b;
+      color: #fff;
+    }
+
     .pc-win__body {
       flex: 1 1 auto;
       position: relative;
       min-height: 0;
       overflow: hidden;
       background: var(--wj-bg, var(--pc-bg));
+      border-bottom-left-radius: 10px;
+      border-bottom-right-radius: 10px;
     }
 
     /* ============================================================
-       任务栏
+       任务栏（浅色）
        ============================================================ */
     .pc-taskbar {
       position: absolute;
-      left: 0; right: 0; bottom: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
       height: var(--taskbar-h);
       display: flex;
       align-items: center;
       padding: 0 8px;
       gap: 4px;
-      background: rgba(26, 29, 36, .95);
+      background: rgba(245, 247, 250, .96);
       backdrop-filter: blur(20px);
       -webkit-backdrop-filter: blur(20px);
-      border-top: 1px solid rgba(255, 255, 255, .06);
+      border-top: 1px solid rgba(0, 0, 0, .08);
       z-index: 500;
       user-select: none;
+      color: #101828;
     }
 
     .pc-taskbar__start {
@@ -225,7 +253,7 @@
       border: 0;
       border-radius: 6px;
       background: transparent;
-      color: #e9ecf2;
+      color: #101828;
       font: inherit;
       font-size: 14px;
       font-weight: 500;
@@ -237,8 +265,15 @@
       -webkit-tap-highlight-color: transparent;
       flex-shrink: 0;
     }
-    .pc-taskbar__start:hover { background: rgba(255, 255, 255, .08); }
-    .pc-taskbar__start.is-open { background: rgba(58, 111, 240, .3); }
+
+    .pc-taskbar__start:hover {
+      background: rgba(0, 0, 0, .06);
+    }
+
+    .pc-taskbar__start.is-open {
+      background: rgba(58, 111, 240, .15);
+      color: #3a6ff0;
+    }
 
     .pc-taskbar__items {
       flex: 1 1 auto;
@@ -250,7 +285,10 @@
       min-width: 0;
       scrollbar-width: none;
     }
-    .pc-taskbar__items::-webkit-scrollbar { display: none; }
+
+    .pc-taskbar__items::-webkit-scrollbar {
+      display: none;
+    }
 
     .pc-task-item {
       flex: 0 0 auto;
@@ -260,8 +298,8 @@
       padding: 0 10px;
       border: 0;
       border-radius: 6px;
-      background: rgba(255, 255, 255, .06);
-      color: #e9ecf2;
+      background: rgba(0, 0, 0, .04);
+      color: #101828;
       font: inherit;
       font-size: 13px;
       cursor: pointer;
@@ -271,8 +309,16 @@
       transition: background .12s;
       -webkit-tap-highlight-color: transparent;
     }
-    .pc-task-item:hover { background: rgba(255, 255, 255, .12); }
-    .pc-task-item.is-active { background: rgba(58, 111, 240, .38); }
+
+    .pc-task-item:hover {
+      background: rgba(0, 0, 0, .09);
+    }
+
+    .pc-task-item.is-active {
+      background: rgba(58, 111, 240, .18);
+      color: #3a6ff0;
+    }
+
     .pc-task-item img {
       width: 20px;
       height: 20px;
@@ -281,6 +327,7 @@
       flex-shrink: 0;
       pointer-events: none;
     }
+
     .pc-task-item__title {
       overflow: hidden;
       text-overflow: ellipsis;
@@ -290,17 +337,66 @@
 
     .pc-taskbar__clock {
       flex: 0 0 auto;
+      height: 36px;
       padding: 0 14px;
+      border: 0;
+      border-radius: 6px;
+      background: transparent;
+      font: inherit;
       font-size: 13px;
       font-weight: 500;
-      color: #c8d0dc;
+      color: #3d4658;
       font-variant-numeric: tabular-nums;
       letter-spacing: .5px;
       white-space: nowrap;
+      cursor: pointer;
+      transition: background .12s, color .12s;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .pc-taskbar__clock:hover {
+      background: rgba(0, 0, 0, .06);
+    }
+
+    .pc-taskbar__clock.is-active {
+      background: rgba(58, 111, 240, .15);
+      color: #3a6ff0;
+    }
+
+    .pc-taskbar__tray {
+      flex: 0 0 auto;
+      width: 36px;
+      height: 36px;
+      padding: 0;
+      border: 0;
+      border-radius: 6px;
+      background: transparent;
+      color: #3d4658;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background .12s, color .12s;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .pc-taskbar__tray:hover {
+      background: rgba(0, 0, 0, .06);
+    }
+
+    .pc-taskbar__tray.is-active {
+      background: rgba(58, 111, 240, .15);
+      color: #3a6ff0;
+    }
+
+    .pc-taskbar__tray svg {
+      width: 18px;
+      height: 18px;
+      display: block;
     }
 
     /* ============================================================
-       开始菜单
+       开始菜单（浅色）
        ============================================================ */
     .pc-start-menu {
       position: absolute;
@@ -308,33 +404,44 @@
       bottom: calc(var(--taskbar-h) + 6px);
       width: var(--start-menu-w);
       max-height: 60vh;
-      background: rgba(26, 29, 36, .98);
+      background: #ffffff;
       backdrop-filter: blur(20px);
       -webkit-backdrop-filter: blur(20px);
       border-radius: 12px;
-      border: 1px solid rgba(255, 255, 255, .08);
-      box-shadow: 0 20px 60px rgba(0, 0, 0, .5);
+      border: 1px solid rgba(0, 0, 0, .08);
+      box-shadow: 0 20px 60px rgba(0, 0, 0, .18);
       z-index: 510;
       display: flex;
       flex-direction: column;
       overflow: hidden;
+      color: #101828;
       animation: pcMenuIn .18s cubic-bezier(.2, .7, .3, 1);
     }
-    .pc-start-menu[hidden] { display: none; }
+
+    .pc-start-menu[hidden] {
+      display: none;
+    }
 
     @keyframes pcMenuIn {
-      from { opacity: 0; transform: translateY(8px) scale(.98); }
-      to   { opacity: 1; transform: translateY(0) scale(1); }
+      from {
+        opacity: 0;
+        transform: translateY(8px) scale(.98);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
     }
 
     .pc-start-menu__header {
       padding: 14px 18px 10px;
       font-size: 12px;
       font-weight: 600;
-      color: #8ad4ff;
+      color: #3a6ff0;
       letter-spacing: .5px;
       text-transform: uppercase;
-      border-bottom: 1px solid rgba(255, 255, 255, .06);
+      border-bottom: 1px solid rgba(0, 0, 0, .06);
     }
 
     .pc-start-menu__list {
@@ -342,9 +449,13 @@
       overflow-y: auto;
       padding: 6px;
     }
-    .pc-start-menu__list::-webkit-scrollbar { width: 6px; }
+
+    .pc-start-menu__list::-webkit-scrollbar {
+      width: 6px;
+    }
+
     .pc-start-menu__list::-webkit-scrollbar-thumb {
-      background: rgba(255, 255, 255, .15);
+      background: rgba(0, 0, 0, .15);
       border-radius: 3px;
     }
 
@@ -357,7 +468,7 @@
       border: 0;
       border-radius: 8px;
       background: transparent;
-      color: #e9ecf2;
+      color: #101828;
       font: inherit;
       font-size: 14px;
       text-align: left;
@@ -365,7 +476,10 @@
       transition: background .12s;
       -webkit-tap-highlight-color: transparent;
     }
-    .pc-start-menu__item:hover { background: rgba(255, 255, 255, .08); }
+
+    .pc-start-menu__item:hover {
+      background: rgba(0, 0, 0, .06);
+    }
 
     .pc-start-menu__item img {
       width: 32px;
@@ -383,11 +497,13 @@
       flex-direction: column;
       gap: 2px;
     }
+
     .pc-start-menu__item-name {
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
     }
+
     .pc-start-menu__item-desc {
       font-size: 12px;
       color: #7a8494;
@@ -404,144 +520,527 @@
     }
 
     /* ============================================================
-       通知横幅
+       右下角控制中心 / 通知中心（浅色）
        ============================================================ */
-    .wj-banner {
-      position: absolute !important;
-      top: auto !important;
-      bottom: calc(var(--taskbar-h) + 12px) !important;
-      left: auto !important;
-      right: 16px !important;
-      width: 380px !important;
-      max-width: calc(100vw - 32px) !important;
-      transform: translateY(140%) !important;
-      z-index: 600 !important;
-    }
-    .wj-banner.is-show {
-      transform: translateY(0) !important;
+    .pc-flyout {
+      position: absolute;
+      right: 12px;
+      bottom: calc(var(--taskbar-h) + 8px);
+      width: 340px;
+      max-width: calc(100vw - 24px);
+      max-height: calc(100vh - var(--taskbar-h) - 24px);
+      background: #ffffff;
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(0, 0, 0, .08);
+      border-radius: 12px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, .18);
+      z-index: 520;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      color: #101828;
+      pointer-events: auto;
+      animation: pcFlyoutIn .18s cubic-bezier(.2, .7, .3, 1);
     }
 
-    .wj-toast {
-      bottom: calc(var(--taskbar-h) + 24px) !important;
-      z-index: 700 !important;
+    .pc-flyout[hidden] {
+      display: none;
     }
 
-    #wjOverlayHost { z-index: 800 !important; }
-    #wjDialogHost  { z-index: 900 !important; }
+    @keyframes pcFlyoutIn {
+      from {
+        opacity: 0;
+        transform: translateY(8px) scale(.98);
+      }
 
-    /* ============================================================
-       开机动画
-       ============================================================ */
-    .pc-boot {
-      position: fixed;
-      inset: 0;
-      z-index: 99999;
-      background: #000;
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    .pc-flyout__pane {
+      flex: 1 1 auto;
+      min-height: 0;
+      overflow-y: auto;
+      padding: 14px;
+    }
+
+    .pc-cc__grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .pc-cc__card {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding: 10px 12px;
+      border-radius: 10px;
+      background: rgba(0, 0, 0, .04);
+      min-width: 0;
+    }
+
+    .pc-cc__row {
       display: flex;
       align-items: center;
-      justify-content: center;
-      flex-direction: column;
-      color: #fff;
-      transition: opacity .55s ease, visibility .55s ease;
-      will-change: opacity;
+      justify-content: space-between;
+      gap: 8px;
     }
-    .pc-boot.is-hide {
-      opacity: 0;
-      visibility: hidden;
+
+    .pc-cc__label {
+      font-size: 12px;
+      color: #5b6478;
+    }
+
+    .pc-cc__value {
+      font-size: 12px;
+      font-weight: 600;
+      color: #3a6ff0;
+    }
+
+    .pc-cc__range {
+      width: 100%;
+      accent-color: #3a6ff0;
+      cursor: pointer;
+    }
+
+    .pc-cc__toggle {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 14px;
+      border: 0;
+      border-radius: 10px;
+      background: rgba(0, 0, 0, .04);
+      color: #101828;
+      font: inherit;
+      font-size: 13px;
+      text-align: left;
+      cursor: pointer;
+      transition: background .12s;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .pc-cc__toggle.is-on {
+      background: rgba(58, 111, 240, .15);
+      color: #3a6ff0;
+    }
+
+    .pc-cc__toggle--wide {
+      grid-column: span 2;
+    }
+
+    .pc-cc__dot {
+      width: 8px;
+      height: 8px;
+      margin-left: auto;
+      border-radius: 50%;
+      background: #c0c8d6;
+      flex: 0 0 auto;
+      transition: background .15s, box-shadow .15s;
+    }
+
+    .pc-cc__toggle.is-on .pc-cc__dot {
+      background: #22b25b;
+      box-shadow: 0 0 8px rgba(34, 178, 91, .6);
+    }
+
+    .pc-nc__head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 2px 10px;
+    }
+
+    .pc-nc__title {
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .pc-nc__clear {
+      border: 0;
+      background: transparent;
+      color: #3a6ff0;
+      font: inherit;
+      font-size: 12px;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .pc-nc__list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .pc-nc__item {
+      display: flex;
+      gap: 10px;
+      padding: 10px;
+      border-radius: 10px;
+      background: rgba(0, 0, 0, .04);
+      cursor: pointer;
+      transition: background .12s;
+    }
+
+    .pc-nc__item:hover {
+      background: rgba(0, 0, 0, .07);
+    }
+
+    .pc-nc__icon {
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      overflow: hidden;
+      flex: 0 0 auto;
+      display: block;
+    }
+
+    .pc-nc__icon img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
       pointer-events: none;
     }
 
-    .pc-boot__brand {
-      font-size: 59px;
+    .pc-nc__body {
+      flex: 1 1 auto;
+      min-width: 0;
+    }
+
+    .pc-nc__item-head {
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+      margin-bottom: 2px;
+    }
+
+    .pc-nc__item-title {
+      font-size: 13px;
       font-weight: 600;
-      letter-spacing: 4px;
-      line-height: 1;
-      opacity: 0;
-      transform: translateY(8px);
-      animation: pcBootBrand .9s cubic-bezier(.2, .7, .3, 1) forwards;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
 
-    .pc-boot__tag {
-      margin-top: 60px;
+    .pc-nc__item-time {
+      margin-left: auto;
+      font-size: 11px;
+      color: #8a93a4;
+      flex: 0 0 auto;
+    }
+
+    .pc-nc__item-content {
       font-size: 12px;
-      letter-spacing: .5px;
-      line-height: 1.4;
-      text-align: center;
-      color: rgba(255, 255, 255, .72);
-      opacity: 0;
-      transform: translateY(6px);
-      animation: pcBootTag .8s cubic-bezier(.2, .7, .3, 1) .7s forwards;
-    }
-    .pc-boot__tag span {
-      font-weight: 500;
-      font-size: 18px;
-      color: #fff;
-      letter-spacing: .3px;
+      line-height: 1.45;
+      color: #5b6478;
+      word-break: break-word;
     }
 
-    @keyframes pcBootBrand {
-      to { opacity: 1; transform: translateY(0); }
+    .pc-nc__empty {
+      padding: 36px 0;
+      text-align: center;
+      font-size: 13px;
+      color: #8a93a4;
     }
-    @keyframes pcBootTag {
-      to { opacity: 1; transform: translateY(0); }
+
+    .pc-nc__empty[hidden] {
+      display: none;
+    }
+
+        /* ============================================================
+       触屏模式：只在"无状态"元素上禁用悬停变色 + 放大缩放热区
+       ============================================================ */
+    #os.is-touch-mode .pc-taskbar__start:not(.is-open):hover,
+    #os.is-touch-mode .pc-taskbar__tray:not(.is-active):hover,
+    #os.is-touch-mode .pc-taskbar__clock:not(.is-active):hover,
+    #os.is-touch-mode .pc-task-item:not(.is-active):hover,
+    #os.is-touch-mode .pc-start-menu__item:hover,
+    #os.is-touch-mode .pc-win__back:hover,
+    #os.is-touch-mode .pc-win__actions button:not(.close):hover,
+    #os.is-touch-mode .pc-nc__item:hover,
+    #os.is-touch-mode .pc-cc__toggle:not(.is-on):hover {
+      background: transparent !important;
+    }
+
+    /* close 按钮恢复默认色，不出现红底 */
+    #os.is-touch-mode .pc-win__actions button.close:hover {
+      background: transparent !important;
+      color: var(--wj-text-muted, var(--pc-text-dim)) !important;
+    }
+
+    /* 触屏模式启动时，一键禁用全局 transition 抖动 */
+    #os.is-touch-mode .pc-taskbar__start,
+    #os.is-touch-mode .pc-taskbar__tray,
+    #os.is-touch-mode .pc-taskbar__clock,
+    #os.is-touch-mode .pc-task-item,
+    #os.is-touch-mode .pc-start-menu__item,
+    #os.is-touch-mode .pc-win__back,
+    #os.is-touch-mode .pc-win__actions button,
+    #os.is-touch-mode .pc-nc__item,
+    #os.is-touch-mode .pc-cc__toggle {
+      transition: none !important;
+    }
+
+    /* 缩放热区放大 */
+    #os.is-touch-mode .pc-win__rz {
+      z-index: 6;
+    }
+
+    #os.is-touch-mode .pc-win__rz--n {
+      top: -10px !important;
+      height: 20px !important;
+    }
+
+    #os.is-touch-mode .pc-win__rz--s {
+      bottom: -10px !important;
+      height: 20px !important;
+    }
+
+    #os.is-touch-mode .pc-win__rz--e {
+      right: -10px !important;
+      width: 20px !important;
+    }
+
+    #os.is-touch-mode .pc-win__rz--w {
+      left: -10px !important;
+      width: 20px !important;
+    }
+
+    #os.is-touch-mode .pc-win__rz--nw,
+    #os.is-touch-mode .pc-win__rz--ne,
+    #os.is-touch-mode .pc-win__rz--sw,
+    #os.is-touch-mode .pc-win__rz--se {
+      width: 30px !important;
+      height: 30px !important;
+    }
+
+        /* ============================================================
+       全局对话框（WujiDialog）
+       ============================================================ */
+    /* 覆盖 dialog.js 内联的 z-index:500，确保盖住任务栏(500)/flyout(520) */
+    #wjDialogHost {
+      z-index: 900 !important;
+    }
+
+    .wj-dialog-backdrop {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      background: rgba(0, 0, 0, 0);
+      pointer-events: auto;
+      transition: background .2s ease;
+      box-sizing: border-box;
+    }
+
+    .wj-dialog-backdrop.is-show {
+      background: rgba(0, 0, 0, .38);
+    }
+
+    .wj-dialog {
+      width: min(320px, 100%);
+      background: #ffffff;
+      border-radius: 16px;
+      padding: 24px 20px 16px;
+      text-align: center;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, .28);
+      transform: scale(.92);
+      opacity: 0;
+      transition: transform .2s cubic-bezier(.2, .7, .3, 1), opacity .2s ease;
+      will-change: transform, opacity;
+    }
+
+    .wj-dialog-backdrop.is-show .wj-dialog {
+      transform: scale(1);
+      opacity: 1;
+    }
+
+    .wj-dialog__title {
+      font-size: 17px;
+      font-weight: 600;
+      color: #101828;
+      line-height: 1.4;
+      margin-bottom: 8px;
+      word-break: break-word;
+    }
+
+    .wj-dialog__content {
+      font-size: 14px;
+      line-height: 1.55;
+      color: #5b6478;
+      margin-bottom: 20px;
+      word-break: break-word;
+    }
+
+    .wj-dialog__actions {
+      display: flex;
+      gap: 8px;
+      margin: 0 -20px -16px;
+      padding: 12px 16px 14px;
+      border-top: 1px solid rgba(0, 0, 0, .06);
+    }
+
+    .wj-dialog__btn {
+      flex: 1 1 0;
+      min-width: 0;
+      height: 44px;
+      border: 0;
+      border-radius: 10px;
+      background: rgba(0, 0, 0, .04);
+      font: inherit;
+      font-size: 15px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background .12s;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .wj-dialog__btn:hover {
+      background: rgba(0, 0, 0, .07);
+    }
+
+    .wj-dialog__btn:active {
+      background: rgba(0, 0, 0, .1);
+    }
+
+    .wj-dialog__btn:disabled {
+      opacity: .5;
+      cursor: default;
+    }
+
+    /* 触屏模式：禁用对话框按钮悬停 */
+    #os.is-touch-mode .wj-dialog__btn:hover {
+      background: rgba(0, 0, 0, .04) !important;
     }
   </style>
 </head>
+
 <body>
 
-<div id="os" data-power="running" data-view="app" data-theme-tone="light">
+  <div id="os" data-power="running" data-view="app" data-theme-tone="light">
 
-  <div id="wallpaperHost" class="os-wallpaper-host"></div>
+    <div id="wallpaperHost" class="os-wallpaper-host"></div>
 
-  <div class="pc-desktop"></div>
+    <div class="pc-desktop"></div>
 
-  <div class="pc-wins" id="pcWins"></div>
+    <div class="pc-wins" id="pcWins"></div>
 
-  <div class="pc-taskbar" id="pcTaskbar">
-    <button class="pc-taskbar__start" id="pcStartBtn" type="button">开始</button>
-    <div class="pc-taskbar__items" id="pcTaskItems"></div>
-    <div class="pc-taskbar__clock" id="pcClock">00:00</div>
+    <div class="pc-taskbar" id="pcTaskbar">
+      <button class="pc-taskbar__start" id="pcStartBtn" type="button">开始</button>
+      <div class="pc-taskbar__items" id="pcTaskItems"></div>
+
+      <button class="pc-taskbar__tray" id="pcWlanBtn" type="button" title="控制中心" aria-label="控制中心">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+          stroke-linejoin="round">
+          <path d="M5 12.55a11 11 0 0 1 14.08 0" />
+          <path d="M1.42 9a16 16 0 0 1 21.16 0" />
+          <path d="M8.53 16.11a6 6 0 0 1 6.95 0" />
+          <line x1="12" y1="20" x2="12.01" y2="20" />
+        </svg>
+      </button>
+
+      <button class="pc-taskbar__clock" id="pcClock" type="button" title="通知中心" aria-label="通知中心">00:00</button>
+    </div>
+    <div class="pc-start-menu" id="pcStartMenu" hidden>
+      <div class="pc-start-menu__header">所有应用</div>
+      <div class="pc-start-menu__list" id="pcStartList"></div>
+    </div>
+
+    <!-- ============ 右下角：控制中心 / 通知中心 ============ -->
+    <div class="pc-flyout" id="pcFlyout" hidden>
+
+      <!-- 控制中心 -->
+      <div class="pc-flyout__pane" data-pane="cc" hidden>
+        <div class="pc-cc__grid">
+          <div class="pc-cc__card">
+            <div class="pc-cc__row">
+              <span class="pc-cc__label">音量</span>
+              <span class="pc-cc__value" id="pcCcVolVal">60</span>
+            </div>
+            <input class="pc-cc__range" id="pcCcVolume" type="range" min="0" max="100" step="1" value="60">
+          </div>
+
+          <div class="pc-cc__card">
+            <div class="pc-cc__row">
+              <span class="pc-cc__label">亮度</span>
+              <span class="pc-cc__value" id="pcCcBriVal">80</span>
+            </div>
+            <input class="pc-cc__range" id="pcCcBrightness" type="range" min="0" max="100" step="1" value="80">
+          </div>
+
+          <button class="pc-cc__toggle" data-key="wifi" type="button">
+            <span>WLAN</span><i class="pc-cc__dot"></i>
+          </button>
+          <button class="pc-cc__toggle" data-key="bluetooth" type="button">
+            <span>蓝牙</span><i class="pc-cc__dot"></i>
+          </button>
+          <button class="pc-cc__toggle" data-key="soundmode" type="button">
+            <span>静音</span><i class="pc-cc__dot"></i>
+          </button>
+          <button class="pc-cc__toggle" data-key="cellular" type="button">
+            <span>移动数据</span><i class="pc-cc__dot"></i>
+          </button>
+
+          <button class="pc-cc__toggle pc-cc__toggle--wide" data-key="touchmode" type="button">
+            <span>触屏模式</span><i class="pc-cc__dot"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- 通知中心 -->
+      <div class="pc-flyout__pane" data-pane="nc" hidden>
+        <div class="pc-nc__head">
+          <span class="pc-nc__title">通知中心</span>
+          <button class="pc-nc__clear" id="pcNcClear" type="button" hidden>清除全部</button>
+        </div>
+        <div class="pc-nc__list" id="pcNcList"></div>
+        <div class="pc-nc__empty" id="pcNcEmpty">无通知</div>
+      </div>
+
+    </div>
+
+  </div>
   </div>
 
-  <div class="pc-start-menu" id="pcStartMenu" hidden>
-    <div class="pc-start-menu__header">所有应用</div>
-    <div class="pc-start-menu__list" id="pcStartList"></div>
+  <div class="pc-boot" id="pcBoot">
+    <div class="pc-boot__brand">ZhuziOS</div>
+    <div class="pc-boot__tag">
+      -Powered by-<br>
+      <span>OpenWuji</span>
+    </div>
   </div>
 
-</div>
+  <script src="navigation.js"></script>
+  <script src="core.js"></script>
+  <script src="app-storage.js"></script>
+  <script src="app-loader.js"></script>
+  <script src="app-code-store.js"></script>
+  <script src="installer.js"></script>
+  <script src="overlay.js"></script>
+  <script src="notification.js"></script>
+  <script src="dialog.js"></script>
+  <script src="toast.js"></script>
+  <script src="themes/store_themes.js"></script>
+  <script src="theme.js"></script>
+  <script src="builtin-apps.js"></script>
 
-<div class="pc-boot" id="pcBoot">
-  <div class="pc-boot__brand">ZhuziOS</div>
-  <div class="pc-boot__tag">
-    -Powered by-<br>
-    <span>OpenWuji</span>
-  </div>
-</div>
+  <script>
+    (() => {
+      const BOOT_MIN_MS = 1800;
 
-<script src="navigation.js"></script>
-<script src="core.js"></script>
-<script src="app-storage.js"></script>
-<script src="app-loader.js"></script>
-<script src="app-code-store.js"></script>
-<script src="installer.js"></script>
-<script src="overlay.js"></script>
-<script src="notification.js"></script>
-<script src="dialog.js"></script>
-<script src="toast.js"></script>
-<script src="themes/store_themes.js"></script>
-<script src="theme.js"></script>
-<script src="builtin-apps.js"></script>
-
-<script>
-(() => {
-  const BOOT_MIN_MS = 1800;
-
-  /* ============================================================
-     Shadow DOM 内基础样式
-     - :host 只设 display:block，不碰 position / width / height
-       （宿主定位交给外部 .pc-win__body 的 position: relative）
-     ============================================================ */
-  const BASE_CSS = `
+      /* ============================================================
+         Shadow DOM 内基础样式
+         - :host 只设 display:block，不碰 position / width / height
+           （宿主定位交给外部 .pc-win__body 的 position: relative）
+         ============================================================ */
+      const BASE_CSS = `
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :host {
       display: block;
@@ -569,193 +1068,263 @@
     img[data-interactive] { pointer-events: auto; }
   `;
 
-  /* ============================================================
-     stub
-     ============================================================ */
-  if (!window.WujiControlCenter) {
-    window.WujiControlCenter = {
-      getVolume: () => Store.get('wujios.volume', 60),
-      setVolume: v => Store.set('wujios.volume', v),
-      getBrightness: () => Store.get('wujios.brightness', 80),
-      setBrightness: v => Store.set('wujios.brightness', v),
-      getToggle: k => !!Store.get('wujios.' + k, false),
-      setToggle: (k, v) => Store.set('wujios.' + k, v),
-      close() {},
-      isOpen() { return false; },
-    };
-  }
-  if (!window.PanelSystem) {
-    window.PanelSystem = {
-      isOpen: false, panel: null,
-      open() {}, close() {}, setPanel() {}, init() {},
-    };
-  }
-
-  /* ============================================================
-     AppRuntime
-     ============================================================ */
-  const AppRuntime = (() => {
-    async function ensureLoaded(bundle) {
-      let app = WujiApps.get(bundle);
-      if (!app) throw new Error('应用未注册: ' + bundle);
-      if (app._metaOnly) {
-        if (!app._src) throw new Error('缺少 src');
-        await WujiAppLoader.load(app._src, app.version);
-        app = WujiApps.get(bundle);
+      /* ============================================================
+         stub
+         ============================================================ */
+      if (!window.WujiControlCenter) {
+        window.WujiControlCenter = {
+          getVolume: () => Store.get('wujios.volume', 60),
+          setVolume: v => Store.set('wujios.volume', v),
+          getBrightness: () => Store.get('wujios.brightness', 80),
+          setBrightness: v => Store.set('wujios.brightness', v),
+          getToggle: k => !!Store.get('wujios.' + k, false),
+          setToggle: (k, v) => Store.set('wujios.' + k, v),
+          close() { },
+          isOpen() { return false; },
+        };
       }
-      if (!app || app._metaOnly) throw new Error('加载失败: ' + bundle);
-      return app;
-    }
-
-    function mount(bundle, hostEl, params, opts = {}) {
-      const app = WujiApps.get(bundle);
-      if (!app) throw new Error('应用不存在: ' + bundle);
-
-      hostEl.innerHTML = '';
-      /* ★ 关键修复：
-         绝不要给 hostEl 设 position: absolute / inset: 0，
-         否则它会脱离 .pc-win 的 flex column，absolute 到 .pc-win，
-         把标题栏整块盖住。
-         只补 position: relative 保证 shadow 内 absolute 子元素能正确依附，
-         overflow: hidden 保留即可。 */
-      hostEl.style.position = 'relative';
-      hostEl.style.overflow = 'hidden';
-
-      const shadow = hostEl.attachShadow({ mode: 'open' });
-
-      const baseStyle = document.createElement('style');
-      baseStyle.textContent = BASE_CSS;
-      shadow.appendChild(baseStyle);
-
-      const compLink = document.createElement('link');
-      compLink.rel = 'stylesheet';
-      compLink.href = 'styles/components.css';
-      shadow.appendChild(compLink);
-
-      const appStyle = document.createElement('style');
-      appStyle.textContent = app.styles || '';
-      shadow.appendChild(appStyle);
-
-      const navHost = document.createElement('div');
-      navHost.style.cssText = 'position:absolute;inset:0;overflow:hidden;';
-      shadow.appendChild(navHost);
-
-      const nav = new WujiNavigation({ host: navHost, routes: app.routes || {} });
-
-      const ctx = {
-        closeApp: () => { opts.onClose?.(); },
-        onBack(fn) { opts.onBack?.(fn); },
-        nav,
-        push: (n, d, o) => nav.push(n, d, o),
-        pop: (r) => nav.pop(r),
-        params: params || {},
-      };
-
-      if (app.routes) {
-        const initial = app.initialRoute || Object.keys(app.routes)[0];
-        nav.push(app.routes[initial], params || {}, { animate: false });
-      } else if (typeof app.render === 'function') {
-        nav.push({
-          name: bundle,
-          render: () => `<div class="app-body" id="legacyBody" style="position:absolute;inset:0;overflow-y:auto;padding:16px;"></div>`,
-          mount: (el) => {
-            const body = el.querySelector('#legacyBody');
-            body.innerHTML = app.render ? app.render(ctx) : '';
-            try { app.mount?.(body, ctx); } catch (e) { console.error(e); }
-          },
-          unmount: () => { try { app.unmount?.(); } catch {} },
-        }, {}, { animate: false });
+      if (!window.PanelSystem) {
+        window.PanelSystem = {
+          isOpen: false, panel: null,
+          open() { }, close() { }, setPanel() { }, init() { },
+        };
       }
 
-      return {
-        bundle, nav, hostEl,
-        dispatchParams(p) {
-          window.dispatchEvent(new CustomEvent('wuji:app-params', {
-            detail: { bundle, params: p || {} },
-          }));
-        },
-        destroy() {
-          try { nav.destroy(); } catch {}
-          try { WujiDialog.closeByBundle?.(bundle); } catch {}
-          try { WujiOverlay.closeAll(); } catch {}
+      /* ============================================================
+         AppRuntime
+         ============================================================ */
+      const AppRuntime = (() => {
+        async function ensureLoaded(bundle) {
+          let app = WujiApps.get(bundle);
+          if (!app) throw new Error('应用未注册: ' + bundle);
+          if (app._metaOnly) {
+            if (!app._src) throw new Error('缺少 src');
+            await WujiAppLoader.load(app._src, app.version);
+            app = WujiApps.get(bundle);
+          }
+          if (!app || app._metaOnly) throw new Error('加载失败: ' + bundle);
+          return app;
+        }
+
+        function mount(bundle, hostEl, params, opts = {}) {
+          const app = WujiApps.get(bundle);
+          if (!app) throw new Error('应用不存在: ' + bundle);
+
           hostEl.innerHTML = '';
-        },
-      };
-    }
+          /* ★ 关键修复：
+             绝不要给 hostEl 设 position: absolute / inset: 0，
+             否则它会脱离 .pc-win 的 flex column，absolute 到 .pc-win，
+             把标题栏整块盖住。
+             只补 position: relative 保证 shadow 内 absolute 子元素能正确依附，
+             overflow: hidden 保留即可。 */
+          hostEl.style.position = 'relative';
+          hostEl.style.overflow = 'hidden';
 
-    return { ensureLoaded, mount };
-  })();
+          const shadow = hostEl.attachShadow({ mode: 'open' });
 
-  /* ============================================================
-     窗口管理器
-     ============================================================ */
-  const WujiWindows = (() => {
-    const wins = [];
-    let zTop = 100;
-    let seq = 0;
-    const winsLayer = document.getElementById('pcWins');
-    const taskItemsEl = document.getElementById('pcTaskItems');
-    const taskItemMap = new Map();
+          const baseStyle = document.createElement('style');
+          baseStyle.textContent = BASE_CSS;
+          shadow.appendChild(baseStyle);
 
-    const getTaskbarH = () =>
-      parseInt(getComputedStyle(document.documentElement).getPropertyValue('--taskbar-h')) || 48;
+          const compLink = document.createElement('link');
+          compLink.rel = 'stylesheet';
+          compLink.href = 'styles/components.css';
+          shadow.appendChild(compLink);
 
-    function addTaskItem(win) {
-      const el = document.createElement('button');
-      el.className = 'pc-task-item';
-      el.type = 'button';
-      el.dataset.winId = String(win.id);
-      el.innerHTML = `
+          const appStyle = document.createElement('style');
+          appStyle.textContent = app.styles || '';
+          shadow.appendChild(appStyle);
+
+          const navHost = document.createElement('div');
+          navHost.style.cssText = 'position:absolute;inset:0;overflow:hidden;';
+          shadow.appendChild(navHost);
+
+          const nav = new WujiNavigation({ host: navHost, routes: app.routes || {} });
+
+          const ctx = {
+            closeApp: () => { opts.onClose?.(); },
+            onBack(fn) { opts.onBack?.(fn); },
+            nav,
+            push: (n, d, o) => nav.push(n, d, o),
+            pop: (r) => nav.pop(r),
+            params: params || {},
+          };
+
+          if (app.routes) {
+            const initial = app.initialRoute || Object.keys(app.routes)[0];
+            nav.push(app.routes[initial], params || {}, { animate: false });
+          } else if (typeof app.render === 'function') {
+            nav.push({
+              name: bundle,
+              render: () => `<div class="app-body" id="legacyBody" style="position:absolute;inset:0;overflow-y:auto;padding:16px;"></div>`,
+              mount: (el) => {
+                const body = el.querySelector('#legacyBody');
+                body.innerHTML = app.render ? app.render(ctx) : '';
+                try { app.mount?.(body, ctx); } catch (e) { console.error(e); }
+              },
+              unmount: () => { try { app.unmount?.(); } catch { } },
+            }, {}, { animate: false });
+          }
+
+          return {
+            bundle, nav, hostEl,
+            dispatchParams(p) {
+              window.dispatchEvent(new CustomEvent('wuji:app-params', {
+                detail: { bundle, params: p || {} },
+              }));
+            },
+            destroy() {
+              try { nav.destroy(); } catch { }
+              try { WujiDialog.closeByBundle?.(bundle); } catch { }
+              try { WujiOverlay.closeAll(); } catch { }
+              hostEl.innerHTML = '';
+            },
+          };
+        }
+
+        return { ensureLoaded, mount };
+      })();
+
+      /* ============================================================
+         窗口管理器
+         ============================================================ */
+      const WujiWindows = (() => {
+        const wins = [];
+        let zTop = 100;
+        let seq = 0;
+        const winsLayer = document.getElementById('pcWins');
+        const taskItemsEl = document.getElementById('pcTaskItems');
+        const taskItemMap = new Map();
+
+        const MIN_W = 320, MIN_H = 220;
+
+        function bindResize(win) {
+          const DIRS = ['n', 's', 'e', 'w', 'ne', 'nw', 'se', 'sw'];
+          const HANDLE_SIZE = 16;      // 触屏/鼠标通用
+
+          DIRS.forEach(dir => {
+            const h = document.createElement('div');
+            h.className = `pc-win__rz pc-win__rz--${dir}`;
+            h.dataset.dir = dir;
+            h.style.cssText = `
+      position: absolute;
+      z-index: 3;
+      ${dir.includes('n') ? 'top: -4px; height: 8px;' : ''}
+      ${dir.includes('s') ? 'bottom: -4px; height: 8px;' : ''}
+      ${dir.includes('w') ? 'left: -4px; width: 8px;' : ''}
+      ${dir.includes('e') ? 'right: -4px; width: 8px;' : ''}
+      ${dir === 'n' || dir === 's' ? 'left: 8px; right: 8px; cursor: ' + (dir === 'n' ? 'ns' : 'ns') + '-resize;' : ''}
+      ${dir === 'e' || dir === 'w' ? 'top: 8px; bottom: 8px; cursor: ' + (dir === 'e' ? 'ew' : 'ew') + '-resize;' : ''}
+      ${dir === 'nw' ? 'left: 0; top: 0; width: 16px; height: 16px; cursor: nwse-resize;' : ''}
+      ${dir === 'ne' ? 'right: 0; top: 0; width: 16px; height: 16px; cursor: nesw-resize;' : ''}
+      ${dir === 'sw' ? 'left: 0; bottom: 0; width: 16px; height: 16px; cursor: nesw-resize;' : ''}
+      ${dir === 'se' ? 'right: 0; bottom: 0; width: 16px; height: 16px; cursor: nwse-resize;' : ''}
+    `;
+            h.addEventListener('pointerdown', e => {
+              if (win.maximized) return;
+              e.preventDefault();
+              e.stopPropagation();
+              const sx = e.clientX, sy = e.clientY;
+              const startL = win.el.offsetLeft;
+              const startT = win.el.offsetTop;
+              const startW = win.el.offsetWidth;
+              const startH = win.el.offsetHeight;
+              try { h.setPointerCapture(e.pointerId); } catch { }
+
+              function move(ev) {
+                const dx = ev.clientX - sx;
+                const dy = ev.clientY - sy;
+                let L = startL, T = startT, W = startW, H = startH;
+
+                if (dir.includes('e')) W = Math.max(MIN_W, startW + dx);
+                if (dir.includes('s')) H = Math.max(MIN_H, startH + dy);
+                if (dir.includes('w')) {
+                  W = Math.max(MIN_W, startW - dx);
+                  L = startL + (startW - W);
+                }
+                if (dir.includes('n')) {
+                  H = Math.max(MIN_H, startH - dy);
+                  T = startT + (startH - H);
+                }
+
+                win.el.style.left = L + 'px';
+                win.el.style.top = T + 'px';
+                win.el.style.width = W + 'px';
+                win.el.style.height = H + 'px';
+              }
+              function end(ev) {
+                try { h.releasePointerCapture(ev.pointerId); } catch { }
+                h.removeEventListener('pointermove', move);
+                h.removeEventListener('pointerup', end);
+                h.removeEventListener('pointercancel', end);
+              }
+              h.addEventListener('pointermove', move);
+              h.addEventListener('pointerup', end);
+              h.addEventListener('pointercancel', end);
+            });
+            win.el.appendChild(h);
+          });
+        }
+
+        const getTaskbarH = () =>
+          parseInt(getComputedStyle(document.documentElement).getPropertyValue('--taskbar-h')) || 48;
+
+        function addTaskItem(win) {
+          const el = document.createElement('button');
+          el.className = 'pc-task-item';
+          el.type = 'button';
+          el.dataset.winId = String(win.id);
+          el.innerHTML = `
         <img src="${win.icon || ''}" alt="">
         <span class="pc-task-item__title">${escapeHtml(win.title)}</span>
       `;
-      el.addEventListener('click', () => {
-        if (win.minimized) restore(win);
-        else if (win.el.classList.contains('is-focused')) minimize(win);
-        else focus(win);
-      });
-      taskItemsEl.appendChild(el);
-      taskItemMap.set(win.id, el);
-    }
-    function removeTaskItem(win) {
-      const el = taskItemMap.get(win.id);
-      if (el) el.remove();
-      taskItemMap.delete(win.id);
-    }
-    function updateTaskItem(win) {
-      const el = taskItemMap.get(win.id);
-      if (!el) return;
-      el.classList.toggle(
-        'is-active',
-        win.el.classList.contains('is-focused') && !win.minimized
-      );
-    }
-
-    async function open(bundle, params = {}) {
-      const existing = wins.find(w => w.bundle === bundle);
-      if (existing) {
-        if (existing.minimized) restore(existing);
-        focus(existing);
-        if (params && Object.keys(params).length) {
-          existing.instance.dispatchParams(params);
+          el.addEventListener('click', () => {
+            if (win.minimized) restore(win);
+            else if (win.el.classList.contains('is-focused')) minimize(win);
+            else focus(win);
+          });
+          taskItemsEl.appendChild(el);
+          taskItemMap.set(win.id, el);
         }
-        return existing;
-      }
+        function removeTaskItem(win) {
+          const el = taskItemMap.get(win.id);
+          if (el) el.remove();
+          taskItemMap.delete(win.id);
+        }
+        function updateTaskItem(win) {
+          const el = taskItemMap.get(win.id);
+          if (!el) return;
+          el.classList.toggle(
+            'is-active',
+            win.el.classList.contains('is-focused') && !win.minimized
+          );
+        }
 
-      let app;
-      try { app = await AppRuntime.ensureLoaded(bundle); }
-      catch (e) { console.error('[open]', bundle, e); return null; }
+        async function open(bundle, params = {}) {
+          const existing = wins.find(w => w.bundle === bundle);
+          if (existing) {
+            if (existing.minimized) restore(existing);
+            focus(existing);
+            if (params && Object.keys(params).length) {
+              existing.instance.dispatchParams(params);
+            }
+            return existing;
+          }
 
-      const id = ++seq;
-      const W = Math.min(920, Math.floor(window.innerWidth * 0.72));
-      const H = Math.min(660, Math.floor((window.innerHeight - getTaskbarH()) * 0.78));
-      const off = (wins.length % 6) * 26;
+          let app;
+          try { app = await AppRuntime.ensureLoaded(bundle); }
+          catch (e) { console.error('[open]', bundle, e); return null; }
 
-      const el = document.createElement('div');
-      el.className = 'pc-win';
-      el.dataset.winId = String(id);
-      el.dataset.bundle = bundle;
-      el.style.cssText = `
+          const id = ++seq;
+          const W = Math.min(920, Math.floor(window.innerWidth * 0.72));
+          const H = Math.min(660, Math.floor((window.innerHeight - getTaskbarH()) * 0.78));
+          const off = (wins.length % 6) * 26;
+
+          const el = document.createElement('div');
+          el.className = 'pc-win';
+          el.dataset.winId = String(id);
+          el.dataset.bundle = bundle;
+          el.style.cssText = `
         left:${Math.max(24, (window.innerWidth - W) / 2 + off)}px;
         top:${Math.max(24, (window.innerHeight - getTaskbarH() - H) / 2 + off)}px;
         width:${W}px;
@@ -763,7 +1332,7 @@
         z-index:${++zTop};
       `;
 
-      el.innerHTML = `
+          el.innerHTML = `
         <div class="pc-win__titlebar">
           <button class="pc-win__back" type="button" title="返回" style="display:none;">←</button>
           <img class="pc-win__icon" src="${escapeHtml(app.icon || '')}" alt="">
@@ -776,374 +1345,224 @@
         </div>
         <div class="pc-win__body"></div>
       `;
-      winsLayer.appendChild(el);
+          winsLayer.appendChild(el);
 
-      const win = {
-        id, bundle, el,
-        bodyEl: el.querySelector('.pc-win__body'),
-        title: app.name || bundle,
-        icon: app.icon || '',
-        minimized: false,
-        maximized: false,
-        prevRect: null,
-        instance: null,
-      };
+          const win = {
+            id, bundle, el,
+            bodyEl: el.querySelector('.pc-win__body'),
+            title: app.name || bundle,
+            icon: app.icon || '',
+            minimized: false,
+            maximized: false,
+            prevRect: null,
+            instance: null,
+          };
 
-      try {
-        win.instance = AppRuntime.mount(bundle, win.bodyEl, params, {
-          onClose: () => close(win),
-        });
-      } catch (e) {
-        console.error('[mount]', bundle, e);
-        el.remove();
-        return null;
-      }
-
-      wins.push(win);
-
-      el.querySelector('.pc-win__actions').addEventListener('click', e => {
-        const btn = e.target.closest('button[data-act]');
-        if (!btn) return;
-        const act = btn.dataset.act;
-        if (act === 'min') minimize(win);
-        else if (act === 'max') toggleMax(win);
-        else if (act === 'close') close(win);
-      });
-
-      const backBtn = el.querySelector('.pc-win__back');
-      backBtn.addEventListener('click', () => {
-        if (win.instance.nav.depth > 1) win.instance.nav.pop();
-      });
-      const offNav = win.instance.nav.onChange(() => {
-        backBtn.style.display = win.instance.nav.depth > 1 ? '' : 'none';
-      });
-      win._offNav = offNav;
-
-      el.addEventListener('pointerdown', () => focus(win), true);
-
-      bindDrag(win);
-      bindWindowGesture(win);
-
-      addTaskItem(win);
-      focus(win);
-      return win;
-    }
-
-    function focus(win) {
-      if (win.minimized) return;
-      win.el.style.zIndex = ++zTop;
-      wins.forEach(w => {
-        w.el.classList.toggle('is-focused', w === win);
-        updateTaskItem(w);
-      });
-    }
-
-    function close(win) {
-      const i = wins.indexOf(win);
-      if (i < 0) return;
-      wins.splice(i, 1);
-
-      try { win._offNav?.(); } catch {}
-      try { win._cleanupGesture?.(); } catch {}
-      try { win.instance.destroy(); } catch {}
-      win.el.remove();
-      removeTaskItem(win);
-
-      const next = wins
-        .filter(w => !w.minimized)
-        .sort((a, b) => +b.el.style.zIndex - +a.el.style.zIndex)[0];
-      if (next) focus(next);
-    }
-
-    function minimize(win) {
-      win.minimized = true;
-      win.el.style.display = 'none';
-      updateTaskItem(win);
-      const next = wins
-        .filter(w => !w.minimized)
-        .sort((a, b) => +b.el.style.zIndex - +a.el.style.zIndex)[0];
-      if (next) focus(next);
-    }
-    function restore(win) {
-      win.minimized = false;
-      win.el.style.display = '';
-      updateTaskItem(win);
-      focus(win);
-    }
-
-    function toggleMax(win) {
-      if (win.maximized) {
-        Object.assign(win.el.style, {
-          left: win.prevRect.left + 'px',
-          top: win.prevRect.top + 'px',
-          width: win.prevRect.width + 'px',
-          height: win.prevRect.height + 'px',
-        });
-        win.maximized = false;
-      } else {
-        win.prevRect = {
-          left: win.el.offsetLeft,
-          top: win.el.offsetTop,
-          width: win.el.offsetWidth,
-          height: win.el.offsetHeight,
-        };
-        Object.assign(win.el.style, {
-          left: '0px', top: '0px', width: '100%', height: '100%',
-        });
-        win.maximized = true;
-      }
-      focus(win);
-    }
-
-    function bindDrag(win) {
-      const bar = win.el.querySelector('.pc-win__titlebar');
-      let dragging = false;
-      let sx = 0, sy = 0, sl = 0, st = 0;
-
-      bar.addEventListener('pointerdown', e => {
-        if (e.button !== 0) return;
-        if (e.target.closest('.pc-win__actions')) return;
-        if (e.target.closest('.pc-win__back')) return;
-        if (win.maximized) return;
-        dragging = true;
-        sx = e.clientX; sy = e.clientY;
-        sl = win.el.offsetLeft; st = win.el.offsetTop;
-        try { bar.setPointerCapture(e.pointerId); } catch {}
-      });
-
-      bar.addEventListener('pointermove', e => {
-        if (!dragging) return;
-        const nl = Math.max(0, Math.min(
-          window.innerWidth - win.el.offsetWidth,
-          sl + e.clientX - sx
-        ));
-        const nt = Math.max(0, Math.min(
-          window.innerHeight - getTaskbarH() - win.el.offsetHeight,
-          st + e.clientY - sy
-        ));
-        win.el.style.left = nl + 'px';
-        win.el.style.top = nt + 'px';
-      });
-
-      const end = e => {
-        if (!dragging) return;
-        dragging = false;
-        try { bar.releasePointerCapture(e.pointerId); } catch {}
-      };
-      bar.addEventListener('pointerup', end);
-      bar.addEventListener('pointercancel', end);
-    }
-
-    const MOVE_CANCEL = 8;
-
-    function bindWindowGesture(win) {
-      const body = win.bodyEl;
-      const nav = win.instance.nav;
-      let g = null;
-
-      function isInteractive(e) {
-        if (!e) return false;
-        const path = (e.composedPath && e.composedPath()) || [e.target];
-        for (const el of path) {
-          if (!(el instanceof Element)) continue;
-          const tag = el.tagName;
-          if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return true;
-          if (el.isContentEditable) return true;
-          if (el.closest && el.closest('[data-no-back-gesture]')) return true;
           try {
-            const cs = getComputedStyle(el);
-            if (/(auto|scroll)/.test(cs.overflowX) &&
-                el.scrollWidth > el.clientWidth + 1) return true;
-          } catch {}
-        }
-        return false;
-      }
+            win.instance = AppRuntime.mount(bundle, win.bodyEl, params, {
+              onClose: () => close(win),
+            });
+          } catch (e) {
+            console.error('[mount]', bundle, e);
+            el.remove();
+            return null;
+          }
 
-      function begin(x, y, pointerId) {
-        const canPop = nav.depth > 1;
-        g = {
-          startX: x, startY: y,
-          dx: 0, dir: null,
-          pointerId,
-          captured: false,
-          mode: canPop ? 'pop' : 'close',
-          navDragging: false,
+          wins.push(win);
+
+          el.querySelector('.pc-win__actions').addEventListener('click', e => {
+            const btn = e.target.closest('button[data-act]');
+            if (!btn) return;
+            const act = btn.dataset.act;
+            if (act === 'min') minimize(win);
+            else if (act === 'max') toggleMax(win);
+            else if (act === 'close') close(win);
+          });
+
+          const backBtn = el.querySelector('.pc-win__back');
+          backBtn.addEventListener('click', () => {
+            if (win.instance.nav.depth > 1) win.instance.nav.pop();
+          });
+          const offNav = win.instance.nav.onChange(() => {
+            backBtn.style.display = win.instance.nav.depth > 1 ? '' : 'none';
+          });
+          win._offNav = offNav;
+
+          el.addEventListener('pointerdown', () => focus(win), true);
+
+          bindDrag(win);
+          bindResize(win);
+          bindWindowGesture(win);
+
+          addTaskItem(win);
+          focus(win);
+          return win;
+        }
+
+        function focus(win) {
+          if (win.minimized) return;
+          win.el.style.zIndex = ++zTop;
+          wins.forEach(w => {
+            w.el.classList.toggle('is-focused', w === win);
+            updateTaskItem(w);
+          });
+        }
+
+        function close(win) {
+          const i = wins.indexOf(win);
+          if (i < 0) return;
+          wins.splice(i, 1);
+
+          try { win._offNav?.(); } catch { }
+          try { win._cleanupGesture?.(); } catch { }
+          try { win.instance.destroy(); } catch { }
+          win.el.remove();
+          removeTaskItem(win);
+
+          const next = wins
+            .filter(w => !w.minimized)
+            .sort((a, b) => +b.el.style.zIndex - +a.el.style.zIndex)[0];
+          if (next) focus(next);
+        }
+
+        function minimize(win) {
+          win.minimized = true;
+          win.el.style.display = 'none';
+          updateTaskItem(win);
+          const next = wins
+            .filter(w => !w.minimized)
+            .sort((a, b) => +b.el.style.zIndex - +a.el.style.zIndex)[0];
+          if (next) focus(next);
+        }
+        function restore(win) {
+          win.minimized = false;
+          win.el.style.display = '';
+          updateTaskItem(win);
+          focus(win);
+        }
+
+        function toggleMax(win) {
+          if (win.maximized) {
+            Object.assign(win.el.style, {
+              left: win.prevRect.left + 'px',
+              top: win.prevRect.top + 'px',
+              width: win.prevRect.width + 'px',
+              height: win.prevRect.height + 'px',
+            });
+            win.maximized = false;
+          } else {
+            win.prevRect = {
+              left: win.el.offsetLeft,
+              top: win.el.offsetTop,
+              width: win.el.offsetWidth,
+              height: win.el.offsetHeight,
+            };
+            Object.assign(win.el.style, {
+              left: '0px', top: '0px', width: '100%', height: '100%',
+            });
+            win.maximized = true;
+          }
+          focus(win);
+        }
+
+        function bindDrag(win) {
+          const bar = win.el.querySelector('.pc-win__titlebar');
+          let dragging = false;
+          let sx = 0, sy = 0, sl = 0, st = 0;
+
+          bar.addEventListener('pointerdown', e => {
+            if (e.button !== 0) return;
+            if (e.target.closest('.pc-win__actions')) return;
+            if (e.target.closest('.pc-win__back')) return;
+            if (win.maximized) return;
+            dragging = true;
+            sx = e.clientX; sy = e.clientY;
+            sl = win.el.offsetLeft; st = win.el.offsetTop;
+            try { bar.setPointerCapture(e.pointerId); } catch { }
+          });
+
+          bar.addEventListener('pointermove', e => {
+            if (!dragging) return;
+            const nl = Math.max(0, Math.min(
+              window.innerWidth - win.el.offsetWidth,
+              sl + e.clientX - sx
+            ));
+            const nt = Math.max(0, Math.min(
+              window.innerHeight - getTaskbarH() - win.el.offsetHeight,
+              st + e.clientY - sy
+            ));
+            win.el.style.left = nl + 'px';
+            win.el.style.top = nt + 'px';
+          });
+
+          const end = e => {
+            if (!dragging) return;
+            dragging = false;
+            try { bar.releasePointerCapture(e.pointerId); } catch { }
+          };
+          bar.addEventListener('pointerup', end);
+          bar.addEventListener('pointercancel', end);
+        }
+
+        function bindWindowGesture(win) {
+          const nav = win.instance.nav;
+
+          function onKey(e) {
+            if (!e.altKey || e.key !== 'ArrowLeft') return;
+            if (!win.el.classList.contains('is-focused')) return;
+            if (nav.depth > 1) { nav.pop(); e.preventDefault(); }
+          }
+          window.addEventListener('keydown', onKey);
+
+          win._cleanupGesture = () => {
+            window.removeEventListener('keydown', onKey);
+          };
+        }
+
+        return {
+          open, close, minimize, restore, toggleMax, focus,
+          list: () => wins.slice(),
         };
-        body.style.transition = 'none';
-        return true;
-      }
+      })();
 
-      function move(x, y, preventFn) {
-        if (!g) return;
-        const dx = x - g.startX;
-        const dy = y - g.startY;
-
-        if (!g.dir) {
-          if (Math.abs(dx) < MOVE_CANCEL && Math.abs(dy) < MOVE_CANCEL) return;
-          g.dir = Math.abs(dx) > Math.abs(dy) ? 'h' : 'v';
-          if (g.dir === 'v') { reset(); return; }
-
-          if (g.pointerId != null && !g.captured) {
-            try { body.setPointerCapture(g.pointerId); g.captured = true; } catch {}
-          }
-
-          if (g.mode === 'pop') {
-            g.navDragging = nav.dragStart();
-            if (!g.navDragging) { reset(); return; }
-          }
-        }
-        if (g.dir !== 'h') return;
-        if (preventFn) preventFn();
-
-        if (dx <= 0) {
-          g.dx = 0;
-          if (g.navDragging) nav.dragMove(0);
-          else body.style.transform = '';
-          return;
-        }
-        g.dx = dx;
-        if (g.navDragging) {
-          nav.dragMove(dx);
-          body.style.transform = '';
-        } else {
-          body.style.transform = `translateX(${dx}px)`;
-        }
-      }
-
-      function end() {
-        if (!g) return;
-        const gg = g;
-        g = null;
-
-        if (gg.dx === 0) {
-          body.style.transform = '';
-          body.style.transition = '';
-          if (gg.navDragging) nav.dragCancel();
-          return;
-        }
-
-        const w = body.offsetWidth;
-        const threshold = w * 0.25;
-
-        if (gg.navDragging) {
-          nav.dragEnd(gg.dx, 0.25);
-          body.style.transition = '';
-        } else if (gg.dx > threshold) {
-          body.style.transition = 'transform .26s cubic-bezier(.4,0,.6,1)';
-          body.style.transform = `translateX(${w}px)`;
-          setTimeout(() => close(win), 260);
-        } else {
-          body.style.transition = 'transform .24s ease';
-          body.style.transform = '';
-          setTimeout(() => { body.style.transition = ''; }, 260);
-        }
-      }
-
-      function reset() {
-        g = null;
-        body.style.transform = '';
-        body.style.transition = '';
-      }
-
-      body.addEventListener('touchstart', e => {
-        const t = e.touches[0];
-        if (!t) return;
-        if (isInteractive(e)) return;
-        begin(t.clientX, t.clientY, t.identifier);
-      }, { passive: true });
-
-      body.addEventListener('touchmove', e => {
-        if (!g) return;
-        const t = [...e.touches].find(x => x.identifier === g.pointerId);
-        if (!t) return;
-        move(t.clientX, t.clientY, () => {
-          if (e.cancelable) e.preventDefault();
-        });
-      }, { passive: false });
-
-      body.addEventListener('touchend', end);
-      body.addEventListener('touchcancel', end);
-
-      body.addEventListener('pointerdown', e => {
-        if (e.pointerType !== 'mouse' || e.button !== 0) return;
-        if (isInteractive(e)) return;
-        begin(e.clientX, e.clientY, e.pointerId);
-      });
-
-      body.addEventListener('pointermove', e => {
-        if (e.pointerType !== 'mouse' || !g || e.pointerId !== g.pointerId) return;
-        move(e.clientX, e.clientY, null);
-      });
-
-      body.addEventListener('pointerup', e => {
-        if (e.pointerType !== 'mouse' || !g || e.pointerId !== g.pointerId) return;
-        try { body.releasePointerCapture(e.pointerId); } catch {}
-        end();
-      });
-
-      body.addEventListener('pointercancel', e => {
-        if (e.pointerType !== 'mouse') return;
-        end();
-      });
-
-      function onKey(e) {
-        if (!e.altKey || e.key !== 'ArrowLeft') return;
-        if (!win.el.classList.contains('is-focused')) return;
-        if (nav.depth > 1) { nav.pop(); e.preventDefault(); }
-      }
-      window.addEventListener('keydown', onKey);
-
-      win._cleanupGesture = () => {
-        window.removeEventListener('keydown', onKey);
-        body.style.transform = '';
-        body.style.transition = '';
+      /* ============================================================
+         WujiAppLauncher
+         ============================================================ */
+      window.WujiAppLauncher = {
+        open(bundle, params) {
+          WujiWindows.open(bundle, params || {});
+        },
+        getCurrentBundle() {
+          const f = WujiWindows.list().find(w => w.el.classList.contains('is-focused'));
+          return f ? f.bundle : null;
+        },
+        close() {
+          const f = WujiWindows.list().find(w => w.el.classList.contains('is-focused'));
+          if (f) WujiWindows.close(f);
+        },
       };
-    }
 
-    return {
-      open, close, minimize, restore, toggleMax, focus,
-      list: () => wins.slice(),
-    };
-  })();
+      /* ============================================================
+         开始菜单
+         ============================================================ */
+      const StartMenu = (() => {
+        const btn = document.getElementById('pcStartBtn');
+        const menu = document.getElementById('pcStartMenu');
+        const listEl = document.getElementById('pcStartList');
 
-  /* ============================================================
-     WujiAppLauncher
-     ============================================================ */
-  window.WujiAppLauncher = {
-    open(bundle, params) {
-      WujiWindows.open(bundle, params || {});
-    },
-    getCurrentBundle() {
-      const f = WujiWindows.list().find(w => w.el.classList.contains('is-focused'));
-      return f ? f.bundle : null;
-    },
-    close() {
-      const f = WujiWindows.list().find(w => w.el.classList.contains('is-focused'));
-      if (f) WujiWindows.close(f);
-    },
-  };
+        function render() {
+          const apps = WujiApps.all().slice().sort((a, b) => {
+            const an = a.name || a.bundlename;
+            const bn = b.name || b.bundlename;
+            return an.localeCompare(bn, 'zh-Hans-CN');
+          });
 
-  /* ============================================================
-     开始菜单
-     ============================================================ */
-  const StartMenu = (() => {
-    const btn = document.getElementById('pcStartBtn');
-    const menu = document.getElementById('pcStartMenu');
-    const listEl = document.getElementById('pcStartList');
+          if (!apps.length) {
+            listEl.innerHTML = '<div class="pc-start-menu__empty">没有应用</div>';
+            return;
+          }
 
-    function render() {
-      const apps = WujiApps.all().slice().sort((a, b) => {
-        const an = a.name || a.bundlename;
-        const bn = b.name || b.bundlename;
-        return an.localeCompare(bn, 'zh-Hans-CN');
-      });
-
-      if (!apps.length) {
-        listEl.innerHTML = '<div class="pc-start-menu__empty">没有应用</div>';
-        return;
-      }
-
-      listEl.innerHTML = apps.map(app => `
+          listEl.innerHTML = apps.map(app => `
         <button class="pc-start-menu__item" data-bundle="${escapeHtml(app.bundlename)}" type="button">
           <img src="${escapeHtml(app.icon || '')}" alt="">
           <div class="pc-start-menu__item-text">
@@ -1153,118 +1572,307 @@
         </button>
       `).join('');
 
-      listEl.querySelectorAll('.pc-start-menu__item').forEach(el => {
-        el.addEventListener('click', () => {
-          const bundle = el.dataset.bundle;
-          close();
-          WujiWindows.open(bundle);
+          listEl.querySelectorAll('.pc-start-menu__item').forEach(el => {
+            el.addEventListener('click', () => {
+              const bundle = el.dataset.bundle;
+              close();
+              WujiWindows.open(bundle);
+            });
+          });
+        }
+
+        function openMenu() {
+          render();
+          menu.hidden = false;
+          btn.classList.add('is-open');
+        }
+        function close() {
+          menu.hidden = true;
+          btn.classList.remove('is-open');
+        }
+        function toggle() {
+          if (menu.hidden) openMenu();
+          else close();
+        }
+
+        btn.addEventListener('click', e => {
+          e.stopPropagation();
+          toggle();
         });
+
+        document.addEventListener('pointerdown', e => {
+          if (menu.hidden) return;
+          if (btn.contains(e.target)) return;
+          if (menu.contains(e.target)) return;
+          close();
+        }, true);
+
+        document.addEventListener('keydown', e => {
+          if (e.key === 'Escape' && !menu.hidden) close();
+        });
+
+        return { open: openMenu, close, toggle };
+      })();
+
+      /* ============================================================
+         任务栏时钟
+         ============================================================ */
+      (function clock() {
+        const el = document.getElementById('pcClock');
+        function tick() {
+          const d = new Date();
+          el.textContent =
+            `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+        }
+        tick();
+        setInterval(tick, 1000);
+      })();
+      /* ============================================================
+         右下角：控制中心 / 通知中心
+         ============================================================ */
+      const Flyout = (() => {
+        const rootEl = document.getElementById('os');
+        const flyoutEl = document.getElementById('pcFlyout');
+        const wlanBtn = document.getElementById('pcWlanBtn');
+        const clockBtn = document.getElementById('pcClock');
+
+        const paneNC = flyoutEl.querySelector('[data-pane="nc"]');
+        const paneCC = flyoutEl.querySelector('[data-pane="cc"]');
+
+        const volEl = document.getElementById('pcCcVolume');
+        const volValEl = document.getElementById('pcCcVolVal');
+        const briEl = document.getElementById('pcCcBrightness');
+        const briValEl = document.getElementById('pcCcBriVal');
+        const toggleEls = Array.from(flyoutEl.querySelectorAll('.pc-cc__toggle'));
+
+        const ncListEl = document.getElementById('pcNcList');
+        const ncEmptyEl = document.getElementById('pcNcEmpty');
+        const ncClearBtn = document.getElementById('pcNcClear');
+
+        const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c =>
+          ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+
+        let openPane = null;
+
+        /* ---------- 触屏模式 ---------- */
+        function applyTouchMode(on) {
+          rootEl.classList.toggle('is-touch-mode', !!on);
+        }
+
+        /* ---------- 控制中心同步 ---------- */
+        function syncControls() {
+          const vol = Math.max(0, Math.min(100, Number(Store.get('wujios.volume', 60)) || 0));
+          const bri = Math.max(0, Math.min(100, Number(Store.get('wujios.brightness', 80)) || 0));
+
+          volEl.value = vol;
+          volValEl.textContent = vol;
+          briEl.value = bri;
+          briValEl.textContent = bri;
+
+          toggleEls.forEach(btn => {
+            btn.classList.toggle(
+              'is-on',
+              !!Store.get('wujios.' + btn.dataset.key, false)
+            );
+          });
+        }
+
+        /* ---------- 通知列表 ---------- */
+        function renderNotifications() {
+          const list = WujiNotification.all() || [];
+
+          ncListEl.innerHTML = list.map(n => {
+            const app = WujiApps.get(n.bundlename);
+            const icon = app && app.icon ? app.icon : '';
+            const d = new Date(n.time || Date.now());
+            const time =
+              `${String(d.getHours()).padStart(2, '0')}:` +
+              `${String(d.getMinutes()).padStart(2, '0')}`;
+
+            return `<div class="pc-nc__item"
+                         data-bundle="${esc(n.bundlename)}"
+                         data-id="${esc(n.id)}">
+              <div class="pc-nc__icon">${icon ? `<img src="${esc(icon)}" alt="">` : ''}</div>
+              <div class="pc-nc__body">
+                <div class="pc-nc__item-head">
+                  <span class="pc-nc__item-title">${esc(n.title)}</span>
+                  ${n.showtime === false ? '' : `<span class="pc-nc__item-time">${time}</span>`}
+                </div>
+                <div class="pc-nc__item-content">${esc(n.content)}</div>
+              </div>
+            </div>`;
+          }).join('');
+
+          ncEmptyEl.hidden = list.length > 0;
+          ncClearBtn.hidden = list.length === 0;
+        }
+
+        /* ---------- 打开 / 关闭 ---------- */
+        function openPanel(name) {
+          if (!flyoutEl.hidden && openPane === name) { closePanel(); return; }
+
+          openPane = name;
+          paneNC.hidden = name !== 'nc';
+          paneCC.hidden = name !== 'cc';
+          flyoutEl.hidden = false;
+
+          wlanBtn.classList.toggle('is-active', name === 'cc');
+          clockBtn.classList.toggle('is-active', name === 'nc');
+
+          if (name === 'cc') syncControls();
+          else renderNotifications();
+        }
+
+        function closePanel() {
+          flyoutEl.hidden = true;
+          openPane = null;
+          wlanBtn.classList.remove('is-active');
+          clockBtn.classList.remove('is-active');
+        }
+
+        /* ---------- 事件 ---------- */
+        wlanBtn.addEventListener('click', e => {
+          e.stopPropagation();
+          openPanel('cc');
+        });
+
+        clockBtn.addEventListener('click', e => {
+          e.stopPropagation();
+          openPanel('nc');
+        });
+
+        document.addEventListener('pointerdown', e => {
+          if (flyoutEl.hidden) return;
+          if (flyoutEl.contains(e.target)) return;
+          if (wlanBtn.contains(e.target) || clockBtn.contains(e.target)) return;
+          closePanel();
+        }, true);
+
+        volEl.addEventListener('input', () => {
+          const v = Math.max(0, Math.min(100, parseInt(volEl.value, 10) || 0));
+          Store.set('wujios.volume', v);
+          volValEl.textContent = v;
+          try { window.dispatchEvent(new CustomEvent('wuji:cc-volume-change')); } catch { }
+        });
+
+        briEl.addEventListener('input', () => {
+          const v = Math.max(0, Math.min(100, parseInt(briEl.value, 10) || 0));
+          Store.set('wujios.brightness', v);
+          briValEl.textContent = v;
+        });
+
+        toggleEls.forEach(btn => {
+          btn.addEventListener('click', () => {
+            const key = btn.dataset.key;
+            const cur = !!Store.get('wujios.' + key, false);
+            const next = !cur;
+            Store.set('wujios.' + key, next);
+            btn.classList.toggle('is-on', next);
+            if (key === 'touchmode') applyTouchMode(next);
+          });
+        });
+
+        ncListEl.addEventListener('click', e => {
+          const item = e.target.closest('.pc-nc__item');
+          if (!item) return;
+
+          const bundle = item.dataset.bundle;
+          const id = item.dataset.id;
+          const rec = (WujiNotification.all() || [])
+            .find(n => n.bundlename === bundle && String(n.id) === String(id));
+
+          closePanel();
+          try {
+            WujiNotification.unpublish({
+              bundlename: bundle,
+              id: rec ? rec.id : id,
+            });
+          } catch { }
+
+          if (bundle && WujiApps.get(bundle)) {
+            WujiWindows.open(bundle, (rec && rec.clickparams) || {});
+          }
+        });
+
+        ncClearBtn.addEventListener('click', () => {
+          try { WujiNotification.clearAll(); } catch { }
+          renderNotifications();
+        });
+
+        /* 初始状态 */
+        applyTouchMode(!!Store.get('wujios.touchmode', false));
+        syncControls();
+
+        return {
+          applyTouchMode,
+          syncControls,
+          renderNotifications,
+          close: closePanel,
+          onNotificationsChanged() {
+            if (!flyoutEl.hidden && openPane === 'nc') renderNotifications();
+          },
+        };
+      })();
+
+      /* ============================================================
+         通知
+         ============================================================ */
+      const osEl = document.getElementById('os');
+      try {
+        WujiNotification.init({
+          osEl,
+          openApp: (bundle, params) => WujiWindows.open(bundle, params || {}),
+          bannerInteractive: false,          // ★ 右下角固定横幅：无手势
+        });
+        WujiNotification.onChange(() => Flyout.onNotificationsChanged());
+      } catch (e) { console.warn('[notification]', e); }
+
+      /* ============================================================
+         启动
+         ============================================================ */
+      (async () => {
+        const bootEl = document.getElementById('pcBoot');
+        const startAt = performance.now();
+
+        try {
+          if (window.WujiTheme) WujiTheme.init();
+          else console.warn('[boot] WujiTheme 未加载，跳过主题初始化');
+        } catch (e) { console.warn('[theme]', e); }
+
+        BUILTIN_APPS.forEach(meta => WujiApps.registerMeta(meta, 'builtin'));
+
+        try { await WujiAppInstaller.restore(); }
+        catch (e) { console.warn('[boot] restore failed', e); }
+
+        BUILTIN_APPS.forEach(m => {
+          if (!m.src) return;
+          WujiAppLoader.load(m.src, m.version).catch(e => {
+            console.warn('[preload builtin]', m.bundlename, e);
+          });
+        });
+        WujiApps.installeds().forEach(app => {
+          if (!app._src) return;
+          WujiAppLoader.load(app._src, app.version).catch(e => {
+            console.warn('[preload installed]', app.bundlename, e);
+          });
+        });
+
+        try { WujiApps.boot(); }
+        catch (e) { console.warn('[boot]', e); }
+
+        const wait = Math.max(0, BOOT_MIN_MS - (performance.now() - startAt));
+        setTimeout(() => {
+          bootEl.classList.add('is-hide');
+          setTimeout(() => { try { bootEl.remove(); } catch { } }, 600);
+        }, wait);
+      })();
+
+      window.addEventListener('beforeunload', () => {
+        try { WujiApps.shutdown(); } catch { }
       });
-    }
-
-    function openMenu() {
-      render();
-      menu.hidden = false;
-      btn.classList.add('is-open');
-    }
-    function close() {
-      menu.hidden = true;
-      btn.classList.remove('is-open');
-    }
-    function toggle() {
-      if (menu.hidden) openMenu();
-      else close();
-    }
-
-    btn.addEventListener('click', e => {
-      e.stopPropagation();
-      toggle();
-    });
-
-    document.addEventListener('pointerdown', e => {
-      if (menu.hidden) return;
-      if (btn.contains(e.target)) return;
-      if (menu.contains(e.target)) return;
-      close();
-    }, true);
-
-    document.addEventListener('keydown', e => {
-      if (e.key === 'Escape' && !menu.hidden) close();
-    });
-
-    return { open: openMenu, close, toggle };
-  })();
-
-  /* ============================================================
-     任务栏时钟
-     ============================================================ */
-  (function clock() {
-    const el = document.getElementById('pcClock');
-    function tick() {
-      const d = new Date();
-      el.textContent =
-        `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
-    }
-    tick();
-    setInterval(tick, 1000);
-  })();
-
-  /* ============================================================
-     通知
-     ============================================================ */
-  const osEl = document.getElementById('os');
-  try {
-    WujiNotification.init({
-      osEl,
-      openApp: (bundle, params) => WujiWindows.open(bundle, params || {}),
-    });
-  } catch (e) { console.warn('[notification]', e); }
-
-  /* ============================================================
-     启动
-     ============================================================ */
-  (async () => {
-    const bootEl = document.getElementById('pcBoot');
-    const startAt = performance.now();
-
-    try {
-      if (window.WujiTheme) WujiTheme.init();
-      else console.warn('[boot] WujiTheme 未加载，跳过主题初始化');
-    } catch (e) { console.warn('[theme]', e); }
-
-    BUILTIN_APPS.forEach(meta => WujiApps.registerMeta(meta, 'builtin'));
-
-    try { await WujiAppInstaller.restore(); }
-    catch (e) { console.warn('[boot] restore failed', e); }
-
-    BUILTIN_APPS.forEach(m => {
-      if (!m.src) return;
-      WujiAppLoader.load(m.src, m.version).catch(e => {
-        console.warn('[preload builtin]', m.bundlename, e);
-      });
-    });
-    WujiApps.installeds().forEach(app => {
-      if (!app._src) return;
-      WujiAppLoader.load(app._src, app.version).catch(e => {
-        console.warn('[preload installed]', app.bundlename, e);
-      });
-    });
-
-    try { WujiApps.boot(); }
-    catch (e) { console.warn('[boot]', e); }
-
-    const wait = Math.max(0, BOOT_MIN_MS - (performance.now() - startAt));
-    setTimeout(() => {
-      bootEl.classList.add('is-hide');
-      setTimeout(() => { try { bootEl.remove(); } catch {} }, 600);
-    }, wait);
-  })();
-
-  window.addEventListener('beforeunload', () => {
-    try { WujiApps.shutdown(); } catch {}
-  });
-})();
-</script>
+    })();
+  </script>
 
 </body>
+
 </html>
