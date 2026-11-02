@@ -7,8 +7,9 @@
      - meta 条目（占位）与完整条目可互相升级
      - on() 事件订阅：桌面布局在增删时自动重绘
      - boot() / shutdown() / shutdownOne()：应用生命周期钩子
-       · 完整注册后若已 booted 自动补调 onBoot
-       · 卸载 / 覆盖安装前调 onShutdown
+     - platformAllowed()：按 window.__OPENWUJI_PLATFORM 过滤应用
+       · 旧数据没有 platforms 字段 → 视为全平台
+       · 空数组 / 非数组 / null → 全平台
 
    Store：
      - 系统级小数据（localStorage），同步、必须立即可读
@@ -20,6 +21,57 @@ window.WujiApps = (() => {
   const installed = new Map();
   const listeners = new Set();
   let booted = false;
+
+  /* =========================================================
+     平台过滤
+     ========================================================= */
+  const CUR_PLATFORM = window.__OPENWUJI_PLATFORM || 'wujios';
+
+  /**
+   * 判断 meta / record 是否适用于当前平台。
+   *
+   * 向后兼容规则：
+   *   platforms 缺失 / null / undefined / 空数组 / 非数组
+   *     → 视为全平台，返回 true
+   *   platforms 是非空数组
+   *     → 仅当包含当前平台时返回 true
+   */
+  function platformAllowed(meta) {
+    if (!meta) return true;
+    const list = meta.platforms;
+    if (!Array.isArray(list) || list.length === 0) return true;
+    return list.includes(CUR_PLATFORM);
+  }
+
+  function supportsFile(app, file) {
+    if (!app || !Array.isArray(app.fileTypes) || !app.fileTypes.length) return false;
+    if (!file) return false;
+
+    const ext = (() => {
+      const i = file.name.lastIndexOf('.');
+      return i >= 0 ? file.name.slice(i + 1).toLowerCase() : '';
+    })();
+
+    return app.fileTypes.some(rule => {
+      if (!rule) return false;
+
+      if (rule.mime) {
+        if (rule.mime.endsWith('/*')) {
+          const prefix = rule.mime.slice(0, -1);
+          if (file.mime && file.mime.startsWith(prefix)) return true;
+        } else if (rule.mime === file.mime) {
+          return true;
+        }
+      }
+
+      if (Array.isArray(rule.ext) && rule.ext.length) {
+        const exts = rule.ext.map(e => String(e).replace(/^\./, '').toLowerCase());
+        if (exts.includes(ext)) return true;
+      }
+
+      return false;
+    });
+  }
 
   function emit(evt) {
     listeners.forEach(fn => {
@@ -34,7 +86,7 @@ window.WujiApps = (() => {
   }
 
   function normalize(app) {
-    return {
+    const norm = {
       bundlename: app.bundlename || app.bundle,
       name: app.name || app.bundlename,
       icon: app.icon || '',
@@ -44,16 +96,23 @@ window.WujiApps = (() => {
       description: app.description || '',
       initialRoute: app.initialRoute || null,
       routes: app.routes || null,
-      overlays: app.overlays || null,        // ★ 新增
+      overlays: app.overlays || null,
       render: app.render || null,
       mount: app.mount || null,
       unmount: app.unmount || null,
       styles: app.styles || '',
-      onBoot: app.onBoot || null,          // ★ 新增
-      onShutdown: app.onShutdown || null,      // ★ 新增
+      onBoot: app.onBoot || null,
+      onShutdown: app.onShutdown || null,
       _src: app.src || app._src || '',
       _metaOnly: false,
+      fileTypes: Array.isArray(app.fileTypes) ? app.fileTypes.slice() : null,
     };
+
+    if (Array.isArray(app.platforms) && app.platforms.length) {
+      norm.platforms = app.platforms.slice();
+    }
+
+    return norm;
   }
 
   /* ---------------------------------------------------------
@@ -65,6 +124,17 @@ window.WujiApps = (() => {
       return false;
     }
 
+    /* ★ 1) 应用自身声明的平台不匹配当前平台 → 直接拒绝 */
+    if (!platformAllowed(app)) return false;
+
+    /* ★ 2) 已安装应用以安装记录为准（防脚本被误 preload 后绕过） */
+    if (source === 'installed' && window.WujiAppInstaller?.get) {
+      try {
+        const rec = window.WujiAppInstaller.get(app.bundlename);
+        if (rec && !platformAllowed(rec)) return false;
+      } catch { }
+    }
+
     const isInstalled = source === 'installed';
     const bucket = isInstalled ? installed : builtin;
     const other = isInstalled ? builtin : installed;
@@ -72,12 +142,10 @@ window.WujiApps = (() => {
     const existingSelf = bucket.get(app.bundlename);
     const existingOther = other.get(app.bundlename);
 
-    /* 已经完整注册过 → 忽略 */
     if (existingSelf && !existingSelf._metaOnly) {
       console.warn(`[WujiApps] 应用 ${app.bundlename} 已注册，忽略`);
       return false;
     }
-    /* 另一桶里有完整版 → 忽略（内置优先，避免把系统应用注册成已安装） */
     if (existingOther && !existingOther._metaOnly) {
       console.warn(`[WujiApps] 应用 ${app.bundlename} 已在另一桶完整注册，忽略`);
       return false;
@@ -92,36 +160,41 @@ window.WujiApps = (() => {
       norm._src = existingSelf._src;
     }
 
+    if (!norm.platforms && existingSelf?.platforms) {
+      norm.platforms = existingSelf.platforms.slice();
+    }
+    if (!norm.fileTypes && existingSelf?.fileTypes) {
+      norm.fileTypes = existingSelf.fileTypes.slice();
+    }
+
     bucket.set(norm.bundlename, norm);
     if (existingOther) other.delete(norm.bundlename);
 
     emit({ type: 'registered', bundle: norm.bundlename, source, app: norm });
 
-    /* ★ 开机后脚本才加载完 → 自动补调 onBoot */
     if (booted) safeInvoke(norm.onBoot, 'onBoot:' + norm.bundlename);
 
     return true;
   }
 
   /* ---------------------------------------------------------
-   只注册元数据（占位），等脚本加载后升级为完整定义
-   source = 'builtin'  → 占位放进 builtin 桶
-   source = 'installed'→ 占位放进 installed 桶（默认）
-   --------------------------------------------------------- */
+     只注册元数据（占位），等脚本加载后升级为完整定义
+     --------------------------------------------------------- */
   function registerMeta(meta, source = 'installed') {
     if (!meta) return false;
     const bundle = meta.bundlename || meta.bundle;
     if (!bundle) return false;
 
+    /* ★ 平台过滤（旧数据无 platforms → 全平台放行） */
+    if (!platformAllowed(meta)) return false;
+
     const isBuiltin = source === 'builtin';
     const bucket = isBuiltin ? builtin : installed;
     const other = isBuiltin ? installed : builtin;
 
-    /* 目标桶里已有完整定义 → 忽略 */
     const existingSelf = bucket.get(bundle);
     if (existingSelf && !existingSelf._metaOnly) return false;
 
-    /* 另一个桶里已有完整定义 → 忽略 */
     const existingOther = other.get(bundle);
     if (existingOther && !existingOther._metaOnly) return false;
 
@@ -144,16 +217,11 @@ window.WujiApps = (() => {
   }
 
   return {
-    /* 内置应用：随 OS 一起发布的 */
     register(app) { return register(app, 'builtin'); },
-
-    /* 应用市场 / 侧载：安装时调用 */
     registerInstalled(app) { return register(app, 'installed'); },
-
-    /* 只登记元数据（占位） */
     registerMeta,
+    platformAllowed,
 
-    /* 卸载：只能卸已安装的应用 */
     unregister(bundle) {
       if (!installed.has(bundle)) return false;
       installed.delete(bundle);
@@ -180,7 +248,6 @@ window.WujiApps = (() => {
       return () => listeners.delete(fn);
     },
 
-    /* ★ 生命周期：开机完成 / 关机前 */
     boot() {
       booted = true;
       eachFull(app => safeInvoke(app.onBoot, 'onBoot:' + app.bundlename));
@@ -191,15 +258,16 @@ window.WujiApps = (() => {
       eachFull(app => safeInvoke(app.onShutdown, 'onShutdown:' + app.bundlename));
     },
 
-    /* 卸载 / 覆盖安装单个应用前 */
     shutdownOne(bundle) {
-      if (!booted) return;          // 没 boot 过，没什么可 shutdown 的
+      if (!booted) return;
       const app = installed.get(bundle) || builtin.get(bundle) || null;
       if (!app || app._metaOnly) return;
       safeInvoke(app.onShutdown, 'onShutdown:' + bundle);
     },
 
     get isBooted() { return booted; },
+    get currentPlatform() { return CUR_PLATFORM; },
+    supportsFile,
   };
 })();
 

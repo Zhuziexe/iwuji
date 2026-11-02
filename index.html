@@ -15,13 +15,14 @@
       --key-w: 14px;
     }
 
-    * { 
+    * {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
-     }
+    }
 
-    html, body {
+    html,
+    body {
       width: 100%;
       height: 100%;
       overflow: hidden;
@@ -33,7 +34,9 @@
       color: #fff;
     }
 
-    html { font-size: 16px !important; }
+    html {
+      font-size: 16px !important;
+    }
 
     body {
       display: flex;
@@ -96,9 +99,18 @@
       -webkit-tap-highlight-color: transparent;
     }
 
-    .tb-btn:hover { background: rgba(138, 212, 255, .18); }
-    .tb-btn:active { transform: translateY(1px); }
-    .tb-btn:disabled { opacity: .4; cursor: not-allowed; }
+    .tb-btn:hover {
+      background: rgba(138, 212, 255, .18);
+    }
+
+    .tb-btn:active {
+      transform: translateY(1px);
+    }
+
+    .tb-btn:disabled {
+      opacity: .4;
+      cursor: not-allowed;
+    }
 
     .tb-btn--icon {
       width: 32px;
@@ -108,11 +120,13 @@
       align-items: center;
       justify-content: center;
     }
+
     .tb-btn--icon svg {
       width: 16px;
       height: 16px;
       display: block;
     }
+
     .tb-btn--icon.is-open {
       background: rgba(138, 212, 255, .22);
       border-color: rgba(138, 212, 255, .55);
@@ -137,11 +151,21 @@
       gap: 1px;
       animation: tbMenuIn .14s cubic-bezier(.2, .7, .3, 1);
     }
-    .tb-menu[hidden] { display: none; }
+
+    .tb-menu[hidden] {
+      display: none;
+    }
 
     @keyframes tbMenuIn {
-      from { opacity: 0; transform: translateY(-4px) scale(.97); }
-      to   { opacity: 1; transform: translateY(0) scale(1); }
+      from {
+        opacity: 0;
+        transform: translateY(-4px) scale(.97);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
     }
 
     .tb-menu__item {
@@ -165,19 +189,25 @@
       transition: background .12s, color .12s;
       -webkit-tap-highlight-color: transparent;
     }
+
     .tb-menu__item:hover {
       background: rgba(138, 212, 255, .10);
       color: #e9ecf2;
     }
+
     .tb-menu__item:active {
       background: rgba(138, 212, 255, .16);
     }
+
     .tb-menu__item:disabled {
       opacity: .4;
       cursor: not-allowed;
     }
 
-    .tb-menu__item--danger { color: #ff9fb5; }
+    .tb-menu__item--danger {
+      color: #ff9fb5;
+    }
+
     .tb-menu__item--danger:hover {
       background: rgba(224, 53, 107, .12);
       color: #ff9fb5;
@@ -189,7 +219,10 @@
       font-weight: 400;
       transition: color .12s;
     }
-    .tb-menu__item:hover .tb-menu__hint { color: #8ad4ff; }
+
+    .tb-menu__item:hover .tb-menu__hint {
+      color: #8ad4ff;
+    }
 
     .tb-menu__state {
       font-size: 11px;
@@ -198,7 +231,10 @@
       color: #6b7280;
       transition: color .15s;
     }
-    .tb-menu__state.is-on { color: #5bd67f; }
+
+    .tb-menu__state.is-on {
+      color: #5bd67f;
+    }
 
     .tb-menu__sep {
       height: 1px;
@@ -353,9 +389,14 @@
         0 0 16px rgba(74, 125, 255, .8);
     }
 
-    .hw-key--power { height: 72px; }
+    .hw-key--power {
+      height: 72px;
+    }
+
     .hw-key--vol-up,
-    .hw-key--vol-down { height: 58px; }
+    .hw-key--vol-down {
+      height: 58px;
+    }
 
     .device:fullscreen,
     .device:-webkit-full-screen {
@@ -379,12 +420,19 @@
       aspect-ratio: 3 / 4;
     }
 
-    .device::backdrop { background: #000; }
+    .device::backdrop {
+      background: #000;
+    }
 
     /* ============ 窄屏 ============ */
     @media (max-width: 480px) {
-      .titlebar { padding: 0 12px; }
-      .stage { padding: 10px calc(10px + 12px); }
+      .titlebar {
+        padding: 0 12px;
+      }
+
+      .stage {
+        padding: 10px calc(10px + 12px);
+      }
     }
   </style>
 </head>
@@ -395,30 +443,28 @@
     <span class="title">iWuji</span>
 
     <div class="tb-actions">
-      <button class="tb-btn tb-btn--icon" id="fsBtn" type="button"
-              title="全屏" aria-label="全屏">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
-             stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M4 9V5a1 1 0 0 1 1-1h4"/>
-          <path d="M20 9V5a1 1 0 0 0-1-1h-4"/>
-          <path d="M4 15v4a1 1 0 0 0 1 1h4"/>
-          <path d="M20 15v4a1 1 0 0 1-1 1h-4"/>
+      <button class="tb-btn tb-btn--icon" id="fsBtn" type="button" title="全屏" aria-label="全屏">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"
+          stroke-linejoin="round">
+          <path d="M4 9V5a1 1 0 0 1 1-1h4" />
+          <path d="M20 9V5a1 1 0 0 0-1-1h-4" />
+          <path d="M4 15v4a1 1 0 0 0 1 1h4" />
+          <path d="M20 15v4a1 1 0 0 1-1 1h-4" />
         </svg>
       </button>
 
-      <button class="tb-btn tb-btn--icon" id="menuBtn" type="button"
-              title="菜单" aria-label="菜单" aria-haspopup="menu" aria-expanded="false">
+      <button class="tb-btn tb-btn--icon" id="menuBtn" type="button" title="菜单" aria-label="菜单" aria-haspopup="menu"
+        aria-expanded="false">
         <svg viewBox="0 0 24 24" fill="currentColor">
-          <circle cx="5" cy="12" r="1.8"/>
-          <circle cx="12" cy="12" r="1.8"/>
-          <circle cx="19" cy="12" r="1.8"/>
+          <circle cx="5" cy="12" r="1.8" />
+          <circle cx="12" cy="12" r="1.8" />
+          <circle cx="19" cy="12" r="1.8" />
         </svg>
       </button>
     </div>
 
     <div class="tb-menu" id="tbMenu" hidden role="menu">
-      <a class="tb-menu__item" href="./studio.html"
-         target="_blank" rel="noopener" role="menuitem">
+      <a class="tb-menu__item" href="./studio.html" target="_blank" rel="noopener" role="menuitem">
         <span>iWuji Studio</span>
         <span class="tb-menu__hint">↗</span>
       </a>
@@ -435,8 +481,7 @@
 
       <div class="tb-menu__sep"></div>
 
-      <button class="tb-menu__item tb-menu__item--danger"
-              id="clearDataBtn" type="button" role="menuitem">
+      <button class="tb-menu__item tb-menu__item--danger" id="clearDataBtn" type="button" role="menuitem">
         <span>清除数据</span>
       </button>
     </div>
@@ -446,7 +491,9 @@
     <div class="device" id="device">
       <div class="screen-wrap">
         <div class="screen" id="screen">
-          <iframe id="osFrame" src="wujios.html" title="iWuji"></iframe>
+          <iframe id="osFrame" src="wujios.html" title="iWuji"
+            sandbox="allow-same-origin allow-scripts allow-forms allow-modals">
+          </iframe>
           <div class="camera-notch" aria-hidden="true"></div>
         </div>
 

@@ -54,7 +54,7 @@
     name: '牛奶百科',
     icon: ICON_URL,
     initialRoute: 'home',
-    version: '1.0.5',
+    version: '1.0.6',
 
     styles: `
       .bk-page {
@@ -392,7 +392,7 @@
         pointer-events: none;
       }
 
-      .bk-fs {
+.bk-fs {
   position: absolute;
   inset: 0;
   background: #000;
@@ -403,12 +403,21 @@
   position: absolute;
   top: 50%;
   left: 50%;
-  width: 100vh;
-  height: 100vw;
+  /* ★ 用容器单位,不用视口单位 */
+  width: 100cqh;
+  height: 100cqw;
   transform: translate(-50%, -50%) rotate(90deg);
   transform-origin: center center;
   background: #000;
   overflow: hidden;
+}
+
+:host([data-wj-platform="zhuzios"]) .bk-fs__stage {
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  transform: none;
 }
 
 .bk-fs__video {

@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+
+  <!-- 黄色纯色圆角背景 -->
+  <rect width="256" height="256" rx="52" ry="52" fill="#FFC107"/>
+
+  <!-- 白色圆角轮廓文件夹 -->
+  <path d="M 56 80
+           L 56 72
+           Q 56 60 68 60
+           L 140 60
+           L 156 92
+           L 188 92
+           Q 200 92 200 104
+           L 200 184
+           Q 200 196 188 196
+           L 68 196
+           Q 56 196 56 184
+           Z"
+        fill="#FFFFFF"
+        stroke="#FFFFFF"
+        stroke-width="12"
+        stroke-linecap="round"
+        stroke-linejoin="round"/>
+
+</svg>

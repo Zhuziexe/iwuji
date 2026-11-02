@@ -1500,7 +1500,6 @@ img {
   white-space: nowrap;
 }
 
-/* ================= 对话框 ================= */
 .wj-dialog-backdrop {
   position: absolute;
   inset: 0;
@@ -1509,8 +1508,8 @@ img {
   justify-content: center;
   padding: 56px 42px;
   background: rgba(0, 0, 0, .38);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
   opacity: 0;
   pointer-events: auto;
   transition: opacity .2s ease;
@@ -1566,7 +1565,7 @@ img {
   background: transparent;
   font: inherit;
   font-size: var(--wj-fs-lg);
-  font-weight: 600;
+  font-weight: 400;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
   transition: background .12s;
@@ -1574,6 +1573,49 @@ img {
 
 .wj-dialog__btn:active {
   background: rgba(0, 0, 0, .06);
+}
+
+.wj-dialog__field {
+  margin: 2px 0 14px;
+}
+
+.wj-dialog__input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 12px;
+  border: 1px solid rgba(0, 0, 0, .12);
+  border-radius: 10px;
+  font: inherit;
+  font-size: 16px;
+  line-height: 1.4;
+  color: var(--wj-text);
+  background: var(--wj-bg, #fff);
+  outline: none;
+  transition: border-color .15s ease, box-shadow .15s ease;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.wj-dialog__input::placeholder {
+  color: rgba(0, 0, 0, .35);
+}
+
+.wj-dialog__input:focus {
+  border-color: var(--wj-primary, #3a6ff0);
+  box-shadow: 0 0 0 3px rgba(58, 111, 240, .15);
+}
+
+.wj-dialog__error {
+  display: none;
+  margin-top: 6px;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--wj-danger, #e5484d);
+}
+
+/* ===== 主按钮 ===== */
+.wj-dialog__btn--primary {
+  font-weight: 600;
 }
 
 .hw-volume-hud {

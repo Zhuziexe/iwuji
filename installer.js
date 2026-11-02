@@ -1,14 +1,10 @@
 /* =========================================================
    installer.js —— 已安装应用的安装 / 更新 / 卸载 / 列表
 
-   依赖（加载顺序需在这些之后）：
-     Store / WujiApps / AppStorage / WujiAppCode / WujiAppLoader
-
-   特性：
-     - install：fetch 代码 → 写 IDB（原子覆盖）→ 清 loader 缓存 → 重注册
-     - 更新策略：本地 < 市场 → 更新；本地 = 市场 → noop；本地 > 市场 → 不降级
-     - uninstall：清 AppStorage + 清 IDB + 清通知 + 移除桌面图标
-     - restore：IDB 为真相源，Store 作为快速索引
+   平台字段：
+     - record.platforms / meta.platforms
+     - 只在存在且非空时写入（向后兼容旧记录）
+     - 旧记录无 platforms → 视为全平台
    ========================================================= */
 window.WujiAppInstaller = (() => {
   const KEY = 'installedApps';
@@ -35,36 +31,76 @@ window.WujiAppInstaller = (() => {
     Store.set(KEY, list);
   }
 
+  function pickPlatforms(obj) {
+    const p = obj?.platforms;
+    return (Array.isArray(p) && p.length) ? p.slice() : null;
+  }
+
   function metaFromRecord(rec) {
-    return {
-      bundlename:  rec.bundle,
-      name:        rec.name,
-      icon:        rec.icon,
-      version:     rec.version,
-      author:      rec.author,
+    const meta = {
+      bundlename: rec.bundle,
+      name: rec.name,
+      icon: rec.icon,
+      version: rec.version,
+      author: rec.author,
       description: rec.description,
-      src:         rec.src,
+      src: rec.src,
     };
+    const p = pickPlatforms(rec);
+    if (p) meta.platforms = p;
+    if (Array.isArray(rec.fileTypes) && rec.fileTypes.length) {
+      meta.fileTypes = rec.fileTypes.slice();       // ★ 新增
+    }
+    return meta;
   }
 
   function recordFromMeta(meta) {
     const bundle = meta.bundle || meta.bundlename;
-    return {
+    const rec = {
       bundle,
-      name:        meta.name        || bundle,
-      icon:        meta.icon        || '',
-      version:     meta.version     || '1.0.0',
-      author:      meta.author      || '',
+      name: meta.name || bundle,
+      icon: meta.icon || '',
+      version: meta.version || '1.0.0',
+      author: meta.author || '',
       description: meta.description || '',
-      src:         meta.src         || meta._src || '',
+      src: meta.src || meta._src || '',
       installedAt: Date.now(),
     };
+    const p = pickPlatforms(meta);
+    if (p) rec.platforms = p;
+    if (Array.isArray(meta.fileTypes) && meta.fileTypes.length) {
+      rec.fileTypes = meta.fileTypes.slice();       // ★ 新增
+    }
+    return rec;
+  }
+
+  function idbMetaFromMeta(meta, bundle) {
+    const m = {
+      name: meta.name || bundle,
+      icon: meta.icon || '',
+      author: meta.author || '',
+      description: meta.description || '',
+    };
+    const p = pickPlatforms(meta);
+    if (p) m.platforms = p;
+    if (Array.isArray(meta.fileTypes) && meta.fileTypes.length) {
+      m.fileTypes = meta.fileTypes.slice();       // ★ 新增
+    }
+    return m;
   }
 
   /* ---------- 对外 API ---------- */
   return {
-    /* ---------- 查询 ---------- */
     list() { return readAll().slice(); },
+
+    /** 当前平台可见的已安装记录（供 PC 的"已安装管理"用） */
+    listForCurrentPlatform() {
+      const cur = window.__OPENWUJI_PLATFORM || 'wujios';
+      return readAll().filter(a => {
+        if (!Array.isArray(a.platforms) || a.platforms.length === 0) return true;
+        return a.platforms.includes(cur);
+      });
+    },
 
     get(bundle) {
       return readAll().find(a => a.bundle === bundle) || null;
@@ -80,42 +116,29 @@ window.WujiAppInstaller = (() => {
     },
 
     /* ---------- 安装 / 更新 ---------- */
-
-    /**
-     * 安装或更新。
-     *   - 未安装            → 安装
-     *   - 已安装，版本相同   → noop
-     *   - 已安装，本地更新   → noop（newer-local）
-     *   - 已安装，市场更新   → 覆盖更新
-     *
-     * @returns {Promise<{
-     *   ok: boolean,
-     *   action: 'installed' | 'updated' | 'noop' | 'newer-local'
-     *         | 'fetch-failed' | 'idb-failed',
-     *   version?: string,
-     *   pendingReload?: boolean,
-     *   error?: Error,
-     * }>}
-     */
     async install(meta, { force = false, code = null } = {}) {
       if (!meta) throw new Error('installer.install: missing meta');
 
       const bundle = meta.bundle || meta.bundlename;
-      const src    = meta.src || meta._src;
+      const src = meta.src || meta._src;
       if (!bundle) throw new Error('installer.install: missing bundle');
       if (!src && code == null) throw new Error('installer.install: missing src/code');
 
       const nextVersion = meta.version || '1.0.0';
-      const existing    = this.get(bundle);
+      const existing = this.get(bundle);
 
-      /* force=true 时跳过版本判断，永远覆盖 */
       if (existing && !force) {
         const c = cmpVer(existing.version, nextVersion);
         if (c === 0) return { ok: false, action: 'noop', version: existing.version };
-        if (c >  0)  return { ok: false, action: 'newer-local', version: existing.version };
+        if (c > 0) return { ok: false, action: 'newer-local', version: existing.version };
       }
 
-      /* 取代码：优先用传入的 code，其次 IDB，最后 fetch */
+      const nextPlatforms = pickPlatforms(meta) || pickPlatforms(existing) || null;
+      const nextFileTypes = Array.isArray(meta.fileTypes) && meta.fileTypes.length
+        ? meta.fileTypes.slice()
+        : (existing?.fileTypes ? existing.fileTypes.slice() : null);
+
+      /* 取代码 */
       let codeText;
       if (code != null) {
         codeText = code;
@@ -133,63 +156,75 @@ window.WujiAppInstaller = (() => {
         }
       }
 
-      /* 原子覆盖 IDB */
+      /* 原子写 IDB */
       try {
         await WujiAppCode.upsert({
           bundle,
           version: nextVersion,
           code: codeText,
-          meta: {
-            name:        meta.name        || bundle,
-            icon:        meta.icon        || '',
-            author:      meta.author      || '',
-            description: meta.description || '',
-          },
+          meta: idbMetaFromMeta(
+            {
+              ...meta,
+              platforms: nextPlatforms || undefined,
+              fileTypes: nextFileTypes || undefined,     // ★ 新增
+            },
+            bundle
+          ),
           savedAt: Date.now(),
         });
       } catch (e) {
         return { ok: false, action: 'idb-failed', error: e };
       }
 
-      /* 写 Store + 重注册 + 清缓存 */
-      const record = recordFromMeta({ ...meta, bundle, src: `idb://${bundle}`, version: nextVersion });
+      /* 写 Store */
+      const record = recordFromMeta({
+        ...meta,
+        bundle,
+        src: `idb://${bundle}`,
+        version: nextVersion,
+        platforms: nextPlatforms || undefined,
+      });
       if (existing) record.installedAt = existing.installedAt || Date.now();
+
       const list = readAll();
-      const idx  = list.findIndex(a => a.bundle === bundle);
+      const idx = list.findIndex(a => a.bundle === bundle);
       if (idx >= 0) list[idx] = record; else list.push(record);
       writeAll(list);
 
+      /* 清 loader 缓存 + 重注册 */
       try { WujiAppLoader.invalidate(`idb://${bundle}`); } catch { }
 
       if (WujiApps.isInstalled(bundle)) {
         try { WujiApps.shutdownOne(bundle); } catch { }
         WujiApps.unregister(bundle);
       }
-      WujiApps.registerMeta({ ...metaFromRecord(record), src: `idb://${bundle}` }, 'installed');
+
+      /* ★ 用最终 platforms 决定是否要注册（别的平台的应用只写数据、不注册） */
+      const finalMeta = { ...metaFromRecord(record), src: `idb://${bundle}` };
+      if (WujiApps.platformAllowed(finalMeta)) {
+        WujiApps.registerMeta(finalMeta, 'installed');
+      }
 
       return { ok: true, action: existing ? 'updated' : 'installed', version: nextVersion };
     },
-    /**
-     * 卸载应用，清空 AppStorage 私有数据 + IDB 代码 + 通知 + 桌面图标。
-     */
+
+    /* ---------- 卸载 ---------- */
     async uninstall(bundle) {
       if (!bundle) return false;
       if (!this.has(bundle)) return false;
 
       const list = readAll();
-      const rec  = list.find(a => a.bundle === bundle);
-      const src  = rec?.src || '';
+      const rec = list.find(a => a.bundle === bundle);
+      const src = rec?.src || '';
 
       writeAll(list.filter(a => a.bundle !== bundle));
 
-      /* 先让应用清自己的定时器 / window 监听 */
       try { WujiApps.shutdownOne(bundle); }
       catch (e) { console.warn('[installer] shutdownOne', bundle, e); }
 
       try { await AppStorage.uninstall(bundle); }
       catch (e) { console.warn('[installer] AppStorage.uninstall failed', bundle, e); }
 
-      /* 清 IDB 代码 */
       try { await WujiAppCode.remove(bundle); }
       catch (e) { console.warn('[installer] IDB remove failed', bundle, e); }
 
@@ -203,7 +238,6 @@ window.WujiAppInstaller = (() => {
         DesktopLayout.removeApp(bundle);
       }
 
-      /* 清脚本缓存 */
       if (window.WujiAppLoader?.invalidate) {
         const target = src || `idb://${bundle}`;
         try { WujiAppLoader.invalidate(target); } catch { }
@@ -214,21 +248,6 @@ window.WujiAppInstaller = (() => {
     },
 
     /* ---------- 启动恢复 ---------- */
-
-    /**
-     * IDB 为真相源，Store 作快速索引：
-     *   - Store 有 + IDB 有 → 用 IDB 的版本号
-     *   - Store 有 + IDB 无 → 兼容旧记录（远程 src）
-     *   - Store 无 + IDB 有 → 从 IDB 补回 Store
-     */
-        /* ---------- 启动恢复 ---------- */
-
-    /**
-     * IDB 为真相源，Store 作为快速索引。
-     * 返回 { newRecords, legacyRecords }：
-     *   newRecords    —— IDB 有、Store 无，已补回 Store
-     *   legacyRecords —— Store 有 URL src、IDB 无，待后台迁移
-     */
     async restore() {
       let idbRecords = [];
       try {
@@ -243,7 +262,7 @@ window.WujiAppInstaller = (() => {
       const storeList = readAll();
       const seen = new Set();
       const newRecords = [];
-      const legacyRecords = [];   // ★ 待迁移：src 是 URL，IDB 里没有
+      const legacyRecords = [];
 
       /* 处理 Store 里已有的 */
       for (const rec of storeList) {
@@ -251,22 +270,39 @@ window.WujiAppInstaller = (() => {
         seen.add(rec.bundle);
 
         const idbRec = idbMap.get(rec.bundle);
+
         if (idbRec) {
-          /* IDB 中有代码 → 用 idb:// 注册 */
+          const platforms = pickPlatforms(rec) || pickPlatforms(idbRec.meta) || null;
+
+          const fileTypes = (Array.isArray(rec.fileTypes) && rec.fileTypes.length)
+            ? rec.fileTypes
+            : (Array.isArray(idbRec.meta?.fileTypes) ? idbRec.meta.fileTypes : null);
+
           const src = (rec.src && rec.src.startsWith('idb://'))
             ? rec.src
             : `idb://${rec.bundle}`;
-          WujiApps.registerMeta({
-            bundlename:  rec.bundle,
-            name:        rec.name        || idbRec.meta?.name        || rec.bundle,
-            icon:        rec.icon        || idbRec.meta?.icon        || '',
-            version:     idbRec.version,
-            author:      rec.author      || idbRec.meta?.author      || '',
+
+          const meta = {
+            bundlename: rec.bundle,
+            name: rec.name || idbRec.meta?.name || rec.bundle,
+            icon: rec.icon || idbRec.meta?.icon || '',
+            version: idbRec.version,
+            author: rec.author || idbRec.meta?.author || '',
             description: rec.description || idbRec.meta?.description || '',
             src,
-          }, 'installed');
+          };
+          if (platforms) meta.platforms = platforms;
+          if (fileTypes) meta.fileTypes = fileTypes;
+
+          WujiApps.registerMeta(meta, 'installed');
+
+          if (!rec.platforms && platforms) {
+            rec.platforms = platforms;
+          }
+          if (!rec.fileTypes && fileTypes) {
+            rec.fileTypes = fileTypes.slice();
+          }
         } else if (rec.src) {
-          /* IDB 中没有 → 先用 URL 跑，收集起来后台迁移 */
           WujiApps.registerMeta(metaFromRecord(rec), 'installed');
           if (!rec.src.startsWith('idb://')) {
             legacyRecords.push(rec);
@@ -274,41 +310,46 @@ window.WujiAppInstaller = (() => {
         }
       }
 
-      /* IDB 里有、Store 里没有的（比如从备份恢复） */
+      /* IDB 里有、Store 里没有的 */
       for (const rec of idbRecords) {
         if (seen.has(rec.bundle)) continue;
+
+        const platforms = pickPlatforms(rec.meta) || null;
+        const fileTypes = (Array.isArray(rec.meta?.fileTypes) && rec.meta.fileTypes.length)
+          ? rec.meta.fileTypes
+          : null;
+
         const meta = {
-          bundlename:  rec.bundle,
-          name:        rec.meta?.name        || rec.bundle,
-          icon:        rec.meta?.icon        || '',
-          version:     rec.version,
-          author:      rec.meta?.author      || '',
+          bundlename: rec.bundle,
+          name: rec.meta?.name || rec.bundle,
+          icon: rec.meta?.icon || '',
+          version: rec.version,
+          author: rec.meta?.author || '',
           description: rec.meta?.description || '',
-          src:         `idb://${rec.bundle}`,
+          src: `idb://${rec.bundle}`,
         };
+        if (platforms) meta.platforms = platforms;
+        if (fileTypes) meta.fileTypes = fileTypes;
         WujiApps.registerMeta(meta, 'installed');
-        newRecords.push({
+
+        const newRec = {
           ...recordFromMeta(meta),
           installedAt: rec.savedAt || Date.now(),
-        });
+        };
+        newRecords.push(newRec);
       }
 
       if (newRecords.length) {
         writeAll([...readAll(), ...newRecords]);
       }
 
+      /* ★ 若本次迁移给 Store 里的记录补了 platforms，写回 */
+      writeAll(storeList);
+
       return { newRecords, legacyRecords };
     },
 
-    /**
-     * 后台静默迁移：把 Store 里还是 URL src 的应用拉到 IDB。
-     *   - 逐条 fetch → 写 IDB → 更新 Store src
-     *   - 失败静默跳过，下次启动再试
-     *   - 不重新注册（避免桌面闪动），下次刷新页面自然生效
-     *
-     * @param {Array} records  restore() 返回的 legacyRecords
-     * @returns {Promise<number>} 成功迁移的数量
-     */
+    /* ---------- 旧 URL src 迁移到 IDB ---------- */
     async migrateLegacyToIdb(records) {
       if (!Array.isArray(records) || !records.length) return 0;
 
@@ -317,11 +358,9 @@ window.WujiAppInstaller = (() => {
         if (!rec?.bundle || !rec.src) continue;
         if (rec.src.startsWith('idb://')) continue;
 
-        /* 再确认一次 IDB 里确实没有（防止并发场景重复写） */
         try {
           const existing = await WujiAppCode.get(rec.bundle);
           if (existing) {
-            /* IDB 已有，只更新 Store 里的 src */
             const list = readAll();
             const idx = list.findIndex(a => a.bundle === rec.bundle);
             if (idx >= 0) {
@@ -333,7 +372,6 @@ window.WujiAppInstaller = (() => {
           }
         } catch { }
 
-        /* fetch 代码 */
         let code;
         try {
           const r = await fetch(rec.src, { cache: 'no-store' });
@@ -341,28 +379,31 @@ window.WujiAppInstaller = (() => {
           code = await r.text();
         } catch (e) {
           console.warn('[installer] 迁移 fetch 失败，跳过', rec.bundle, e.message);
-          continue;   // 下次启动再试
+          continue;
         }
 
-        /* 写 IDB */
         try {
+          const idbMeta = {
+            name: rec.name || rec.bundle,
+            icon: rec.icon || '',
+            author: rec.author || '',
+            description: rec.description || '',
+          };
+          const p = pickPlatforms(rec);
+          if (p) idbMeta.platforms = p;
+
           await WujiAppCode.upsert({
-            bundle:  rec.bundle,
+            bundle: rec.bundle,
             version: rec.version || '1.0.0',
             code,
-            meta: {
-              name:        rec.name        || rec.bundle,
-              icon:        rec.icon        || '',
-              author:      rec.author      || '',
-              description: rec.description || '',
-            },
+            meta: idbMeta,
+            savedAt: Date.now(),
           });
         } catch (e) {
           console.warn('[installer] 迁移写 IDB 失败，跳过', rec.bundle, e.message);
           continue;
         }
 
-        /* 更新 Store 的 src */
         const list = readAll();
         const idx = list.findIndex(a => a.bundle === rec.bundle);
         if (idx >= 0) {
@@ -375,14 +416,7 @@ window.WujiAppInstaller = (() => {
       return migrated;
     },
 
-    /**
-     * 旧的 pruneMissing 保留为 no-op。
-     * 理由：IDB 里有代码就能跑，不再自动清理"市场上没有"的应用。
-     */
-    async pruneMissing() {
-      return 0;
-    },
-
+    async pruneMissing() { return 0; },
     cmpVer,
   };
 })();

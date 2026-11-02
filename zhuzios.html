@@ -7,6 +7,7 @@
   <title>ZhuziOS</title>
   <link rel="stylesheet" href="styles/tokens.css">
   <link rel="stylesheet" href="styles/components.css">
+  <script>window.__OPENWUJI_PLATFORM = 'zhuzios';</script>
   <style>
     :root {
       --statusbar-h: 0px;
@@ -127,7 +128,7 @@
     .pc-win__titlebar {
       flex: 0 0 auto;
       position: relative;
-      z-index: 2;
+      z-index: 7;
       height: 40px;
       display: flex;
       align-items: center;
@@ -137,6 +138,7 @@
       border-bottom: 1px solid var(--wj-border, var(--pc-border));
       cursor: move;
       user-select: none;
+      touch-action: none;
       border-top-left-radius: 10px;
       border-top-right-radius: 10px;
     }
@@ -148,12 +150,17 @@
       border-radius: 6px;
       background: transparent;
       color: var(--wj-text-muted, var(--pc-text-dim));
-      font-size: 16px;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
       -webkit-tap-highlight-color: transparent;
+    }
+
+    .pc-win__back svg {
+      display: block;
+      flex-shrink: 0;
+      pointer-events: none;
     }
 
     .pc-win__back:hover {
@@ -190,20 +197,37 @@
     }
 
     .pc-win__actions button {
-      width: 36px;
+      width: 32px;
       height: 32px;
       border: 0;
       border-radius: 6px;
       background: transparent;
       color: var(--wj-text-muted, var(--pc-text-dim));
-      font-size: 16px;
-      line-height: 1;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
       -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
       transition: background .12s, color .12s;
+    }
+
+    .pc-win__actions button svg {
+      display: block;
+      flex-shrink: 0;
+      pointer-events: none;
+    }
+
+    .pc-win__actions button[data-act="max"] .pc-win__ic-restore {
+      display: none;
+    }
+
+    .pc-win__actions button[data-act="max"].is-maximized .pc-win__ic-max {
+      display: none;
+    }
+
+    .pc-win__actions button[data-act="max"].is-maximized .pc-win__ic-restore {
+      display: block;
     }
 
     .pc-win__actions button:hover {
@@ -223,6 +247,30 @@
       background: var(--wj-bg, var(--pc-bg));
       border-bottom-left-radius: 10px;
       border-bottom-right-radius: 10px;
+    }
+
+    .pc-win__rz {
+      touch-action: none;
+    }
+
+    .pc-win__rz--nw {
+      left: -4px !important;
+      top: -4px !important;
+    }
+
+    .pc-win__rz--ne {
+      right: -4px !important;
+      top: -4px !important;
+    }
+
+    .pc-win__rz--sw {
+      left: -4px !important;
+      bottom: -4px !important;
+    }
+
+    .pc-win__rz--se {
+      right: -4px !important;
+      bottom: -4px !important;
     }
 
     /* ============================================================
@@ -519,6 +567,115 @@
       font-size: 14px;
     }
 
+    .pc-start-menu__footer {
+      flex: 0 0 auto;
+      padding: 8px;
+      border-top: 1px solid rgba(0, 0, 0, .06);
+      display: flex;
+      gap: 6px;
+    }
+
+    .pc-start-menu__sys {
+      flex: 1 1 0;
+      min-width: 0;
+      height: 40px;
+      padding: 0 10px;
+      border: 0;
+      border-radius: 8px;
+      background: rgba(0, 0, 0, .04);
+      color: #101828;
+      font: inherit;
+      font-size: 13px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      -webkit-tap-highlight-color: transparent;
+      transition: background .12s, color .12s;
+    }
+
+    .pc-start-menu__sys svg {
+      width: 16px;
+      height: 16px;
+      display: block;
+      flex-shrink: 0;
+    }
+
+    .pc-start-menu__sys:hover {
+      background: rgba(0, 0, 0, .08);
+    }
+
+    .pc-start-menu__sys[data-action="shutdown"]:hover {
+      background: rgba(224, 53, 107, .12);
+      color: #e0356b;
+    }
+
+    /* ============================================================
+       关机 / 重启遮罩
+       ============================================================ */
+    .pc-power-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 9998;
+      /* 低于 pc-boot 的 9999 */
+      background: #000;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 22px;
+      color: rgba(255, 255, 255, .82);
+      opacity: 0;
+      transition: opacity .42s ease;
+      pointer-events: auto;
+      user-select: none;
+    }
+
+    .pc-power-overlay.is-show {
+      opacity: 1;
+    }
+
+    .pc-power-overlay[hidden] {
+      display: none !important;
+    }
+
+    .pc-power-overlay.is-off {
+      cursor: pointer;
+    }
+
+    .pc-power-spinner {
+      width: 28px;
+      height: 28px;
+      border: 2.5px solid rgba(255, 255, 255, .18);
+      border-top-color: rgba(255, 255, 255, .95);
+      border-radius: 50%;
+      animation: pcSpin .82s linear infinite;
+    }
+
+    .pc-power-overlay:not(.is-spin) .pc-power-spinner {
+      display: none;
+    }
+
+    @keyframes pcSpin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    .pc-power-text {
+      font-size: 14px;
+      letter-spacing: .3px;
+      color: rgba(255, 255, 255, .82);
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* 触屏模式下 footer 按钮也保持基础态 */
+    #os.is-touch-mode .pc-start-menu__sys:hover {
+      background: rgba(0, 0, 0, .04) !important;
+      color: #101828 !important;
+    }
+
     /* ============================================================
        右下角控制中心 / 通知中心（浅色）
        ============================================================ */
@@ -528,6 +685,7 @@
       bottom: calc(var(--taskbar-h) + 8px);
       width: 340px;
       max-width: calc(100vw - 24px);
+      height: 340px;
       max-height: calc(100vh - var(--taskbar-h) - 24px);
       background: #ffffff;
       backdrop-filter: blur(20px);
@@ -535,7 +693,7 @@
       border: 1px solid rgba(0, 0, 0, .08);
       border-radius: 12px;
       box-shadow: 0 20px 60px rgba(0, 0, 0, .18);
-      z-index: 520;
+      z-index: 800;
       display: flex;
       flex-direction: column;
       overflow: hidden;
@@ -677,13 +835,51 @@
     }
 
     .pc-nc__item {
+      position: relative;
       display: flex;
       gap: 10px;
-      padding: 10px;
+      padding: 10px 34px 10px 10px;
+      /* 右侧留出叉号空间 */
       border-radius: 10px;
       background: rgba(0, 0, 0, .04);
       cursor: pointer;
       transition: background .12s;
+    }
+
+    .pc-nc__item:hover {
+      background: rgba(0, 0, 0, .07);
+    }
+
+    .pc-nc__remove {
+      position: absolute;
+      top: 4px;
+      right: 4px;
+      width: 24px;
+      height: 24px;
+      padding: 0;
+      border: 0;
+      border-radius: 50%;
+      background: transparent;
+      color: #8a93a4;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: .65;
+      transition: background .12s, color .12s, opacity .12s;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .pc-nc__remove:hover {
+      background: rgba(0, 0, 0, .08);
+      color: #e0356b;
+      opacity: 1;
+    }
+
+    .pc-nc__remove svg {
+      width: 12px;
+      height: 12px;
+      display: block;
     }
 
     .pc-nc__item:hover {
@@ -752,28 +948,39 @@
       display: none;
     }
 
-        /* ============================================================
-       触屏模式：只在"无状态"元素上禁用悬停变色 + 放大缩放热区
+    /* ============================================================
+       触屏模式：hover 时保持"基础态"颜色，避免白/灰/蓝闪变
        ============================================================ */
+
+    /* ① 基础态透明的元素 → hover 也透明 */
     #os.is-touch-mode .pc-taskbar__start:not(.is-open):hover,
     #os.is-touch-mode .pc-taskbar__tray:not(.is-active):hover,
     #os.is-touch-mode .pc-taskbar__clock:not(.is-active):hover,
-    #os.is-touch-mode .pc-task-item:not(.is-active):hover,
     #os.is-touch-mode .pc-start-menu__item:hover,
     #os.is-touch-mode .pc-win__back:hover,
-    #os.is-touch-mode .pc-win__actions button:not(.close):hover,
-    #os.is-touch-mode .pc-nc__item:hover,
-    #os.is-touch-mode .pc-cc__toggle:not(.is-on):hover {
+    #os.is-touch-mode .pc-win__actions button:not(.close):hover {
       background: transparent !important;
     }
 
-    /* close 按钮恢复默认色，不出现红底 */
+    /* ② 基础态是浅灰的元素 → hover 时保持浅灰，别变透明 */
+    #os.is-touch-mode .pc-task-item:not(.is-active):hover,
+    #os.is-touch-mode .pc-nc__item:hover {
+      background: rgba(0, 0, 0, .04) !important;
+    }
+
+    /* ③ .pc-cc__toggle 本身没有 hover 规则，不用处理
+          （之前写成 :not(.is-on):hover { transparent } 是多余且有害的） */
+
+    /* ④ close 按钮：hover 保持默认色，不出现红底 */
     #os.is-touch-mode .pc-win__actions button.close:hover {
       background: transparent !important;
       color: var(--wj-text-muted, var(--pc-text-dim)) !important;
     }
 
-    /* 触屏模式启动时，一键禁用全局 transition 抖动 */
+    /* ⑤ 有状态类的元素：hover 时优先级被上面的 :not() 排除，
+          状态色由原规则提供，不额外声明也不会被覆盖 */
+
+    /* ⑥ 触屏模式禁用 transition，避免颜色切换抖动 */
     #os.is-touch-mode .pc-taskbar__start,
     #os.is-touch-mode .pc-taskbar__tray,
     #os.is-touch-mode .pc-taskbar__clock,
@@ -786,7 +993,7 @@
       transition: none !important;
     }
 
-    /* 缩放热区放大 */
+    /* ⑦ 缩放热区放大 */
     #os.is-touch-mode .pc-win__rz {
       z-index: 6;
     }
@@ -811,18 +1018,42 @@
       width: 20px !important;
     }
 
-    #os.is-touch-mode .pc-win__rz--nw,
-    #os.is-touch-mode .pc-win__rz--ne,
-    #os.is-touch-mode .pc-win__rz--sw,
-    #os.is-touch-mode .pc-win__rz--se {
+    /* 触屏模式：角落手柄 30×30，负偏移 -10 → 外侧 10px + 内侧 20px，
+       即使内侧被标题栏压住，外侧 L 形依然能抓到 */
+    #os.is-touch-mode .pc-win__rz--nw {
+      left: -10px !important;
+      top: -10px !important;
       width: 30px !important;
       height: 30px !important;
     }
 
-        /* ============================================================
-       全局对话框（WujiDialog）
-       ============================================================ */
-    /* 覆盖 dialog.js 内联的 z-index:500，确保盖住任务栏(500)/flyout(520) */
+    #os.is-touch-mode .pc-win__rz--ne {
+      right: -10px !important;
+      top: -10px !important;
+      width: 30px !important;
+      height: 30px !important;
+    }
+
+    #os.is-touch-mode .pc-win__rz--sw {
+      left: -10px !important;
+      bottom: -10px !important;
+      width: 30px !important;
+      height: 30px !important;
+    }
+
+    #os.is-touch-mode .pc-win__rz--se {
+      right: -10px !important;
+      bottom: -10px !important;
+      width: 30px !important;
+      height: 30px !important;
+    }
+
+    #os.is-touch-mode .pc-nc__remove:hover {
+      background: transparent !important;
+      color: #8a93a4 !important;
+      opacity: .65 !important;
+    }
+
     #wjDialogHost {
       z-index: 900 !important;
     }
@@ -902,6 +1133,50 @@
       -webkit-tap-highlight-color: transparent;
     }
 
+    /* ===== 输入框区域 ===== */
+    .wj-dialog__field {
+      margin: 2px 0 14px;
+    }
+
+    .wj-dialog__input {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 10px 12px;
+      border: 1px solid rgba(0, 0, 0, .12);
+      border-radius: 10px;
+      font: inherit;
+      font-size: 15px;
+      line-height: 1.4;
+      color: inherit;
+      background: var(--wj-bg, #fff);
+      outline: none;
+      transition: border-color .15s ease, box-shadow .15s ease;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+
+    .wj-dialog__input::placeholder {
+      color: rgba(0, 0, 0, .35);
+    }
+
+    .wj-dialog__input:focus {
+      border-color: var(--wj-primary, #3a6ff0);
+      box-shadow: 0 0 0 3px rgba(58, 111, 240, .15);
+    }
+
+    .wj-dialog__error {
+      display: none;
+      margin-top: 6px;
+      font-size: 12px;
+      line-height: 1.4;
+      color: var(--wj-danger, #e5484d);
+    }
+
+    /* ===== 主按钮 ===== */
+    .wj-dialog__btn--primary {
+      font-weight: 600;
+    }
+
     .wj-dialog__btn:hover {
       background: rgba(0, 0, 0, .07);
     }
@@ -918,6 +1193,370 @@
     /* 触屏模式：禁用对话框按钮悬停 */
     #os.is-touch-mode .wj-dialog__btn:hover {
       background: rgba(0, 0, 0, .04) !important;
+    }
+
+    /* ============================================================
+   右下角固定卡片式横幅（图标左、内容右）
+   结构：.wj-banner > .wj-banner__icon + .wj-banner__body(>__title + __content)
+   ============================================================ */
+    .wj-banner {
+      position: absolute;
+      top: auto;
+      bottom: calc(var(--taskbar-h) + 12px);
+      left: auto;
+      right: 16px;
+      width: 360px;
+      max-width: calc(100vw - 32px);
+
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 14px;
+      box-sizing: border-box;
+      background: #ffffff;
+      border: 1px solid rgba(0, 0, 0, .07);
+      border-radius: 14px;
+      box-shadow:
+        0 16px 48px rgba(0, 0, 0, .18),
+        0 0 0 1px rgba(0, 0, 0, .04);
+      color: #101828;
+
+      transform: translateX(calc(100% + 32px));
+      transition: transform .32s cubic-bezier(.2, .7, .3, 1);
+      z-index: 600;
+      cursor: pointer;
+      overflow: hidden;
+    }
+
+    .wj-banner.is-show {
+      transform: translateX(0);
+    }
+
+    .wj-banner>.wj-banner__icon {
+      flex: 0 0 auto;
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0, 0, 0, .06);
+    }
+
+    .wj-banner>.wj-banner__icon img {
+      width: 100%;
+      height: 100%;
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: cover;
+      display: block;
+      pointer-events: none;
+    }
+
+    .wj-banner>.wj-banner__icon span {
+      font-size: 16px;
+      font-weight: 600;
+      color: #3a6ff0;
+      line-height: 1;
+    }
+
+    .wj-banner>.wj-banner__body {
+      flex: 1 1 auto;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .wj-banner>.wj-banner__body>.wj-banner__title {
+      font-size: 14px;
+      font-weight: 600;
+      color: #101828;
+      line-height: 1.35;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .wj-banner>.wj-banner__body>.wj-banner__content {
+      font-size: 12.5px;
+      line-height: 1.45;
+      color: #5b6478;
+      overflow: hidden;
+      word-break: break-word;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      line-clamp: 2;
+      -webkit-box-orient: vertical;
+    }
+
+    #os.is-touch-mode .wj-banner:hover {
+      background: #ffffff;
+    }
+
+    .wj-toast {
+      bottom: calc(var(--taskbar-h) + 24px) !important;
+      z-index: 700 !important;
+    }
+
+    .pc-lock {
+      position: fixed;
+      inset: 0;
+      z-index: 9998;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      /* ★ 不透明背景，独立场景 */
+      background:
+        radial-gradient(900px 600px at 50% 40%, #1a3a5c 0%, #0d1928 55%, #060c15 100%);
+      transition: opacity .4s cubic-bezier(.4, 0, .2, 1);
+      pointer-events: auto;
+      user-select: none;
+      -webkit-user-select: none;
+      overflow: hidden;
+    }
+
+    /* 角落光斑，让背景不单调 */
+    .pc-lock::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(600px 400px at 25% 75%, rgba(58, 111, 240, .16), transparent 65%),
+        radial-gradient(700px 500px at 75% 25%, rgba(120, 80, 200, .10), transparent 65%);
+      pointer-events: none;
+    }
+
+    .pc-lock[hidden] {
+      display: none !important;
+    }
+
+    .pc-lock.is-hiding {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .pc-lock__card {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 18px;
+      width: min(340px, 100%);
+      padding: 44px 40px 40px;
+      background: transparent;
+    }
+
+    /* 头像：loading.png 圆裁 */
+    .pc-lock__avatar {
+      width: 104px;
+      height: 104px;
+      flex-shrink: 0;
+      border-radius: 50%;
+      overflow: hidden;
+      background: #eaf0ff;
+    }
+
+    .pc-lock__avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      pointer-events: none;
+      user-select: none;
+      -webkit-user-drag: none;
+    }
+
+    .pc-lock__name {
+      font-size: 22px;
+      font-weight: 600;
+      color: #ffffff;
+      letter-spacing: .3px;
+    }
+
+    .pc-lock__form {
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      gap: 10px;
+      width: 240px;
+      max-width: 100%;
+    }
+
+    .pc-lock__form[hidden] {
+      display: none;
+    }
+
+    .pc-lock__input {
+      height: 44px;
+      padding: 0 14px;
+      border: 1px solid rgba(0, 0, 0, .12);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, .95);
+      font: inherit;
+      font-size: 15px;
+      color: #101828;
+      text-align: center;
+      letter-spacing: 3px;
+      outline: none;
+      transition: border-color .15s, box-shadow .15s;
+    }
+
+    .pc-lock__input[hidden] {
+      display: none;
+    }
+
+    .pc-lock__input:focus {
+      border-color: #3a6ff0;
+      box-shadow: 0 0 0 3px rgba(58, 111, 240, .18);
+    }
+
+    .pc-lock__btn {
+      height: 44px;
+      border: 0;
+      border-radius: 8px;
+      background: #3a6ff0;
+      color: #fff;
+      font: inherit;
+      font-size: 15px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background .15s, transform .06s;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .pc-lock__btn:hover {
+      background: #3260d6;
+    }
+
+    .pc-lock__btn:active {
+      transform: translateY(1px);
+    }
+
+    .pc-lock__btn:focus-visible {
+      outline: 2px solid rgba(58, 111, 240, .5);
+      outline-offset: 2px;
+    }
+
+    .pc-lock__welcome {
+      font-size: 18px;
+      font-weight: 500;
+      color: #ffffff;
+      letter-spacing: .5px;
+      animation: pcLockWelcome .38s cubic-bezier(.2, .7, .3, 1);
+    }
+
+    .pc-lock__welcome[hidden] {
+      display: none;
+    }
+
+    @keyframes pcLockWelcome {
+      from {
+        opacity: 0;
+        transform: translateY(6px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .pc-lock.is-error .pc-lock__input {
+      animation: pcLockShake .42s cubic-bezier(.36, .07, .19, .97);
+      border-color: #e0356b;
+      box-shadow: 0 0 0 3px rgba(224, 53, 107, .15);
+    }
+
+    @keyframes pcLockShake {
+
+      10%,
+      90% {
+        transform: translateX(-2px);
+      }
+
+      20%,
+      80% {
+        transform: translateX(4px);
+      }
+
+      30%,
+      50%,
+      70% {
+        transform: translateX(-6px);
+      }
+
+      40%,
+      60% {
+        transform: translateX(6px);
+      }
+    }
+
+
+    .pc-boot {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      background: #000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      color: #fff;
+      transition: opacity .55s ease, visibility .55s ease;
+      will-change: opacity;
+    }
+
+    .pc-boot.is-hide {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+
+    .pc-boot__brand {
+      font-size: 59px;
+      font-weight: 600;
+      letter-spacing: 4px;
+      line-height: 1;
+      opacity: 0;
+      transform: translateY(8px);
+      animation: pcBootBrand .9s cubic-bezier(.2, .7, .3, 1) forwards;
+    }
+
+    .pc-boot__tag {
+      margin-top: 60px;
+      font-size: 12px;
+      letter-spacing: .5px;
+      line-height: 1.4;
+      text-align: center;
+      color: rgba(255, 255, 255, .72);
+      opacity: 0;
+      transform: translateY(6px);
+      animation: pcBootTag .8s cubic-bezier(.2, .7, .3, 1) .7s forwards;
+    }
+
+    .pc-boot__tag span {
+      font-weight: 500;
+      font-size: 18px;
+      color: #fff;
+      letter-spacing: .3px;
+    }
+
+    @keyframes pcBootBrand {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pcBootTag {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
     }
   </style>
 </head>
@@ -951,6 +1590,32 @@
     <div class="pc-start-menu" id="pcStartMenu" hidden>
       <div class="pc-start-menu__header">所有应用</div>
       <div class="pc-start-menu__list" id="pcStartList"></div>
+      <div class="pc-start-menu__footer">
+        <button class="pc-start-menu__sys" data-action="lock" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+            stroke-linejoin="round">
+            <rect x="4" y="11" width="16" height="10" rx="2" />
+            <path d="M8 11V7a4 4 0 0 1 8 0v4" />
+          </svg>
+          <span>锁定</span>
+        </button>
+        <button class="pc-start-menu__sys" data-action="restart" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+            stroke-linejoin="round">
+            <path d="M3 12a9 9 0 1 0 3-6.7" />
+            <path d="M3 4v5h5" />
+          </svg>
+          <span>重启</span>
+        </button>
+        <button class="pc-start-menu__sys" data-action="shutdown" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"
+            stroke-linejoin="round">
+            <path d="M12 2v10" />
+            <path d="M18.36 6.64a9 9 0 1 1-12.73 0" />
+          </svg>
+          <span>关机</span>
+        </button>
+      </div>
     </div>
 
     <!-- ============ 右下角：控制中心 / 通知中心 ============ -->
@@ -1003,12 +1668,30 @@
         <div class="pc-nc__list" id="pcNcList"></div>
         <div class="pc-nc__empty" id="pcNcEmpty">无通知</div>
       </div>
-
     </div>
-
-  </div>
   </div>
 
+  <div class="pc-power-overlay" id="pcPowerOverlay" hidden>
+    <div class="pc-power-spinner"></div>
+    <div class="pc-power-text" id="pcPowerText"></div>
+  </div>
+  <div class="pc-lock" id="pcLock" hidden>
+    <div class="pc-lock__card">
+      <div class="pc-lock__avatar">
+        <img src="./assets/loading.png" alt="" draggable="false">
+      </div>
+
+      <div class="pc-lock__name">用户</div>
+
+      <div class="pc-lock__form" id="pcLockForm">
+        <input class="pc-lock__input" id="pcLockInput" type="password" placeholder="密码" autocomplete="off"
+          autocapitalize="off" spellcheck="false">
+        <button class="pc-lock__btn" id="pcLockBtn" type="button">登录</button>
+      </div>
+
+      <div class="pc-lock__welcome" id="pcLockWelcome" hidden>欢迎</div>
+    </div>
+  </div>
   <div class="pc-boot" id="pcBoot">
     <div class="pc-boot__brand">ZhuziOS</div>
     <div class="pc-boot__tag">
@@ -1022,6 +1705,8 @@
   <script src="app-storage.js"></script>
   <script src="app-loader.js"></script>
   <script src="app-code-store.js"></script>
+  <script src="fs.js"></script>
+  <script src="file-opener.js"></script>
   <script src="installer.js"></script>
   <script src="overlay.js"></script>
   <script src="notification.js"></script>
@@ -1052,6 +1737,8 @@
       -webkit-text-size-adjust: none; text-size-adjust: none;
       -webkit-tap-highlight-color: transparent;
       --statusbar-h: 0px;
+      container-type: size;
+      container-name: wj-app;
     }
     * { scrollbar-width: thin; scrollbar-color: rgba(0,0,0,.2) transparent; }
     *::-webkit-scrollbar { width: 8px; height: 8px; }
@@ -1111,14 +1798,9 @@
           if (!app) throw new Error('应用不存在: ' + bundle);
 
           hostEl.innerHTML = '';
-          /* ★ 关键修复：
-             绝不要给 hostEl 设 position: absolute / inset: 0，
-             否则它会脱离 .pc-win 的 flex column，absolute 到 .pc-win，
-             把标题栏整块盖住。
-             只补 position: relative 保证 shadow 内 absolute 子元素能正确依附，
-             overflow: hidden 保留即可。 */
           hostEl.style.position = 'relative';
           hostEl.style.overflow = 'hidden';
+          hostEl.dataset.wjPlatform = 'zhuzios';
 
           const shadow = hostEl.attachShadow({ mode: 'open' });
 
@@ -1312,12 +1994,21 @@
           }
 
           let app;
-          try { app = await AppRuntime.ensureLoaded(bundle); }
-          catch (e) { console.error('[open]', bundle, e); return null; }
+          try {
+            app = await AppRuntime.ensureLoaded(bundle);
+          } catch (e) {
+            console.error('[open]', bundle, e);
+
+            const rec = window.WujiAppInstaller?.get?.(bundle);
+            if (rec && !WujiApps.platformAllowed(rec)) {
+              try { WujiToast?.show?.(`该应用仅支持在iWuji上使用`); } catch { }
+            }
+            return null;
+          }
 
           const id = ++seq;
-          const W = Math.min(920, Math.floor(window.innerWidth * 0.72));
-          const H = Math.min(660, Math.floor((window.innerHeight - getTaskbarH()) * 0.78));
+          const W = Math.min(660, Math.floor(window.innerWidth * 0.72));
+          const H = Math.min(560, Math.floor((window.innerHeight - getTaskbarH()) * 0.78));
           const off = (wins.length % 6) * 26;
 
           const el = document.createElement('div');
@@ -1334,14 +2025,44 @@
 
           el.innerHTML = `
         <div class="pc-win__titlebar">
-          <button class="pc-win__back" type="button" title="返回" style="display:none;">←</button>
+          <button class="pc-win__back" type="button" title="返回" style="display:none;"><svg viewBox="0 0 16 16" width="16" height="16" fill="none"
+     stroke="currentColor" stroke-width="1.5"
+     stroke-linecap="round" stroke-linejoin="round">
+  <polyline points="10,3 5,8 10,13"/>
+</svg></button>
           <img class="pc-win__icon" src="${escapeHtml(app.icon || '')}" alt="">
           <span class="pc-win__title">${escapeHtml(app.name || bundle)}</span>
           <div class="pc-win__actions">
-            <button type="button" data-act="min" title="最小化">—</button>
-            <button type="button" data-act="max" title="最大化">□</button>
-            <button type="button" data-act="close" class="close" title="关闭">×</button>
-          </div>
+  <button type="button" data-act="min" title="最小化" aria-label="最小化">
+    <svg viewBox="0 0 16 16" width="18" height="18" fill="none"
+         stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+      <line x1="3" y1="8" x2="13" y2="8"/>
+    </svg>
+  </button>
+
+  <button type="button" data-act="max" title="最大化" aria-label="最大化">
+    <svg class="pc-win__ic-max" viewBox="0 0 16 16" width="18" height="18"
+         fill="none" stroke="currentColor" stroke-width="1.5"
+         stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M2 9 V14 H7"/>
+      <path d="M9 2 H14 V7"/>
+    </svg>
+    <svg class="pc-win__ic-restore" viewBox="0 0 16 16" width="18" height="18"
+         fill="none" stroke="currentColor" stroke-width="1.5"
+         stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M2 9.5 H6.5 V14"/>
+      <path d="M9.5 2 V6.5 H14"/>
+    </svg>
+  </button>
+
+  <button type="button" data-act="close" class="close" title="关闭" aria-label="关闭">
+    <svg viewBox="0 0 16 16" width="18" height="18" fill="none"
+         stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+      <line x1="3.5" y1="3.5" x2="12.5" y2="12.5"/>
+      <line x1="12.5" y1="3.5" x2="3.5" y2="12.5"/>
+    </svg>
+  </button>
+</div>
         </div>
         <div class="pc-win__body"></div>
       `;
@@ -1442,6 +2163,8 @@
         }
 
         function toggleMax(win) {
+          const maxBtn = win.el.querySelector('button[data-act="max"]');
+
           if (win.maximized) {
             Object.assign(win.el.style, {
               left: win.prevRect.left + 'px',
@@ -1462,6 +2185,13 @@
             });
             win.maximized = true;
           }
+
+          if (maxBtn) {
+            maxBtn.classList.toggle('is-maximized', win.maximized);
+            maxBtn.title = win.maximized ? '还原' : '最大化';
+            maxBtn.setAttribute('aria-label', maxBtn.title);
+          }
+
           focus(win);
         }
 
@@ -1524,10 +2254,7 @@
           list: () => wins.slice(),
         };
       })();
-
-      /* ============================================================
-         WujiAppLauncher
-         ============================================================ */
+      window.WujiWindows = WujiWindows;
       window.WujiAppLauncher = {
         open(bundle, params) {
           WujiWindows.open(bundle, params || {});
@@ -1542,15 +2269,14 @@
         },
       };
 
-      /* ============================================================
-         开始菜单
-         ============================================================ */
       const StartMenu = (() => {
         const btn = document.getElementById('pcStartBtn');
         const menu = document.getElementById('pcStartMenu');
         const listEl = document.getElementById('pcStartList');
+        const footerEl = menu.querySelector('.pc-start-menu__footer');
 
         function render() {
+          /* WujiApps.all() 已经在 registerMeta 阶段按平台过滤过 */
           const apps = WujiApps.all().slice().sort((a, b) => {
             const an = a.name || a.bundlename;
             const bn = b.name || b.bundlename;
@@ -1567,7 +2293,6 @@
           <img src="${escapeHtml(app.icon || '')}" alt="">
           <div class="pc-start-menu__item-text">
             <div class="pc-start-menu__item-name">${escapeHtml(app.name || app.bundlename)}</div>
-            ${app.description ? `<div class="pc-start-menu__item-desc">${escapeHtml(app.description)}</div>` : ''}
           </div>
         </button>
       `).join('');
@@ -1611,8 +2336,217 @@
           if (e.key === 'Escape' && !menu.hidden) close();
         });
 
+        if (footerEl) {
+          footerEl.addEventListener('click', e => {
+            const b = e.target.closest('.pc-start-menu__sys');
+            if (!b) return;
+            const action = b.dataset.action;
+            close();
+            if (action === 'shutdown') {
+              window.PowerMenu?.shutdown?.();
+            } else if (action === 'restart') {
+              window.PowerMenu?.restart?.();
+            } else if (action === 'lock') {
+              window.PowerMenu?.lock?.();
+            }
+          });
+        }
+
         return { open: openMenu, close, toggle };
       })();
+
+      const Locker = (() => {
+        const overlayEl = document.getElementById('pcLock');
+        const formEl = document.getElementById('pcLockForm');
+        const inputEl = document.getElementById('pcLockInput');
+        const btnEl = document.getElementById('pcLockBtn');
+        const welcomeEl = document.getElementById('pcLockWelcome');
+
+        let state = 'unlocked';       // unlocked | locked | welcome
+
+        function hasPassword() {
+          return !!Store.get('lock.password', '');
+        }
+
+        function renderForm() {
+          welcomeEl.hidden = true;
+          formEl.hidden = false;
+
+          if (hasPassword()) {
+            inputEl.hidden = false;
+            inputEl.value = '';
+            inputEl.disabled = false;
+            btnEl.textContent = '登录';
+          } else {
+            inputEl.hidden = true;
+            inputEl.value = '';
+            btnEl.textContent = '登录';
+          }
+        }
+
+        function focusPrimary() {
+          if (state !== 'locked') return;
+          if (hasPassword() && !inputEl.hidden) {
+            try { inputEl.focus(); } catch { }
+          } else {
+            try { btnEl.focus(); } catch { }
+          }
+        }
+
+        function lock() {
+          if (state === 'locked' || state === 'welcome') return;
+          state = 'locked';
+          overlayEl.hidden = false;
+          overlayEl.classList.remove('is-hiding', 'is-error');
+          renderForm();
+          /* 下一帧再 focus；若被 boot 挡住也没关系，外部会再调 focus() */
+          requestAnimationFrame(() => focusPrimary());
+        }
+
+        function unlock() {
+          state = 'welcome';
+          formEl.hidden = true;
+          welcomeEl.hidden = false;
+
+          setTimeout(() => {
+            overlayEl.classList.add('is-hiding');
+            setTimeout(() => {
+              overlayEl.hidden = true;
+              overlayEl.classList.remove('is-hiding');
+              state = 'unlocked';
+            }, 400);
+          }, 900);
+        }
+
+        function tryLogin() {
+          if (state !== 'locked') return;
+
+          if (!hasPassword()) {
+            unlock();
+            return;
+          }
+
+          const v = inputEl.value;
+          if (v === Store.get('lock.password', '')) {
+            unlock();
+          } else {
+            overlayEl.classList.remove('is-error');
+            void overlayEl.offsetWidth;
+            overlayEl.classList.add('is-error');
+            inputEl.value = '';
+            try { inputEl.focus(); } catch { }
+            if (navigator.vibrate) {
+              try { navigator.vibrate([30, 40, 30]); } catch { }
+            }
+            setTimeout(() => overlayEl.classList.remove('is-error'), 500);
+          }
+        }
+
+        function forceHide() {
+          overlayEl.hidden = true;
+          overlayEl.classList.remove('is-hiding', 'is-error');
+          state = 'unlocked';
+        }
+
+        btnEl.addEventListener('click', tryLogin);
+        inputEl.addEventListener('keydown', e => {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            tryLogin();
+          }
+        });
+
+        return {
+          lock,
+          forceHide,
+          tryLogin,
+          focus: focusPrimary,
+          get isLocked() { return state === 'locked' || state === 'welcome'; },
+        };
+      })();
+
+      /* ============================================================
+         关机 / 重启 / 锁定
+         ============================================================ */
+      const PowerMenu = (() => {
+        const overlayEl = document.getElementById('pcPowerOverlay');
+        const textEl = document.getElementById('pcPowerText');
+
+        let state = 'running';        // running | shuttingdown | restarting | off
+
+        function setOverlay(text, { spinner = false, off = false } = {}) {
+          if (!overlayEl) return;
+          overlayEl.hidden = false;
+          overlayEl.classList.toggle('is-spin', spinner);
+          overlayEl.classList.toggle('is-off', off);
+          if (textEl) textEl.textContent = text || '';
+          void overlayEl.offsetWidth;
+          overlayEl.classList.add('is-show');
+        }
+
+        function closeAllUI() {
+          try { WujiWindows.list().forEach(w => WujiWindows.close(w)); } catch { }
+          try { StartMenu.close(); } catch { }
+          try { Flyout.close(); } catch { }
+          try { WujiDialog?.close?.(); } catch { }
+          try { WujiOverlay?.closeAll?.(); } catch { }
+          try { WujiNotification?.hideBanner?.(); } catch { }
+        }
+
+        async function shutdown() {
+          if (state !== 'running') return;
+          state = 'shuttingdown';
+
+          try { Locker.forceHide(); } catch { }
+          closeAllUI();
+          setOverlay('正在关机…', { spinner: true });
+
+          await new Promise(r => setTimeout(r, 1600));
+
+          try { WujiApps.shutdown(); } catch (e) { console.warn('[shutdown]', e); }
+
+          setOverlay('已关机 · 点击屏幕开机', { off: true });
+          state = 'off';
+        }
+
+        async function restart() {
+          if (state !== 'running') return;
+          state = 'restarting';
+
+          try { Locker.forceHide(); } catch { }
+          closeAllUI();
+          setOverlay('正在重启…', { spinner: true });
+
+          try { WujiApps.shutdown(); } catch (e) { console.warn('[restart]', e); }
+
+          await new Promise(r => setTimeout(r, 1200));
+
+          try { location.reload(); } catch (e) { console.warn('[restart]', e); }
+        }
+
+        function lockNow() {
+          if (state !== 'running') return;
+          closeAllUI();
+          Locker.lock();
+        }
+
+        /* 已关机状态：点击屏幕开机 */
+        document.addEventListener('pointerdown', e => {
+          if (state !== 'off') return;
+          if (!overlayEl || overlayEl.hidden) return;
+          try { location.reload(); } catch { }
+        }, true);
+
+        return {
+          shutdown,
+          restart,
+          lock: lockNow,
+          get state() { return state; },
+        };
+      })();
+
+      window.Locker = Locker;
+      window.PowerMenu = PowerMenu;
 
       /* ============================================================
          任务栏时钟
@@ -1700,6 +2634,16 @@
                 </div>
                 <div class="pc-nc__item-content">${esc(n.content)}</div>
               </div>
+              <button class="pc-nc__remove" type="button"
+                      data-remove="${esc(n.id)}"
+                      data-bundle="${esc(n.bundlename)}"
+                      aria-label="删除该通知">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                     stroke-width="2.2" stroke-linecap="round">
+                  <line x1="6" y1="6" x2="18" y2="18"/>
+                  <line x1="18" y1="6" x2="6" y2="18"/>
+                </svg>
+              </button>
             </div>`;
           }).join('');
 
@@ -1773,6 +2717,27 @@
         });
 
         ncListEl.addEventListener('click', e => {
+          const removeBtn = e.target.closest('.pc-nc__remove');
+          if (removeBtn) {
+            e.stopPropagation();
+            e.preventDefault();
+
+            const bundle = removeBtn.dataset.bundle;
+            const idStr = removeBtn.dataset.remove;
+            const rec = (WujiNotification.all() || [])
+              .find(n => n.bundlename === bundle && String(n.id) === idStr);
+
+            try {
+              WujiNotification.unpublish({
+                bundlename: bundle,
+                id: rec ? rec.id : idStr,
+              });
+            } catch { }
+
+            renderNotifications();
+            return;
+          }
+
           const item = e.target.closest('.pc-nc__item');
           if (!item) return;
 
@@ -1827,9 +2792,6 @@
         WujiNotification.onChange(() => Flyout.onNotificationsChanged());
       } catch (e) { console.warn('[notification]', e); }
 
-      /* ============================================================
-         启动
-         ============================================================ */
       (async () => {
         const bootEl = document.getElementById('pcBoot');
         const startAt = performance.now();
@@ -1839,17 +2801,23 @@
           else console.warn('[boot] WujiTheme 未加载，跳过主题初始化');
         } catch (e) { console.warn('[theme]', e); }
 
+        /* registerMeta 内部已按 platforms 过滤 */
         BUILTIN_APPS.forEach(meta => WujiApps.registerMeta(meta, 'builtin'));
 
         try { await WujiAppInstaller.restore(); }
         catch (e) { console.warn('[boot] restore failed', e); }
 
-        BUILTIN_APPS.forEach(m => {
-          if (!m.src) return;
-          WujiAppLoader.load(m.src, m.version).catch(e => {
-            console.warn('[preload builtin]', m.bundlename, e);
+        /* ★ 内置应用按平台过滤后预加载 */
+        BUILTIN_APPS
+          .filter(m => WujiApps.platformAllowed(m))
+          .forEach(m => {
+            if (!m.src) return;
+            WujiAppLoader.load(m.src, m.version).catch(e => {
+              console.warn('[preload builtin]', m.bundlename, e);
+            });
           });
-        });
+
+        /* installeds() 已过滤，天然只含本平台应用 */
         WujiApps.installeds().forEach(app => {
           if (!app._src) return;
           WujiAppLoader.load(app._src, app.version).catch(e => {
@@ -1862,8 +2830,14 @@
 
         const wait = Math.max(0, BOOT_MIN_MS - (performance.now() - startAt));
         setTimeout(() => {
+          try { Locker.lock(); } catch (e) { console.warn('[lock]', e); }
+
           bootEl.classList.add('is-hide');
-          setTimeout(() => { try { bootEl.remove(); } catch { } }, 600);
+
+          setTimeout(() => {
+            try { bootEl.remove(); } catch { }
+            try { Locker.focus(); } catch { }
+          }, 600);
         }, wait);
       })();
 

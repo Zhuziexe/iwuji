@@ -1,5 +1,5 @@
 const BUILTIN_APPS = [
-    { bundlename: 'com.wujios.phone', name: '电话', icon: './assets/phone.svg', src: 'apps/phone.js' },
+    { bundlename: 'com.wujios.phone', name: '电话', icon: './assets/phone.svg', src: 'apps/phone.js', platforms: ['wujios'] },
     { bundlename: 'com.wujios.weather', name: '天气', icon: './assets/weather.svg', src: 'apps/weather.js' },
     { bundlename: 'com.wujios.camera', name: '相机', icon: './assets/camera.svg', src: 'apps/camera.js' },
     { bundlename: 'com.wujios.clock', name: '时钟', icon: './assets/clock.svg', src: 'apps/clock.js' },
@@ -8,6 +8,8 @@ const BUILTIN_APPS = [
     { bundlename: 'com.wujios.wujigallery', name: '应用市场', icon: './assets/wujigallery.svg', src: 'apps/wujigallery.js' },
     { bundlename: 'com.wujios.calculator', name: '计算器', icon: './assets/calculator.svg', src: 'apps/calculator.js' },
     { bundlename: 'com.wujios.themes', name: '主题', icon: './assets/themes.svg', src: 'apps/themes.js' },
+    { bundlename: 'com.wujios.taskmgr', name: '任务管理器', icon: './assets/taskmgr.svg', src: 'apps/taskmgr.js', platforms: ['zhuzios'] },
+    { bundlename: 'com.wujios.files', name: '文件管理', icon: './assets/files.svg', src: 'apps/files.js' },
 ];
 
 const PRELOAD_SCRIPTS = [];

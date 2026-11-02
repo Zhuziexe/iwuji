@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+
+  <!-- 白色圆角背景 -->
+  <rect width="256" height="256" rx="48" ry="48" fill="#FFFFFF"/>
+
+  <!-- 波线下方浅蓝色填充，延伸到底部内缘并带圆角收边 -->
+  <path d="M 33 190
+           L 52 175
+           L 71 185
+           L 90 155
+           L 109 140
+           L 128 158
+           L 147 120
+           L 166 130
+           L 185 95
+           L 204 105
+           L 223 72
+           L 223 210
+           A 13 13 0 0 1 210 223
+           L 46 223
+           A 13 13 0 0 1 33 210
+           Z"
+        fill="#B8D4F0"/>
+
+  <!-- 蓝色波线：整体上升 + 局部波动，尖角转折，左右延伸到边框内缘 -->
+  <path d="M 33 190
+           L 52 175
+           L 71 185
+           L 90 155
+           L 109 140
+           L 128 158
+           L 147 120
+           L 166 130
+           L 185 95
+           L 204 105
+           L 223 72"
+        fill="none"
+        stroke="#1E6FD9"
+        stroke-width="8"
+        stroke-linecap="butt"
+        stroke-linejoin="miter"
+        stroke-miterlimit="8"/>
+
+  <!-- 蓝色空心矩形窗口，覆盖在波线与填充之上，遮住边缘溢出 -->
+  <rect x="28" y="28" width="200" height="200" rx="18" ry="18"
+        fill="none"
+        stroke="#1E6FD9"
+        stroke-width="10"/>
+
+</svg>

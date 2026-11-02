@@ -38,6 +38,9 @@ WujiApps.register({
       background: #dae2f0;
       transform: scale(.99);
     }
+    .market-row.is-na {
+      opacity: .62;
+    }
 
     .market-row__icon {
       width: 73px;
@@ -68,7 +71,6 @@ WujiApps.register({
       white-space: nowrap;
     }
 
-    /* 只有「可更新」才显示徽章 */
     .market-row__badge--update {
       flex: 0 0 auto;
       font-size: var(--wj-fs-xs);
@@ -80,6 +82,18 @@ WujiApps.register({
       color: #fff;
       white-space: nowrap;
       box-shadow: 0 3px 11px rgba(58, 111, 240, .35);
+    }
+
+    .market-row__badge--na {
+      flex: 0 0 auto;
+      font-size: var(--wj-fs-xs);
+      font-weight: 500;
+      letter-spacing: .3px;
+      padding: 4px 13px;
+      border-radius: 1399px;
+      background: rgba(0, 0, 0, .06);
+      color: var(--wj-text-muted);
+      white-space: nowrap;
     }
 
     .market-empty,
@@ -243,26 +257,75 @@ WujiApps.register({
       mount(root, ctx) {
         const listEl = root.querySelector('#marketList');
 
-        /* ---------- 判断单个应用的状态 ---------- */
-        const getAppState = (app) => {
-          const installed = WujiApps.has(app.bundle) && WujiApps.isInstalled(app.bundle);
-          if (!installed) {
-            return { installed: false, hasUpdate: false, localVersion: '' };
+        /* ---------- 平台标签 ---------- */
+        const platformLabel = list => {
+          if (!Array.isArray(list) || !list.length) return '';
+          return list
+            .map(p => p === 'wujios' ? 'iWuji' : p === 'zhuzios' ? '电脑' : p)
+            .join('/');
+        };
+
+        /* ---------- 静默回填：把市场里的 platforms 写回已安装记录 ---------- */
+        const syncInstalledPlatforms = (marketApps) => {
+          const list = Store.get('installedApps', []);
+          if (!Array.isArray(list) || !list.length) return 0;
+
+          const byBundle = new Map(marketApps.map(a => [a.bundle, a]));
+          let changed = 0;
+
+          for (const rec of list) {
+            const m = byBundle.get(rec.bundle);
+            if (!m || !Array.isArray(m.platforms) || !m.platforms.length) continue;
+
+            const same = Array.isArray(rec.platforms)
+              && rec.platforms.length === m.platforms.length
+              && rec.platforms.every((p, i) => p === m.platforms[i]);
+
+            if (!same) {
+              rec.platforms = m.platforms.slice();
+              changed++;
+            }
           }
 
+          if (changed) {
+            Store.set('installedApps', list);
+
+            /* 内存注册表同步下线不适用本平台的应用
+               （避免刷新前依然可见 / 可尝试打开） */
+            for (const rec of list) {
+              if (!rec.platforms) continue;
+              if (WujiApps.platformAllowed(rec)) continue;
+              if (WujiApps.isInstalled(rec.bundle)) {
+                try { WujiApps.unregister(rec.bundle); } catch { }
+              }
+            }
+          }
+          return changed;
+        };
+
+        /* ---------- 判断单个应用状态 ---------- */
+        const getAppState = (app) => {
+          const platformApplicable = WujiApps.platformAllowed(app);
+
           const rec = WujiAppInstaller.get(app.bundle);
-          const reg = WujiApps.get(app.bundle);
+          /* 记录层平台不适用 → 视为"当前设备不可用"（含旧数据未回填时的二次校验） */
+          const recordApplicable = rec
+            ? WujiApps.platformAllowed(rec)
+            : platformApplicable;
+
+          const inRegistry =
+            WujiApps.has(app.bundle) && WujiApps.isInstalled(app.bundle);
 
           const norm = v => String(v == null ? '' : v).trim();
           const localVersion = norm(
             (rec && rec.version) ||
-            (reg && reg.version) ||
+            (inRegistry && WujiApps.get(app.bundle)?.version) ||
             ''
           );
           const marketVersion = norm(app.version);
 
           let hasUpdate = false;
-          if (localVersion && marketVersion) {
+          if (rec && localVersion && marketVersion) {
             try {
               hasUpdate = WujiAppInstaller.cmpVer(localVersion, marketVersion) < 0;
             } catch {
@@ -270,7 +333,13 @@ WujiApps.register({
             }
           }
 
-          return { installed: true, hasUpdate, localVersion };
+          return {
+            installed: !!rec || inRegistry,
+            hasUpdate,
+            localVersion,
+            platformApplicable,
+            recordApplicable,
+          };
         };
 
         /* ---------- 渲染列表 ---------- */
@@ -292,12 +361,16 @@ WujiApps.register({
           listEl.innerHTML = `
             <div class="market-list">
               ${withState.map(({ app, state }) => {
-                const badge = state.hasUpdate
-                  ? '<span class="market-row__badge--update">更新</span>'
-                  : '';
+                let badge = '';
+                if (!state.platformApplicable) {
+                  badge = `<span class="market-row__badge--na">仅${platformLabel(app.platforms)}</span>`;
+                } else if (state.hasUpdate) {
+                  badge = '<span class="market-row__badge--update">更新</span>';
+                }
 
                 return `
-                <div class="market-row" data-bundle="${escapeHtml(app.bundle)}">
+                <div class="market-row ${state.platformApplicable ? '' : 'is-na'}"
+                     data-bundle="${escapeHtml(app.bundle)}">
                   <div class="market-row__icon">
                     <img src="${escapeHtml(app.icon || '')}" alt="">
                   </div>
@@ -350,6 +423,12 @@ WujiApps.register({
             return;
           }
 
+          /* ★ 市场元数据到位 → 先把旧安装记录的 platforms 补齐 */
+          const fixed = syncInstalledPlatforms(apps);
+          if (fixed) {
+            console.log(`[market] 已回填 ${fixed} 条安装记录的 platforms`);
+          }
+
           renderList(apps);
         }
 
@@ -382,6 +461,15 @@ WujiApps.register({
           return `<div class="market-page"><div class="market-empty">应用不存在</div></div>`;
         }
 
+        /* ★ 支持设备：platforms 缺失/空 → 全平台 */
+        const platformNames = Array.isArray(app.platforms) && app.platforms.length
+          ? app.platforms.map(p =>
+              p === 'wujios'   ? 'iWuji' :
+              p === 'zhuzios'  ? '电脑'  : p
+            )
+          : ['iWuji', '电脑'];
+        const supportText = platformNames.join('，');
+
         return `
           <div class="market-detail">
             <div class="market-detail__scroll">
@@ -406,6 +494,8 @@ WujiApps.register({
               ${app.longdescription ? `
                 <div class="market-detail__desc">${escapeHtml(app.longdescription)}</div>
               ` : ''}
+
+              <div class="market-detail__desc">支持设备：${escapeHtml(supportText)}</div>
             </div>
 
             <div class="market-detail__footer">
@@ -429,16 +519,30 @@ WujiApps.register({
 
         let busy = false;
 
+        const platformLabel = list => {
+          if (!Array.isArray(list) || !list.length) return '';
+          return list
+            .map(p => p === 'wujios' ? 'iWuji' : p === 'zhuzios' ? '电脑' : p)
+            .join('/');
+        };
+
         const refreshBtn = () => {
           if (busy) return;
 
-          // 两个数据源都查：Store.installedApps 和 WujiApps 内存注册表
+          /* ---------- 状态 0：平台不适用（最重要） ---------- */
+          if (!WujiApps.platformAllowed(app)) {
+            label.textContent = `不适用于本设备（仅${platformLabel(app.platforms)}）`;
+            btn.disabled = true;
+            btn.classList.remove('is-progress');
+            fill.style.width = '0%';
+            return;
+          }
+
           const rec = WujiAppInstaller.get(app.bundle);
           const inRegistry =
             WujiApps.has(app.bundle) && WujiApps.isInstalled(app.bundle);
           const registeredApp = WujiApps.get(app.bundle);
 
-          // 归一化版本号，兼容数字/字符串两种写法
           const normalize = v => String(v == null ? '' : v).trim();
 
           const currentVersion = normalize(
@@ -448,7 +552,6 @@ WujiApps.register({
           );
           const targetVersion = normalize(app.version);
 
-          // ---- 状态 1：完全没装过 ----
           if (!rec && !inRegistry) {
             label.textContent = '安装';
             btn.disabled = false;
@@ -457,7 +560,16 @@ WujiApps.register({
             return;
           }
 
-          // ---- 状态 2：装了，版本一致或本地更新 ----
+          /* ---------- 状态 1：记录层平台不适用 ---------- */
+          if (rec && !WujiApps.platformAllowed(rec)) {
+            label.textContent = `已安装在其它设备（仅${platformLabel(rec.platforms)}）`;
+            btn.disabled = true;
+            btn.classList.remove('is-progress');
+            fill.style.width = '0%';
+            return;
+          }
+
+          /* ---------- 状态 2：本地最新 ---------- */
           let cmp = 0;
           if (currentVersion && targetVersion) {
             try {
@@ -475,7 +587,7 @@ WujiApps.register({
             return;
           }
 
-          // ---- 状态 3：装了，但市场版更新 ----
+          /* ---------- 状态 3：可更新 ---------- */
           label.textContent = '更新';
           btn.disabled = false;
           btn.classList.remove('is-progress');
@@ -506,6 +618,7 @@ WujiApps.register({
 
         btn.addEventListener('click', async () => {
           if (busy || btn.disabled) return;
+          if (!WujiApps.platformAllowed(app)) return;
 
           busy = true;
           btn.disabled = true;
@@ -528,6 +641,10 @@ WujiApps.register({
                 author: app.author,
                 description: app.description,
                 src: app.src,
+                /* ★ 关键：把市场元数据里的 platforms 传下去 */
+                platforms: Array.isArray(app.platforms) && app.platforms.length
+                  ? app.platforms.slice()
+                  : undefined,
               }),
               sleep(1000),
             ]);
@@ -540,9 +657,7 @@ WujiApps.register({
             btn.classList.remove('is-progress');
             label.textContent = '安装失败';
             fill.style.width = '0%';
-            setTimeout(() => {
-              refreshBtn();
-            }, 1200);
+            setTimeout(() => { refreshBtn(); }, 1200);
           }
         });
       },
