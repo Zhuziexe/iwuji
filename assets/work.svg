@@ -1,0 +1,21 @@
+<svg viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg">
+  <rect width="256" height="256" rx="56" fill="#1d3b8f" />
+
+  <!-- 文档轮廓与折角 -->
+  <path d="M64 40 H136 L168 72 V200 H64 Z"
+        fill="none" stroke="#ffffff" stroke-width="12"
+        stroke-linejoin="round" />
+  <path d="M136 40 V72 H168"
+        fill="none" stroke="#ffffff" stroke-width="12"
+        stroke-linejoin="round" />
+
+  <!-- 文档文字横线 -->
+  <line x1="80" y1="92" x2="132" y2="92" stroke="#ffffff" stroke-width="10" stroke-linecap="round" />
+  <line x1="80" y1="116" x2="144" y2="116" stroke="#ffffff" stroke-width="10" stroke-linecap="round" />
+  <line x1="80" y1="140" x2="120" y2="140" stroke="#ffffff" stroke-width="10" stroke-linecap="round" />
+  <line x1="80" y1="164" x2="136" y2="164" stroke="#ffffff" stroke-width="10" stroke-linecap="round" />
+
+  <!-- 放大镜 -->
+  <circle cx="182" cy="182" r="34" fill="none" stroke="#ffffff" stroke-width="12" />
+  <line x1="206" y1="206" x2="226" y2="226" stroke="#ffffff" stroke-width="14" stroke-linecap="round" />
+</svg>
