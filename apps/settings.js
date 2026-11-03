@@ -1779,8 +1779,8 @@
 
               if (!root.isConnected) return;
 
-              if (codeEl)  codeEl.textContent  = formatBytes(codeBytes);
-              if (dataEl)  dataEl.textContent  = formatBytes(dataBytes);
+              if (codeEl) codeEl.textContent = formatBytes(codeBytes);
+              if (dataEl) dataEl.textContent = formatBytes(dataBytes);
               if (totalEl) totalEl.textContent = formatBytes(codeBytes + dataBytes);
             })();
           }
@@ -2673,8 +2673,8 @@
             if (!statusEl) return;
             statusEl.textContent = text || '';
             statusEl.classList.toggle('is-error', kind === 'error');
-            statusEl.classList.toggle('is-ok',    kind === 'ok');
-            statusEl.classList.toggle('is-busy',  kind === 'busy');
+            statusEl.classList.toggle('is-ok', kind === 'ok');
+            statusEl.classList.toggle('is-busy', kind === 'busy');
           }
 
           function setPickDisabled(on) {
@@ -2706,7 +2706,7 @@
               }
 
               if (count === 0) return reject(new Error('JS 未调用 registerInstalled'));
-              if (count > 1)   return reject(new Error('JS 注册了多个应用，一次只能侧载一个'));
+              if (count > 1) return reject(new Error('JS 注册了多个应用，一次只能侧载一个'));
               if (!captured || !captured.bundlename) {
                 return reject(new Error('缺少 bundlename'));
               }
@@ -2715,63 +2715,19 @@
           }
 
           async function installSideload(meta, code) {
-            const bundle  = meta.bundlename;
-            const version = meta.version || '1.0.0';
-
-            /* 1. 写 IDB（原子覆盖） */
-            await WujiAppCode.upsert({
-              bundle,
-              version,
-              code,
-              meta: {
-                name:        meta.name        || bundle,
-                icon:        meta.icon        || '',
-                author:      meta.author      || '',
-                description: meta.description || '',
+            return WujiAppInstaller.install(
+              {
+                bundle: meta.bundlename,
+                name: meta.name,
+                icon: meta.icon,
+                version: meta.version || '1.0.0',
+                author: meta.author,
+                description: meta.description,
+                platforms: meta.platforms,
+                fileTypes: meta.fileTypes,
               },
-              savedAt: Date.now(),
-            });
-
-            /* 2. 写 Store 记录 */
-            const record = {
-              bundle,
-              name:        meta.name        || bundle,
-              icon:        meta.icon        || '',
-              version,
-              author:      meta.author      || '',
-              description: meta.description || '',
-              src:         `idb://${bundle}`,
-              installedAt: Date.now(),
-            };
-            const list = Store.get('installedApps', []) || [];
-            const idx  = list.findIndex(a => a.bundle === bundle);
-            if (idx >= 0) {
-              list[idx] = { ...list[idx], ...record, installedAt: list[idx].installedAt };
-            } else {
-              list.push(record);
-            }
-            Store.set('installedApps', list);
-
-            /* 3. 清 loader 缓存 */
-            try { WujiAppLoader.invalidate(`idb://${bundle}`); } catch { }
-
-            /* 4. 重注册 */
-            if (WujiApps.isInstalled(bundle)) {
-              try { WujiApps.shutdownOne(bundle); } catch { }
-              WujiApps.unregister(bundle);
-            }
-            WujiApps.registerMeta({
-              bundlename:  bundle,
-              name:        record.name,
-              icon:        record.icon,
-              version,
-              author:      record.author,
-              description: record.description,
-              src:         `idb://${bundle}`,
-            }, 'installed');
-
-            /* 5. 桌面重绘 */
-            try { DesktopLayout.seedFromRegistry(); } catch { }
+              { force: true, code }
+            );
           }
 
           /* ---------- 侧载 ---------- */
