@@ -64,7 +64,7 @@
     '<rect x="10" y="13" width="12" height="1.5" rx="0.75" fill="white"/><rect x="10" y="16.5" width="12" height="1.5" rx="0.75" fill="white"/><rect x="10" y="20" width="9" height="1.5" rx="0.75" fill="white"/><rect x="10" y="23.5" width="6" height="1.5" rx="0.75" fill="white"/>');
 
   const ICON_FILE_DOC = svgFile('#54A5E6', '#3295E5',
-    '<path d="M11 12 L13 21 L16 15 L19 21 L21 12" stroke="white" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="miter" fill="none"/>');
+    '<path d="M12 13 L12 21 L16 15 L20 21 L20 13" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>');
 
   const ICON_FILE_SHEET = svgFile('#81C784', '#66BB6A',
     '<path d="M12 13 L20 22 M20 13 L12 22" stroke="white" stroke-width="2" stroke-linecap="round" fill="none"/>');

@@ -86,8 +86,7 @@
       position: absolute;
       inset: 0;
       z-index: 1;
-      background:
-        linear-gradient(180deg, rgba(0, 0, 0, .25) 0%, rgba(0, 0, 0, .45) 100%);
+      background: transparent;
       pointer-events: auto;
     }
 
@@ -111,7 +110,7 @@
       background: var(--pc-bg);
       border-radius: 10px;
       box-shadow:
-        0 20px 60px rgba(0, 0, 0, .18),
+        0 10px 30px rgba(0, 0, 0, .18),
         0 0 0 1px rgba(0, 0, 0, .06);
       overflow: visible;
       min-width: 320px;
@@ -120,8 +119,8 @@
 
     .pc-win.is-focused {
       box-shadow:
-        0 24px 72px rgba(0, 0, 0, .55),
-        0 0 0 1px rgba(58, 111, 240, .55);
+        0 12px 36px rgba(0, 0, 0, .4),
+        0 0 0 1px rgba(94, 240, 58, .4);
     }
 
     .pc-win__titlebar {
@@ -285,9 +284,9 @@
       align-items: center;
       padding: 0 8px;
       gap: 4px;
-      background: rgba(245, 247, 250, .96);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
+      background: rgba(245, 247, 250, .9);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
       border-top: 1px solid rgba(0, 0, 0, .08);
       z-index: 500;
       user-select: none;
@@ -318,8 +317,8 @@
     }
 
     .pc-taskbar__start.is-open {
-      background: rgba(58, 111, 240, .15);
-      color: #3a6ff0;
+      background: rgba(94, 240, 58, 0.15);
+      color: #17a821;
     }
 
     .pc-taskbar__items {
@@ -362,8 +361,8 @@
     }
 
     .pc-task-item.is-active {
-      background: rgba(58, 111, 240, .18);
-      color: #3a6ff0;
+      background: rgba(94, 240, 58, .18);
+      color: #17a821;
     }
 
     .pc-task-item img {
@@ -406,8 +405,8 @@
     }
 
     .pc-taskbar__clock.is-active {
-      background: rgba(58, 111, 240, .15);
-      color: #3a6ff0;
+      background: rgba(94, 240, 58, 0.15);
+      color: #17a821;
     }
 
     .pc-taskbar__tray {
@@ -432,8 +431,8 @@
     }
 
     .pc-taskbar__tray.is-active {
-      background: rgba(58, 111, 240, .15);
-      color: #3a6ff0;
+      background: rgba(94, 240, 58, 0.15);
+      color: #17a821;
     }
 
     .pc-taskbar__tray svg {
@@ -452,8 +451,6 @@
       width: var(--start-menu-w);
       max-height: 60vh;
       background: #ffffff;
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
       border-radius: 12px;
       border: 1px solid rgba(0, 0, 0, .08);
       box-shadow: 0 20px 60px rgba(0, 0, 0, .18);
@@ -483,9 +480,9 @@
 
     .pc-start-menu__header {
       padding: 14px 18px 10px;
-      font-size: 12px;
+      font-size: 18px;
       font-weight: 600;
-      color: #3a6ff0;
+      color: #17a821;
       letter-spacing: .5px;
       text-transform: uppercase;
       border-bottom: 1px solid rgba(0, 0, 0, .06);
@@ -687,8 +684,6 @@
       height: 340px;
       max-height: calc(100vh - var(--taskbar-h) - 24px);
       background: #ffffff;
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
       border: 1px solid rgba(0, 0, 0, .08);
       border-radius: 12px;
       box-shadow: 0 20px 60px rgba(0, 0, 0, .18);
@@ -755,12 +750,12 @@
     .pc-cc__value {
       font-size: 12px;
       font-weight: 600;
-      color: #3a6ff0;
+      color: #17a821;
     }
 
     .pc-cc__range {
       width: 100%;
-      accent-color: #3a6ff0;
+      accent-color: #17a821;
       cursor: pointer;
     }
 
@@ -782,8 +777,8 @@
     }
 
     .pc-cc__toggle.is-on {
-      background: rgba(58, 111, 240, .15);
-      color: #3a6ff0;
+      background: rgba(94, 240, 58, 0.15);
+      color: #17a821;
     }
 
     .pc-cc__toggle--wide {
@@ -820,7 +815,7 @@
     .pc-nc__clear {
       border: 0;
       background: transparent;
-      color: #3a6ff0;
+      color: #17a821;
       font: inherit;
       font-size: 12px;
       cursor: pointer;
@@ -1159,8 +1154,8 @@
     }
 
     .wj-dialog__input:focus {
-      border-color: var(--wj-primary, #3a6ff0);
-      box-shadow: 0 0 0 3px rgba(58, 111, 240, .15);
+      border-color: var(--wj-primary, #17a821);
+      box-shadow: 0 0 0 3px rgba(94, 240, 58, 0.15);
     }
 
     .wj-dialog__error {
@@ -1256,7 +1251,7 @@
     .wj-banner>.wj-banner__icon span {
       font-size: 16px;
       font-weight: 600;
-      color: #3a6ff0;
+      color: #17a821;
       line-height: 1;
     }
 
@@ -1323,7 +1318,7 @@
       position: absolute;
       inset: 0;
       background:
-        radial-gradient(600px 400px at 25% 75%, rgba(58, 111, 240, .16), transparent 65%),
+        radial-gradient(600px 400px at 25% 75%, rgba(94, 240, 58, .16), transparent 65%),
         radial-gradient(700px 500px at 75% 25%, rgba(120, 80, 200, .10), transparent 65%);
       pointer-events: none;
     }
@@ -1409,34 +1404,30 @@
     }
 
     .pc-lock__input:focus {
-      border-color: #3a6ff0;
-      box-shadow: 0 0 0 3px rgba(58, 111, 240, .18);
+      border-color: #17a821;
+      box-shadow: 0 0 0 3px rgba(94, 240, 58, .18);
     }
 
     .pc-lock__btn {
       height: 44px;
       border: 0;
       border-radius: 8px;
-      background: #3a6ff0;
+      background: #17a821;
       color: #fff;
       font: inherit;
       font-size: 15px;
       font-weight: 500;
       cursor: pointer;
-      transition: background .15s, transform .06s;
+      transition: background .12s;
       -webkit-tap-highlight-color: transparent;
     }
 
-    .pc-lock__btn:hover {
-      background: #3260d6;
-    }
-
     .pc-lock__btn:active {
-      transform: translateY(1px);
+      background: #089612;
     }
 
     .pc-lock__btn:focus-visible {
-      outline: 2px solid rgba(58, 111, 240, .5);
+      outline: 2px solid rgba(94, 240, 58, .5);
       outline-offset: 2px;
     }
 
@@ -1571,7 +1562,7 @@
     <div class="pc-wins" id="pcWins"></div>
 
     <div class="pc-taskbar" id="pcTaskbar">
-      <button class="pc-taskbar__start" id="pcStartBtn" type="button">开始</button>
+      <button class="pc-taskbar__start" id="pcStartBtn" type="button">竹子</button>
       <div class="pc-taskbar__items" id="pcTaskItems"></div>
 
       <button class="pc-taskbar__tray" id="pcWlanBtn" type="button" title="控制中心" aria-label="控制中心">
@@ -1702,6 +1693,7 @@
   <script src="navigation.js"></script>
   <script src="core.js"></script>
   <script src="app-storage.js"></script>
+  <script src="backup.js"></script>
   <script src="app-loader.js"></script>
   <script src="app-code-store.js"></script>
   <script src="fs.js"></script>

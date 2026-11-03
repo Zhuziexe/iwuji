@@ -2517,7 +2517,7 @@
                 <div class="settings-item" data-act="import" style="justify-content:center;color:var(--wj-danger,#e0356b);">
                   <span>从电脑恢复</span>
                 </div>
-                <input type="file" id="backupFileInput" accept="application/json,.json" hidden>
+                <input type="file" id="backupFileInput" accept=".wjbk,.json" hidden>
               </div>
 
               <div class="backup-status" id="backupStatus"></div>
@@ -2582,9 +2582,20 @@
             setStatus('正在恢复…');
 
             try {
-              const text = await file.text();
-              const json = JSON.parse(text);
-              await WujiBackup.importAll(json);
+              await WujiBackup.importAll(file, {
+                onProgress: ({ phase, current, total, name }) => {
+                  if (phase === 'localStorage') {
+                    setStatus('正在恢复设置…');
+                  } else if (phase === 'indexedDB') {
+                    setStatus('正在恢复应用数据…');
+                  } else if (phase === 'opfs-clear') {
+                    setStatus('正在清理文件…');
+                  } else if (phase === 'opfs-write') {
+                    const suffix = name ? `：${name}` : '';
+                    setStatus(`正在恢复文件 ${current}/${total}${suffix}`);
+                  }
+                },
+              });
               setStatus('恢复完成，正在重启…', 'ok');
               setTimeout(() => WujiBackup.triggerRestart(), 400);
             } catch (e) {
