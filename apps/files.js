@@ -619,13 +619,24 @@
             }
 
             listEl.innerHTML = `<div class="fm-empty">正在上传 ${uploadable.length} 个文件…</div>`;
+
+            const failures = [];
             for (const f of uploadable) {
               try {
                 await WujiFileSystem.add(currentPath, f);
               } catch (e) {
                 console.error('[fs] upload failed', f.name, e);
+                failures.push({ name: f.name, error: e });
               }
             }
+
+            if (failures.length) {
+              const details = failures.map(f =>
+                `「${f.name}」: ${f.error?.message || '未知错误'}`
+              ).join('\n');
+              await showAlert('上传失败', `${failures.length} 个文件失败:\n\n${details}`);
+            }
+
             render();
           };
 
