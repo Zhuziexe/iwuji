@@ -11,7 +11,7 @@
    ========================================================= */
 window.WujiFileOpener = (() => {
   const ROLE_WEIGHT = { owner: 3, editor: 2, viewer: 1 };
-  const ROLE_LABEL  = { owner: '默认', editor: '可编辑', viewer: '查看' };
+  const ROLE_LABEL = { owner: '默认', editor: '可编辑', viewer: '查看' };
 
   /* ---------- 工具 ---------- */
   function esc(s) {
@@ -26,24 +26,31 @@ window.WujiFileOpener = (() => {
     console.warn('[file-opener]', msg);
   }
 
-  /* ---------- 查询支持该文件的所有应用 ---------- */
   function handlers(file) {
     if (!file) return [];
 
-    const list = WujiApps.installeds()
-      .filter(app => !app._metaOnly)
-      .filter(app => WujiApps.supportsFile(app, file));
+    const list = WujiApps.all()
+      .filter(app => {
+        const fileTypes = (app.fileTypes && app.fileTypes.length)
+          ? app.fileTypes
+          : (window.WujiAppInstaller?.get(app.bundlename)?.fileTypes || null);
+        if (!fileTypes || !fileTypes.length) return false;
+        return WujiApps.supportsFile({ fileTypes }, file);
+      });
 
     const withRole = list.map(app => {
-      const rule = (app.fileTypes || []).find(r => {
-        const fake = { name: file.name, mime: file.mime };
+      const fileTypes = (app.fileTypes && app.fileTypes.length)
+        ? app.fileTypes
+        : (window.WujiAppInstaller?.get(app.bundlename)?.fileTypes || []);
+      const rule = fileTypes.find(r => {
+        const fake = { name: file.name };
         return WujiApps.supportsFile({ fileTypes: [r] }, fake);
       });
       return {
-        bundle:     app.bundlename,
-        name:       app.name || app.bundlename,
-        icon:       app.icon || '',
-        role:       rule?.role || 'viewer',
+        bundle: app.bundlename,
+        name: app.name || app.bundlename,
+        icon: app.icon || '',
+        role: rule?.role || 'viewer',
         roleWeight: ROLE_WEIGHT[rule?.role] || 0,
       };
     });
@@ -51,7 +58,6 @@ window.WujiFileOpener = (() => {
     return withRole.sort((a, b) => b.roleWeight - a.roleWeight);
   }
 
-  /* ---------- 选择器样式（只注入一次） ---------- */
   let styleInjected = false;
   function ensureStyle() {
     if (styleInjected) return;
@@ -69,8 +75,6 @@ window.WujiFileOpener = (() => {
         justify-content: center;
         padding: 32px;
         background: rgba(0, 0, 0, .38);
-        backdrop-filter: blur(6px);
-        -webkit-backdrop-filter: blur(6px);
         opacity: 0;
         transition: opacity .2s ease;
         pointer-events: auto;
@@ -189,8 +193,8 @@ window.WujiFileOpener = (() => {
   /* ---------- 弹选择器：返回 bundle 或 null ---------- */
   function pickApp(file) {
     const list = handlers(file);
-    if (!list.length)          return Promise.resolve(null);
-    if (list.length === 1)     return Promise.resolve(list[0].bundle);
+    if (!list.length) return Promise.resolve(null);
+    if (list.length === 1) return Promise.resolve(list[0].bundle);
 
     ensureStyle();
 
@@ -225,7 +229,7 @@ window.WujiFileOpener = (() => {
       /* 阻止触摸穿透 */
       const stop = e => e.stopPropagation();
       backdrop.addEventListener('touchstart', stop, { passive: true });
-      backdrop.addEventListener('touchmove',  stop, { passive: true });
+      backdrop.addEventListener('touchmove', stop, { passive: true });
 
       function close(value) {
         backdrop.classList.remove('is-show');

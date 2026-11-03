@@ -27,11 +27,75 @@
     return (bytes / 1073741824).toFixed(2) + ' GB';
   }
 
+  /* =========================================================
+     SVG 图标（32×32，Win11 风格彩色文件夹 + 文件）
+     ========================================================= */
+  const SVG_ATTR = 'viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"';
+
+  const svgFolder = (color, content = '') =>
+    `<svg ${SVG_ATTR}><path d="M4 8 Q4 6 6 6 H12 L14 8 H26 Q28 8 28 10 V24 Q28 26 26 26 H6 Q4 26 4 24 Z" fill="${color}"/>${content}</svg>`;
+
+  const svgFile = (color, foldColor, content = '') =>
+    `<svg ${SVG_ATTR}><path d="M8 4 H20 L26 10 V27 Q26 28 25 28 H8 Q7 28 7 27 V5 Q7 4 8 4 Z" fill="${color}"/><path d="M20 4 V10 H26 Z" fill="${foldColor}" opacity="0.7"/>${content}</svg>`;
+
+  /* ---------- 文件夹图标 ---------- */
+  const ICON_FOLDER = svgFolder('#FFC107');
+
+  const ICON_FOLDER_DOWNLOADS = svgFolder('#4CAF50',
+    '<path d="M16 12 V19 M12.5 16 L16 19.5 L19.5 16" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>');
+
+  const ICON_FOLDER_PICTURES = svgFolder('#2196F3',
+    '<path d="M8 22 L11 17 L14 19 L18 14 L24 22 Z" fill="white"/><circle cx="22" cy="12" r="1.8" fill="white"/>');
+
+  const ICON_FOLDER_DOCUMENTS = svgFolder('#9E9E9E',
+    '<rect x="10" y="13" width="10" height="1.6" rx="0.8" fill="white"/><rect x="10" y="17" width="10" height="1.6" rx="0.8" fill="white"/><rect x="10" y="21" width="7" height="1.6" rx="0.8" fill="white"/><rect x="21" y="13" width="3" height="9" rx="0.8" fill="white" opacity="0.85"/>');
+
+  /* ---------- 文件图标 ---------- */
+  const ICON_FILE_IMAGE = svgFile('#B3E5FC', '#81D4FA',
+    '<rect x="9" y="12" width="14" height="12" rx="1.5" fill="white" opacity="0.9"/><path d="M10 22 L13 17 L15 19 L18 15 L22 22 Z" fill="#1976D2"/><circle cx="20" cy="15" r="1.2" fill="#1976D2"/>');
+
+  const ICON_FILE_VIDEO = svgFile('#DA7FEA', '#CB70DB',
+    '<rect x="9" y="13" width="14" height="10" rx="1.5" fill="white" opacity="0.9"/><path d="M14 15.5 L19 18 L14 20.5 Z" fill="#7B1FA2"/>');
+
+  const ICON_FILE_AUDIO = svgFile('#F9A082', '#F78569',
+    '<ellipse cx="12" cy="21" rx="2" ry="1.5" fill="white"/><ellipse cx="19" cy="19" rx="2" ry="1.5" fill="white"/><path d="M13.8 21 V13 M20.8 19 V11" stroke="white" stroke-width="1.2"/><path d="M13.8 13 L20.8 11 L20.8 13 L13.8 15 Z" fill="white"/>');
+
+  const ICON_FILE_TEXT = svgFile('#54A5E6', '#3295E5',
+    '<rect x="10" y="13" width="12" height="1.5" rx="0.75" fill="white"/><rect x="10" y="16.5" width="12" height="1.5" rx="0.75" fill="white"/><rect x="10" y="20" width="9" height="1.5" rx="0.75" fill="white"/><rect x="10" y="23.5" width="6" height="1.5" rx="0.75" fill="white"/>');
+
+  const ICON_FILE_DOC = svgFile('#54A5E6', '#3295E5',
+    '<path d="M11 12 L13 21 L16 15 L19 21 L21 12" stroke="white" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="miter" fill="none"/>');
+
+  const ICON_FILE_SHEET = svgFile('#81C784', '#66BB6A',
+    '<path d="M12 13 L20 22 M20 13 L12 22" stroke="white" stroke-width="2" stroke-linecap="round" fill="none"/>');
+
+  const ICON_FILE_UNKNOWN = svgFile('#B0B0B0', '#9F9F9F',
+    '<path d="M12.5 13 Q12.5 11 16 11 Q19.5 11 19.5 14 Q19.5 16 16 17.5 L16 19" stroke="white" stroke-width="1.8" stroke-linecap="round" fill="none"/><circle cx="16" cy="22" r="1" fill="white"/>');
+
+  /* ---------- 按钮图标 ---------- */
+  const SVG_RENAME = `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>`;
+
+  const SVG_DELETE = `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>`;
+
+  /* ---------- 类型映射 ---------- */
   function iconFor(kind) {
-    return {
-      image: '🖼️', video: '🎬', audio: '🎵', pdf: '📕',
-      text: '📄', document: '📘', file: '📎', dir: '📁',
-    }[kind] || '📎';
+    switch (kind) {
+      case 'image': return ICON_FILE_IMAGE;
+      case 'video': return ICON_FILE_VIDEO;
+      case 'audio': return ICON_FILE_AUDIO;
+      case 'text': return ICON_FILE_TEXT;
+      case 'doc': return ICON_FILE_DOC;
+      case 'xls': return ICON_FILE_SHEET;
+      case 'dir': return ICON_FOLDER;
+      default: return ICON_FILE_UNKNOWN;
+    }
+  }
+
+  function dirIcon(name) {
+    if (name === 'Pictures') return ICON_FOLDER_PICTURES;
+    if (name === 'Documents') return ICON_FOLDER_DOCUMENTS;
+    if (name === 'Downloads') return ICON_FOLDER_DOWNLOADS;
+    return ICON_FOLDER;
   }
 
   function validateEntryName(raw) {
@@ -65,7 +129,7 @@
         { value: '取消' },
         {
           value: okValue, primary: true,
-          ...(danger ? { color: 'var(--wj-danger, #e5484d)' } : {})
+          ...(danger ? { color: 'var(--wj-danger, #e5484d)' } : {}),
         },
       ],
     });
@@ -98,8 +162,7 @@
     name: '文件管理',
     icon: './assets/files.svg',
     initialRoute: 'home',
-    version: '1.3.0',
-    platforms: ['zhuzios', 'wujios'],
+    version: '1.4.0',
 
     styles: `
       .fm-page {
@@ -114,18 +177,32 @@
 
       .fm-path {
         flex: 0 0 auto;
-        padding: 12px 16px;
-        display: flex; align-items: center; gap: 6px;
+        padding: 10px 16px;
+        display: flex; align-items: center; gap: 4px;
         font-size: var(--wj-fs-md);
         border-bottom: 1px solid #e6e9ef;
         overflow-x: auto; white-space: nowrap;
         -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        touch-action: pan-x;
       }
-      .fm-crumb { color: #3a6ff0; cursor: pointer; text-decoration: none; }
+      .fm-path::-webkit-scrollbar { display: none; }
+
+      .fm-path > * { flex-shrink: 0; }
+
+      .fm-crumb {
+        color: #3a6ff0;
+        cursor: pointer;
+        text-decoration: none;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 200px;
+      }
       .fm-crumb:hover { text-decoration: underline; }
+
       .fm-sep { color: #8a93a4; }
 
-      /* ---------- 工具栏 ---------- */
       .fm-toolbar {
         flex: 0 0 auto;
         display: flex; gap: 8px;
@@ -133,13 +210,13 @@
         border-bottom: 1px solid #e6e9ef;
       }
       .fm-btn {
-        height: 36px; padding: 0 16px;
+        height: 40px; padding: 0 14px;
         border: 1px solid #e6e9ef; border-radius: 8px;
         background: #fff; color: #101828;
-        font: inherit; font-size: var(--wj-fs-sm);
+        font: inherit; font-size: var(--wj-fs-md);
         cursor: pointer;
         -webkit-tap-highlight-color: transparent;
-        display: inline-flex; align-items: center; gap: 6px;
+        display: inline-flex; align-items: center; justify-content: center; gap: 6px;
         white-space: nowrap;
         transition: background .12s;
       }
@@ -147,8 +224,13 @@
       .fm-btn:active:not(:disabled) { background: #e8edf5; }
       .fm-btn:disabled { opacity: .4; cursor: not-allowed; }
 
+      .fm-btn--icon {
+        width: 40px; padding: 0;
+      }
+
       .fm-btn__icon,
-      .fm-btn__text { display: inline; line-height: 1; }
+      .fm-btn__text { display: inline-flex; align-items: center; justify-content: center; line-height: 1; }
+      .fm-btn__icon svg { display: block; }
 
       /* ---------- 文件列表 ---------- */
       .fm-list {
@@ -162,12 +244,11 @@
         line-height: 1.7;
       }
 
-      /* 列宽因字号放大从 90px → 100px */
       .fm-row {
         display: grid;
-        grid-template-columns: 32px minmax(0,1fr) 100px auto auto;
-        align-items: center; gap: 12px;
-        padding: 12px 12px; border-radius: 8px;
+        grid-template-columns: 48px minmax(0,1fr) 60px 40px 40px;
+        align-items: center; gap: 8px;
+        padding: 6px 12px; border-radius: 8px;
         font-size: var(--wj-fs-md);
         cursor: pointer;
         -webkit-tap-highlight-color: transparent;
@@ -179,9 +260,15 @@
       .fm-row.is-selected .fm-row__name { color: #3a6ff0; }
 
       .fm-row__icon {
-        font-size: var(--wj-fs-xl);
+        width: 48px;
+        height: 48px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
         line-height: 1;
       }
+      .fm-row__icon svg { width: 100%; height: 100%; display: block; }
+
       .fm-row__name {
         overflow: hidden; text-overflow: ellipsis;
         white-space: nowrap; min-width: 0;
@@ -192,83 +279,27 @@
         font-size: var(--wj-fs-md);
         white-space: nowrap;
         font-variant-numeric: tabular-nums;
+        text-align: right;
       }
 
-      .fm-row button {
-        height: 32px; padding: 0 12px;
-        border: 1px solid #e6e9ef; border-radius: 6px;
-        background: #fff; color: #101828;
-        font: inherit; font-size: var(--wj-fs-sm);
+      /* 行内操作按钮：40×40 方，只显示 SVG 图标 */
+      .fm-row__btn {
+        width: 40px; height: 40px; padding: 0;
+        border: 1px solid #e6e9ef; border-radius: 8px;
+        background: #fff; color: #5b6478;
+        font: inherit;
         cursor: pointer;
         -webkit-tap-highlight-color: transparent;
         display: inline-flex; align-items: center; justify-content: center;
-        gap: 4px;
         transition: background .12s, color .12s, border-color .12s;
       }
-      .fm-row button:hover {
+      .fm-row__btn svg { display: block; }
+      .fm-row__btn:hover {
         background: #eaf0ff; border-color: #b9cdfb; color: #3a6ff0;
       }
-      .fm-row button:active { background: #dde7fb; }
-      .fm-row button.fm-row__del:hover {
+      .fm-row__btn:active { background: #dde7fb; }
+      .fm-row__btn.fm-row__btn--danger:hover {
         background: #fde8ef; border-color: #f7c1d3; color: #e0356b;
-      }
-
-      .fm-row button .fm-btn__icon { display: none; }
-
-      @media (max-width: 640px) {
-        .fm-path { padding: 12px 14px; font-size: var(--wj-fs-lg); }
-        .fm-toolbar { padding: 10px 14px; gap: 8px; }
-        .fm-btn { height: 40px; padding: 0 14px; font-size: var(--wj-fs-lg); }
-
-        .fm-list { padding: 6px 10px 14px; }
-        .fm-row {
-          grid-template-columns: 32px minmax(0,1fr) auto auto;
-          gap: 10px;
-          padding: 12px 10px;
-        }
-        .fm-row__meta { display: none; }
-        .fm-row button {
-          height: 36px; padding: 0 12px;
-          font-size: var(--wj-fs-sm);
-        }
-      }
-
-      /* ---------- 小屏（iWuji） ---------- */
-      @media (max-width: 520px) {
-        /* 路径字号再大一号 */
-        .fm-path {
-          padding: 14px 14px;
-          font-size: var(--wj-fs-lg);
-          gap: 6px;
-        }
-
-        .fm-toolbar { padding: 10px 12px; gap: 6px; }
-        .fm-btn {
-          height: 44px; padding: 0 14px;
-          font-size: var(--wj-fs-sm);
-          gap: 0;
-          border-radius: 10px;
-        }
-        /* 上级 / 新建：正方形按钮，仅图标 */
-        #fmUpBtn, #fmMkdirBtn {
-          width: 44px; padding: 0;
-          justify-content: center;
-        }
-        #fmUpBtn .fm-btn__text,
-        #fmMkdirBtn .fm-btn__text { display: none; }
-
-        .fm-row {
-          grid-template-columns: 30px minmax(0,1fr) auto auto;
-          gap: 8px;
-          padding: 14px 10px;
-        }
-        .fm-row button {
-          width: 44px; height: 44px; padding: 0;
-          font-size: var(--wj-fs-sm);
-          border-radius: 10px;
-        }
-        .fm-row button .fm-btn__text { display: none; }
-        .fm-row button .fm-btn__icon { display: inline; }
       }
 
       /* ---------- 预览 ---------- */
@@ -286,8 +317,8 @@
         border-bottom: 1px solid rgba(255,255,255,.08);
         font-size: var(--wj-fs-md);
       }
-      .fm-preview__back {
-        height: 36px; padding: 0 16px;
+      .fm-preview__btn {
+        height: 40px; padding: 0 16px;
         border: 1px solid rgba(255,255,255,.15); border-radius: 8px;
         background: rgba(255,255,255,.06); color: #fff;
         font: inherit; font-size: var(--wj-fs-md);
@@ -295,8 +326,8 @@
         -webkit-tap-highlight-color: transparent;
         transition: background .12s;
       }
-      .fm-preview__back:hover { background: rgba(255,255,255,.12); }
-      .fm-preview__back:active { background: rgba(255,255,255,.18); }
+      .fm-preview__btn:hover { background: rgba(255,255,255,.12); }
+      .fm-preview__btn:active { background: rgba(255,255,255,.18); }
 
       .fm-preview__name {
         flex: 1 1 auto; min-width: 0;
@@ -332,19 +363,12 @@
         font-size: var(--wj-fs-md);
         line-height: 1.7;
       }
-
-      @media (max-width: 520px) {
-        .fm-preview__head { padding: 12px 14px; }
-        .fm-preview__back { height: 40px; padding: 0 16px; font-size: var(--wj-fs-lg); }
-        .fm-preview__name { font-size: var(--wj-fs-lg); }
-      }
     `,
 
     routes: {
       home: {
         name: 'home',
 
-        /* ★ 3. 工具栏加"⬆️ 上级"按钮 */
         render() {
           return `
             <div class="fm-page">
@@ -352,7 +376,6 @@
               <div class="fm-toolbar">
                 <button class="fm-btn" id="fmUpBtn" type="button" disabled title="上级目录">
                   <span class="fm-btn__icon" aria-hidden="true">⬆️</span>
-                  <span class="fm-btn__text">上级</span>
                 </button>
                 <button class="fm-btn" id="fmUploadBtn" type="button">
                   <span class="fm-btn__text">上传文件</span>
@@ -380,6 +403,12 @@
           const pathEl = root.querySelector('#fmPath');
           const listEl = root.querySelector('#fmList');
           const input = root.querySelector('#fmInput');
+          pathEl.addEventListener('touchstart', e => {
+            e.stopPropagation();
+          }, { passive: true });
+          pathEl.addEventListener('pointerdown', e => {
+            e.stopPropagation();
+          }, { passive: true });
           const upBtn = root.querySelector('#fmUpBtn');
           const uploadBtn = root.querySelector('#fmUploadBtn');
           const mkdirBtn = root.querySelector('#fmMkdirBtn');
@@ -394,7 +423,6 @@
             fn();
           }
 
-          /* ---------- 上级按钮状态 ---------- */
           function updateUpBtn() {
             upBtn.disabled = currentPath.length === 0;
           }
@@ -405,7 +433,6 @@
             render();
           }
 
-          /* ---------- 路径面包屑 ---------- */
           function renderPath() {
             const parts = ['根目录', ...currentPath];
             pathEl.innerHTML = parts.map((p, i) => {
@@ -420,6 +447,9 @@
                 currentPath = currentPath.slice(0, Number(a.dataset.idx));
                 render();
               };
+            });
+            requestAnimationFrame(() => {
+              pathEl.scrollLeft = pathEl.scrollWidth;
             });
           }
 
@@ -479,23 +509,20 @@
               return;
             }
 
-            /* ★ 2. 移除打开按钮 */
             listEl.innerHTML = items.map(it => {
               const isDir = it.kind === 'dir';
-              const icon = isDir ? '📁' : iconFor(WujiFileSystem.kindOf(it.name));
-              const meta = isDir ? '文件夹' : fmtSize(it.size);
+              const icon = isDir ? dirIcon(it.name) : iconFor(WujiFileSystem.kindOf(it.name));
+              const meta = isDir ? '' : fmtSize(it.size);
               return `
                 <div class="fm-row" data-name="${escapeHtml(it.name)}" data-kind="${it.kind}">
                   <span class="fm-row__icon">${icon}</span>
                   <span class="fm-row__name">${escapeHtml(it.name)}</span>
                   <span class="fm-row__meta">${meta}</span>
-                  <button data-act="rename" type="button" aria-label="重命名" title="重命名">
-                    <span class="fm-btn__text">重命名</span>
-                    <span class="fm-btn__icon">✏️</span>
+                                    <button data-act="rename" class="fm-row__btn" type="button" aria-label="重命名" title="重命名">
+                    ${SVG_RENAME}
                   </button>
-                  <button data-act="delete" class="fm-row__del" type="button" aria-label="删除" title="删除">
-                    <span class="fm-btn__text">删除</span>
-                    <span class="fm-btn__icon">🗑️</span>
+                  <button data-act="delete" class="fm-row__btn fm-row__btn--danger" type="button" aria-label="删除" title="删除">
+                    ${SVG_DELETE}
                   </button>
                 </div>`;
             }).join('');
@@ -513,36 +540,22 @@
                   return;
                 }
 
-                const file = {
-                  path: full,
-                  name,
-                  mime: WujiFileSystem.guessMime(name),
-                };
+                const file = { path: full, name };
 
                 if (window.WujiFileOpener) {
-                  const list = WujiFileOpener.handlers(file);
-                  if (list.length) {
-                    WujiFileOpener.open(file).catch(e => console.error('[files] open failed', e));
-                    return;
-                  }
+                  WujiFileOpener.open(file).catch(e => console.error('[files] open failed', e));
+                } else {
+                  showNoHandler(file);
                 }
-
-                const kind = WujiFileSystem.kindOf(name);
-                if (['image', 'video', 'audio', 'text'].includes(kind)) {
-                  ctx.push('preview', { path: full });
-                  return;
-                }
-
-                showNoHandler(file);
               }
 
               row.addEventListener('click', (e) => {
                 if (e.target.closest('button')) return;
                 if (useDoubleClick()) {
-                  selectRow(row);            // 双击模式:单击选中
+                  selectRow(row);
                 } else {
                   selectRow(null);
-                  guardedOpen(openItem);     // 单击模式:单击打开
+                  guardedOpen(openItem);
                 }
               });
 
@@ -583,10 +596,8 @@
             });
           }
 
-          /* ---------- 上级按钮 ---------- */
           upBtn.onclick = () => goUp();
 
-          /* ---------- 上传 ---------- */
           uploadBtn.onclick = () => input.click();
 
           input.onchange = async () => {
@@ -640,7 +651,6 @@
             render();
           };
 
-          /* ---------- 新建文件夹 ---------- */
           mkdirBtn.onclick = async () => {
             const name = await showPrompt(
               '新建文件夹', '新建文件夹', '创建', '输入文件夹名称'
@@ -658,7 +668,7 @@
         },
       },
 
-      /* ---------- 预览 ---------- */
+      /* ---------- 预览（无返回按钮） ---------- */
       preview: {
         name: 'preview',
 
@@ -668,10 +678,8 @@
           return `
             <div class="fm-preview">
               <div class="fm-preview__head">
-                <button class="fm-preview__back" id="fmPreviewBack" type="button">返回</button>
                 <span class="fm-preview__name">${escapeHtml(name)}</span>
-                <button class="fm-preview__back" id="fmPreviewDownload" type="button">下载</button>
-              </div>
+                <button class="fm-preview__btn" id="fmPreviewDownload" type="button">下载</button>              </div>
               <div class="fm-preview__body" id="fmPreviewBody">
                 <div class="fm-preview__hint">加载中…</div>
               </div>
@@ -684,8 +692,6 @@
           const name = path[path.length - 1] || '';
           const bodyEl = root.querySelector('#fmPreviewBody');
           let objectURL = null;
-
-          root.querySelector('#fmPreviewBack').onclick = () => ctx.pop();
 
           root.querySelector('#fmPreviewDownload').onclick = () => {
             WujiFileSystem.download(path);

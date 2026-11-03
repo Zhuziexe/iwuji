@@ -75,8 +75,10 @@
     </div>
 
     <div class="view view--app" id="appView">
+      <div class="app-screen-frozen" id="appScreenFrozen" hidden></div>
       <div class="app-screen" id="appScreen"></div>
     </div>
+
 
     <!-- ============ PanelSystem ============ -->
     <div class="panel-backdrop" id="panelBackdrop"></div>
@@ -283,6 +285,8 @@
     const S = {
       view: 'locked',
       currentBundle: null,
+      currentParams: null,
+      frozenState: null,
       power: 'off',
       viewBeforeLock: 'home',
       screenOff: false,
@@ -1500,7 +1504,67 @@
         }, DUR + 30);
       });
     }
+    const appScreenFrozen = document.getElementById('appScreenFrozen');
+    function freezeCurrentApp() {
+      if (!S.currentBundle) return;
 
+      if (S.frozenState) destroyFrozenApp();
+
+      appScreen.querySelectorAll('audio, video').forEach(el => {
+        try { el.pause(); } catch { }
+      });
+
+      appScreenFrozen.innerHTML = '';
+      while (appScreen.firstChild) {
+        appScreenFrozen.appendChild(appScreen.firstChild);
+      }
+      appScreenFrozen.hidden = false;
+
+      S.frozenState = {
+        bundle: S.currentBundle,
+        params: S.currentParams,
+        nav: currentNav,
+        backHandler: currentBackHandler,
+      };
+
+      S.currentBundle = null;
+      S.currentParams = null;
+      currentNav = null;
+      currentBackHandler = null;
+    }
+
+    function destroyFrozenApp() {
+      if (!S.frozenState) return;
+      try { S.frozenState.nav?.destroy(); } catch { }
+      appScreenFrozen.innerHTML = '';
+      appScreenFrozen.hidden = true;
+      S.frozenState = null;
+    }
+
+    function restoreFrozenApp() {
+      if (!S.frozenState) return false;
+
+      /* 清空当前 appScreen（新应用的 DOM） */
+      appScreen.innerHTML = '';
+      appScreen.style.transition = 'none';
+      appScreen.style.transform = '';
+      appScreen.style.opacity = '';
+
+      /* 把冻结的内容搬回 appScreen */
+      while (appScreenFrozen.firstChild) {
+        appScreen.appendChild(appScreenFrozen.firstChild);
+      }
+      appScreenFrozen.hidden = true;
+
+      /* 恢复状态 */
+      S.currentBundle = S.frozenState.bundle;
+      S.currentParams = S.frozenState.params;
+      currentNav = S.frozenState.nav;
+      currentBackHandler = S.frozenState.backHandler;
+      S.frozenState = null;
+
+      return true;
+    }
     async function openApp(bundle, sourceEl, params, animType) {
       let app = WujiApps.get(bundle);
       if (!app) {
@@ -1519,6 +1583,10 @@
           }));
         } catch { }
         return;
+      }
+
+      if (!sourceEl && S.view === 'app' && S.currentBundle) {
+        freezeCurrentApp();
       }
 
       if (!sourceEl) {
@@ -1745,39 +1813,35 @@
       },
       /** 关闭当前应用，回到桌面 */
       close() {
-        if (S.view === 'app') closeApp();
+        if (S.view !== 'app') return;
+        if (!goBackApp()) closeApp();
       },
     };
 
     function disposeCurrentApp() {
       const closingBundle = S.currentBundle;
 
-      /* 1) 清掉应用打开的 overlay */
       try { window.WujiOverlay?.closeAll?.(); } catch { }
 
-      /* 2) 销毁导航栈 —— 会逐个触发路由的 dispose() */
       if (currentNav) {
         try { currentNav.destroy(); } catch { }
         currentNav = null;
       } else if (S.currentBundle) {
-        /* 旧式（无 routes）应用走 unmount */
         const app = WujiApps.get(S.currentBundle);
         try { app?.unmount?.(); } catch { }
       }
 
-      /* 3) 清屏 */
       appScreen.innerHTML = '';
       appScreen.style.transition = 'none';
       appScreen.style.transform = '';
       appScreen.style.opacity = '';
 
-      /* 4) 清状态 */
       S.currentBundle = null;
       currentBackHandler = null;
 
-      /* 5) 关掉该应用打开的对话框 */
       try { window.WujiDialog?.closeByBundle?.(closingBundle); } catch { }
 
+      destroyFrozenApp();
       return closingBundle;
     }
 
@@ -1794,6 +1858,28 @@
       appScreen.style.transition = 'transform .26s cubic-bezier(.4,0,.6,1)';
       appScreen.style.transform = `translateX(${w}px)`;
       setTimeout(finishCloseApp, 260);
+    }
+
+    function goBackApp() {
+      if (!S.frozenState) return false;
+
+      const closingBundle = S.currentBundle;
+
+      try { window.WujiOverlay?.closeAll?.(); } catch { }
+      if (currentNav) {
+        try { currentNav.destroy(); } catch { }
+        currentNav = null;
+      } else if (S.currentBundle) {
+        const app = WujiApps.get(S.currentBundle);
+        try { app?.unmount?.(); } catch { }
+      }
+      try { window.WujiDialog?.closeByBundle?.(closingBundle); } catch { }
+
+      restoreFrozenApp();
+
+      try { WujiTheme.post('app-exit', {}); } catch { }
+      notifyParent('app-close', {});
+      return true;
     }
 
     /* =========================================================
@@ -2251,7 +2337,11 @@
           } else {
             appScreen.style.transition = 'transform .26s cubic-bezier(.4,0,.6,1)';
             appScreen.style.transform = `translateX(${w}px)`;
-            setTimeout(finishCloseApp, 260);
+            setTimeout(() => {
+              if (!goBackApp()) {
+                finishCloseApp();
+              }
+            }, 260);
           }
         } else {
           appScreen.style.transition = 'transform .24s ease';

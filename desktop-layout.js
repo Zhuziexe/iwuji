@@ -107,7 +107,7 @@ window.DesktopLayout = (() => {
       const onDesktop = new Set();
       d.pages.forEach(p => p.slots.forEach(s => { if (s) onDesktop.add(s); }));
 
-      const missing = WujiApps.all()
+      const missing = WujiApps.visible()
         .map(a => a.bundlename)
         .filter(b => !onDesktop.has(b));
 

@@ -106,6 +106,7 @@ window.WujiApps = (() => {
       _src: app.src || app._src || '',
       _metaOnly: false,
       fileTypes: Array.isArray(app.fileTypes) ? app.fileTypes.slice() : null,
+      hidden: !!app.hidden,
     };
 
     if (Array.isArray(app.platforms) && app.platforms.length) {
@@ -268,6 +269,16 @@ window.WujiApps = (() => {
     get isBooted() { return booted; },
     get currentPlatform() { return CUR_PLATFORM; },
     supportsFile,
+    visible() {
+      return [...builtin.values(), ...installed.values()]
+        .filter(a => !a.hidden);
+    },
+    visibleBuiltins() {
+      return [...builtin.values()].filter(a => !a.hidden);
+    },
+    visibleInstalleds() {
+      return [...installed.values()].filter(a => !a.hidden);
+    },
   };
 })();
 

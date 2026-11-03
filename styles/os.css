@@ -248,6 +248,16 @@ img {
   z-index: 10;
 }
 
+.app-screen-frozen {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.app-screen-frozen[hidden] {
+  display: none !important;
+}
+
 .os:not([data-power="running"]) .view {
   opacity: 0 !important;
   visibility: hidden !important;

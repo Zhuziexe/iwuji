@@ -5,6 +5,7 @@
    ========================================================= */
 window.WujiFileSystem = (() => {
   const ROOT = 'files';
+  const INITIAL_DIRS = ['Pictures', 'Documents', 'Downloads'];
   /* ---------- Worker 通道 ---------- */
   let fsWorker = null;
   let fsWorkerBroken = false;
@@ -53,38 +54,28 @@ window.WujiFileSystem = (() => {
   /* ---------- 能力检测 ---------- */
   const supported = !!(navigator.storage && navigator.storage.getDirectory);
 
-  /* ---------- 扩展名 → MIME ---------- */
-  const EXT_MIME = {
-    jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', gif: 'image/gif',
-    webp: 'image/webp', svg: 'image/svg+xml', bmp: 'image/bmp',
-    mp4: 'video/mp4', webm: 'video/webm', mov: 'video/quicktime',
-    mp3: 'audio/mpeg', wav: 'audio/wav', ogg: 'audio/ogg',
-    pdf: 'application/pdf',
-    txt: 'text/plain', md: 'text/markdown', csv: 'text/csv',
-    json: 'application/json', xml: 'application/xml',
-    html: 'text/html', css: 'text/css', js: 'text/javascript',
-    docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-    xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-    zip: 'application/zip',
+  const EXT_KIND = {
+    image: ['jpg','jpeg','png','gif','webp','svg','bmp','ico','heic','avif','tif','tiff'],
+    video: ['mp4','webm','mov','avi','mkv','m4v','flv','wmv','3gp','mpeg','mpg'],
+    audio: ['mp3','wav','ogg','flac','m4a','aac','opus','wma','amr','aiff','ape'],
+    text:  ['txt','md','markdown','csv','tsv','json','xml','html','htm','css',
+            'js','mjs','ts','jsx','tsx','yml','yaml','ini','toml','log',
+            'sh','bat','ps1','py','rb','go','rs','java','c','h','cpp','hpp',
+            'cs','php','sql','lua'],
+    doc:   ['doc','docx','odt','rtf','pdf'],
+    xls:   ['xls','xlsx','ods'],
   };
-  function guessMime(name) {
-    const dot = name.lastIndexOf('.');
-    if (dot < 0) return 'application/octet-stream';
-    return EXT_MIME[name.slice(dot + 1).toLowerCase()] || 'application/octet-stream';
-  }
+
   function kindOf(name) {
-    const m = guessMime(name);
-    if (m.startsWith('image/')) return 'image';
-    if (m.startsWith('video/')) return 'video';
-    if (m.startsWith('audio/')) return 'audio';
-    if (m === 'application/pdf') return 'pdf';
-    if (m.startsWith('text/')) return 'text';
-    if (m === 'application/json') return 'text';
-    if (m.startsWith('application/')) return 'document';
+    const dot = name.lastIndexOf('.');
+    if (dot < 0) return 'file';
+    const ext = name.slice(dot + 1).toLowerCase();
+    for (const kind of Object.keys(EXT_KIND)) {
+      if (EXT_KIND[kind].includes(ext)) return kind;
+    }
     return 'file';
   }
 
-  /* ---------- 路径遍历 ---------- */
   async function getRoot() {
     const r = await navigator.storage.getDirectory();
     return r.getDirectoryHandle(ROOT, { create: true });
@@ -123,7 +114,7 @@ window.WujiFileSystem = (() => {
         const f = await h.getFile();
         out.push({
           name, path: [...prefix, name], kind: 'file',
-          size: f.size, mtime: f.lastModified, mime: guessMime(name),
+          size: f.size, mtime: f.lastModified, 
         });
       }
     }
@@ -147,7 +138,22 @@ window.WujiFileSystem = (() => {
   /* ---------- API ---------- */
   const api = {
     supported,
-
+    async ensureStructure() {
+      try {
+        const root = await getRoot();
+        for (const name of INITIAL_DIRS) {
+          try {
+            await root.getDirectoryHandle(name, { create: true });
+          } catch (e) {
+            console.warn('[fs] 创建目录失败:', name, e);
+          }
+        }
+        return true;
+      } catch (e) {
+        console.warn('[fs] ensureStructure 失败', e);
+        return false;
+      }
+    },
     async list(path = []) {
       const dir = await getDir(path);
       const dirs = [], files = [];
@@ -157,7 +163,7 @@ window.WujiFileSystem = (() => {
           const f = await h.getFile();
           files.push({
             name, kind: 'file', size: f.size,
-            mtime: f.lastModified, mime: guessMime(name),
+            mtime: f.lastModified,
           });
         }
       }
@@ -216,7 +222,6 @@ window.WujiFileSystem = (() => {
           name: targetName,
           size: saved.size,
           mtime: saved.lastModified,
-          mime: guessMime(targetName),
         };
       } catch (e) {
         mainError = e;
@@ -236,7 +241,6 @@ window.WujiFileSystem = (() => {
           name: r.name,
           size: r.size,
           mtime: r.mtime,
-          mime: guessMime(r.name),
         };
       } catch (workerError) {
         console.error('[fs] Worker 写入也失败', workerError);
@@ -325,8 +329,15 @@ window.WujiFileSystem = (() => {
       return null;
     },
 
-    guessMime, kindOf,
+    kindOf,
   };
-
+  if (supported) {
+    /* 延迟到下一帧，避免和首屏渲染争资源 */
+    setTimeout(() => {
+      api.ensureStructure().catch(e => {
+        console.warn('[fs] 自动初始化失败', e);
+      });
+    }, 0);
+  }
   return api;
 })();
