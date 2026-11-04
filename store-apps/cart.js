@@ -780,7 +780,7 @@ for (let i = 0; i < SEG; i++) {
 const p = samples[i], t = tangents[i];
 const lx = t.z, lz = -t.x;
 const hue = (Math.floor(i / 20) * 0.137) % 1;
-const col = new THREE.Color().setHSL(hue, 0.82, 0.62);
+const col = new THREE.Color().setHSL(hue, 0.92, 0.7);
 P.push(p.x + lx * leftOff, y, p.z + lz * leftOff);
 P.push(p.x + lx * rightOff, y, p.z + lz * rightOff);
 C.push(col.r, col.g, col.b, col.r, col.g, col.b);
@@ -876,9 +876,9 @@ let roadMesh;
 if (lv.roadColor === 'rainbow') {
 roadMesh = new THREE.Mesh(
 buildRainbowRibbon(HALF_W, -HALF_W, 0.02),
-new THREE.MeshStandardMaterial({
-vertexColors: true, roughness: 0.55, metalness: 0.15,
-side: THREE.DoubleSide, emissive: 0x222222, emissiveIntensity: 0.2,
+new THREE.MeshBasicMaterial({
+vertexColors: true,
+side: THREE.DoubleSide,
 })
 );
 } else {
@@ -1237,7 +1237,7 @@ g.setAttribute('position', new THREE.Float32BufferAttribute(P, 3));
 g.setIndex(I);
 g.computeVertexNormals();
 const mat = new THREE.MeshBasicMaterial({
-color: 0x66ffff, transparent: true, opacity: 0.38,
+color: 0x66ffff, transparent: true, opacity: 0.55,
 side: THREE.DoubleSide, depthWrite: false,
 });
 worldGroup.add(new THREE.Mesh(g, mat));
