@@ -151,7 +151,7 @@ bundlename: BUNDLE,
 name: '吴际赛车',
 icon: './assets/cart.svg',
 initialRoute: 'home',
-version: '1.0.0',
+version: '1.1.1',
 onBoot() { },
 onShutdown() {
 AudioEngine.destroy();
