@@ -193,7 +193,6 @@ window.WujiNavigation = class WujiNavigation {
       display: flex;
       flex-direction: column;
       overflow: hidden;
-      will-change: transform, opacity;
       touch-action: auto;
     `;
 
@@ -216,8 +215,14 @@ window.WujiNavigation = class WujiNavigation {
     this.host.appendChild(el);
 
     if (animate) {
+      el.style.willChange = 'transform, opacity';
+
       try { t.enter(el, origin); }
       catch (e) { console.error('[WujiNavigation] enter', type, e); }
+
+      setTimeout(() => {
+        if (el.isConnected) el.style.willChange = '';
+      }, 500);
     }
 
     const item = {
@@ -228,9 +233,9 @@ window.WujiNavigation = class WujiNavigation {
       dispose: null,
       disposed: false,
       _mountRaf: 0,
-      transitionType: type,          /* ★ */
+      transitionType: type,
       transitionOrigin: origin || null,
-      onResult: typeof onResult === 'function' ? onResult : null,  /* ★ */
+      onResult: typeof onResult === 'function' ? onResult : null,
     };
     this.stack.push(item);
 
@@ -271,6 +276,7 @@ window.WujiNavigation = class WujiNavigation {
 
     /* ★ 用该次 push 时的转场类型做反向动画 */
     const t = this._getTransition(cur.transitionType);
+    cur.element.style.willChange = 'transform, opacity';
     try { t.exit(cur.element, cur.transitionOrigin); }
     catch (e) { console.error('[WujiNavigation] exit', e); }
 
@@ -316,6 +322,7 @@ window.WujiNavigation = class WujiNavigation {
     if (!cur || !cur.element) return false;
 
     cur.element.style.transition = 'none';
+    cur.element.style.willChange = 'transform, opacity';
     if (cur.transitionType === 'zoom' && cur.transitionOrigin) {
       cur.element.style.transformOrigin = 'top left';
     }
@@ -374,13 +381,13 @@ window.WujiNavigation = class WujiNavigation {
     const el = cur.element;
     const w = el.offsetWidth || 1;
 
-    const isZoom    = cur.transitionType === 'zoom' && !!cur.transitionOrigin;
+    const isZoom = cur.transitionType === 'zoom' && !!cur.transitionOrigin;
     const isSlideUp = cur.transitionType === 'slide-up';
 
     const passed = dx > w * thresholdRatio;
 
     if (passed) {
-      this.pop();
+      this.pop();               // pop 内会重设 will-change 并最终移除元素
       return true;
     }
 
@@ -392,6 +399,7 @@ window.WujiNavigation = class WujiNavigation {
         if (!el.parentNode) return;
         el.style.transition = '';
         el.style.transformOrigin = '';
+        el.style.willChange = '';
       }, 280);
     } else if (isSlideUp) {
       el.style.transition = 'transform .26s cubic-bezier(.2,.7,.3,1)';
@@ -399,13 +407,16 @@ window.WujiNavigation = class WujiNavigation {
       setTimeout(() => {
         if (!el.parentNode) return;
         el.style.transition = '';
-        el.style.transform = '';
+        el.style.willChange = '';
       }, 280);
     } else {
       el.style.transition = 'transform .24s ease';
       el.style.transform = '';
       setTimeout(() => {
-        if (el.parentNode) el.style.transition = '';
+        if (el.parentNode) {
+          el.style.transition = '';
+          el.style.willChange = '';
+        }
       }, 260);
     }
     return false;
@@ -420,7 +431,7 @@ window.WujiNavigation = class WujiNavigation {
     if (!cur || !cur.element) return;
 
     const el = cur.element;
-    const isZoom    = cur.transitionType === 'zoom' && !!cur.transitionOrigin;
+    const isZoom = cur.transitionType === 'zoom' && !!cur.transitionOrigin;
     const isSlideUp = cur.transitionType === 'slide-up';
 
     if (isZoom) {
@@ -431,6 +442,7 @@ window.WujiNavigation = class WujiNavigation {
         if (!el.parentNode) return;
         el.style.transition = '';
         el.style.transformOrigin = '';
+        el.style.willChange = '';
       }, 220);
     } else if (isSlideUp) {
       el.style.transition = 'transform .2s cubic-bezier(.2,.7,.3,1)';
@@ -438,13 +450,16 @@ window.WujiNavigation = class WujiNavigation {
       setTimeout(() => {
         if (!el.parentNode) return;
         el.style.transition = '';
-        el.style.transform = '';
+        el.style.willChange = '';
       }, 220);
     } else {
       el.style.transition = 'transform .2s ease';
       el.style.transform = '';
       setTimeout(() => {
-        if (el.parentNode) el.style.transition = '';
+        if (el.parentNode) {
+          el.style.transition = '';
+          el.style.willChange = '';
+        }
       }, 220);
     }
   }
