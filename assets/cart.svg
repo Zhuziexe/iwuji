@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+<rect width="256" height="256" fill="#16213e"/>
+
+<g>
+<rect x="32" y="94" width="192" height="44" rx="20" fill="#3a6ff0"/>
+<rect x="32" y="94" width="192" height="18" rx="9" fill="#5b8bff"/>
+<path d="M 82 94 L 100 58 Q 105 50 114 50 H 152 Q 161 50 166 58 L 184 94 Z" fill="#5b8bff"/>
+<path d="M 92 90 L 106 62 Q 108 56 114 56 H 134 V 90 Z M 142 56 H 152 Q 158 56 160 62 L 172 90 H 142 Z" fill="#cfe4ff"/>
+<circle cx="82" cy="138" r="17" fill="#9aa0a6" stroke="#22232a" stroke-width="14"/>
+<circle cx="176" cy="138" r="17" fill="#9aa0a6" stroke="#22232a" stroke-width="14"/>
+<circle cx="214" cy="110" r="8" fill="#ffe08a"/>
+<circle cx="46" cy="110" r="7" fill="#ff7a7a"/>
+</g>
+
+<path d="M 0 172
+ Q 128 196 256 172
+ L 256 256
+ L 0 256
+ Z"
+fill="#2348b8"/>
+
+<text x="128" y="230" text-anchor="middle"
+font-family="ui-sans-serif, -apple-system, 'PingFang SC', 'Segoe UI', Arial, sans-serif"
+font-size="44" font-weight="700" fill="#ffffff" letter-spacing="0.5">WujiCart</text>
+</svg>
