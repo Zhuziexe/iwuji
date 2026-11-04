@@ -7,8 +7,8 @@
     screen: '420 × 560',
     ram: '4 GB',
     rom: '64 GB',
-    os: 'WujiOS 1.0.115',
-    kernel: 'OpenWuji 1.0',
+    os: 'WujiOS',
+    kernel: 'OpenWuji',
   };
 
   function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }

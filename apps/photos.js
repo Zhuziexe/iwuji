@@ -583,10 +583,7 @@
 
             clearTimeout(resizeTimer);
             resizeTimer = setTimeout(() => {
-              for (const rec of cells.values()) destroyCell(rec);
-              cells.clear();
-              startRow = -1;
-              endRow = -1;
+              startRow = -1; endRow = -1;
               renderWindow();
             }, 150);
           });
