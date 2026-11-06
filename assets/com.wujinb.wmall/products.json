@@ -23,7 +23,7 @@
           "id": "black",
           "text": "牛逼黑",
           "image": "./assets/com.wujinb.wmall/iwuji_black.png",
-          "buyable": false
+          "buyable": true
         }
       ],
       "specs": [
@@ -57,7 +57,7 @@
           "id": "sky",
           "text": "天空蓝",
           "image": "./assets/com.wujinb.wmall/wujibuds_sky.png",
-          "buyable": false
+          "buyable": true
         },
         {
           "id": "blue",
@@ -72,14 +72,14 @@
       "icon": "./assets/com.wujinb.wmall/iwuji_charger.png",
       "name": "iWuji快充充电器",
       "price": 79,
-      "buyable": false
+      "buyable": true
     },
     {
       "id": "case",
       "icon": "./assets/com.wujinb.wmall/iwuji_baohuke.png",
       "name": "iWuji透明保护壳",
       "price": 39,
-      "buyable": true
+      "buyable": false
     },
     {
       "id": "nb_baohuke",
