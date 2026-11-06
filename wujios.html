@@ -196,6 +196,7 @@
   </div>
 
   <script src="navigation.js"></script>
+  <script src="device-compat.js"></script>
   <script src="core.js"></script>
   <script src="app-storage.js"></script>
   <script src="backup.js"></script>
@@ -1569,7 +1570,7 @@
       let app = WujiApps.get(bundle);
       if (!app) {
         const rec = window.WujiAppInstaller?.get?.(bundle);
-        if (rec && !WujiApps.platformAllowed(rec)) {
+        if (rec && !WujiApps.deviceAllowed(rec)) {
           console.warn(`[openApp] ${bundle} 仅支持在电脑上运行`);
           try { WujiToast?.show?.(`该应用仅支持在电脑上使用`); } catch { }
         }
@@ -2615,13 +2616,13 @@
         if (!m.bundle || !installed.has(m.bundle)) continue;
 
         /* ★ 市场条目不属于本平台 → 跳过 */
-        if (!WujiApps.platformAllowed(m)) continue;
+        if (!WujiApps.deviceAllowed(m)) continue;
 
         const local = WujiAppInstaller.get(m.bundle);
         if (!local) continue;
 
         /* ★ 本地记录属于别的平台 → 交给那台设备去更新 */
-        if (!WujiApps.platformAllowed(local)) continue;
+        if (!WujiApps.deviceAllowed(local)) continue;
 
         let cmp = 0;
         try {
@@ -2640,8 +2641,8 @@
             author: m.author,
             description: m.description,
             src: m.src,
-            /* ★ 市场里没有 platforms 时，沿用本地已有的 */
-            platforms: m.platforms || local.platforms || null,
+            /* ★ 市场里没有 devices 时，沿用本地已有的（兼容旧 platforms） */
+            devices: m.devices || m.platforms || local.devices || local.platforms || null,
           });
           results.push({ bundle: m.bundle, ...r });
         } catch (e) {
@@ -2909,7 +2910,7 @@
       const run = async () => {
         /* ★ 内置应用按平台过滤 */
         const builtinLoads = BUILTIN_APPS
-          .filter(m => WujiApps.platformAllowed(m))
+          .filter(m => WujiApps.deviceAllowed(m))
           .map(m => {
             if (!m.src) return Promise.resolve();
             return WujiAppLoader.load(m.src, m.version).catch(err => {

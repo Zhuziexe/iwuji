@@ -7,7 +7,7 @@
     icon: './assets/taskmgr.svg',
     initialRoute: 'main',
     version: '1.0.0',
-    platforms: ['zhuzios'],
+    devices: ['pc'],
 
     styles: `
       .tm-page {

@@ -1,13 +1,17 @@
 /* =========================================================
    installer.js —— 已安装应用的安装 / 更新 / 卸载 / 列表
 
-   平台字段：
-     - record.platforms / meta.platforms
-     - 只在存在且非空时写入（向后兼容旧记录）
-     - 旧记录无 platforms → 视为全平台
+   目标设备字段（原名 platforms）：
+     - 统一使用 devices: ['iwuji','pc']（wujios→iwuji，zhuzios→pc）
+     - 写入侧只写 devices
+     - 读取侧通过 WujiDevices.normalizeDevices 兼容旧 platforms
+     - 无 devices / 空数组 → 视为全设备
+     - 启动时 restore() 会自动把持久化数据（Store + IDB）
+       里的 platforms 迁移为 devices 并回写（见 device-compat.js）
    ========================================================= */
 window.WujiAppInstaller = (() => {
   const KEY = 'installedApps';
+  let migrationDone = false;
 
   /* ---------- 版本比较 ---------- */
   function cmpVer(a, b) {
@@ -31,9 +35,17 @@ window.WujiAppInstaller = (() => {
     Store.set(KEY, list);
   }
 
-  function pickPlatforms(obj) {
-    const p = obj?.platforms;
-    return (Array.isArray(p) && p.length) ? p.slice() : null;
+  /** 取规范 devices 数组（兼容旧 platforms），缺失/空 → null */
+  function pickDevices(obj) {
+    const D = window.WujiDevices;
+    if (D?.normalizeDevices) {
+      return D.normalizeDevices(obj);
+    }
+    const p = Array.isArray(obj?.devices) && obj.devices.length
+      ? obj.devices
+      : (Array.isArray(obj?.platforms) && obj.platforms.length ? obj.platforms : null);
+    if (!p) return null;
+    return p.map(v => v === 'wujios' ? 'iwuji' : v === 'zhuzios' ? 'pc' : v);
   }
 
   function metaFromRecord(rec) {
@@ -46,10 +58,10 @@ window.WujiAppInstaller = (() => {
       description: rec.description,
       src: rec.src,
     };
-    const p = pickPlatforms(rec);
-    if (p) meta.platforms = p;
+    const d = pickDevices(rec);
+    if (d) meta.devices = d;
     if (Array.isArray(rec.fileTypes) && rec.fileTypes.length) {
-      meta.fileTypes = rec.fileTypes.slice();       // ★ 新增
+      meta.fileTypes = rec.fileTypes.slice();
     }
     return meta;
   }
@@ -66,10 +78,10 @@ window.WujiAppInstaller = (() => {
       src: meta.src || meta._src || '',
       installedAt: Date.now(),
     };
-    const p = pickPlatforms(meta);
-    if (p) rec.platforms = p;
+    const d = pickDevices(meta);
+    if (d) rec.devices = d;
     if (Array.isArray(meta.fileTypes) && meta.fileTypes.length) {
-      rec.fileTypes = meta.fileTypes.slice();       // ★ 新增
+      rec.fileTypes = meta.fileTypes.slice();
     }
     return rec;
   }
@@ -81,10 +93,10 @@ window.WujiAppInstaller = (() => {
       author: meta.author || '',
       description: meta.description || '',
     };
-    const p = pickPlatforms(meta);
-    if (p) m.platforms = p;
+    const d = pickDevices(meta);
+    if (d) m.devices = d;
     if (Array.isArray(meta.fileTypes) && meta.fileTypes.length) {
-      m.fileTypes = meta.fileTypes.slice();       // ★ 新增
+      m.fileTypes = meta.fileTypes.slice();
     }
     return m;
   }
@@ -93,14 +105,18 @@ window.WujiAppInstaller = (() => {
   return {
     list() { return readAll().slice(); },
 
-    /** 当前平台可见的已安装记录（供 PC 的"已安装管理"用） */
-    listForCurrentPlatform() {
-      const cur = window.__OPENWUJI_PLATFORM || 'wujios';
+    /** 当前设备可见的已安装记录（供 PC 的"已安装管理"用） */
+    listForCurrentDevice() {
+      const api = window.WujiDevices;
+      const cur = api?.currentDevice?.() || 'iwuji';
       return readAll().filter(a => {
-        if (!Array.isArray(a.platforms) || a.platforms.length === 0) return true;
-        return a.platforms.includes(cur);
+        if (api?.deviceAllowed) return api.deviceAllowed(a, cur);
+        const d = pickDevices(a);
+        return !d || d.includes(cur);
       });
     },
+    /* 历史别名，保留避免外部调用失效 */
+    listForCurrentPlatform() { return this.listForCurrentDevice(); },
 
     get(bundle) {
       return readAll().find(a => a.bundle === bundle) || null;
@@ -133,7 +149,7 @@ window.WujiAppInstaller = (() => {
         if (c > 0) return { ok: false, action: 'newer-local', version: existing.version };
       }
 
-      const nextPlatforms = pickPlatforms(meta) || pickPlatforms(existing) || null;
+      const nextDevices = pickDevices(meta) || pickDevices(existing) || null;
       const nextFileTypes = Array.isArray(meta.fileTypes) && meta.fileTypes.length
         ? meta.fileTypes.slice()
         : (existing?.fileTypes ? existing.fileTypes.slice() : null);
@@ -165,8 +181,9 @@ window.WujiAppInstaller = (() => {
           meta: idbMetaFromMeta(
             {
               ...meta,
-              platforms: nextPlatforms || undefined,
-              fileTypes: nextFileTypes || undefined,     // ★ 新增
+              devices: nextDevices || undefined,
+              platforms: undefined,       /* 屏蔽调用方残留的旧字段，避免回退读取 */
+              fileTypes: nextFileTypes || undefined,
             },
             bundle
           ),
@@ -182,7 +199,8 @@ window.WujiAppInstaller = (() => {
         bundle,
         src: `idb://${bundle}`,
         version: nextVersion,
-        platforms: nextPlatforms || undefined,
+        devices: nextDevices || undefined,
+        platforms: undefined,       /* 屏蔽调用方残留的旧字段，避免回退读取 */
       });
       if (existing) record.installedAt = existing.installedAt || Date.now();
 
@@ -199,9 +217,9 @@ window.WujiAppInstaller = (() => {
         WujiApps.unregister(bundle);
       }
 
-      /* ★ 用最终 platforms 决定是否要注册（别的平台的应用只写数据、不注册） */
+      /* ★ 用最终 devices 决定是否要注册（别的设备的应用只写数据、不注册） */
       const finalMeta = { ...metaFromRecord(record), src: `idb://${bundle}` };
-      if (WujiApps.platformAllowed(finalMeta)) {
+      if (WujiApps.deviceAllowed(finalMeta)) {
         WujiApps.registerMeta(finalMeta, 'installed');
       }
 
@@ -249,6 +267,13 @@ window.WujiAppInstaller = (() => {
 
     /* ---------- 启动恢复 ---------- */
     async restore() {
+      /* ★ 自动迁移：把持久化数据里的 platforms 改成 devices（幂等） */
+      if (!migrationDone && window.WujiDevices?.migrateAll) {
+        migrationDone = true;
+        try { await WujiDevices.migrateAll(); }
+        catch (e) { console.warn('[installer] devices 迁移失败', e); }
+      }
+
       let idbRecords = [];
       try {
         idbRecords = await WujiAppCode.list();
@@ -272,7 +297,7 @@ window.WujiAppInstaller = (() => {
         const idbRec = idbMap.get(rec.bundle);
 
         if (idbRec) {
-          const platforms = pickPlatforms(rec) || pickPlatforms(idbRec.meta) || null;
+          const devices = pickDevices(rec) || pickDevices(idbRec.meta) || null;
 
           const fileTypes = (Array.isArray(rec.fileTypes) && rec.fileTypes.length)
             ? rec.fileTypes
@@ -291,16 +316,20 @@ window.WujiAppInstaller = (() => {
             description: rec.description || idbRec.meta?.description || '',
             src,
           };
-          if (platforms) meta.platforms = platforms;
+          if (devices) meta.devices = devices;
           if (fileTypes) meta.fileTypes = fileTypes;
 
           WujiApps.registerMeta(meta, 'installed');
 
-          if (!rec.platforms && platforms) {
-            rec.platforms = platforms;
+          if (!rec.devices && devices) {
+            rec.devices = devices;
           }
           if (!rec.fileTypes && fileTypes) {
             rec.fileTypes = fileTypes.slice();
+          }
+          /* 顺手清掉本记录里可能残留的旧字段 */
+          if (Object.prototype.hasOwnProperty.call(rec, 'platforms')) {
+            delete rec.platforms;
           }
         } else if (rec.src) {
           WujiApps.registerMeta(metaFromRecord(rec), 'installed');
@@ -314,7 +343,7 @@ window.WujiAppInstaller = (() => {
       for (const rec of idbRecords) {
         if (seen.has(rec.bundle)) continue;
 
-        const platforms = pickPlatforms(rec.meta) || null;
+        const devices = pickDevices(rec.meta) || null;
         const fileTypes = (Array.isArray(rec.meta?.fileTypes) && rec.meta.fileTypes.length)
           ? rec.meta.fileTypes
           : null;
@@ -328,7 +357,7 @@ window.WujiAppInstaller = (() => {
           description: rec.meta?.description || '',
           src: `idb://${rec.bundle}`,
         };
-        if (platforms) meta.platforms = platforms;
+        if (devices) meta.devices = devices;
         if (fileTypes) meta.fileTypes = fileTypes;
         WujiApps.registerMeta(meta, 'installed');
 
@@ -343,7 +372,7 @@ window.WujiAppInstaller = (() => {
         writeAll([...readAll(), ...newRecords]);
       }
 
-      /* ★ 若本次迁移给 Store 里的记录补了 platforms，写回 */
+      /* ★ 若本次给 Store 里的记录补了 devices，写回 */
       writeAll(storeList);
 
       return { newRecords, legacyRecords };
@@ -389,8 +418,8 @@ window.WujiAppInstaller = (() => {
             author: rec.author || '',
             description: rec.description || '',
           };
-          const p = pickPlatforms(rec);
-          if (p) idbMeta.platforms = p;
+          const d = pickDevices(rec);
+          if (d) idbMeta.devices = d;
 
           await WujiAppCode.upsert({
             bundle: rec.bundle,

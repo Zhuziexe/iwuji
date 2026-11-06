@@ -1691,6 +1691,7 @@
   </div>
 
   <script src="navigation.js"></script>
+  <script src="device-compat.js"></script>
   <script src="core.js"></script>
   <script src="app-storage.js"></script>
   <script src="backup.js"></script>
@@ -1991,7 +1992,7 @@
             console.error('[open]', bundle, e);
 
             const rec = window.WujiAppInstaller?.get?.(bundle);
-            if (rec && !WujiApps.platformAllowed(rec)) {
+            if (rec && !WujiApps.deviceAllowed(rec)) {
               try { WujiToast?.show?.(`该应用仅支持在iWuji上使用`); } catch { }
             }
             return null;
@@ -2791,7 +2792,7 @@
           else console.warn('[boot] WujiTheme 未加载，跳过主题初始化');
         } catch (e) { console.warn('[theme]', e); }
 
-        /* registerMeta 内部已按 platforms 过滤 */
+        /* registerMeta 内部已按 devices 过滤 */
         BUILTIN_APPS.forEach(meta => WujiApps.registerMeta(meta, 'builtin'));
 
         try { await WujiAppInstaller.restore(); }
@@ -2799,7 +2800,7 @@
 
         /* ★ 内置应用按平台过滤后预加载 */
         BUILTIN_APPS
-          .filter(m => WujiApps.platformAllowed(m))
+          .filter(m => WujiApps.deviceAllowed(m))
           .forEach(m => {
             if (!m.src) return;
             WujiAppLoader.load(m.src, m.version).catch(e => {

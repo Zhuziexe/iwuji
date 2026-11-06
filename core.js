@@ -7,9 +7,10 @@
      - meta 条目（占位）与完整条目可互相升级
      - on() 事件订阅：桌面布局在增删时自动重绘
      - boot() / shutdown() / shutdownOne()：应用生命周期钩子
-     - platformAllowed()：按 window.__OPENWUJI_PLATFORM 过滤应用
-       · 旧数据没有 platforms 字段 → 视为全平台
-       · 空数组 / 非数组 / null → 全平台
+     - deviceAllowed() / platformAllowed()：按 window.__OPENWUJI_PLATFORM 过滤应用
+       · 字段统一为 devices: ['iwuji','pc']（wujios→iwuji，zhuzios→pc）
+       · 兼容旧 platforms 字段（由 WujiDevices 自动映射）
+       · devices 缺失 / null / undefined / 空数组 / 非数组 → 视为全设备
 
    Store：
      - 系统级小数据（localStorage），同步、必须立即可读
@@ -23,25 +24,39 @@ window.WujiApps = (() => {
   let booted = false;
 
   /* =========================================================
-     平台过滤
+     设备过滤
      ========================================================= */
   const CUR_PLATFORM = window.__OPENWUJI_PLATFORM || 'wujios';
+  const CUR_DEVICE = window.WujiDevices?.currentDevice?.() || 'iwuji';
 
   /**
-   * 判断 meta / record 是否适用于当前平台。
+   * 判断 meta / record 是否适用于当前设备。
    *
-   * 向后兼容规则：
-   *   platforms 缺失 / null / undefined / 空数组 / 非数组
-   *     → 视为全平台，返回 true
-   *   platforms 是非空数组
-   *     → 仅当包含当前平台时返回 true
+   * 向后兼容规则（全部交给 WujiDevices 处理）：
+   *   devices / platforms 缺失 / null / undefined / 空数组 / 非数组
+   *     → 视为全设备，返回 true
+   *   devices（或旧 platforms）是非空数组
+   *     → 仅当包含当前设备时返回 true
    */
-  function platformAllowed(meta) {
+  function deviceAllowed(meta) {
     if (!meta) return true;
-    const list = meta.platforms;
-    if (!Array.isArray(list) || list.length === 0) return true;
-    return list.includes(CUR_PLATFORM);
+    const D = window.WujiDevices;
+    if (D?.deviceAllowed) {
+      return D.deviceAllowed(meta, CUR_DEVICE);
+    }
+    /* 兜底：WujiDevices 未加载时也能工作 */
+    const list = Array.isArray(meta.devices) && meta.devices.length
+      ? meta.devices
+      : (Array.isArray(meta.platforms) ? meta.platforms : null);
+    if (!list || !list.length) return true;
+    return list.some(v => {
+      const d = v === 'wujios' ? 'iwuji' : v === 'zhuzios' ? 'pc' : v;
+      return d === CUR_DEVICE || d === CUR_PLATFORM;
+    });
   }
+
+  /* platformAllowed 作为历史别名保留，避免外部旧代码调用失效 */
+  const platformAllowed = deviceAllowed;
 
   function supportsFile(app, file) {
     if (!app || !Array.isArray(app.fileTypes) || !app.fileTypes.length) return false;
@@ -109,9 +124,10 @@ window.WujiApps = (() => {
       hidden: !!app.hidden,
     };
 
-    if (Array.isArray(app.platforms) && app.platforms.length) {
-      norm.platforms = app.platforms.slice();
-    }
+    /* 统一输出 devices（兼容入参里残留的旧 platforms） */
+    const devices = window.WujiDevices?.normalizeDevices?.(app)
+      || (Array.isArray(app.devices) && app.devices.length ? app.devices.slice() : null);
+    if (devices) norm.devices = devices;
 
     return norm;
   }
@@ -125,14 +141,14 @@ window.WujiApps = (() => {
       return false;
     }
 
-    /* ★ 1) 应用自身声明的平台不匹配当前平台 → 直接拒绝 */
-    if (!platformAllowed(app)) return false;
+    /* ★ 1) 应用自身声明的设备不匹配当前设备 → 直接拒绝 */
+    if (!deviceAllowed(app)) return false;
 
     /* ★ 2) 已安装应用以安装记录为准（防脚本被误 preload 后绕过） */
     if (source === 'installed' && window.WujiAppInstaller?.get) {
       try {
         const rec = window.WujiAppInstaller.get(app.bundlename);
-        if (rec && !platformAllowed(rec)) return false;
+        if (rec && !deviceAllowed(rec)) return false;
       } catch { }
     }
 
@@ -161,8 +177,8 @@ window.WujiApps = (() => {
       norm._src = existingSelf._src;
     }
 
-    if (!norm.platforms && existingSelf?.platforms) {
-      norm.platforms = existingSelf.platforms.slice();
+    if (!norm.devices && existingSelf?.devices) {
+      norm.devices = existingSelf.devices.slice();
     }
     if (!norm.fileTypes && existingSelf?.fileTypes) {
       norm.fileTypes = existingSelf.fileTypes.slice();
@@ -186,8 +202,8 @@ window.WujiApps = (() => {
     const bundle = meta.bundlename || meta.bundle;
     if (!bundle) return false;
 
-    /* ★ 平台过滤（旧数据无 platforms → 全平台放行） */
-    if (!platformAllowed(meta)) return false;
+    /* ★ 设备过滤（旧数据无 devices → 全设备放行） */
+    if (!deviceAllowed(meta)) return false;
 
     const isBuiltin = source === 'builtin';
     const bucket = isBuiltin ? builtin : installed;
@@ -221,6 +237,7 @@ window.WujiApps = (() => {
     register(app) { return register(app, 'builtin'); },
     registerInstalled(app) { return register(app, 'installed'); },
     registerMeta,
+    deviceAllowed,
     platformAllowed,
 
     unregister(bundle) {
@@ -268,6 +285,7 @@ window.WujiApps = (() => {
 
     get isBooted() { return booted; },
     get currentPlatform() { return CUR_PLATFORM; },
+    get currentDevice() { return CUR_DEVICE; },
     supportsFile,
     visible() {
       return [...builtin.values(), ...installed.values()]

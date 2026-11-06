@@ -2723,7 +2723,7 @@
                 version: meta.version || '1.0.0',
                 author: meta.author,
                 description: meta.description,
-                platforms: meta.platforms,
+                devices: meta.devices || meta.platforms,
                 fileTypes: meta.fileTypes,
               },
               { force: true, code }

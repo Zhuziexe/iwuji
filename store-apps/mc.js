@@ -67,7 +67,7 @@
     icon: './assets/mc.svg',
     initialRoute: 'main',
     version: '1.4.5',
-    platforms: ['wujios'],
+    devices: ['iwuji'],
     styles: `
       .mc-wrap { position: absolute; inset: 0; background: #000; overflow: hidden; }
       .mc-stage {

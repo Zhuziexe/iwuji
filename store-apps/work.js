@@ -223,7 +223,7 @@
     name: '吴际办公',
     icon: './assets/work.svg',
     version: '1.0.0',
-    platforms: ['zhuzios', 'wujios'],
+    devices: ['pc', 'iwuji'],
     fileTypes: [
       {
         ext: ['docx'], role: 'viewer',

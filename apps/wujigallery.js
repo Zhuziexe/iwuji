@@ -257,32 +257,40 @@ WujiApps.register({
       mount(root, ctx) {
         const listEl = root.querySelector('#marketList');
 
-        /* ---------- 平台标签 ---------- */
-        const platformLabel = list => {
-          if (!Array.isArray(list) || !list.length) return '';
-          return list
-            .map(p => p === 'wujios' ? 'iWuji' : p === 'zhuzios' ? '电脑' : p)
-            .join('/');
+        /* ---------- 设备标签（devices: ['iwuji','pc']，兼容旧 platforms） ---------- */
+        const deviceLabel = list => {
+          const D = window.WujiDevices;
+          const d = D?.normalizeDevices
+            ? D.normalizeDevices({ devices: list })
+            : list;
+          if (!Array.isArray(d) || !d.length) return '';
+          return d.map(x => D ? D.label(x) : x).join('/');
         };
 
-        /* ---------- 静默回填：把市场里的 platforms 写回已安装记录 ---------- */
-        const syncInstalledPlatforms = (marketApps) => {
+        /* ---------- 静默回填：把市场里的 devices 写回已安装记录 ---------- */
+        const syncInstalledDevices = (marketApps) => {
           const list = Store.get('installedApps', []);
           if (!Array.isArray(list) || !list.length) return 0;
 
           const byBundle = new Map(marketApps.map(a => [a.bundle, a]));
+          const pick = o => window.WujiDevices?.normalizeDevices?.(o)
+            || (Array.isArray(o?.devices) && o.devices.length ? o.devices : null);
           let changed = 0;
 
           for (const rec of list) {
             const m = byBundle.get(rec.bundle);
-            if (!m || !Array.isArray(m.platforms) || !m.platforms.length) continue;
+            const md = pick(m);
+            if (!md) continue;
 
-            const same = Array.isArray(rec.platforms)
-              && rec.platforms.length === m.platforms.length
-              && rec.platforms.every((p, i) => p === m.platforms[i]);
+            const rd = pick(rec);
+            const same = Array.isArray(rd)
+              && rd.length === md.length
+              && rd.every((d, i) => d === md[i]);
 
             if (!same) {
-              rec.platforms = m.platforms.slice();
+              rec.devices = md.slice();
+              /* 清掉残留的旧字段 */
+              if (Object.prototype.hasOwnProperty.call(rec, 'platforms')) delete rec.platforms;
               changed++;
             }
           }
@@ -290,11 +298,11 @@ WujiApps.register({
           if (changed) {
             Store.set('installedApps', list);
 
-            /* 内存注册表同步下线不适用本平台的应用
+            /* 内存注册表同步下线不适用本设备的应用
                （避免刷新前依然可见 / 可尝试打开） */
             for (const rec of list) {
-              if (!rec.platforms) continue;
-              if (WujiApps.platformAllowed(rec)) continue;
+              if (!rec.devices) continue;
+              if (WujiApps.deviceAllowed(rec)) continue;
               if (WujiApps.isInstalled(rec.bundle)) {
                 try { WujiApps.unregister(rec.bundle); } catch { }
               }
@@ -305,12 +313,12 @@ WujiApps.register({
 
         /* ---------- 判断单个应用状态 ---------- */
         const getAppState = (app) => {
-          const platformApplicable = WujiApps.platformAllowed(app);
+          const platformApplicable = WujiApps.deviceAllowed(app);
 
           const rec = WujiAppInstaller.get(app.bundle);
-          /* 记录层平台不适用 → 视为"当前设备不可用"（含旧数据未回填时的二次校验） */
+          /* 记录层设备不适用 → 视为"当前设备不可用"（含旧数据未回填时的二次校验） */
           const recordApplicable = rec
-            ? WujiApps.platformAllowed(rec)
+            ? WujiApps.deviceAllowed(rec)
             : platformApplicable;
 
           const inRegistry =
@@ -363,7 +371,7 @@ WujiApps.register({
               ${withState.map(({ app, state }) => {
                 let badge = '';
                 if (!state.platformApplicable) {
-                  badge = `<span class="market-row__badge--na">仅${platformLabel(app.platforms)}</span>`;
+                  badge = `<span class="market-row__badge--na">仅${deviceLabel(app.devices || app.platforms)}</span>`;
                 } else if (state.hasUpdate) {
                   badge = '<span class="market-row__badge--update">更新</span>';
                 }
@@ -423,10 +431,10 @@ WujiApps.register({
             return;
           }
 
-          /* ★ 市场元数据到位 → 先把旧安装记录的 platforms 补齐 */
-          const fixed = syncInstalledPlatforms(apps);
+          /* ★ 市场元数据到位 → 先把旧安装记录的 devices 补齐 */
+          const fixed = syncInstalledDevices(apps);
           if (fixed) {
-            console.log(`[market] 已回填 ${fixed} 条安装记录的 platforms`);
+            console.log(`[market] 已回填 ${fixed} 条安装记录的 devices`);
           }
 
           renderList(apps);
@@ -461,14 +469,14 @@ WujiApps.register({
           return `<div class="market-page"><div class="market-empty">应用不存在</div></div>`;
         }
 
-        /* ★ 支持设备：platforms 缺失/空 → 全平台 */
-        const platformNames = Array.isArray(app.platforms) && app.platforms.length
-          ? app.platforms.map(p =>
-              p === 'wujios'   ? 'iWuji' :
-              p === 'zhuzios'  ? '电脑'  : p
-            )
+        /* ★ 支持设备：devices 缺失/空 → 全设备（兼容旧 platforms） */
+        const D = window.WujiDevices;
+        const deviceIds = D?.normalizeDevices?.(app)
+          || (Array.isArray(app.devices) && app.devices.length ? app.devices : null);
+        const deviceNames = deviceIds
+          ? deviceIds.map(d => D ? D.label(d) : d)
           : ['iWuji', '电脑'];
-        const supportText = platformNames.join('，');
+        const supportText = deviceNames.join('，');
 
         return `
           <div class="market-detail">
@@ -519,19 +527,21 @@ WujiApps.register({
 
         let busy = false;
 
-        const platformLabel = list => {
-          if (!Array.isArray(list) || !list.length) return '';
-          return list
-            .map(p => p === 'wujios' ? 'iWuji' : p === 'zhuzios' ? '电脑' : p)
-            .join('/');
+        const deviceLabel = list => {
+          const D = window.WujiDevices;
+          const d = D?.normalizeDevices
+            ? D.normalizeDevices({ devices: list })
+            : list;
+          if (!Array.isArray(d) || !d.length) return '';
+          return d.map(x => D ? D.label(x) : x).join('/');
         };
 
         const refreshBtn = () => {
           if (busy) return;
 
-          /* ---------- 状态 0：平台不适用（最重要） ---------- */
-          if (!WujiApps.platformAllowed(app)) {
-            label.textContent = `不适用于本设备（仅${platformLabel(app.platforms)}）`;
+          /* ---------- 状态 0：设备不适用（最重要） ---------- */
+          if (!WujiApps.deviceAllowed(app)) {
+            label.textContent = `不适用于本设备（仅${deviceLabel(app.devices || app.platforms)}）`;
             btn.disabled = true;
             btn.classList.remove('is-progress');
             fill.style.width = '0%';
@@ -560,9 +570,9 @@ WujiApps.register({
             return;
           }
 
-          /* ---------- 状态 1：记录层平台不适用 ---------- */
-          if (rec && !WujiApps.platformAllowed(rec)) {
-            label.textContent = `已安装在其它设备（仅${platformLabel(rec.platforms)}）`;
+          /* ---------- 状态 1：记录层设备不适用 ---------- */
+          if (rec && !WujiApps.deviceAllowed(rec)) {
+            label.textContent = `已安装在其它设备（仅${deviceLabel(rec.devices || rec.platforms)}）`;
             btn.disabled = true;
             btn.classList.remove('is-progress');
             fill.style.width = '0%';
@@ -618,7 +628,7 @@ WujiApps.register({
 
         btn.addEventListener('click', async () => {
           if (busy || btn.disabled) return;
-          if (!WujiApps.platformAllowed(app)) return;
+          if (!WujiApps.deviceAllowed(app)) return;
 
           busy = true;
           btn.disabled = true;
@@ -641,10 +651,10 @@ WujiApps.register({
                 author: app.author,
                 description: app.description,
                 src: app.src,
-                /* ★ 关键：把市场元数据里的 platforms 传下去 */
-                platforms: Array.isArray(app.platforms) && app.platforms.length
-                  ? app.platforms.slice()
-                  : undefined,
+                /* ★ 关键：把市场元数据里的 devices 传下去（兼容旧 platforms） */
+                devices: window.WujiDevices?.normalizeDevices?.(app)
+                  || (Array.isArray(app.devices) && app.devices.length
+                    ? app.devices.slice() : undefined),
               }),
               sleep(1000),
             ]);
