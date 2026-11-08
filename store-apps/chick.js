@@ -215,7 +215,6 @@
     const hasBoots      = outfit.boots      === true;
     const hasSocks      = outfit.socks      === true;
 
-    // 墨镜穿戴时，不画眼睛
     const eyes = hasSunglasses ? '' : (happy
       ? `<path d="M36 32 Q42 26 48 32" stroke="#1c2536" stroke-width="3" fill="none" stroke-linecap="round"/>
          <path d="M52 32 Q58 26 64 32" stroke="#1c2536" stroke-width="3" fill="none" stroke-linecap="round"/>`
@@ -238,7 +237,6 @@
       ? `<text x="78" y="24" font-size="16" font-weight="700" fill="#e0356b">!</text>`
       : '';
 
-    // ---- 头顶：牛逼帽 / 帽子 / 耳机 三选一 ----
     const hatSVG = outfit.nbhat ? `
       <g class="chick-nbhat">
         <rect x="24" y="16" width="52" height="6" rx="3" fill="#1e40af"/>
@@ -353,7 +351,6 @@
     `;
   }
 
-  /* ---------- 蛋 SVG ---------- */
   function eggSVG() {
     return `
       <svg viewBox="0 0 30 40" class="chick-egg-on-stage-svg">

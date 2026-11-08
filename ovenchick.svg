@@ -1,0 +1,199 @@
+<svg viewBox="0 0 280 160" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="topGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#c6cad0"/>
+      <stop offset="100%" stop-color="#7c8186"/>
+    </linearGradient>
+    <linearGradient id="frontGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#9ea3a8"/>
+      <stop offset="100%" stop-color="#4d5155"/>
+    </linearGradient>
+    <linearGradient id="sideGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#6c7176"/>
+      <stop offset="100%" stop-color="#26292c"/>
+    </linearGradient>
+    <radialGradient id="cavityInner" cx="0.5" cy="0.35" r="0.8">
+      <stop offset="0%" stop-color="#313437"/>
+      <stop offset="60%" stop-color="#17191b"/>
+      <stop offset="100%" stop-color="#030405"/>
+    </radialGradient>
+    <linearGradient id="cavitySideL" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="rgba(0,0,0,0)"/>
+      <stop offset="100%" stop-color="rgba(0,0,0,0.55)"/>
+    </linearGradient>
+    <linearGradient id="cavitySideR" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="rgba(0,0,0,0.55)"/>
+      <stop offset="100%" stop-color="rgba(0,0,0,0)"/>
+    </linearGradient>
+    <linearGradient id="cavityTop" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="rgba(0,0,0,0.35)"/>
+      <stop offset="100%" stop-color="rgba(0,0,0,0)"/>
+    </linearGradient>
+    <linearGradient id="glassDoor" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="rgba(255,255,255,0.50)"/>
+      <stop offset="25%" stop-color="rgba(255,255,255,0.18)"/>
+      <stop offset="70%" stop-color="rgba(255,255,255,0.12)"/>
+      <stop offset="100%" stop-color="rgba(255,255,255,0.40)"/>
+    </linearGradient>
+    <linearGradient id="rackBar" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#555"/>
+      <stop offset="50%" stop-color="#999"/>
+      <stop offset="100%" stop-color="#333"/>
+    </linearGradient>
+    <filter id="heatBlur" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="1.1"/>
+    </filter>
+  </defs>
+
+  <!-- 1. 烤箱箱体：正面 + 顶面 + 右侧面 -->
+  <polygon points="45,38 145,38 175,14 75,14"
+           fill="url(#topGrad)" stroke="#1a1c1e" stroke-width="1.2" stroke-linejoin="round"/>
+  <polygon points="145,38 175,14 175,92 145,116"
+           fill="url(#sideGrad)" stroke="#1a1c1e" stroke-width="1.2" stroke-linejoin="round"/>
+  <rect x="45" y="38" width="100" height="78"
+        fill="url(#frontGrad)" stroke="#1a1c1e" stroke-width="1.2"/>
+  <rect x="45" y="110" width="100" height="6" fill="#3b3e41" opacity="0.9"/>
+
+  <!-- 控制面板 -->
+  <rect x="50" y="42" width="90" height="12" rx="2"
+        fill="#45484b" stroke="#222" stroke-width="0.6"/>
+  <circle cx="60" cy="48" r="2" fill="#ff5454"/>
+  <circle cx="68" cy="48" r="2" fill="#ffb020"/>
+  <circle cx="76" cy="48" r="2" fill="#6ad66a"/>
+  <rect x="116" y="45" width="18" height="5" rx="1" fill="#222"/>
+
+  <!-- 炉腔外框 -->
+  <rect x="56" y="60" width="78" height="46" rx="2"
+        fill="#0b0c0d" stroke="#1a1c1e" stroke-width="1.2"/>
+
+  <!-- 炉腔内凹透视：后壁 + 内壁 -->
+  <rect x="64" y="66" width="62" height="34" rx="1.5" fill="url(#cavityInner)"/>
+  <polygon points="56,60 134,60 126,66 64,66" fill="url(#cavityTop)"/>
+  <polygon points="56,60 64,66 64,100 56,106" fill="url(#cavitySideL)"/>
+  <polygon points="134,60 126,66 126,100 134,106" fill="url(#cavitySideR)"/>
+  <polygon points="56,106 64,100 126,100 134,106" fill="#050606" opacity="0.72"/>
+  <rect x="56" y="60" width="78" height="46" rx="2"
+        fill="none" stroke="#000" stroke-width="0.8" opacity="0.4"/>
+
+  <!-- 立体烤架 -->
+  <g stroke="#444" stroke-width="0.7" opacity="0.75">
+    <rect x="61" y="74" width="68" height="2.5" rx="1" fill="url(#rackBar)"/>
+    <rect x="61" y="86" width="68" height="2.5" rx="1" fill="url(#rackBar)"/>
+    <rect x="61" y="98" width="68" height="2.5" rx="1" fill="url(#rackBar)"/>
+    <line x1="66" y1="74" x2="70" y2="67"/>
+    <line x1="78" y1="74" x2="82" y2="67"/>
+    <line x1="90" y1="74" x2="94" y2="67"/>
+    <line x1="102" y1="74" x2="106" y2="67"/>
+    <line x1="114" y1="74" x2="118" y2="67"/>
+    <line x1="126" y1="74" x2="130" y2="67"/>
+    <line x1="66" y1="86" x2="70" y2="79"/>
+    <line x1="78" y1="86" x2="82" y2="79"/>
+    <line x1="90" y1="86" x2="94" y2="79"/>
+    <line x1="102" y1="86" x2="106" y2="79"/>
+    <line x1="114" y1="86" x2="118" y2="79"/>
+    <line x1="126" y1="86" x2="130" y2="79"/>
+    <line x1="66" y1="98" x2="70" y2="91"/>
+    <line x1="78" y1="98" x2="82" y2="91"/>
+    <line x1="90" y1="98" x2="94" y2="91"/>
+    <line x1="102" y1="98" x2="106" y2="91"/>
+    <line x1="114" y1="98" x2="118" y2="91"/>
+    <line x1="126" y1="98" x2="130" y2="91"/>
+  </g>
+
+  <!-- 2. 小鸡：躺平 90°，整体缩到 0.85，中心 (93,83) -->
+  <g>
+    <animateTransform attributeName="transform" type="translate"
+                      values="-120 0; -120 0; 0 0; 0 0; 0 0; 0 0; 0 0; -120 0; -120 0"
+                      keyTimes="0;0.15;0.30;0.35;0.70;0.75;0.85;0.90;1"
+                      dur="14s" repeatCount="indefinite"/>
+
+    <g transform="translate(93,83) rotate(90) scale(0.85)">
+      <g id="chick">
+  <!-- 身体 -->
+  <ellipse cx="0" cy="0" rx="18" ry="17" fill="#FFD93B">
+    <animate attributeName="fill"
+             values="#FFD93B;#FFD93B;#FFD93B;#FFB347;#D4752B;#8C4A1E;#8C4A1E;#8C4A1E;#8C4A1E"
+             keyTimes="0;0.15;0.30;0.35;0.50;0.70;0.75;0.90;1"
+             dur="14s" repeatCount="indefinite"/>
+  </ellipse>
+
+  <!-- 头 -->
+  <circle cx="0" cy="-15" r="13" fill="#FFE066">
+    <animate attributeName="fill"
+             values="#FFE066;#FFE066;#FFE066;#FFC857;#C96A24;#7A4018;#7A4018;#7A4018;#7A4018"
+             keyTimes="0;0.15;0.30;0.35;0.50;0.70;0.75;0.90;1"
+             dur="14s" repeatCount="indefinite"/>
+  </circle>
+
+  <!-- 眼睛 -->
+  <circle cx="-5.5" cy="-17" r="2.6" fill="#1c2536"/>
+  <circle cx="5.5" cy="-17" r="2.6" fill="#1c2536"/>
+
+  <!-- 嘴巴：人类微笑弧线，在头前方、鸡冠左侧 -->
+  <path d="M -3 -20 Q 0 -23 3 -20"
+        stroke="#FF9500" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+
+  <!-- 鸡冠：紧贴头顶（局部 y=-27~-31），旋转后在嘴巴右侧 -->
+  <path d="M -6.5 -27 Q -4.33 -31.3 -2.17 -27 Q 0 -31.3 2.17 -27 Q 4.33 -31.3 6.5 -27"
+        fill="#e0356b"/>
+
+  <!-- 左右翅膀 -->
+  <ellipse cx="-19" cy="2" rx="5" ry="8" fill="#FFD93B">
+    <animate attributeName="fill"
+             values="#FFD93B;#FFD93B;#FFD93B;#FFB347;#D4752B;#8C4A1E;#8C4A1E;#8C4A1E;#8C4A1E"
+             keyTimes="0;0.15;0.30;0.35;0.50;0.70;0.75;0.90;1"
+             dur="14s" repeatCount="indefinite"/>
+  </ellipse>
+  <ellipse cx="19" cy="2" rx="5" ry="8" fill="#FFD93B">
+    <animate attributeName="fill"
+             values="#FFD93B;#FFD93B;#FFD93B;#FFB347;#D4752B;#8C4A1E;#8C4A1E;#8C4A1E;#8C4A1E"
+             keyTimes="0;0.15;0.30;0.35;0.50;0.70;0.75;0.90;1"
+             dur="14s" repeatCount="indefinite"/>
+  </ellipse>
+
+  <!-- 腿 -->
+  <line x1="-6" y1="17" x2="-6" y2="22" stroke="#FF9500"
+        stroke-width="1.5" stroke-linecap="round"/>
+  <line x1="6" y1="17" x2="6" y2="22" stroke="#FF9500"
+        stroke-width="1.5" stroke-linecap="round"/>
+</g>
+    </g>
+  </g>
+
+  <!-- 热气 -->
+  <g opacity="0">
+    <g filter="url(#heatBlur)">
+      <path d="M80 76 Q84 68 88 76" stroke="#ffd27a"
+            stroke-width="1.2" fill="none" opacity="0.55"/>
+      <path d="M92 74 Q96 66 100 74" stroke="#ffd27a"
+            stroke-width="1.2" fill="none" opacity="0.45"/>
+      <path d="M86 70 Q90 62 94 70" stroke="#fff4c2"
+            stroke-width="1" fill="none" opacity="0.35"/>
+    </g>
+    <animate attributeName="opacity"
+             values="0;0;0;1;1;0;0;0;0"
+             keyTimes="0;0.15;0.30;0.35;0.70;0.75;0.85;0.90;1"
+             dur="14s" repeatCount="indefinite"/>
+  </g>
+
+  <!-- 3. 烤箱门：铰链固定 y=106；打开时自由边整体向左下平移 -->
+  <line x1="54" y1="106" x2="136" y2="106" stroke="#222" stroke-width="1.6"/>
+
+  <g>
+    <polygon fill="url(#glassDoor)" stroke="#222" stroke-width="1.2"
+             stroke-linejoin="round">
+      <animate attributeName="points" dur="14s" repeatCount="indefinite"
+        values="
+          54,106 136,106 120,128 38,128;
+          54,106 136,106 120,128 38,128;
+          54,106 136,106 120,128 38,128;
+          54,106 136,106 136,60 54,60;
+          54,106 136,106 136,60 54,60;
+          54,106 136,106 136,60 54,60;
+          54,106 136,106 120,128 38,128;
+          54,106 136,106 120,128 38,128;
+          54,106 136,106 120,128 38,128"
+        keyTimes="0;0.15;0.30;0.35;0.70;0.75;0.85;0.90;1"/>
+    </polygon>
+  </g>
+</svg>
