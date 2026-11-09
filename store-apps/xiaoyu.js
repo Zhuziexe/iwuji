@@ -223,14 +223,20 @@
     return { ok: true, value };
   }
 
-  /* ---------- 公共 UI 片段（header 需要金币，故接受 S） ---------- */
+  /* ---------- 公共 UI 片段 ---------- */
   const header = (S, title, right = '') => `
     <div class="xy-header">
       <div class="xy-title">${esc(title)}</div>
       <div class="xy-coin">${COIN_SVG(30)}<span>${S.state.coins}</span></div>
       ${right}
     </div>`;
-  const page = (inner, cls = '') => `<div class="xy-page ${cls}">${inner}</div>`;
+
+  /* 页面壳：固定 header + 内层可滚动 body */
+  const page = (headerHtml, bodyHtml, cls = '') => `
+    <div class="xy-page ${cls}">
+      ${headerHtml}
+      <div class="xy-body">${bodyHtml}</div>
+    </div>`;
 
   function bowl(fishHtml, { big = false, empty = false } = {}) {
     return `
@@ -257,17 +263,17 @@
        - 28：页面大标题
      ========================================================= */
   const styles = `
-    .xy-page { position:absolute; inset:0; isolation:isolate; display:flex; flex-direction:column;
-      overflow-y:auto; padding: calc(var(--statusbar-h) + 12px) 14px 16px;
+    /* 页面壳：固定高度、无滚动，滚动交给 .xy-body */
+    .xy-page { position:absolute; inset:0; display:flex; flex-direction:column;
+      overflow:hidden;
       background: linear-gradient(180deg,#eaf6ff 0%, #f7fbff 40%, #ffffff 100%);
-      color: var(--wj-text); font-family: var(--wj-font); -webkit-overflow-scrolling:touch;
+      color: var(--wj-text); font-family: var(--wj-font);
       font-size: 22px; }
-    .xy-page::-webkit-scrollbar { display:none; }
 
-    /* 顶部标题栏：固定，不随下方内容滚动 */
-    .xy-header { position:sticky; top:0; z-index:5; display:flex; align-items:center; gap:10px;
-      margin-bottom:14px; padding-bottom:10px;
-      background: linear-gradient(180deg,#eaf6ff 0%, #eef7ff 78%, rgba(238,247,255,0) 100%); }
+    /* 顶部标题栏：固定不滚，statusbar 间距由自身 padding-top 承担，纯色背景 */
+    .xy-header { flex: 0 0 auto; display:flex; align-items:center; gap:10px;
+      padding: calc(var(--statusbar-h) + 12px) 14px 10px;
+      background: #eef7ff; }
     .xy-title { font-size:28px; font-weight:800; letter-spacing:.5px; flex:1 1 auto;
       line-height:1.2; }
     .xy-coin { display:inline-flex; align-items:center; gap:7px; font-weight:800;
@@ -281,6 +287,11 @@
       background: var(--wj-primary); color:#fff; font-size:22px; line-height:1;
       display:flex; align-items:center; justify-content:center;
       cursor:pointer; font-weight:700; flex:0 0 auto; }
+
+    /* 内层滚动区 */
+    .xy-body { flex:1 1 auto; min-height:0; overflow-y:auto;
+      padding: 14px 14px 16px; -webkit-overflow-scrolling:touch; }
+    .xy-body::-webkit-scrollbar { display:none; }
 
     /* 鱼缸 */
     .xy-bowl { position:relative; width:180px; height:180px; border-radius:50%;
@@ -321,24 +332,24 @@
     .xy-m-sign{background:linear-gradient(135deg,#ab47bc,#8e24aa);}
     .xy-loved { margin-top:14px; background:#fff; border-radius:16px; padding:14px 16px;
       box-shadow:0 3px 12px rgba(0,0,0,.06); }
-    .xy-loved__label { font-size:18px; color: var(--wj-text-dim); margin-bottom:6px; }
+    .xy-loved__label { font-size:18px; color: var(--wj-text-muted); margin-bottom:6px; }
     .xy-loved__name { font-size:22px; font-weight:800; }
-    .xy-loved__q { font-size:20px; color: var(--wj-text-muted); margin-top:4px; }
-    .xy-loved__empty { color: var(--wj-text-dim); font-size:18px; }
+    .xy-loved__q { font-size:20px; color: var(--wj-text); margin-top:4px; }
+    .xy-loved__empty { color: var(--wj-text); font-size:18px; }
 
-    /* 钓鱼 */
     .xy-rod { text-align:center; margin:2px 0 6px; }
     .xy-rod svg { display:block; margin:0 auto; }
     .xy-rod .xy-line { transition:transform .3s; transform-origin:top center; }
     .xy-catch { background:#fff; border-radius:18px; padding:16px; text-align:center;
-      box-shadow:0 4px 16px rgba(0,0,0,.08); min-height:180px; }
+      box-shadow:0 4px 16px rgba(0,0,0,.08); min-height:180px;
+      overflow:hidden; }
     .xy-catch__art { height:120px; display:flex; align-items:center; justify-content:center; }
     .xy-catch__name { font-size:24px; font-weight:800; margin-top:6px; }
     .xy-catch__q { font-size:20px; color: var(--wj-text-muted); margin-top:4px; }
     .xy-catch__val { font-size:22px; color:#f9a825; font-weight:800; margin-top:6px; }
     .xy-catch__rare { font-size:18px; color:#8e24aa; margin-top:4px; font-weight:700; }
-    .xy-catch__prob { font-size:18px; color: var(--wj-text-dim); margin-top:2px; }
-    .xy-catch__hint { color: var(--wj-text-dim); font-size:20px; }
+    .xy-catch__prob { font-size:18px; color: var(--wj-text-muted); margin-top:2px; }
+    .xy-catch__hint { color: var(--wj-text-muted); font-size:20px; }
     .xy-actions { display:flex; gap:10px; margin-top:12px; }
     .xy-btn { flex:1; border:none; border-radius:1399px; padding:13px; font-size:22px;
       font-weight:700; cursor:pointer; transition:transform .1s; line-height:1.2; }
@@ -346,7 +357,7 @@
     .xy-btn:disabled { opacity:.5; cursor:default; }
     .xy-btn--primary { background: var(--wj-primary); color:#fff; }
     .xy-btn--ghost { background:#eef2f7; color: var(--wj-text); }
-    .xy-tip { text-align:center; color: var(--wj-text-dim); font-size:18px; margin-top:10px; }
+    .xy-tip { text-align:center; color: var(--wj-text-muted); font-size:18px; margin-top:10px; }
 
     /* 全部小鱼 网格 */
     .xy-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
@@ -360,7 +371,7 @@
     .xy-cell__name { font-size:18px; font-weight:700; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
     .xy-cell__val { font-size:18px; color:#f9a825; font-weight:800; margin-top:2px; }
     .xy-cell__star { color:#f9a825; font-size:18px; }
-    .xy-empty { text-align:center; color: var(--wj-text-dim); padding:50px 0; font-size:20px; }
+    .xy-empty { text-align:center; color: var(--wj-text-muted); padding:50px 0; font-size:20px; }
 
     /* 详情 */
     .xy-detail { text-align:center; }
@@ -372,12 +383,12 @@
     .xy-detail__q { font-size:20px; color: var(--wj-text-muted); margin-top:4px; }
     .xy-detail__val { font-size:22px; color:#f9a825; font-weight:800; margin-top:6px; }
     .xy-detail__rare { font-size:18px; color:#8e24aa; margin-top:4px; font-weight:700; }
-    .xy-detail__prob { font-size:18px; color: var(--wj-text-dim); margin-top:2px; }
+    .xy-detail__prob { font-size:18px; color: var(--wj-text-muted); margin-top:2px; }
     .xy-sell { display:flex; align-items:center; justify-content:center; gap:6px;
       margin:16px auto 0; max-width:320px; }
     .xy-btn--sell { background:linear-gradient(135deg,#ffb74d,#f57c00); color:#fff; }
     .xy-btn--sell:disabled { background:#e0e0e0; color:#9e9e9e; }
-    .xy-sell__note { text-align:center; font-size:18px; color: var(--wj-text-dim); margin-top:8px; }
+    .xy-sell__note { text-align:center; font-size:18px; color: var(--wj-text-muted); margin-top:8px; }
     .xy-sellbar { display:flex; gap:10px; align-items:center; margin-bottom:10px; }
     .xy-sellbar__info { flex:1; font-size:18px; color: var(--wj-text-muted); line-height:1.35; }
     .xy-sellbar .xy-btn { flex:0 0 auto; padding:10px 16px; font-size:20px; }
@@ -393,7 +404,7 @@
     .xy-card:active { transform:scale(.99); }
     .xy-card svg { width:60px; height:60px; flex:0 0 60px; }
     .xy-card__name { font-size:22px; font-weight:700; }
-    .xy-card__tag { font-size:18px; color: var(--wj-text-dim); margin-top:2px; line-height:1.3; }
+    .xy-card__tag { font-size:18px; color: var(--wj-text-muted); margin-top:2px; line-height:1.3; }
     .xy-card.is-locked { opacity:.55; }
     .xy-card.is-locked svg { filter:grayscale(1); }
 
@@ -416,8 +427,7 @@
         const loved = S.state.fish.find(f => f.id === S.state.likedId);
         const sp = loved ? findFish(loved.species) : null;
         const fishHtml = sp ? fishSvg(sp, 150) : '';
-        return page(`
-          ${header(S, '杨梅小鱼')}
+        return page(header(S, '杨梅小鱼'), `
           <div class="xy-home">
             ${bowl(fishHtml, { empty: !sp })}
             <div class="xy-menu">
@@ -432,9 +442,8 @@
             ${sp ? `
               <div class="xy-loved__name">${esc(sp.name)}</div>
               <div class="xy-loved__q">质量：${esc(qualityOf(loved.quality).label)} · 价值 ${valueOfFish(loved)}</div>
-            ` : `<div class="xy-loved__empty">去「全部小鱼」里点五角星，选一只喜欢的吧～</div>`}
+            ` : `<div class="xy-loved__empty">去「全部小鱼」里点五角星，选一只喜欢的吧</div>`}
           </div>
-          <div class="xy-tip">钓到的小鱼会自动收进「全部小鱼」和「图鉴」；越稀有的鱼卖得越贵</div>
           ${S.state.soldCount || S.state.earned
             ? `<div class="xy-tip">已售出 ${S.state.soldCount} 条 · 累计收入 ${S.state.earned} 小鱼币</div>` : ''}
         `);
@@ -451,8 +460,9 @@
       name: 'fish',
       render(routeCtx) {
         const S = session(routeCtx.nav);
-        return page(`
-          ${header(S, '钓鱼', `<span class="xy-bait">🪱 鱼饵 ${S.state.bait}<button class="xy-plus" id="xyAddBait" type="button" aria-label="兑换鱼饵">+</button></span>`)}
+        return page(
+          header(S, '钓鱼', `<span class="xy-bait">🪱 鱼饵 ${S.state.bait}<button class="xy-plus" id="xyAddBait" type="button" aria-label="兑换鱼饵">+</button></span>`),
+          `
           <div class="xy-rod">
             <svg width="120" height="80" viewBox="0 0 120 80" aria-hidden="true">
               <path d="M14 76 Q26 20 96 10" stroke="#8d6e63" stroke-width="5" fill="none" stroke-linecap="round"/>
@@ -468,7 +478,8 @@
             <button class="xy-btn xy-btn--primary" id="xyGoFish" type="button">抛竿（消耗 1 鱼饵）</button>
           </div>
           <div class="xy-tip" id="xyFishTip">每钓一次消耗 1 个鱼饵</div>
-        `);
+          `
+        );
       },
       mount(root, ctx) {
         const S = session(ctx.nav);
@@ -476,7 +487,7 @@
         const goBtn = root.querySelector('#xyGoFish');
         const tip = root.querySelector('#xyFishTip');
         const line = root.querySelector('#xyLine');
-        let busy = false;   /* 本页局部状态，随页面卸载销毁 */
+        let busy = false;
 
         function refreshHeader() {
           const coinEl = root.querySelector('.xy-coin span');
@@ -565,7 +576,6 @@
           }, 900);
         }
 
-
         bindBait();
         goBtn.addEventListener('click', onFish);
       },
@@ -588,8 +598,7 @@
             <div class="xy-cell__val">${val} 币</div>
           </div>`;
         }).join('');
-        return page(`
-          ${header(S, '全部小鱼')}
+        return page(header(S, '全部小鱼'), `
           ${S.state.fish.length ? `
             <div class="xy-sellbar">
               <div class="xy-sellbar__info">共 ${S.state.fish.length} 条${S.state.likedId ? '（喜欢的 1 条不卖）' : ''}<br>可卖 ${sellable.length} 条 · 预计 ${total} 币</div>
@@ -602,12 +611,12 @@
       },
       mount(root, ctx) {
         const S = session(ctx.nav);
-        const pageEl = root.querySelector('.xy-page');
-        if (pageEl) pageEl.scrollTop = S.scroll.all || 0;
+        const bodyEl = root.querySelector('.xy-body');
+        if (bodyEl) bodyEl.scrollTop = S.scroll.all || 0;
 
         root.querySelectorAll('.xy-cell').forEach(el => {
           el.addEventListener('click', () => {
-            if (pageEl) S.scroll.all = pageEl.scrollTop;
+            if (bodyEl) S.scroll.all = bodyEl.scrollTop;
             ctx.push('fishDetail', { id: el.dataset.id });
           });
         });
@@ -638,13 +647,12 @@
         const S = session(routeCtx.nav);
         const f = S.state.fish.find(x => x.id === routeCtx.data?.id);
         const sp = f ? (findFish(f.species) || FISH_SPECIES[0]) : null;
-        if (!f || !sp) return page(`${header(S, '小鱼')}<div class="xy-empty">找不到这只小鱼</div>`);
+        if (!f || !sp) return page(header(S, '小鱼'), `<div class="xy-empty">找不到这只小鱼</div>`);
         const liked = f.id === S.state.likedId;
         const rare = rarityOf(sp);
         const val = valueOfFish(f);
         const pct = (absProbOf(sp) * 100).toFixed(1);
-        return page(`
-          ${header(S, '小鱼')}
+        return page(header(S, '小鱼'), `
           <div class="xy-detail">
             ${bowl(fishSvg(sp, 190), { big: true })}
             <div class="xy-detail__name">${esc(sp.name)}</div>
@@ -720,8 +728,7 @@
       name: 'book',
       render(routeCtx) {
         const S = session(routeCtx.nav);
-        return page(`
-          ${header(S, '图鉴')}
+        return page(header(S, '图鉴'), `
           <div class="xy-tabs">
             <button class="xy-tab is-on" data-tab="fish" type="button">小鱼</button>
             <button class="xy-tab" data-tab="junk" type="button">杂物</button>
@@ -733,8 +740,8 @@
         const S = session(ctx.nav);
         const cards = root.querySelector('#xyCards');
         const tabs = root.querySelectorAll('.xy-tab');
-        const pageEl = root.querySelector('.xy-page');
-        let tab = S.bookTab || 'fish';   /* 跨返回保留的当前标签 */
+        const bodyEl = root.querySelector('.xy-body');
+        let tab = S.bookTab || 'fish';
 
         function renderCards() {
           tabs.forEach(t => t.classList.toggle('is-on', t.dataset.tab === tab));
@@ -764,7 +771,7 @@
           cards.querySelectorAll('.xy-card').forEach(el => {
             el.addEventListener('click', () => {
               if (el.classList.contains('is-locked')) return;
-              if (pageEl) S.scroll.book = pageEl.scrollTop;
+              if (bodyEl) S.scroll.book = bodyEl.scrollTop;
               ctx.push('bookDetail', { kind: el.dataset.kind, id: el.dataset.id });
             });
           });
@@ -777,7 +784,7 @@
         }));
 
         renderCards();
-        if (pageEl) pageEl.scrollTop = S.scroll.book || 0;
+        if (bodyEl) bodyEl.scrollTop = S.scroll.book || 0;
       },
     },
 
@@ -791,8 +798,7 @@
         const j = kind === 'junk' ? findJunk(id) : null;
         const art = sp ? fishSvg(sp, 160) : (j ? junkSvg(j, 160) : '');
         const name = sp ? sp.name : (j ? j.name : '未知');
-        return page(`
-          ${header(S, '图鉴')}
+        return page(header(S, '图鉴'), `
           <div class="xy-detail">
             <div class="xy-catch__art" style="height:200px">${art}</div>
             <div class="xy-detail__name">${esc(name)}</div>
@@ -800,7 +806,6 @@
         `);
       },
       mount(root, ctx) {
-
       },
     },
 
@@ -810,8 +815,7 @@
       render(routeCtx) {
         const S = session(routeCtx.nav);
         const signed = S.state.lastSignIn === todayKey();
-        return page(`
-          ${header(S, '签到')}
+        return page(header(S, '签到'), `
           <div class="xy-signin">
             <div class="xy-signin__coin">${COIN_SVG(96)}</div>
             <div class="xy-signin__title">每日签到</div>
@@ -834,7 +838,7 @@
           S.state.coins += 15;
           S.state.lastSignIn = todayKey();
           await S.save();
-          btn.outerHTML = '<div class="xy-signin__ok">✓ 签到成功，小鱼币 +15</div>';
+          btn.parentElement.outerHTML = '<div class="xy-signin__ok">✓ 签到成功，小鱼币 +15</div>';
           const coinEl = root.querySelector('.xy-coin span');
           if (coinEl) coinEl.textContent = S.state.coins;
           try { WujiToast.show('签到成功：小鱼币 +15 🎉'); } catch { }
@@ -903,7 +907,7 @@
     name: '杨梅小鱼',
     icon: './assets/xiaoyu.svg',
     initialRoute: 'home',
-    version: '1.2.0',
+    version: '1.3.0',
     devices: ['iwuji', 'pc'],
     styles,
     routes: wrappedRoutes,
