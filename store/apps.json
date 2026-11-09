@@ -25,6 +25,7 @@
     { "bundle": "com.wujinb.work", "name": "吴际办公", "icon": "./assets/work.svg", "version": "1.0.0", "author": "Wuji", "description": "吴际办公官方正版", "longdescription": "吴际办公，查看DOCX/XLSX文件", "src": "./store-apps/work.js" },
     { "bundle": "com.wujinb.cart", "name": "吴际赛车", "icon": "./assets/cart.svg", "version": "1.1.1", "author": "Wuji", "description": "吴际赛车官方正版", "longdescription": "非常弱智的赛车游戏。", "src": "./store-apps/cart.js" },
     { "bundle": "com.wujinb.dice", "name": "骰子", "icon": "./assets/dice.svg", "version": "1.0.2", "author": "Wuji", "description": "骰子官方正版", "longdescription": "一个骰子，生成1~6随机数", "src": "./store-apps/dice.js" },
+    { "bundle": "com.niunai.map", "name": "牛奶地图", "icon": "./assets/map.svg", "version": "1.0.2", "author": "Niunai", "description": "牛奶地图官方正版", "longdescription": "一个地图罢了。", "src": "./store-apps/map.js" },
     { "bundle": "com.wujinb.stock", "name": "吴际财富", "icon": "./assets/stock.svg", "version": "1.1.7", "author": "Wuji", "description": "吴际财富官方正版", "longdescription": "吴际财富官方正版", "src": "./store-apps/stock.js" },
     { "bundle": "com.niunai.niunairailway", "name": "牛奶铁路", "icon": "./assets/niunairailway.svg", "version": "1.0.6", "author": "Niunai", "description": "牛奶铁路官方正版", "longdescription": "牛奶铁路，查询高铁/火车路线", "src": "./store-apps/niunairailway.js" },
     { "bundle": "com.wujinb.mc", "name": "吴际MC", "icon": "./assets/mc.svg", "version": "1.4.6", "author": "Wuji", "description": "吴际MC官方正版", "longdescription": "在iWuji里面玩游戏?你的CPU要炸了!", "src": "./store-apps/mc.js", "devices": ["iwuji"] },

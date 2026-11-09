@@ -1,0 +1,20 @@
+<svg width="256" height="256" viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg">
+  <!-- 白色圆角方形背景 -->
+  <rect width="256" height="256" fill="#FFFFFF" stroke="#E5E5EA" stroke-width="2"/>
+
+  <!-- 地图道路（浅灰路网） -->
+  <path d="M 40 96 L 216 96 M 128 40 L 128 216 M 64 176 L 196 64"
+        fill="none" stroke="#E8EBF0" stroke-width="16" stroke-linecap="round"/>
+
+  <!-- 蓝色主干道 -->
+  <path d="M 48 200 L 208 56" fill="none" stroke="#0A84FF" stroke-width="14" stroke-linecap="round"/>
+
+  <!-- 定位针 -->
+  <path d="M 128 60
+           C 100 60 82 80 82 104
+           C 82 138 128 188 128 188
+           C 128 188 174 138 174 104
+           C 174 80 156 60 128 60 Z"
+        fill="#FF453A"/>
+  <circle cx="128" cy="104" r="20" fill="#FFFFFF"/>
+</svg>
