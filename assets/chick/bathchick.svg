@@ -1,0 +1,112 @@
+<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="cyl" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%"   stop-color="#aab6c6"/>
+      <stop offset="14%"  stop-color="#eef4fb"/>
+      <stop offset="50%"  stop-color="#d3dfee"/>
+      <stop offset="86%"  stop-color="#eef4fb"/>
+      <stop offset="100%" stop-color="#aab6c6"/>
+    </linearGradient>
+
+    <linearGradient id="innerG" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%"   stop-color="#8fa2b8"/>
+      <stop offset="55%"  stop-color="#c6d3e2"/>
+      <stop offset="100%" stop-color="#e9f0f8"/>
+    </linearGradient>
+
+    <linearGradient id="waterG" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%"   stop-color="#7cc2ea"/>
+      <stop offset="100%" stop-color="#d6efff"/>
+    </linearGradient>
+
+    <clipPath id="rimClipOut">
+      <ellipse cx="50" cy="42" rx="42" ry="13"/>
+    </clipPath>
+
+    <clipPath id="chickBody">
+      <ellipse cx="50" cy="58" rx="24" ry="20"/>
+      <ellipse cx="31" cy="56" rx="7" ry="12" transform="rotate(-14 31 56)"/>
+      <ellipse cx="69" cy="56" rx="7" ry="12" transform="rotate(14 69 56)"/>
+    </clipPath>
+  </defs>
+
+  <!-- 1. 外壳 -->
+  <path d="M8,42 C4,66 12,88 24,92 Q50,99 76,92 C88,88 96,66 92,42 A42,13 0 0 0 8,42 Z" fill="url(#cyl)"/>
+
+  <!-- 2. 内壁 -->
+  <ellipse cx="50" cy="42" rx="38" ry="11" fill="url(#innerG)"/>
+
+  <!-- 3. 水面 -->
+  <g clip-path="url(#rimClipOut)">
+    <ellipse cx="50" cy="46" rx="38" ry="11" fill="url(#waterG)" opacity="0.95"/>
+  </g>
+
+  <!-- 4. 水里的泡泡（在小鸡后面） -->
+  <g fill="#fff" stroke="#9fd4f5" stroke-width="0.5">
+    <circle cx="34" cy="46" r="3" opacity="0.9">
+      <animate attributeName="cy" values="46;10" dur="3s" begin="0s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0;0.9;0.9;0" keyTimes="0;0.1;0.8;1" dur="3s" begin="0s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="50" cy="44" r="3.6" opacity="0.9">
+      <animate attributeName="cy" values="44;6" dur="3.6s" begin="0.9s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0;0.9;0.9;0" keyTimes="0;0.1;0.8;1" dur="3.6s" begin="0.9s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="64" cy="47" r="2.6" opacity="0.9">
+      <animate attributeName="cy" values="47;12" dur="2.8s" begin="1.7s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0;0.9;0.9;0" keyTimes="0;0.1;0.8;1" dur="2.8s" begin="1.7s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="42" cy="48" r="2.2" opacity="0.9">
+      <animate attributeName="cy" values="48;14" dur="3.2s" begin="2.4s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0;0.9;0.9;0" keyTimes="0;0.1;0.8;1" dur="3.2s" begin="2.4s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="58" cy="45" r="2.8" opacity="0.9">
+      <animate attributeName="cy" values="45;8" dur="3.4s" begin="0.4s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0;0.9;0.9;0" keyTimes="0;0.1;0.8;1" dur="3.4s" begin="0.4s" repeatCount="indefinite"/>
+    </circle>
+  </g>
+
+  <!-- 5. 小鸡身体 + 翅膀（不含头） -->
+  <g>
+    <ellipse cx="50" cy="58" rx="24" ry="20" fill="#FFD93B"/>
+    <ellipse cx="31" cy="56" rx="7" ry="12" fill="#FFD93B" transform="rotate(-14 31 56)"/>
+    <ellipse cx="69" cy="56" rx="7" ry="12" fill="#FFD93B" transform="rotate(14 69 56)"/>
+  </g>
+
+  <!-- 6. 水膜：顶部用 Q 曲线向下凹，控制点 (50,64)，中点 (50,57) -->
+  <g clip-path="url(#chickBody)">
+    <path d="M18,42 Q50,60 82,42 L82,70 L18,70 Z"
+          fill="url(#waterG)" opacity="0.3"/>
+  </g>
+
+  <!-- 7. 从小鸡两侧冒出的泡泡 -->
+  <g fill="#fff" stroke="#9fd4f5" stroke-width="0.5">
+    <circle cx="24" cy="52" r="1.8" opacity="0.9">
+      <animate attributeName="cy" values="52;16" dur="2.6s" begin="0.2s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0.9;0.9;0" keyTimes="0;0.7;1" dur="2.6s" begin="0.2s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="32" cy="48" r="1.5" opacity="0.9">
+      <animate attributeName="cy" values="48;14" dur="3s" begin="1.2s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0.9;0.9;0" keyTimes="0;0.7;1" dur="3s" begin="1.2s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="68" cy="48" r="2" opacity="0.9">
+      <animate attributeName="cy" values="48;14" dur="3.4s" begin="0.6s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0.9;0.9;0" keyTimes="0;0.7;1" dur="3.4s" begin="0.6s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="76" cy="52" r="1.6" opacity="0.9">
+      <animate attributeName="cy" values="52;16" dur="2.9s" begin="1.8s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0.9;0.9;0" keyTimes="0;0.7;1" dur="2.9s" begin="1.8s" repeatCount="indefinite"/>
+    </circle>
+  </g>
+
+  <!-- 8. 小鸡头：画在水膜之后，永远不被水盖住 -->
+  <g>
+    <circle cx="50" cy="30" r="17" fill="#FFE066"/>
+    <path d="M41 16 Q43 8 47 16 Q50 7 53 16 Q56 8 58 16" fill="#e0356b"/>
+    <circle cx="44" cy="28" r="2.6" fill="#1c2536"/>
+    <circle cx="56" cy="28" r="2.6" fill="#1c2536"/>
+    <path d="M46 35 L54 35" stroke="#FF9500" stroke-width="2.6" stroke-linecap="round"/>
+  </g>
+
+  <!-- 9. 前壁 -->
+  <path d="M88,42 L92,42 C96,66 88,88 76,92 Q50,99 24,92 C12,88 4,66 8,42 L12,42 A38,11 0 0 0 88,42 Z" fill="url(#cyl)"/>
+</svg>

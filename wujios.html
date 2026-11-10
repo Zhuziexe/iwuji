@@ -24,7 +24,10 @@
       </span>
       <span class="right">
         <span>5G</span>
-        <span class="battery"><i></i></span>
+        <span class="battery">
+          <i></i>
+          <span class="battery__pct" id="batteryPct">--</span>
+        </span>
       </span>
     </div>
 
@@ -349,6 +352,48 @@
       };
       tick();
       setInterval(tick, 15000);
+    })();
+
+    /* =========================================================
+       真实电量（navigator.getBattery，不支持时回退模拟）
+       ========================================================= */
+    (function initBattery() {
+      const battEl = document.querySelector('.statusbar .battery');
+      if (!battEl) return;
+      const fillEl = battEl.querySelector('i') || battEl;
+      const pctEl = document.getElementById('batteryPct');
+
+      function setLevel(level, charging) {
+        const pct = Math.max(0, Math.min(1, level));
+        const pctRounded = Math.round(pct * 100);
+        fillEl.style.width = pctRounded + '%';
+        if (pctEl) pctEl.textContent = pctRounded;
+        battEl.title = pctRounded + '%' + (charging ? ' · 充电中' : '');
+        battEl.classList.toggle('is-charging', !!charging);
+        battEl.classList.toggle('is-low', pct <= 0.2);
+      }
+
+      function fallbackBattery() {
+        let level = 0.78;
+        setLevel(level, false);
+        setInterval(() => {
+          const charging = Math.random() < 0.4;
+          setLevel(level, charging);
+          if (charging) level = Math.min(1, level + 0.05);
+          else level = Math.max(0.05, level - 0.02);
+        }, 12000);
+      }
+
+      if (navigator.getBattery) {
+        navigator.getBattery().then(b => {
+          const update = () => setLevel(b.level, b.charging);
+          update();
+          b.addEventListener('levelchange', update);
+          b.addEventListener('chargingchange', update);
+        }).catch(fallbackBattery);
+      } else {
+        fallbackBattery();
+      }
     })();
 
     /* =========================================================

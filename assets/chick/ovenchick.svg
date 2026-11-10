@@ -1,0 +1,163 @@
+<svg viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="topGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#c6cad0"/>
+      <stop offset="100%" stop-color="#7c8186"/>
+    </linearGradient>
+    <linearGradient id="frontGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#9ea3a8"/>
+      <stop offset="100%" stop-color="#4d5155"/>
+    </linearGradient>
+    <linearGradient id="sideGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#6c7176"/>
+      <stop offset="100%" stop-color="#26292c"/>
+    </linearGradient>
+    <radialGradient id="cavityInner" cx="0.5" cy="0.35" r="0.8">
+      <stop offset="0%" stop-color="#313437"/>
+      <stop offset="60%" stop-color="#17191b"/>
+      <stop offset="100%" stop-color="#030405"/>
+    </radialGradient>
+    <linearGradient id="cavitySideL" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="rgba(0,0,0,0)"/>
+      <stop offset="100%" stop-color="rgba(0,0,0,0.55)"/>
+    </linearGradient>
+    <linearGradient id="cavitySideR" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="rgba(0,0,0,0.55)"/>
+      <stop offset="100%" stop-color="rgba(0,0,0,0)"/>
+    </linearGradient>
+    <linearGradient id="cavityTop" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="rgba(0,0,0,0.35)"/>
+      <stop offset="100%" stop-color="rgba(0,0,0,0)"/>
+    </linearGradient>
+    <linearGradient id="glassDoor" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="rgba(255,255,255,0.50)"/>
+      <stop offset="25%" stop-color="rgba(255,255,255,0.18)"/>
+      <stop offset="70%" stop-color="rgba(255,255,255,0.12)"/>
+      <stop offset="100%" stop-color="rgba(255,255,255,0.40)"/>
+    </linearGradient>
+    <linearGradient id="rackBar" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#555"/>
+      <stop offset="50%" stop-color="#999"/>
+      <stop offset="100%" stop-color="#333"/>
+    </linearGradient>
+  </defs>
+
+  <!-- 1. 烤箱箱体：正面 + 顶面 + 右侧面 -->
+  <polygon points="40.25,83.45 175.25,83.45 215.75,51.05 80.75,51.05"
+           fill="url(#topGrad)" stroke="#1a1c1e" stroke-width="1.2" stroke-linejoin="round"/>
+  <polygon points="175.25,83.45 215.75,51.05 215.75,156.35 175.25,188.75"
+           fill="url(#sideGrad)" stroke="#1a1c1e" stroke-width="1.2" stroke-linejoin="round"/>
+  <rect x="40.25" y="83.45" width="135" height="105.3"
+        fill="url(#frontGrad)" stroke="#1a1c1e" stroke-width="1.2"/>
+  <rect x="40.25" y="180.65" width="135" height="8.1" fill="#3b3e41" opacity="0.9"/>
+
+  <!-- 控制面板 -->
+  <rect x="47" y="88.85" width="121.5" height="16.2" rx="2.7"
+        fill="#45484b" stroke="#222" stroke-width="0.6"/>
+  <circle cx="60.5" cy="96.95" r="2.7" fill="#ff5454"/>
+  <circle cx="71.3" cy="96.95" r="2.7" fill="#ffb020"/>
+  <circle cx="82.1" cy="96.95" r="2.7" fill="#6ad66a"/>
+  <rect x="136.1" y="92.9" width="24.3" height="6.75" rx="1.35" fill="#222"/>
+
+  <!-- 炉腔外框 -->
+  <rect x="55.1" y="113.15" width="105.3" height="62.1" rx="2.7"
+        fill="#0b0c0d" stroke="#1a1c1e" stroke-width="1.2"/>
+
+  <!-- 炉腔内凹透视：后壁 + 内壁 -->
+  <rect x="65.9" y="121.25" width="83.7" height="45.9" rx="2.025" fill="url(#cavityInner)"/>
+  <polygon points="55.1,113.15 160.4,113.15 149.6,121.25 65.9,121.25" fill="url(#cavityTop)"/>
+  <polygon points="55.1,113.15 65.9,121.25 65.9,167.15 55.1,175.25" fill="url(#cavitySideL)"/>
+  <polygon points="160.4,113.15 149.6,121.25 149.6,167.15 160.4,175.25" fill="url(#cavitySideR)"/>
+  <polygon points="55.1,175.25 65.9,167.15 149.6,167.15 160.4,175.25" fill="#050606" opacity="0.72"/>
+  <rect x="55.1" y="113.15" width="105.3" height="62.1" rx="2.7"
+        fill="none" stroke="#000" stroke-width="0.8" opacity="0.4"/>
+
+  <!-- 立体烤架 -->
+  <g stroke="#444" stroke-width="0.7" opacity="0.75">
+    <rect x="61.85" y="132.05" width="91.8" height="3.375" rx="1.35" fill="url(#rackBar)"/>
+    <rect x="61.85" y="148.25" width="91.8" height="3.375" rx="1.35" fill="url(#rackBar)"/>
+    <rect x="61.85" y="164.45" width="91.8" height="3.375" rx="1.35" fill="url(#rackBar)"/>
+    <line x1="68.6" y1="132.05" x2="74" y2="122.6"/>
+    <line x1="84.8" y1="132.05" x2="90.2" y2="122.6"/>
+    <line x1="101" y1="132.05" x2="106.4" y2="122.6"/>
+    <line x1="117.2" y1="132.05" x2="122.6" y2="122.6"/>
+    <line x1="133.4" y1="132.05" x2="138.8" y2="122.6"/>
+    <line x1="149.6" y1="132.05" x2="155" y2="122.6"/>
+    <line x1="68.6" y1="148.25" x2="74" y2="138.8"/>
+    <line x1="84.8" y1="148.25" x2="90.2" y2="138.8"/>
+    <line x1="101" y1="148.25" x2="106.4" y2="138.8"/>
+    <line x1="117.2" y1="148.25" x2="122.6" y2="138.8"/>
+    <line x1="133.4" y1="148.25" x2="138.8" y2="138.8"/>
+    <line x1="149.6" y1="148.25" x2="155" y2="138.8"/>
+    <line x1="68.6" y1="164.45" x2="74" y2="155"/>
+    <line x1="84.8" y1="164.45" x2="90.2" y2="155"/>
+    <line x1="101" y1="164.45" x2="106.4" y2="155"/>
+    <line x1="117.2" y1="164.45" x2="122.6" y2="155"/>
+    <line x1="133.4" y1="164.45" x2="138.8" y2="155"/>
+    <line x1="149.6" y1="164.45" x2="155" y2="155"/>
+  </g>
+
+  <!-- 2. 小鸡：定位坐标已合并外层平移，内部形状本地坐标不变 -->
+  <g>
+    <animateTransform attributeName="transform" type="translate"
+                  values="-162 0; -162 0; 0 0; 0 0; 0 0; 0 0; -162 0; -162 0"
+                  keyTimes="0; 0.15; 0.25; 0.35; 0.70; 0.80; 0.90; 1"
+                  dur="14s" repeatCount="indefinite"/>
+
+    <g transform="translate(107.75,144.2) rotate(90) scale(0.54)">
+      <g transform="translate(-50,-55)">
+        <ellipse cx="50" cy="62" rx="32" ry="30" fill="#FFD93B">
+          <animate attributeName="fill"
+                   values="#FFD93B;#FFD93B;#FFD93B;#FFB347;#D4752B;#8C4A1E;#8C4A1E;#8C4A1E;#8C4A1E"
+                   keyTimes="0;0.15;0.30;0.35;0.50;0.70;0.75;0.90;1"
+                   dur="14s" repeatCount="indefinite"/>
+        </ellipse>
+        <circle cx="50" cy="36" r="24" fill="#FFE066">
+          <animate attributeName="fill"
+                   values="#FFE066;#FFE066;#FFE066;#FFC857;#C96A24;#7A4018;#7A4018;#7A4018;#7A4018"
+                   keyTimes="0;0.15;0.30;0.35;0.50;0.70;0.75;0.90;1"
+                   dur="14s" repeatCount="indefinite"/>
+        </circle>
+        <path d="M38 14 Q42 6 46 14 Q50 6 54 14 Q58 6 62 14" fill="#e0356b"/>
+        <ellipse cx="16" cy="60" rx="8" ry="14" fill="#FFD93B" transform="rotate(-15 16 60)">
+          <animate attributeName="fill"
+                   values="#FFD93B;#FFD93B;#FFD93B;#FFB347;#D4752B;#8C4A1E;#8C4A1E;#8C4A1E;#8C4A1E"
+                   keyTimes="0;0.15;0.30;0.35;0.50;0.70;0.75;0.90;1"
+                   dur="14s" repeatCount="indefinite"/>
+        </ellipse>
+        <ellipse cx="84" cy="60" rx="8" ry="14" fill="#FFD93B" transform="rotate(15 84 60)">
+          <animate attributeName="fill"
+                   values="#FFD93B;#FFD93B;#FFD93B;#FFB347;#D4752B;#8C4A1E;#8C4A1E;#8C4A1E;#8C4A1E"
+                   keyTimes="0;0.15;0.30;0.35;0.50;0.70;0.75;0.90;1"
+                   dur="14s" repeatCount="indefinite"/>
+        </ellipse>
+        <line x1="38" y1="88" x2="38" y2="95" stroke="#FF9500" stroke-width="3" stroke-linecap="round"/>
+        <line x1="62" y1="88" x2="62" y2="95" stroke="#FF9500" stroke-width="3" stroke-linecap="round"/>
+        <circle cx="42" cy="32" r="3.5" fill="#1c2536"/>
+        <circle cx="58" cy="32" r="3.5" fill="#1c2536"/>
+        <path d="M44 44 L56 44" stroke="#FF9500" stroke-width="2.8" stroke-linecap="round"/>
+      </g>
+    </g>
+  </g>
+
+  <!-- 3. 烤箱门 -->
+  <line x1="52.4" y1="175.25" x2="163.1" y2="175.25" stroke="#222" stroke-width="1.6"/>
+
+  <g>
+    <polygon fill="url(#glassDoor)" stroke="#222" stroke-width="1.2"
+             stroke-linejoin="round">
+      <animate attributeName="points" dur="14s" repeatCount="indefinite"
+        values="
+          52.4,175.25 163.1,175.25 141.5,204.95 30.8,204.95;
+          52.4,175.25 163.1,175.25 141.5,204.95 30.8,204.95;
+          52.4,175.25 163.1,175.25 141.5,204.95 30.8,204.95;
+          52.4,175.25 163.1,175.25 163.1,113.15 52.4,113.15;
+          52.4,175.25 163.1,175.25 163.1,113.15 52.4,113.15;
+          52.4,175.25 163.1,175.25 163.1,113.15 52.4,113.15;
+          52.4,175.25 163.1,175.25 141.5,204.95 30.8,204.95;
+          52.4,175.25 163.1,175.25 141.5,204.95 30.8,204.95;
+          52.4,175.25 163.1,175.25 141.5,204.95 30.8,204.95"
+        keyTimes="0;0.15;0.30;0.35;0.70;0.75;0.85;0.90;1"/>
+    </polygon>
+  </g>
+</svg>
