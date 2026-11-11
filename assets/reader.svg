@@ -1,0 +1,32 @@
+<svg width="256" height="256" viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg">
+  <!-- 背景 -->
+  <rect width="256" height="256" fill="#5BC0EB"/>
+
+  <!-- 书：左右两页，中央书脊 -->
+  <path d="M 128 60
+           C 100 48, 60 50, 44 60
+           L 44 196
+           C 60 186, 100 184, 128 196 Z"
+        fill="#FFFFFF"/>
+
+  <path d="M 128 60
+           C 156 48, 196 50, 212 60
+           L 212 196
+           C 196 186, 156 184, 128 196 Z"
+        fill="#FFFFFF"/>
+
+  <!-- 书脊 -->
+  <rect x="124" y="60" width="8" height="136" rx="2" fill="#5BC0EB"/>
+
+  <!-- 左页文字线 -->
+  <rect x="58" y="84"  width="50" height="7" rx="3.5" fill="#5BC0EB"/>
+  <rect x="58" y="102" width="58" height="7" rx="3.5" fill="#5BC0EB"/>
+  <rect x="58" y="120" width="44" height="7" rx="3.5" fill="#5BC0EB"/>
+  <rect x="58" y="138" width="54" height="7" rx="3.5" fill="#5BC0EB"/>
+
+  <!-- 右页文字线 -->
+  <rect x="148" y="84"  width="50" height="7" rx="3.5" fill="#5BC0EB"/>
+  <rect x="148" y="102" width="58" height="7" rx="3.5" fill="#5BC0EB"/>
+  <rect x="148" y="120" width="44" height="7" rx="3.5" fill="#5BC0EB"/>
+  <rect x="148" y="138" width="54" height="7" rx="3.5" fill="#5BC0EB"/>
+</svg>

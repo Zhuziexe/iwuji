@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+  <rect x="0" y="0" width="256" height="256" fill="#d7ece7"/>
+  <text x="128" y="118"
+        font-family="serif"
+        font-size="162"
+        font-weight="700"
+        fill="#146251"
+        text-anchor="middle"
+        dominant-baseline="middle">诗</text>
+  <path d="M 0 168
+           Q 128 192 256 168
+           L 256 256
+           L 0 256
+           Z"
+        fill="#19a98a"/>
+  <text x="128" y="220"
+        font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', sans-serif"
+        font-size="60"
+        font-weight="600"
+        fill="#ffffff"
+        text-anchor="middle"
+        dominant-baseline="middle">Wuji</text>
+</svg>

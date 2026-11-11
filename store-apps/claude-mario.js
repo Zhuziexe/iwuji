@@ -1,5 +1,5 @@
 /* =========================================================
-   claude-mario.js —— 《Claude 大冒险》WujiOS 移植版
+   claude-mario.js —— 《Claude大冒险》WujiOS 移植版
 
    来源：claude-mario.html（独立 12 关平台跳跃小游戏）
    接入：两个 route —— home（选关）用 ctx.push('game', {level}) 打开游戏；
@@ -34,72 +34,96 @@
 
   /* ===================== 关卡数据（逐字复制） ===================== */
   const LEVELS = [
-    {name:"1-1 初入代码谷", w:40, gaps:[], plats:[], poop:[[22,14]], deep:[],
-      coins:[[7,12],[8,12],[9,12],[15,11],[16,11],[28,12],[29,12]],
-      blocks:[[12,11,'?'],[13,11,'?']], startX:2, goalX:37},
+    {
+      name: "1-1 初入代码谷", w: 40, gaps: [], plats: [], poop: [[22, 14]], deep: [],
+      coins: [[7, 12], [8, 12], [9, 12], [15, 11], [16, 11], [28, 12], [29, 12]],
+      blocks: [[12, 11, '?'], [13, 11, '?']], startX: 2, goalX: 37
+    },
 
-    {name:"1-2 初遇粑粑", w:44, gaps:[[19,20]], plats:[[34,12,4]], poop:[[10,14]], deep:[[27,14]],
-      coins:[[6,12],[7,12],[24,12],[25,12],[35,11],[36,11],[37,11]],
-      blocks:[[14,11,'?']], startX:2, goalX:41},
+    {
+      name: "1-2 初遇粑粑", w: 44, gaps: [[19, 20]], plats: [[34, 12, 4]], poop: [[10, 14]], deep: [[27, 14]],
+      coins: [[6, 12], [7, 12], [24, 12], [25, 12], [35, 11], [36, 11], [37, 11]],
+      blocks: [[14, 11, '?']], startX: 2, goalX: 41
+    },
 
-    {name:"1-3 深坑跳跃", w:48, gaps:[[15,16],[31,32]], plats:[[18,12,3],[34,12,4]],
-      poop:[[8,14],[22,14],[40,14]], deep:[[26,14]],
-      coins:[[9,12],[10,12],[19,11],[20,11],[35,11],[36,11],[44,12]],
-      blocks:[[12,11,'?'],[13,11,'?']], startX:2, goalX:45},
+    {
+      name: "1-3 深坑跳跃", w: 48, gaps: [[15, 16], [31, 32]], plats: [[18, 12, 3], [34, 12, 4]],
+      poop: [[8, 14], [22, 14], [40, 14]], deep: [[26, 14]],
+      coins: [[9, 12], [10, 12], [19, 11], [20, 11], [35, 11], [36, 11], [44, 12]],
+      blocks: [[12, 11, '?'], [13, 11, '?']], startX: 2, goalX: 45
+    },
 
-    {name:"2-1 双怪出击", w:52, gaps:[[13,14],[25,26],[39,40]], plats:[[16,12,3],[28,12,3],[42,12,4]],
-      poop:[[8,14],[20,14],[34,14],[46,14]], deep:[[30,14],[44,14]],
-      coins:[[9,12],[17,11],[29,11],[43,11],[47,12]],
-      blocks:[[10,11,'?'],[22,11,'?']], startX:2, goalX:49},
+    {
+      name: "2-1 双怪出击", w: 52, gaps: [[13, 14], [25, 26], [39, 40]], plats: [[16, 12, 3], [28, 12, 3], [42, 12, 4]],
+      poop: [[8, 14], [20, 14], [34, 14], [46, 14]], deep: [[30, 14], [44, 14]],
+      coins: [[9, 12], [17, 11], [29, 11], [43, 11], [47, 12]],
+      blocks: [[10, 11, '?'], [22, 11, '?']], startX: 2, goalX: 49
+    },
 
-    {name:"2-2 平台迷宫", w:56, gaps:[[11,12],[21,22],[33,34],[45,46]],
-      plats:[[14,12,3],[24,12,3],[36,12,3],[48,12,4]],
-      poop:[[6,14],[18,14],[28,14],[38,14],[50,14]], deep:[[26,14],[42,14]],
-      coins:[[15,11],[25,11],[37,11],[49,11],[51,12]],
-      blocks:[[8,11,'?'],[30,11,'?']], startX:2, goalX:53},
+    {
+      name: "2-2 平台迷宫", w: 56, gaps: [[11, 12], [21, 22], [33, 34], [45, 46]],
+      plats: [[14, 12, 3], [24, 12, 3], [36, 12, 3], [48, 12, 4]],
+      poop: [[6, 14], [18, 14], [28, 14], [38, 14], [50, 14]], deep: [[26, 14], [42, 14]],
+      coins: [[15, 11], [25, 11], [37, 11], [49, 11], [51, 12]],
+      blocks: [[8, 11, '?'], [30, 11, '?']], startX: 2, goalX: 53
+    },
 
-    {name:"2-3 粑粑军团", w:60, gaps:[[13,14],[23,24],[35,36],[47,48],[55,56]],
-      plats:[[16,12,3],[26,12,3],[38,12,3],[50,12,4]],
-      poop:[[8,14],[18,14],[30,14],[40,14],[52,14]], deep:[[28,14],[44,14],[58,14]],
-      coins:[[17,11],[27,11],[39,11],[51,11],[55,12]],
-      blocks:[[10,11,'?'],[32,11,'?']], startX:2, goalX:57},
+    {
+      name: "2-3 粑粑军团", w: 60, gaps: [[13, 14], [23, 24], [35, 36], [47, 48], [55, 56]],
+      plats: [[16, 12, 3], [26, 12, 3], [38, 12, 3], [50, 12, 4]],
+      poop: [[8, 14], [18, 14], [30, 14], [40, 14], [52, 14]], deep: [[28, 14], [44, 14], [58, 14]],
+      coins: [[17, 11], [27, 11], [39, 11], [51, 11], [55, 12]],
+      blocks: [[10, 11, '?'], [32, 11, '?']], startX: 2, goalX: 57
+    },
 
-    {name:"3-1 高层栈道", w:58, gaps:[[13,14],[27,28],[41,42]],
-      plats:[[16,12,3],[20,10,3],[30,12,3],[44,12,3],[48,10,3]],
-      poop:[[8,14],[22,14],[36,14],[52,14]], deep:[[34,14],[50,14]],
-      coins:[[17,11],[21,9],[31,11],[45,11],[49,9],[53,12]],
-      blocks:[[10,11,'?'],[38,11,'?']], startX:2, goalX:55},
+    {
+      name: "3-1 高层栈道", w: 58, gaps: [[13, 14], [27, 28], [41, 42]],
+      plats: [[16, 12, 3], [20, 10, 3], [30, 12, 3], [44, 12, 3], [48, 10, 3]],
+      poop: [[8, 14], [22, 14], [36, 14], [52, 14]], deep: [[34, 14], [50, 14]],
+      coins: [[17, 11], [21, 9], [31, 11], [45, 11], [49, 9], [53, 12]],
+      blocks: [[10, 11, '?'], [38, 11, '?']], startX: 2, goalX: 55
+    },
 
-    {name:"3-2 深蓝突袭", w:62, gaps:[[11,12],[23,24],[35,36],[49,50]],
-      plats:[[14,12,3],[26,12,3],[38,12,3],[52,12,4]],
-      poop:[[7,14],[18,14],[30,14],[42,14],[54,14]], deep:[[16,14],[28,14],[40,14],[46,14],[58,14]],
-      coins:[[15,11],[27,11],[39,11],[53,11],[56,12]],
-      blocks:[[12,11,'?'],[32,11,'?'],[44,11,'?']], startX:2, goalX:59},
+    {
+      name: "3-2 深蓝突袭", w: 62, gaps: [[11, 12], [23, 24], [35, 36], [49, 50]],
+      plats: [[14, 12, 3], [26, 12, 3], [38, 12, 3], [52, 12, 4]],
+      poop: [[7, 14], [18, 14], [30, 14], [42, 14], [54, 14]], deep: [[16, 14], [28, 14], [40, 14], [46, 14], [58, 14]],
+      coins: [[15, 11], [27, 11], [39, 11], [53, 11], [56, 12]],
+      blocks: [[12, 11, '?'], [32, 11, '?'], [44, 11, '?']], startX: 2, goalX: 59
+    },
 
-    {name:"3-3 峡谷飞跃", w:64, gaps:[[13,14],[25,26],[37,38],[49,50],[59,60]],
-      plats:[[16,12,3],[28,12,3],[40,12,3],[52,12,3],[56,10,3]],
-      poop:[[8,14],[20,14],[32,14],[44,14],[54,14]], deep:[[18,14],[30,14],[42,14],[50,14],[62,14]],
-      coins:[[17,11],[29,11],[41,11],[53,11],[57,9],[60,12]],
-      blocks:[[10,11,'?'],[34,11,'?'],[46,11,'?']], startX:2, goalX:61},
+    {
+      name: "3-3 峡谷飞跃", w: 64, gaps: [[13, 14], [25, 26], [37, 38], [49, 50], [59, 60]],
+      plats: [[16, 12, 3], [28, 12, 3], [40, 12, 3], [52, 12, 3], [56, 10, 3]],
+      poop: [[8, 14], [20, 14], [32, 14], [44, 14], [54, 14]], deep: [[18, 14], [30, 14], [42, 14], [50, 14], [62, 14]],
+      coins: [[17, 11], [29, 11], [41, 11], [53, 11], [57, 9], [60, 12]],
+      blocks: [[10, 11, '?'], [34, 11, '?'], [46, 11, '?']], startX: 2, goalX: 61
+    },
 
-    {name:"4-1 怪潮汹涌", w:66, gaps:[[13,14],[25,26],[37,38],[51,52],[61,62]],
-      plats:[[16,12,3],[28,12,3],[40,12,3],[44,10,3],[54,12,3]],
-      poop:[[8,14],[20,14],[32,14],[46,14],[56,14],[64,14]], deep:[[18,14],[30,14],[42,14],[48,14],[58,14]],
-      coins:[[17,11],[29,11],[41,11],[45,9],[55,11],[62,12]],
-      blocks:[[10,11,'?'],[34,11,'?'],[52,11,'?']], startX:2, goalX:63},
+    {
+      name: "4-1 怪潮汹涌", w: 66, gaps: [[13, 14], [25, 26], [37, 38], [51, 52], [61, 62]],
+      plats: [[16, 12, 3], [28, 12, 3], [40, 12, 3], [44, 10, 3], [54, 12, 3]],
+      poop: [[8, 14], [20, 14], [32, 14], [46, 14], [56, 14], [64, 14]], deep: [[18, 14], [30, 14], [42, 14], [48, 14], [58, 14]],
+      coins: [[17, 11], [29, 11], [41, 11], [45, 9], [55, 11], [62, 12]],
+      blocks: [[10, 11, '?'], [34, 11, '?'], [52, 11, '?']], startX: 2, goalX: 63
+    },
 
-    {name:"4-2 天梯云桥", w:68, gaps:[[15,16],[29,30],[43,44],[57,58]],
-      plats:[[18,12,3],[22,10,3],[32,12,3],[36,10,3],[46,12,3],[50,10,3],[60,12,4]],
-      poop:[[9,14],[24,14],[38,14],[52,14],[64,14]], deep:[[20,14],[34,14],[48,14],[54,14],[62,14],[66,14]],
-      coins:[[19,11],[23,9],[33,11],[37,9],[47,11],[51,9],[61,11],[65,12]],
-      blocks:[[12,11,'?'],[40,11,'?'],[54,11,'?']], startX:2, goalX:65},
+    {
+      name: "4-2 天梯云桥", w: 68, gaps: [[15, 16], [29, 30], [43, 44], [57, 58]],
+      plats: [[18, 12, 3], [22, 10, 3], [32, 12, 3], [36, 10, 3], [46, 12, 3], [50, 10, 3], [60, 12, 4]],
+      poop: [[9, 14], [24, 14], [38, 14], [52, 14], [64, 14]], deep: [[20, 14], [34, 14], [48, 14], [54, 14], [62, 14], [66, 14]],
+      coins: [[19, 11], [23, 9], [33, 11], [37, 9], [47, 11], [51, 9], [61, 11], [65, 12]],
+      blocks: [[12, 11, '?'], [40, 11, '?'], [54, 11, '?']], startX: 2, goalX: 65
+    },
 
-    {name:"4-3 终焉之殿", w:72, gaps:[[13,14],[27,28],[41,42],[55,56],[65,66]],
-      plats:[[16,12,3],[20,10,3],[30,12,3],[34,10,3],[44,12,3],[48,10,3],[58,12,3],[62,10,3],[68,12,3]],
-      poop:[[8,14],[22,14],[36,14],[50,14],[58,14],[70,14]],
-      deep:[[18,14],[32,14],[46,14],[54,14],[60,14],[68,14],[71,14]],
-      coins:[[17,11],[21,9],[31,11],[35,9],[45,11],[49,9],[59,11],[63,9],[69,11]],
-      blocks:[[10,11,'?'],[38,11,'?'],[52,11,'?'],[66,11,'?']], startX:2, goalX:69}
+    {
+      name: "4-3 终焉之殿", w: 72, gaps: [[13, 14], [27, 28], [41, 42], [55, 56], [65, 66]],
+      plats: [[16, 12, 3], [20, 10, 3], [30, 12, 3], [34, 10, 3], [44, 12, 3], [48, 10, 3], [58, 12, 3], [62, 10, 3], [68, 12, 3]],
+      poop: [[8, 14], [22, 14], [36, 14], [50, 14], [58, 14], [70, 14]],
+      deep: [[18, 14], [32, 14], [46, 14], [54, 14], [60, 14], [68, 14], [71, 14]],
+      coins: [[17, 11], [21, 9], [31, 11], [35, 9], [45, 11], [49, 9], [59, 11], [63, 9], [69, 11]],
+      blocks: [[10, 11, '?'], [38, 11, '?'], [52, 11, '?'], [66, 11, '?']], startX: 2, goalX: 69
+    }
   ];
 
   /* ===================== 样式（注入在本 app 的 shadow root，统一加 .cm-root 作用域） ===================== */
@@ -184,7 +208,7 @@
   const HOME_HTML = `
     <div class="cm-root">
       <section id="home">
-        <h1 class="cm-title">${CLAUDE_MARK}<span>Claude 大冒险</span></h1>
+        <h1 class="cm-title">${CLAUDE_MARK}<span>Claude大冒险</span></h1>
         <div class="sub">12 关 · 踩扁粑粑怪 &amp; DeepSeek 怪 · 抵达终点旗</div>
         <div class="levels" id="levelGrid"></div>
         <div class="help">
@@ -245,7 +269,7 @@
     const VIEW_OFF = 130;        // 世界整体上移量：地面落在底部并露出泥土带
     const GRAV = 0.867, MOVE = 3.65, JUMP = -13.24, MAXFALL = 14.6, BOUNCE = -9.86;
     const SPEED_POOP = 1.31, SPEED_DEEP = 1.97;
-    const W_P = 31, H_P = 53;
+    const W_P = 40, H_P = 40;
 
     let disposed = false;
     function isActive() {
@@ -330,8 +354,10 @@
     function makeMonster(type, px, py) {
       const w = type === 'poop' ? 35 : 38;
       const h = type === 'poop' ? 35 : 38;
-      return { type, x: px, y: py - h, w, h, vx: (type === 'poop' ? -SPEED_POOP : -SPEED_DEEP), vy: 0,
-               alive: true, onGround: false, dir: -1, t: Math.random() * 6 };
+      return {
+        type, x: px, y: py - h, w, h, vx: (type === 'poop' ? -SPEED_POOP : -SPEED_DEEP), vy: 0,
+        alive: true, onGround: false, dir: -1, t: Math.random() * 6
+      };
     }
     function buildLevel(idx) {
       const cfg = LEVELS[idx];
@@ -477,7 +503,6 @@
       let target = player.x + player.w / 2 - (VIEW_W * T) / 2;
       const maxCam = Math.max(0, (W - VIEW_W) * T);
       camX = Math.max(0, Math.min(maxCam, target));
-      camX = Math.floor(camX); /* ★ 加固：相机取整，杜绝亚像素平移导致的画面微抖 */
 
       hCoin.textContent = totalCoins;
     }
@@ -511,6 +536,7 @@
       ctx.arcTo(x, y, x + w, y, r);
       ctx.closePath();
     }
+    const sx = wx => Math.round(wx - camX);
     function drawBackground() {
       const sky = ctx.createLinearGradient(0, 0, 0, SCREEN_H);
       sky.addColorStop(0, '#5fb3ff'); sky.addColorStop(1, '#bfe9ff');
@@ -537,7 +563,7 @@
          深坑(gap)列完全留空（露出天空蓝），不画任何深色，读起来就是洞。 */
       const c0 = Math.floor(camX / T), c1 = c0 + VIEW_W + 1;
       for (let tx = Math.max(0, c0); tx <= Math.min(W - 1, c1); tx++) {
-        const x = tx * T - camX;
+        const x = sx(tx * T);
         const solid = grid[ground][tx] !== ' ';
         if (solid) {
           /* 有地砖：从地表线向下一直铺到画布底部，与地砖连成一体 */
@@ -564,7 +590,7 @@
         for (let tx = Math.max(0, c0); tx <= Math.min(W - 1, c1); tx++) {
           const c = grid[ty][tx];
           if (c === ' ') continue;
-          const x = tx * T - camX, y = ty * T - VIEW_OFF;
+          const x = sx(tx * T), y = ty * T - VIEW_OFF;
           if (c === 'X') {
             ctx.fillStyle = '#8a5a2b'; ctx.fillRect(x, y, T, T);
             ctx.fillStyle = '#5fae3a'; ctx.fillRect(x, y, T, 6);
@@ -590,7 +616,7 @@
     }
     function drawCoin(c) {
       if (c.got) return;
-      const x = c.x - camX, y = c.y - VIEW_OFF + Math.sin(c.t) * 3;
+      const x = sx(c.x), y = Math.round(c.y - VIEW_OFF + Math.sin(c.t) * 3);
       ctx.fillStyle = '#ffd34d';
       ctx.beginPath(); ctx.ellipse(x, y, c.r * 0.7, c.r, 0, 0, 7); ctx.fill();
       ctx.fillStyle = '#fff0a8';
@@ -598,7 +624,7 @@
       ctx.strokeStyle = '#c79a1f'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.ellipse(x, y, c.r * 0.7, c.r, 0, 0, 7); ctx.stroke();
     }
     function drawGoal() {
-      const x = goal.x - camX, topY = goal.y - VIEW_OFF, botY = (goal.y + goal.h) - VIEW_OFF;
+      const x = sx(goal.x), topY = Math.round(goal.y - VIEW_OFF), botY = Math.round((goal.y + goal.h) - VIEW_OFF);
       ctx.fillStyle = '#ddd'; ctx.fillRect(x, topY, 4, goal.h);
       ctx.fillStyle = '#ffd34d'; ctx.beginPath(); ctx.arc(x + 2, topY, 5, 0, 7); ctx.fill();
       ctx.fillStyle = '#ff5a5a'; ctx.beginPath();
@@ -606,17 +632,17 @@
       ctx.fillStyle = 'rgba(255,255,255,.5)'; ctx.fillRect(x - 1, botY - 4, 8, 4);
     }
     function drawClaude(p) {
-      /* ★ 加固：屏幕坐标取整，配合 imageSmoothingEnabled=false，Claude 不再亚像素闪烁 */
-      const x = Math.round(p.x - camX), y = Math.round(p.y - VIEW_OFF), w = p.w, h = p.h;
-      ctx.fillStyle = 'rgba(0,0,0,.18)'; ctx.beginPath(); ctx.ellipse(x + w / 2, y + h, w / 2, 5, 0, 0, 7); ctx.fill();
+      const x = Math.round(p.x - camX), y = Math.round(p.y - VIEW_OFF);
+      ctx.fillStyle = 'rgba(0,0,0,.18)';
+      ctx.beginPath(); ctx.ellipse(x + p.w / 2, y + p.h, p.w / 2, 5, 0, 0, 7); ctx.fill();
       if (imgClaude.complete && imgClaude.naturalWidth) {
-        ctx.drawImage(imgClaude, x - 2, y, w + 4, h);
+        ctx.drawImage(imgClaude, x, y, p.w, p.h);   // 40×40 等比，1:1 贴合碰撞盒
       } else {
-        ctx.fillStyle = '#E8643C'; roundRect(x, y + 4, w, h - 4, 6); ctx.fill();
+        ctx.fillStyle = '#E8643C'; roundRect(x, y, p.w, p.h, 6); ctx.fill();
       }
     }
     function drawPoop(m) {
-      const x = m.x - camX, y = m.y - VIEW_OFF, w = m.w, h = m.h;
+      const x = sx(m.x), y = Math.round(m.y - VIEW_OFF), w = m.w, h = m.h;
       ctx.fillStyle = 'rgba(0,0,0,.18)'; ctx.beginPath(); ctx.ellipse(x + w / 2, y + h, w / 2, 4, 0, 0, 7); ctx.fill();
       ctx.fillStyle = '#8a5a2b';
       ctx.beginPath(); ctx.ellipse(x + w / 2, y + h - 4, w / 2, 7, 0, 0, 7); ctx.fill();
@@ -628,7 +654,7 @@
       ctx.fillStyle = '#000'; ctx.beginPath(); ctx.arc(x + w * 0.36, y + h - 15, 1.4, 0, 7); ctx.arc(x + w * 0.64, y + h - 15, 1.4, 0, 7); ctx.fill();
     }
     function drawDeep(m) {
-      const x = m.x - camX, y = m.y - VIEW_OFF, w = m.w, h = m.h;
+      const x = sx(m.x), y = Math.round(m.y - VIEW_OFF), w = m.w, h = m.h;
       ctx.fillStyle = 'rgba(0,0,0,.18)'; ctx.beginPath(); ctx.ellipse(x + w / 2, y + h, w / 2, 4, 0, 0, 7); ctx.fill();
       if (imgDeep.complete && imgDeep.naturalWidth) {
         ctx.drawImage(imgDeep, x, y, w, h);
@@ -637,7 +663,6 @@
       }
     }
     function render() {
-      /* 画布缓冲 = 屏幕 420×560，世界坐标直接 1:1 绘制，无任何缩放变换。 */
       drawBackground();
       if (!grid) return;
       drawTiles();
@@ -703,7 +728,7 @@
       const el = q(id);
       const down = e => {
         e.preventDefault();
-        try { el.setPointerCapture(e.pointerId); } catch (_) {}
+        try { el.setPointerCapture(e.pointerId); } catch (_) { }
         holdMap.set(e.pointerId, prop);
         if (prop === 'jump') keys.jump = true; else pressHoriz(prop, 'touch', true);
         audio();
@@ -714,7 +739,7 @@
         let still = false;
         holdMap.forEach(p => { if (p === prop) still = true; });
         if (!still) { if (prop === 'jump') keys.jump = false; else pressHoriz(prop, 'touch', false); }
-        try { el.releasePointerCapture(e.pointerId); } catch (_) {}
+        try { el.releasePointerCapture(e.pointerId); } catch (_) { }
       };
       on(el, 'pointerdown', down);
       on(el, 'pointerup', up);
@@ -757,12 +782,12 @@
       disposed = true;
       if (rafId) cancelAnimationFrame(rafId);
       rafId = 0;
-      listeners.forEach(f => { try { f(); } catch (e) {} });
+      listeners.forEach(f => { try { f(); } catch (e) { } });
       listeners.length = 0;
       timers.forEach(t => clearTimeout(t));
       timers.length = 0;
       holdMap.clear();
-      try { if (actx && actx.state !== 'closed') actx.close(); } catch (e) {}
+      try { if (actx && actx.state !== 'closed') actx.close(); } catch (e) { }
       actx = null;
     };
   }
@@ -770,7 +795,7 @@
   /* ===================== 注册到 WujiOS 应用生态 ===================== */
   WujiApps.registerInstalled({
     bundlename: BUNDLE,
-    name: 'Claude 大冒险',
+    name: 'Claude大冒险',
     icon: './assets/claude-mario.svg',
     version: '1.0.1',
     author: 'wujinb',
@@ -779,7 +804,6 @@
     devices: ['iwuji', 'pc'],
     styles: STYLES,
     routes: {
-      /* 选关首页：点击关卡用 ctx.push 打开游戏页；返回由框架手势/按钮处理 */
       home: {
         name: 'home',
         render() { return HOME_HTML; },
@@ -796,7 +820,6 @@
         },
       },
 
-      /* 游戏页：读取 push 传来的 level，构建关卡；pop（系统返回）时 dispose 收尾 */
       game: {
         name: 'game',
         render() { return GAME_HTML; },

@@ -1,25 +1,11 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
-  <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#26324f"/>
-      <stop offset="100%" stop-color="#141a2e"/>
-    </linearGradient>
-    <linearGradient id="grass" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#6fc14a"/>
-      <stop offset="100%" stop-color="#3d7d28"/>
-    </linearGradient>
-  </defs>
-
-  <!-- 深色圆角底 -->
-  <rect width="256" height="256" rx="56" fill="url(#bg)"/>
-
-  <!-- 草地平台，点题「平台跳跃」 -->
+  <rect width="256" height="256" fill="#26324f"/>
   <rect x="0" y="208" width="256" height="48" fill="#8a5a2b"/>
-  <rect x="0" y="208" width="256" height="12" fill="url(#grass)"/>
-
-  <!-- Canvas 同款 Claude：与游戏内 imgClaude 完全一致的形状 + #D97757 配色 -->
-  <g transform="translate(44 30) scale(7)">
-    <path d="M20.998 10.949H24v3.102h-3v3.028h-1.487V20H18v-2.921h-1.487V20H15v-2.921H9V20H7.488v-2.921H6V20H4.487v-2.921H3V14.05H0V10.95h3V5h17.998v5.949zM6 10.949h1.488V8.102H6v2.847zm10.51 0H18V8.102h-1.49v2.847z"
-          fill="#D97757" fill-rule="evenodd" clip-rule="evenodd"/>
-  </g>
+  <rect x="0" y="208" width="256" height="12" fill="#6fc14a"/>
+  <path
+    d="M190.986 106.643 H212 v21.714 h-21 v21.196 h-10.409 V170 H170 v-20.447 h-10.409 V170 H149 v-20.447 H107 V170 H96.416 v-20.447 H86 V170 H75.409 v-20.447 H65 V128.35 H44 V106.65 h21 V65 h125.986 v41.643 z M86 106.643 h10.416 V86.714 H86 v19.929 z m73.57 0 H170 V86.714 h-10.43 v19.929 z"
+    fill="#D97757"
+    fill-rule="evenodd"
+    clip-rule="evenodd"
+  />
 </svg>
