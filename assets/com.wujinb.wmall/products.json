@@ -23,7 +23,7 @@
           "id": "black",
           "text": "牛逼黑",
           "image": "./assets/com.wujinb.wmall/iwuji_black.png",
-          "buyable": false
+          "buyable": true
         }
       ],
       "specs": [
@@ -86,7 +86,7 @@
       "icon": "./assets/com.wujinb.wmall/nb_baohuke.png",
       "name": "牛逼素皮保护壳",
       "price": 109,
-      "buyable": true
+      "buyable": false
     }
   ]
 }
