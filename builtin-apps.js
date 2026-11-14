@@ -12,7 +12,8 @@ const BUILTIN_APPS = [
     { bundlename: 'com.wujios.themes', name: '主题', src: 'apps/themes.js' },
     { bundlename: 'com.wujios.taskmgr', name: '任务管理器', src: 'apps/taskmgr.js', devices: ['pc'] },
     { bundlename: 'com.wujios.files', name: '文件管理', src: 'apps/files.js' },
-    { bundlename: 'com.wujios.filepreview', name: '文件预览', src: 'apps/filepreview.js', hidden: true }
+    { bundlename: 'com.wujios.filepreview', name: '文件预览', src: 'apps/filepreview.js', hidden: true },
+    { bundlename: 'com.wujios.terminal', name: '终端', src: 'apps/terminal.js', devices: ['pc'] }
 ];
 
 const PRELOAD_SCRIPTS = [];

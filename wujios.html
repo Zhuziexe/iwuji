@@ -218,6 +218,8 @@
   <script src="themes/store_themes.js"></script>
   <script src="theme.js"></script>
   <script src="builtin-apps.js"></script>
+  <script src="ime-data.js"></script>
+  <script src="ime.js"></script>
 
   <script>
     const ICONS = {
@@ -1812,6 +1814,8 @@
           routes: app.routes || {},
         });
         currentNav = nav;
+        // #5 页面级 IME：任意路由切换（push/pop/reset）都收起输入法，避免留在上一个页面。
+        if (window.WJ_IME) nav.onChange(() => window.WJ_IME.hide());
 
         const legacyCtx = {
           closeApp,

@@ -59,7 +59,7 @@
     name: '吴际诗词',
     icon: './assets/wujipoe.svg',
     initialRoute: 'home',
-    version: '1.0.0',
+    version: '1.0.1',
     devices: ['iwuji', 'pc'],
 
     styles: `
@@ -172,7 +172,10 @@
               <header class="wp-header">
                 <div class="wp-header__title">吴际诗词</div>
                 <div class="wp-search">
-                  <input id="wp-q" type="search" placeholder="搜索诗句 / 标题，如「明月」「静夜思」" />
+                  ${ window.WJ_IME
+                    ? '<div id="wp-q" data-wj-field="1" data-wj-placeholder="搜索诗句 / 标题，如「明月」「静夜思」" tabindex="0" inputmode="none" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></div>'
+                    : '<input id="wp-q" type="search" placeholder="搜索诗句 / 标题，如「明月」「静夜思」" />'
+                  }
                   <button id="wp-go" type="button">搜索</button>
                 </div>
               </header>
@@ -223,7 +226,7 @@
           }
 
           function doSearch() {
-            const q = (qEl().value || '').trim();
+            const q = (window.WJ_IME ? window.WJ_IME.getFieldText(qEl()) : qEl().value || '').trim();
             if (q.length < 3) {
               toast('搜索关键词至少需要 3 个字');
               return;

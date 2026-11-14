@@ -68,7 +68,7 @@
     name: '备忘录',
     icon: './assets/note.svg',
     initialRoute: 'home',
-    version: '1.0.6',
+    version: '1.0.7',
     styles: `
       /* ==================== 主页 ==================== */
       .note-page {
@@ -250,6 +250,9 @@
       .note-edit__content::placeholder {
         color: var(--wj-text-dim);
       }
+      /* #4 自绘 div 输入框：保持与原 input/textarea 一致的换行/滚动表现 */
+      div.note-edit__title { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      div.note-edit__content { white-space: pre-wrap; word-break: break-word; }
 
       /* ==================== 删除确认页 ==================== */
       .note-confirm {
@@ -506,24 +509,17 @@
           const title   = note ? (note.title   || '') : '';
           const content = note ? (note.content || '') : '';
 
+          const titleField = window.WJ_IME
+            ? `<div class="note-edit__title" id="noteEditTitle" data-wj-field="1" data-wj-placeholder="标题" tabindex="0" inputmode="none" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></div>`
+            : `<input class="note-edit__title" id="noteEditTitle" type="text" placeholder="标题" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" value="${escapeHtml(title)}">`;
+          const contentField = window.WJ_IME
+            ? `<div class="note-edit__content" id="noteEditContent" data-wj-field="1" data-wj-placeholder="内容" tabindex="0" inputmode="none" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></div>`
+            : `<textarea class="note-edit__content" id="noteEditContent" placeholder="内容" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">${escapeHtml(content)}</textarea>`;
+
           return `
             <div class="note-edit">
-              <input class="note-edit__title"
-                     id="noteEditTitle"
-                     type="text"
-                     placeholder="标题"
-                     autocomplete="off"
-                     autocorrect="off"
-                     autocapitalize="off"
-                     spellcheck="false"
-                     value="${escapeHtml(title)}">
-              <textarea class="note-edit__content"
-                        id="noteEditContent"
-                        placeholder="内容"
-                        autocomplete="off"
-                        autocorrect="off"
-                        autocapitalize="off"
-                        spellcheck="false">${escapeHtml(content)}</textarea>
+              ${titleField}
+              ${contentField}
             </div>
           `;
         },
@@ -539,6 +535,13 @@
           const contentEl = root.querySelector('#noteEditContent');
           const isNew     = !!ctx.data.isNew;
 
+          // #4 自绘 div 用 IME 接口初始化文本（input 直接走 value）。
+          // title/content 在 render 作用域内，mount 里重新取值。
+          const note0 = findNote(id);
+          const title0   = note0 ? (note0.title   || '') : '';
+          const content0 = note0 ? (note0.content || '') : '';
+          if (window.WJ_IME) { window.WJ_IME.setFieldText(titleEl, title0); window.WJ_IME.setFieldText(contentEl, content0); }
+
           if (isNew) {
             setTimeout(() => {
               try { titleEl.focus(); } catch {}
@@ -548,9 +551,10 @@
           let saveTimer = null;
           let destroyed = false;
 
+          function readText(el) { return window.WJ_IME ? window.WJ_IME.getFieldText(el) : (el.value || ''); }
           function flushSave() {
-            const title   = titleEl.value;
-            const content = contentEl.value;
+            const title   = readText(titleEl);
+            const content = readText(contentEl);
             if (isNew && !title.trim() && !content.trim()) return;
             upsertNote(id, title, content);
           }
@@ -563,6 +567,7 @@
             }, 400);
           }
 
+          // 自绘 div 输入由 IME 接管并派发 input 事件；input 原生派发。
           titleEl.addEventListener('input', scheduleSave);
           contentEl.addEventListener('input', scheduleSave);
 

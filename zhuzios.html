@@ -1814,6 +1814,8 @@
           shadow.appendChild(navHost);
 
           const nav = new WujiNavigation({ host: navHost, routes: app.routes || {} });
+          // #5 页面级 IME：任意路由切换都收起输入法（zhuzios 无 WJ_IME，这里做防御性判空）。
+          if (window.WJ_IME) nav.onChange(() => window.WJ_IME.hide());
 
           const ctx = {
             closeApp: () => { opts.onClose?.(); },

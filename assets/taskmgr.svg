@@ -1,7 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
 
   <!-- 白色圆角背景 -->
-  <rect width="256" height="256" rx="48" ry="48" fill="#FFFFFF"/>
+  <rect width="256" height="256" fill="#FFFFFF"/>
 
   <!-- 波线下方浅蓝色填充，延伸到底部内缘并带圆角收边 -->
   <path d="M 33 190

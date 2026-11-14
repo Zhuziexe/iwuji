@@ -307,7 +307,7 @@
     name: '牛奶地图',
     icon: './assets/map.svg',
     initialRoute: 'home',
-    version: '1.0.2',
+    version: '1.0.3',
 
     styles: `
       .map-page {
@@ -878,7 +878,10 @@
             <div class="map-searchpage">
               <div class="map-sp__bar">
                 <svg class="map-sp__icon" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#8a8a8e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
-                <input id="mapSearchInput" class="map-sp__input" type="search" placeholder="城市 / 地点" enterkeyhint="search" autocomplete="off" />
+                ${ window.WJ_IME
+                  ? '<div id="mapSearchInput" class="map-sp__input" data-wj-field="1" data-wj-placeholder="城市 / 地点" tabindex="0" inputmode="none" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></div>'
+                  : '<input id="mapSearchInput" class="map-sp__input" placeholder="城市 / 地点" />'
+                }
                 <button id="mapSearchGo" class="map-sp__go" type="button">搜索</button>
               </div>
               <div class="map-sp__body" id="mapSearchBody">
@@ -921,12 +924,14 @@
               const r = results[+el.dataset.i];
               el.addEventListener('click', () => {
                 try { AppState.flyToPlace?.(r.lat, r.lng, r.sys); } catch {}
+                if (window.WJ_IME) window.WJ_IME.hide();   // #5 滑走前收起 IME
                 try { ctx?.pop(); } catch (e) { console.warn('[map] pop', e); }
               });
             });
           };
           const doSearch = async () => {
-            const q = (input && input.value || '').trim();
+            const getText = window.WJ_IME ? (() => window.WJ_IME.getFieldText(input)) : (() => input && input.value || '');
+            const q = getText().trim();
             if (!q) return;
             busy = true; renderResults([], '');
             const { results, note } = await geocode(q);
@@ -934,13 +939,18 @@
             if (!body) return;
             renderResults(results, note);
           };
-          input?.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') { e.preventDefault(); doSearch(); }
-          });
           goBtn?.addEventListener('click', doSearch);
-          // 进入即聚焦
-          setTimeout(() => { try { input?.focus(); } catch {} }, 250);
-          return () => {};
+          // #3 输入不会弹：首次进搜索页时面板动画未稳定，focusin 抓到的 rect 不对导致不弹；
+          // 这里等面板可见后再聚焦，确保 IME 正确弹出。
+          if (input) {
+            requestAnimationFrame(() => requestAnimationFrame(() => {
+              if (!disposed && input.isConnected) { try { input.focus(); } catch (e) {} }
+            }));
+          }
+          return () => {
+            // #5 搜索页滑走时收起 IME（页面级，避免地图页还留着键盘）。
+            if (window.WJ_IME) window.WJ_IME.hide();
+          };
         },
       },
     },

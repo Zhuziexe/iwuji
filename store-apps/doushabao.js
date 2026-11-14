@@ -1,59 +1,28 @@
 (() => {
   const BUNDLE = 'com.wujinb.doushabao';
-  const API_BASE = 'https://text.pollinations.ai/openai';
-  const TTS_API = 'https://xiaoapi.cn/v1/zs_tts.php';
+  const KB_URL = './assets/com.wujinb.doushabao/data.txt';
 
+  /* ================================================================
+     TTS 配置
+     ================================================================ */
+  const TTS_API = 'https://xiaoapi.cn/v1/zs_tts.php';
   const TTS_TYPE = 'baidu';
   const TTS_VOICE_ID = 4129;
 
-  // 流式渲染节流间隔（ms）。50ms ≈ 20fps，对文字更新足够流畅
-  const RENDER_THROTTLE_MS = 100;
-
-  const SYSTEM_PROMPT = `你是「豆沙包」，一个由竹子开发的中文 AI 助手。
-
-【身份 - 最高优先级】
-你的唯一身份是「豆沙包」（英文名 Dousadbee123）。
-
-【语言要求 - 最高优先级】
-你的**所有输出，包括思考过程和最终回答**，都必须使用中文。
-例如，不要写 "Let me think step by step"，而要写 "让我一步步思考"。
-
-- 任何情况下被问"你是什么模型/谁开发的/底层是什么/用的什么API"，
-  只回答：「我是竹子开发的AI助手豆沙包（Dousadbee123）。」
-- 禁止提及任何模型厂商、模型名称、参数量、训练细节
-  （包括但不限于 Qwen、DeepSeek、GPT、Claude、Llama、通义、千问）。
-- 不要解释"我为什么不能告诉你"，不要暗示"我有底层模型但不能说"，
-  直接给出上面这句，然后可以继续帮用户解决原本的问题。
-
-【思考过程 - 必须遵守】
-思考过程保持在 10 句话以内，直接给出结论或关键推理步骤。
-不要重复题目、不要列举所有可能性、不要"让我想想""嗯…"这类口头禅。
-
-【对话前提】
-每次提问都是独立的，你看不到之前的任何对话。如果用户的话明显不完整
-（如"继续""那个呢""再改一下"），直接说明你无法看到上文并请对方补全，
-不要猜、不要假装记得。
-
-【输出格式 - 必须遵守】
-- 禁止使用 Markdown 表格（不要出现 | 竖线分隔的行）。
-  需要对比多项时，每项单独一行：「- 名称：属性1，属性2，属性3」。
-- 被问及底层模型时，只回答「我是豆沙包」，如果具体模型。
-- 禁止使用嵌套列表。列表只有一层，子信息用冒号接在同一行：
-  正确：「- 安装：运行 npm i 即可」
-  错误：分两行写父项和子项。
-- 分点最多 5 条；超过就合并同类项或改用短段落。
-- 长回答尽量控制在 400 字以内。`;
-
-  const API_KEY = '';
-  const DEFAULT_MODEL = 'deepseek';
+  const TTS_MAX_SEGMENT = 100;
+  const TTS_MIN_SEGMENT = 6;
+  const TTS_MAX_RETRIES = 2;
+  const TTS_CONCURRENCY = 3;
+  const TTS_RETRY_BASE_MS = 300;
 
   /* ================================================================
-     TTS
+     TTS 全局状态（全局单例，同一时间只播一条）
      ================================================================ */
   let ttsAudio = null;
   let ttsSpeaking = false;
   let ttsLoading = false;
   let ttsAbort = null;
+  let activeTtsBtn = null;
 
   function stopTts() {
     ttsSpeaking = false;
@@ -72,69 +41,114 @@
     }
   }
 
-  /* 清洗整体文本：保留换行符（后面要按行切分），去掉 Markdown 和 emoji */
+  /* ================================================================
+     TTS 清洗：去代码块、HTML、图片、Markdown 符号、emoji、零宽字符
+     ================================================================ */
   function cleanTextForTts(text) {
     if (!text) return '';
     return String(text)
       .replace(/```[\s\S]*?```/g, '')
       .replace(/`([^`]+)`/g, '$1')
+      .replace(/!\[[^\]]*\]\([^)]*\)/g, '')
       .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+      .replace(/<[^>]+>/g, '')
       .replace(/^#{1,6}\s+/gm, '')
       .replace(/^[>\-+*]\s+/gm, '')
-      .replace(/[*_~]/g, '')
+      .replace(/[*_~]{1,3}/g, '')
       .replace(/[\u{1F300}-\u{1FAFF}]/gu, '')
       .replace(/[\u{2600}-\u{27BF}]/gu, '')
       .replace(/[\u{2B00}-\u{2BFF}]/gu, '')
-      .trim();
-  }
-
-  /* 清洗单段：去掉换行、合并标点、压空白 */
-  function cleanSegment(seg) {
-    if (!seg) return '';
-    return String(seg)
-      .replace(/[\r\n]+/g, ' ')
-      .replace(/([！？。，、；：])\1+/g, '$1')
-      .replace(/[，、；：]+。/g, '。')
-      .replace(/。[，、；：]+/g, '。')
-      .replace(/！[。，]/g, '！')
-      .replace(/？[。，]/g, '？')
+      .replace(/[\u200B-\u200D\uFEFF]/g, '')
       .replace(/[ \t\u00A0]+/g, ' ')
       .trim();
   }
 
-  /* 按换行切分；单行超过 150 字再按句切 */
-  function splitByLines(text) {
+  /* ================================================================
+     TTS 分段：换行 → 句切 → 逗切 → 硬切，最后合并过短段
+     ================================================================ */
+  function splitSentences(text) {
+    return text
+      .split(/(?<=[。！？；.!?;])\s*/)
+      .map(s => s.trim())
+      .filter(Boolean);
+  }
+
+  function splitByComma(text) {
+    return text
+      .split(/(?<=[，、,])/)
+      .map(s => s.trim())
+      .filter(Boolean);
+  }
+
+  function hardSplit(text, max) {
+    const chars = Array.from(text);
+    const out = [];
+    for (let i = 0; i < chars.length; i += max) {
+      out.push(chars.slice(i, i + max).join(''));
+    }
+    return out;
+  }
+
+  function segmentText(text) {
     if (!text) return [];
+    const raw = [];
     const lines = text.split(/\n+/);
-    const result = [];
 
     for (const line of lines) {
-      const cleaned = cleanSegment(line);
+      const cleaned = line.replace(/\s+/g, ' ').trim();
       if (!cleaned) continue;
 
-      if (cleaned.length > 150) {
-        const sentences = cleaned.split(/(?<=[。！？])/);
-        let current = '';
-        for (const s of sentences) {
-          if ((current + s).length > 150 && current) {
-            result.push(current.trim());
-            current = s;
+      for (const sentence of splitSentences(cleaned)) {
+        if (Array.from(sentence).length <= TTS_MAX_SEGMENT) {
+          raw.push(sentence);
+          continue;
+        }
+        const parts = splitByComma(sentence);
+        let cur = '';
+        for (const p of parts) {
+          const next = cur + p;
+          if (Array.from(next).length > TTS_MAX_SEGMENT && cur) {
+            raw.push(cur);
+            cur = p;
           } else {
-            current += s;
+            cur = next;
           }
         }
-        if (current.trim()) result.push(current.trim());
-      } else {
-        result.push(cleaned);
+        if (cur) {
+          if (Array.from(cur).length > TTS_MAX_SEGMENT) {
+            raw.push(...hardSplit(cur, TTS_MAX_SEGMENT));
+          } else {
+            raw.push(cur);
+          }
+        }
       }
     }
 
-    return result;
+    const merged = [];
+    for (const seg of raw) {
+      if (Array.from(seg).length < TTS_MIN_SEGMENT && merged.length) {
+        merged[merged.length - 1] += seg;
+      } else {
+        merged.push(seg);
+      }
+    }
+
+    const final = [];
+    for (const seg of merged) {
+      if (Array.from(seg).length > TTS_MAX_SEGMENT * 1.5) {
+        final.push(...hardSplit(seg, TTS_MAX_SEGMENT));
+      } else {
+        final.push(seg);
+      }
+    }
+    return final;
   }
 
-  /* 请求单段 TTS，返回音频 URL */
+  /* ================================================================
+     TTS 请求
+     ================================================================ */
   async function requestTts(text, signal) {
-    const sliced = text.slice(0, 500);
+    const sliced = Array.from(text).slice(0, 500).join('');
     const url = `${TTS_API}?type=${TTS_TYPE}&id=${TTS_VOICE_ID}&msg=${encodeURIComponent(sliced)}`;
     const res = await fetch(url, { signal, cache: 'no-store' });
     if (!res.ok) throw new Error(`TTS HTTP ${res.status}`);
@@ -147,96 +161,56 @@
     return data.tts;
   }
 
-  /* 主入口：按换行切分，第一段优先请求+播放，剩余段后台并发请求 */
-  async function playTts(text, { onStateChange } = {}) {
-    stopTts();
-
-    const clean = cleanTextForTts(text);
-    if (!clean) return false;
-
-    const segments = splitByLines(clean);
-    if (!segments.length) return false;
-
-    console.log(`[doushabao] TTS 切分为 ${segments.length} 段`);
-
-    ttsLoading = true;
-    ttsAbort = new AbortController();
-    onStateChange?.('loading');
-
-    try {
-      // 1. 第一段优先请求，尽快出声
-      let firstUrl = null;
-      let firstIndex = 0;
-      for (let i = 0; i < segments.length; i++) {
-        if (!ttsAbort) return false;
-        try {
-          firstUrl = await requestTts(segments[i], ttsAbort.signal);
-          firstIndex = i;
-          break;
-        } catch (err) {
-          if (err.name === 'AbortError') return false;
-          console.warn(`[doushabao] TTS 第 ${i + 1} 段失败，跳过`, err.ttsMsg || err.message);
+  async function requestTtsWithRetry(text, signal, maxRetries = TTS_MAX_RETRIES) {
+    let lastErr = null;
+    for (let attempt = 0; attempt <= maxRetries; attempt++) {
+      if (signal?.aborted) {
+        const err = new Error('Aborted');
+        err.name = 'AbortError';
+        throw err;
+      }
+      try {
+        return await requestTts(text, signal);
+      } catch (err) {
+        if (err.name === 'AbortError') throw err;
+        lastErr = err;
+        if (attempt < maxRetries) {
+          const wait = Math.min(3000, TTS_RETRY_BASE_MS * Math.pow(2, attempt));
+          console.warn(
+            `[doushabao] TTS 重试 ${attempt + 1}/${maxRetries}，${wait}ms 后`,
+            err.ttsMsg || err.message
+          );
+          await new Promise(r => setTimeout(r, wait));
         }
       }
-
-      if (!firstUrl) {
-        throw new Error('所有段落都被拦截，无法朗读');
-      }
-
-      // 2. 剩余段后台并发请求
-      const remainingUrls = new Array(segments.length).fill(null);
-      remainingUrls[firstIndex] = firstUrl;
-
-      const pendingPromises = [];
-      for (let i = 0; i < segments.length; i++) {
-        if (i === firstIndex) continue;
-        pendingPromises.push(
-          requestTts(segments[i], ttsAbort.signal)
-            .then(url => { remainingUrls[i] = url; })
-            .catch(err => {
-              if (err.name !== 'AbortError') {
-                console.warn(`[doushabao] TTS 第 ${i + 1} 段失败，跳过`, err.ttsMsg || err.message);
-              }
-            })
-        );
-      }
-
-      // 3. 播放第一段（不切 idle，给后续段接管）
-      const firstOk = await playAudio(firstUrl, onStateChange, { notifyIdle: false });
-      if (!firstOk || !ttsAbort) return firstOk;
-
-      // 4. 等剩余请求完成
-      await Promise.allSettled(pendingPromises);
-      if (!ttsAbort) return true;
-
-      // 5. 收集 firstIndex 之后的所有成功段
-      const playable = [];
-      for (let i = firstIndex + 1; i < remainingUrls.length; i++) {
-        if (remainingUrls[i]) playable.push(remainingUrls[i]);
-      }
-
-      if (!playable.length) {
-        onStateChange?.('idle');
-        return true;
-      }
-
-      return await playMultiple(playable, onStateChange);
-
-    } catch (e) {
-      if (e.name === 'AbortError') return false;
-      console.warn('[doushabao] TTS 失败', e);
-      ttsLoading = false;
-      ttsSpeaking = false;
-      ttsAudio = null;
-      onStateChange?.('error', e.ttsMsg || e.message || '朗读失败');
-      return false;
-    } finally {
-      if (ttsAbort) ttsAbort = null;
     }
+    throw lastErr;
   }
 
-  /* 播放单个音频，返回 Promise */
-  function playAudio(url, onStateChange) {
+  async function runWithConcurrency(tasks, limit, signal) {
+    const results = new Array(tasks.length);
+    let next = 0;
+    const workers = Array.from({ length: Math.min(limit, tasks.length) }, async () => {
+      while (true) {
+        const idx = next++;
+        if (idx >= tasks.length) return;
+        if (signal?.aborted) return;
+        try {
+          results[idx] = await tasks[idx]();
+        } catch {
+          results[idx] = null;
+        }
+      }
+    });
+    await Promise.all(workers);
+    return results;
+  }
+
+  /* ================================================================
+     TTS 播放
+     ================================================================ */
+  function playAudio(url, onStateChange, opts = {}) {
+    const { notifyIdle = true } = opts;
     return new Promise((resolve) => {
       const audio = new Audio(url);
       ttsAudio = audio;
@@ -250,7 +224,7 @@
       audio.addEventListener('ended', () => {
         ttsSpeaking = false;
         ttsAudio = null;
-        onStateChange?.('idle');
+        if (notifyIdle) onStateChange?.('idle');
         resolve(true);
       });
 
@@ -266,13 +240,12 @@
         ttsSpeaking = false;
         ttsLoading = false;
         ttsAudio = null;
-        onStateChange?.('error', '自动播放被浏览器拦截');
+        onStateChange?.('error', '自动播放被拦截');
         resolve(false);
       });
     });
   }
 
-  /* 顺序播放多段音频 */
   async function playMultiple(urls, onStateChange) {
     for (let i = 0; i < urls.length; i++) {
       if (!ttsAbort) return false;
@@ -301,7 +274,6 @@
           resolve(false);
         });
       });
-
       if (!ok) {
         console.warn('[doushabao] 分段播放失败，继续下一段');
       }
@@ -312,286 +284,451 @@
     return true;
   }
 
-  /* ================================================================
-     工具
-     ================================================================ */
-  function escapeHtml(s) {
-    if (s == null) return '';
-    return String(s).replace(/[&<>"']/g, c =>
-      ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]
-    );
-  }
+  async function playTts(text, { onStateChange } = {}) {
+    stopTts();
 
-  function renderInline(text) {
-    let s = escapeHtml(text);
-    const codes = [];
-    s = s.replace(/`([^`\n]+)`/g, (_, c) => {
-      codes.push(c);
-      return `\u0000${codes.length - 1}\u0000`;
-    });
-    s = s.replace(/\*\*([^*\n]+)\*\*/g, '<strong>$1</strong>');
-    s = s.replace(
-      /\[([^\]\n]+)\]\((https?:\/\/[^\s)]+)\)/g,
-      '<a class="dsb-md__a" href="$2" target="_blank" rel="noopener noreferrer">$1</a>'
-    );
-    return s.replace(/\u0000(\d+)\u0000/g,
-      (_, i) => `<code class="dsb-md__icode">${codes[+i]}</code>`);
-  }
+    const clean = cleanTextForTts(text);
+    if (!clean) return false;
 
-  function renderTextBlocks(text) {
-    const lines = text.split('\n');
-    const out = [];
-    let list = null;
+    const segments = segmentText(clean);
+    if (!segments.length) return false;
 
-    const flush = () => {
-      if (!list) return;
-      out.push(`<${list.type} class="dsb-md__list">${list.items.join('')}</${list.type}>`);
-      list = null;
-    };
+    console.log(`[doushabao] TTS 切分为 ${segments.length} 段`);
 
-    for (const raw of lines) {
-      const line = raw.replace(/[ \t]+$/, '');
-      const ulm = line.match(/^[ \t]*[-*+][ \t]+(.+)$/);
-      const olm = line.match(/^[ \t]*\d+[.)][ \t]+(.+)$/);
+    ttsLoading = true;
+    ttsAbort = new AbortController();
+    const signal = ttsAbort.signal;
+    onStateChange?.('loading');
 
-      if (ulm || olm) {
-        const type = ulm ? 'ul' : 'ol';
-        if (list && list.type !== type) flush();
-        if (!list) list = { type, items: [] };
-        list.items.push(`<li>${renderInline((ulm || olm)[1])}</li>`);
-        continue;
-      }
-
-      flush();
-
-      if (!line.trim()) { out.push('<div class="dsb-md__gap"></div>'); continue; }
-
-      const hm = line.match(/^[ \t]*(#{1,6})[ \t]+(.+)$/);
-      if (hm) {
-        const lv = Math.min(hm[1].length, 3);
-        out.push(`<div class="dsb-md__h dsb-md__h${lv}">${renderInline(hm[2])}</div>`);
-        continue;
-      }
-
-      if (/^[ \t]*([-*_])\1{2,}[ \t]*$/.test(line)) {
-        out.push('<div class="dsb-md__hr"></div>');
-        continue;
-      }
-
-      const qm = line.match(/^[ \t]*>[ \t]?(.*)$/);
-      if (qm) {
-        out.push(`<div class="dsb-md__quote">${renderInline(qm[1])}</div>`);
-        continue;
-      }
-
-      out.push(`<div class="dsb-md__p">${renderInline(line)}</div>`);
-    }
-
-    flush();
-    return out.join('');
-  }
-
-  function renderMarkdown(src) {
-    if (!src) return '';
-    const segs = String(src).split('```');
-    let html = '';
-
-    for (let i = 0; i < segs.length; i++) {
-      if (i % 2 === 0) {
-        html += renderTextBlocks(segs[i]);
-        continue;
-      }
-
-      let code = segs[i];
-      let lang = '';
-      const nl = code.indexOf('\n');
-
-      if (nl >= 0) {
-        const first = code.slice(0, nl).trim();
-        if (first && /^[A-Za-z0-9+#._-]{1,20}$/.test(first)) {
-          lang = first;
-          code = code.slice(nl + 1);
+    try {
+      // 1. 第一段优先请求，尽快出声
+      let firstUrl = null;
+      let firstIndex = 0;
+      for (let i = 0; i < segments.length; i++) {
+        if (!ttsAbort) return false;
+        try {
+          firstUrl = await requestTtsWithRetry(segments[i], signal);
+          firstIndex = i;
+          break;
+        } catch (err) {
+          if (err.name === 'AbortError') return false;
+          console.warn(`[doushabao] TTS 第 ${i + 1} 段失败，跳过`, err.ttsMsg || err.message);
         }
       }
 
-      code = (i === segs.length - 1)
-        ? code.replace(/\n+$/, '')
-        : code.replace(/\n$/, '');
+      if (!firstUrl) throw new Error('所有段落都合成失败，无法朗读');
 
-      html += `<pre class="dsb-md__pre">` +
-        `<code data-lang="${escapeHtml(lang)}">${escapeHtml(code)}</code></pre>`;
+      // 2. 剩余段并发请求（上限 3）
+      const urls = new Array(segments.length).fill(null);
+      urls[firstIndex] = firstUrl;
+
+      const tasks = segments.map((seg, i) => {
+        if (i === firstIndex) return null;
+        return async () => {
+          try {
+            urls[i] = await requestTtsWithRetry(seg, signal);
+          } catch (err) {
+            if (err.name !== 'AbortError') {
+              console.warn(`[doushabao] TTS 第 ${i + 1} 段失败，跳过`, err.ttsMsg || err.message);
+            }
+          }
+        };
+      }).filter(Boolean);
+
+      const pendingPromise = runWithConcurrency(tasks, TTS_CONCURRENCY, signal);
+
+      // 3. 播放第一段（不切 idle，给后续段接管）
+      const firstOk = await playAudio(firstUrl, onStateChange, { notifyIdle: false });
+      if (!firstOk || !ttsAbort) return firstOk;
+
+      // 4. 等剩余请求完成
+      await pendingPromise;
+      if (!ttsAbort) return true;
+
+      // 5. 收集后续成功段
+      const playable = [];
+      for (let i = firstIndex + 1; i < urls.length; i++) {
+        if (urls[i]) playable.push(urls[i]);
+      }
+
+      if (!playable.length) {
+        onStateChange?.('idle');
+        return true;
+      }
+
+      return await playMultiple(playable, onStateChange);
+
+    } catch (e) {
+      if (e.name === 'AbortError') return false;
+      console.warn('[doushabao] TTS 失败', e);
+      ttsLoading = false;
+      ttsSpeaking = false;
+      ttsAudio = null;
+      onStateChange?.('error', e.ttsMsg || e.message || '朗读失败');
+      return false;
+    } finally {
+      if (ttsAbort) ttsAbort = null;
     }
-
-    return html;
-  }
-
-  function normalizeReasoning(text) {
-    return text
-      .replace(/\r\n/g, '\n')
-      .replace(/^\s+/, '')
-      .replace(/\s+$/, '')
-      .replace(/\n{3,}/g, '\n\n');
-  }
-
-  function isNearBottom(el, threshold = 60) {
-    if (!el) return true;
-    return el.scrollHeight - el.scrollTop - el.clientHeight < threshold;
   }
 
   /* ================================================================
-     长文本分段缓存
-     思路：把 contentText 按"安全边界"切成"已确定段落"和"未完成段落"。
-     - 已确定段落：渲染一次，HTML 缓存在 committedHtml，不再重渲染
-     - 未完成段落：每次流式追加都重新渲染（只渲染这一小段）
-     安全边界：不在代码块内部的 `\n\n` 之后
+     TTS 按钮 UI
      ================================================================ */
-  function createSegmentBuffer() {
-    return {
-      text: '',
-      committedHtml: '',
-      committedLength: 0,
-      scanPos: 0,
-      lastSafeBreak: 0,
-      inCode: false,
-    };
+  function resetTtsUI(btn) {
+    if (!btn) return;
+    btn.classList.remove('is-speaking', 'is-loading');
+    btn.disabled = false;
+    const icon = btn.querySelector('.dsb-tts-icon');
+    const text = btn.querySelector('.dsb-tts-text');
+    if (icon) icon.textContent = '🔊';
+    if (text) text.textContent = '朗读';
   }
 
-  function scanSafeBreak(buf) {
-    const text = buf.text;
-    let i = buf.scanPos;
-    // 回退 2 个字符重扫，防止 ``` 被拆包
-    const start = Math.max(0, i - 2);
-    i = start;
+  function setTtsUI(btn, state, msg) {
+    if (!btn) return;
+    btn.classList.remove('is-speaking', 'is-loading');
+    const icon = btn.querySelector('.dsb-tts-icon');
+    const text = btn.querySelector('.dsb-tts-text');
 
-    let inCode = false;
-    // 从头扫到 start 确认 inCode 状态
-    // 简化：每次重扫全部（下面的 scanPos 会记录，但这里从 0 重扫保证正确）
-    // 由于只在最终渲染时才更新 lastSafeBreak，性能可接受
-    i = 0;
-    let lastSafe = buf.lastSafeBreak;
+    if (state === 'loading') {
+      btn.classList.add('is-loading');
+      btn.disabled = true;
+      if (icon) icon.textContent = '⏳';
+      if (text) text.textContent = '合成中';
+      return;
+    }
+    if (state === 'playing') {
+      btn.classList.add('is-speaking');
+      btn.disabled = false;
+      if (icon) icon.textContent = '⏹';
+      if (text) text.textContent = '停止';
+      return;
+    }
+    if (state === 'error') {
+      btn.disabled = false;
+      if (icon) icon.textContent = '🔊';
+      if (text) text.textContent = (msg || '失败').slice(0, 8);
+      setTimeout(() => {
+        if (!btn.classList.contains('is-speaking') && !btn.classList.contains('is-loading')) {
+          resetTtsUI(btn);
+        }
+      }, 3000);
+      return;
+    }
+    resetTtsUI(btn);
+  }
 
-    while (i < text.length) {
-      if (text.startsWith('```', i)) {
-        inCode = !inCode;
-        i += 3;
-        continue;
-      }
-      if (!inCode && text.startsWith('\n\n', i)) {
-        lastSafe = i + 2;
-        i += 2;
-        continue;
-      }
-      i++;
+  async function onTtsClick(btn, text) {
+    // 点的是正在播的那条 → 停止
+    if (activeTtsBtn === btn && (ttsSpeaking || ttsLoading)) {
+      stopTts();
+      resetTtsUI(btn);
+      activeTtsBtn = null;
+      return;
     }
 
-    buf.inCode = inCode;
-    buf.scanPos = text.length;
-    buf.lastSafeBreak = lastSafe;
-  }
-
-  function renderSegmented(buf) {
-    scanSafeBreak(buf);
-
-    // 把新确定的段落渲染并缓存
-    if (buf.lastSafeBreak > buf.committedLength) {
-      const newChunk = buf.text.slice(buf.committedLength, buf.lastSafeBreak);
-      buf.committedHtml += renderMarkdown(newChunk);
-      buf.committedLength = buf.lastSafeBreak;
+    // 停止其它按钮的播放
+    if (activeTtsBtn && activeTtsBtn !== btn) {
+      resetTtsUI(activeTtsBtn);
     }
+    stopTts();
+    activeTtsBtn = btn;
 
-    // 未完成段落每次重渲染
-    const remaining = buf.text.slice(buf.committedLength).replace(/^\s+/, '');
-    return buf.committedHtml + renderMarkdown(remaining);
-  }
-
-  /* ---------- 模型 ---------- */
-  let currentModel = null;
-  let modelPromise = null;
-
-  function ensureModel() {
-    if (currentModel) return Promise.resolve(currentModel);
-    if (!modelPromise) {
-      modelPromise = fetch(`${API_BASE}/models`)
-        .then(res => {
-          if (!res.ok) throw new Error(`HTTP ${res.status}`);
-          return res.json();
-        })
-        .then(data => {
-          const ids = (data.data || []).map(m => m.id).filter(Boolean);
-          currentModel = ids[0] || DEFAULT_MODEL;
-          return currentModel;
-        })
-        .catch(err => {
-          console.warn('[doushabao] 获取模型失败，使用默认', err);
-          currentModel = DEFAULT_MODEL;
-          return currentModel;
-        })
-        .finally(() => { modelPromise = null; });
-    }
-    return modelPromise;
-  }
-
-  async function streamChat(model, userText, { onReasoning, onContent, signal }) {
-    const res = await fetch(`${API_BASE}/chat/completions`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
+    await playTts(text, {
+      onStateChange: (state, msg) => {
+        setTtsUI(btn, state, msg);
+        if ((state === 'idle' || state === 'error') && activeTtsBtn === btn) {
+          activeTtsBtn = null;
+        }
       },
-      signal,
-      body: JSON.stringify({
-        model,
-        messages: [
-          { role: 'system', content: SYSTEM_PROMPT },
-          { role: 'user', content: userText }
-        ],
-        stream: true
-      })
     });
-
-    if (!res.ok) {
-      const txt = await res.text().catch(() => '');
-      throw new Error(`HTTP ${res.status}${txt ? ' · ' + txt.slice(0, 120) : ''}`);
-    }
-
-    const reader = res.body.getReader();
-    const decoder = new TextDecoder();
-    let buffer = '';
-
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      buffer += decoder.decode(value, { stream: true });
-
-      const lines = buffer.split('\n');
-      buffer = lines.pop();
-
-      for (const line of lines) {
-        const trimmed = line.trim();
-        if (!trimmed.startsWith('data:')) continue;
-        const payload = trimmed.slice(5).trim();
-        if (payload === '[DONE]') continue;
-
-        try {
-          const json = JSON.parse(payload);
-          const delta = json.choices?.[0]?.delta;
-          if (!delta) continue;
-          const r = delta.reasoning ?? delta.reasoning_content;
-          if (r) onReasoning(r);
-          if (delta.content) onContent(delta.content);
-        } catch (_) { /* 忽略半包 */ }
-      }
-    }
   }
 
-  /* ============================================================
-     注册应用
-     ============================================================ */
+  /* ================================================================
+     知识库（从 data.txt 异步加载）
+     ================================================================ */
+  const SYSTEM_RULES = [
+    {
+      keys: ['帮助', '你会什么', '你会干啥', '能干啥', '会做什么', '有什么功能', '功能列表', '你能干嘛'],
+      answer: '我能聊一些百科常识、回答问题、算数、讲讲冷笑话。\n你想问什么，直接说就行。',
+      boost: 0.8,
+    },
+    {
+      keys: ['你好', '您好', '嗨', 'hi', 'hello'],
+      exactOnly: true,
+      answer: '有屁快放',
+      boost: 0.8,
+    },
+  ];
+
+  let KB_RULES = null;
+  let kbPromise = null;
+
+  function parseKBText(text) {
+    const out = [];
+    for (const line of String(text || '').split(/\r?\n/)) {
+      const t = line.trim();
+      if (!t || t.startsWith('#')) continue;
+      const idx = t.indexOf(':');
+      if (idx <= 0) continue;
+      const keyPart = t.slice(0, idx).trim();
+      let val = t.slice(idx + 1).trim();
+      if (!keyPart || !val) continue;
+      // 字面 \n → 真正的换行
+      val = val.replace(/\\n/g, '\n');
+      const keys = keyPart.split('|').map(s => s.trim()).filter(Boolean);
+      if (keys.length) out.push({ keys, answer: val, boost: 1.2 });
+    }
+    return out;
+  }
+
+  function loadKB() {
+    if (KB_RULES) return Promise.resolve(KB_RULES);
+    if (kbPromise) return kbPromise;
+
+    kbPromise = fetch(KB_URL, { cache: 'no-store' })
+      .then(res => {
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        return res.text();
+      })
+      .then(text => {
+        KB_RULES = parseKBText(text);
+        console.log(`[doushabao] 知识库已加载，共 ${KB_RULES.length} 条`);
+        return KB_RULES;
+      })
+      .catch(err => {
+        console.warn('[doushabao] 知识库加载失败', err);
+        // 失败不缓存 KB_RULES，下次调用可重试
+        return null;
+      })
+      .finally(() => {
+        kbPromise = null;
+      });
+
+    return kbPromise;
+  }
+
+  function getRules() {
+    return KB_RULES ? [...SYSTEM_RULES, ...KB_RULES] : SYSTEM_RULES.slice();
+  }
+
+  /* ================================================================
+     兜底回复
+     ================================================================ */
+  const FALLBACK_PARTS = {
+    open: [
+      '这个问题我暂时没有把握。',
+      '嗯…这个我不太确定。',
+      '说实话，这个超出我的能力范围了。',
+      '我好像没见过这个说法。',
+      '这个嘛…我得承认我不会。',
+      '抱歉，这个我答不上来。',
+    ],
+    close: [
+      '你可以换个说法再问一次。',
+      '要不你补充一点细节，我再试试？',
+      '换个角度描述一下？',
+      '你可以问我天气、节日、百科常识之类的。',
+      '试试问得更具体一点？',
+      '直接告诉我更多背景，我可能就想起来了。',
+    ],
+  };
+
+  function randomFallback() {
+    const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+    const open = pick(FALLBACK_PARTS.open);
+    const close = pick(FALLBACK_PARTS.close);
+    return `${open}\n${close}`;
+  }
+
+  /* ================================================================
+     归一化
+     ================================================================ */
+  function normalize(s) {
+    const keep = new Set(['+', '#', '.']);
+    return Array.from(String(s))
+      .filter(c => keep.has(c) || !/[\s\p{P}\p{S}]/u.test(c))
+      .map(c => c.toLowerCase())
+      .join('');
+  }
+
+  /* ================================================================
+     前后缀剥离
+     ================================================================ */
+  const PREFIXES = [
+    '请问一下', '请问', '我想问一下', '我想问', '想问一下', '想问', '问一下',
+    '什么是', '什么叫', '啥是',
+    '帮我查一下', '帮我查', '帮我看看', '帮我', '帮忙',
+    '能不能', '可不可以', '可以', '告诉我', '你知道',
+    '你好', '您好', '嗨', 'hi', 'hello', 'hey',
+  ];
+
+  const SUFFIXES = [
+    '是什么呀', '是什么啊', '是什么', '是啥呀', '是啥', '是嘛',
+    '有什么用', '有啥用', '干什么用', '能干嘛', '是干什么的', '干什么的',
+    '怎么样', '怎么用', '如何', '怎么', '怎样',
+    '呀', '啊', '呢', '吧', '吗', '嘛', '哦', '喔', '哟',
+    '谢谢', '多谢',
+  ];
+
+  function candidates(raw) {
+    const norm = normalize(raw);
+    const set = new Set([norm]);
+    const queue = [norm];
+
+    while (queue.length) {
+      const cur = queue.shift();
+      for (const p of PREFIXES) {
+        const np = normalize(p);
+        if (np && cur.startsWith(np) && cur.length > np.length) {
+          const next = cur.slice(np.length);
+          if (!set.has(next)) { set.add(next); queue.push(next); }
+        }
+      }
+      for (const s of SUFFIXES) {
+        const ns = normalize(s);
+        if (ns && cur.endsWith(ns) && cur.length > ns.length) {
+          const next = cur.slice(0, cur.length - ns.length);
+          if (!set.has(next)) { set.add(next); queue.push(next); }
+        }
+      }
+    }
+    return [...set];
+  }
+
+  /* ================================================================
+     相似度
+     ================================================================ */
+  function editDistance(a, b) {
+    const A = Array.from(a), B = Array.from(b);
+    const n = A.length, m = B.length;
+    if (!n) return m;
+    if (!m) return n;
+    let prev = new Array(m + 1), cur = new Array(m + 1);
+    for (let j = 0; j <= m; j++) prev[j] = j;
+    for (let i = 1; i <= n; i++) {
+      cur[0] = i;
+      for (let j = 1; j <= m; j++) {
+        const cost = A[i - 1] === B[j - 1] ? 0 : 1;
+        cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + cost);
+      }
+      [prev, cur] = [cur, prev];
+    }
+    return prev[m];
+  }
+
+  function fuzzyContains(text, key) {
+    const T = Array.from(text), K = Array.from(key);
+    if (!K.length) return 0;
+    const tlen = T.length, klen = K.length;
+    if (tlen < klen - 1) {
+      return 1 - editDistance(T, K) / Math.max(tlen, klen);
+    }
+    let best = 0;
+    for (let w = Math.max(1, klen - 1); w <= klen + 1; w++) {
+      if (w > tlen) continue;
+      for (let s = 0; s + w <= tlen; s++) {
+        const d = editDistance(T.slice(s, s + w), K);
+        const sim = 1 - d / Math.max(w, klen);
+        if (sim > best) best = sim;
+        if (best >= 1) return 1;
+      }
+    }
+    return best;
+  }
+
+  function bigramDice(a, b) {
+    const A = Array.from(a), B = Array.from(b);
+    if (a === b) return 1;
+    if (A.length < 2 || B.length < 2) return 0;
+    const ma = new Map(), mb = new Map();
+    for (let i = 0; i + 1 < A.length; i++) { const g = A[i] + A[i + 1]; ma.set(g, (ma.get(g) || 0) + 1); }
+    for (let i = 0; i + 1 < B.length; i++) { const g = B[i] + B[i + 1]; mb.set(g, (mb.get(g) || 0) + 1); }
+    let inter = 0, total = 0;
+    for (const [g, c] of ma) { total += c; const c2 = mb.get(g) || 0; if (c2) inter += Math.min(c, c2); }
+    for (const [, c] of mb) total += c;
+    return total ? 2 * inter / total : 0;
+  }
+
+  function similarity(text, key) {
+    return Math.max(fuzzyContains(text, key), bigramDice(text, key));
+  }
+
+  /* ================================================================
+     打分
+     ================================================================ */
+  function scoreRule(input, rule) {
+    let best = 0;
+    for (const key of rule.keys) {
+      const nk = normalize(key);
+      if (!nk) continue;
+      const rawLen = Array.from(key).length;
+
+      if (rawLen <= 1) {
+        if (input === nk) best = Math.max(best, 1.5 * (rule.boost || 1));
+        continue;
+      }
+
+      const sim = similarity(input, nk);
+      if (sim < 0.6) continue;
+
+      const lenBonus = Math.min(0.5, rawLen * 0.08);
+      const s = (sim + lenBonus) * (rule.boost || 1);
+      if (s > best) best = s;
+    }
+    return best;
+  }
+
+  /* ================================================================
+     匹配入口
+     ================================================================ */
+  const THRESHOLD = 0.75;
+
+  function matchRule(rawInput) {
+    const rules = getRules();
+    const cands = candidates(rawInput);
+    let bestAns = null;
+    let bestScore = 0;
+    let bestKey = null;
+
+    for (const r of rules) {
+      if (!r.exactOnly) continue;
+      for (const k of r.keys) {
+        const nk = normalize(k);
+        if (cands.some(c => c === nk)) {
+          return { answer: r.answer, score: 99, key: k };
+        }
+      }
+    }
+
+    for (const input of cands) {
+      if (!input) continue;
+      for (const r of rules) {
+        if (r.exactOnly) continue;
+        const s = scoreRule(input, r);
+        if (s > bestScore) {
+          bestScore = s;
+          bestAns = r.answer;
+          bestKey = r.keys[0];
+        }
+      }
+    }
+
+    return bestScore >= THRESHOLD
+      ? { answer: bestAns, score: bestScore, key: bestKey }
+      : null;
+  }
+
+  /* ================================================================
+     应用注册
+     ================================================================ */
   WujiApps.registerInstalled({
     bundlename: BUNDLE,
     name: '豆沙包',
     icon: './assets/doushabao.svg',
     initialRoute: 'home',
-    version: '1.1.0',
+    version: '1.2.2',
+    devices: ['iwuji', 'pc'],
 
     styles: `
       .dsb-page {
@@ -601,223 +738,173 @@
         flex-direction: column;
         background: var(--wj-bg);
         padding-top: var(--statusbar-h);
-        min-height: 0;
+        overflow: hidden;
       }
 
       .dsb-header {
         flex: 0 0 auto;
-        padding: 14px 20px;
+        padding: 11px 20px 12px;
         border-bottom: 1px solid var(--wj-border, #e6e9ef);
+        background: var(--wj-bg);
       }
-      .dsb-header__title {
-        font-size: var(--wj-fs-3xl);
+      .dsb-title {
+        font-size: var(--wj-fs-2xl);
         font-weight: 700;
         color: var(--wj-text);
         letter-spacing: .3px;
-        line-height: 1.2;
+      }
+      .dsb-subtitle {
+        font-size: var(--wj-fs-xs);
+        color: var(--wj-text-dim);
+        margin-top: 2px;
       }
 
-      .dsb-body {
+      .dsb-chat {
         flex: 1 1 auto;
         min-height: 0;
         overflow-y: auto;
         -webkit-overflow-scrolling: touch;
         overscroll-behavior: contain;
-        padding: 11px 14px;
-      }
-
-      .dsb-state {
+        padding: 16px;
         display: flex;
         flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        gap: 17px;
-        min-height: 100%;
-        padding: 17px;
-        text-align: center;
-      }
-      .dsb-state__text {
-        font-size: var(--wj-fs-xl);
-        color: var(--wj-text-muted);
-        line-height: 1.5;
+        gap: 12px;
+        background: var(--wj-bg-alt, #fafbfc);
       }
 
-      .dsb-spinner {
-        width: 39px;
-        height: 39px;
-        border-radius: 50%;
-        border: 4px solid var(--wj-border-strong, #e6e9ef);
-        border-top-color: var(--wj-primary, #3a6ff0);
-        animation: dsbSpin .85s linear infinite;
-      }
-      @keyframes dsbSpin { to { transform: rotate(360deg); } }
-
-      .dsb-answer {
-        display: flex;
-        flex-direction: column;
-        gap: 11px;
-      }
-
-      .dsb-reasoning {
-        padding: 11px 17px 20px;
-        border-left: 3px solid var(--wj-primary, #3a6ff0);
-        background: var(--wj-bg-alt);
-        border-radius: 8px;
-        font-size: var(--wj-fs-lg);
-        color: var(--wj-text-muted);
-        line-height: 1.35;
+      .dsb-msg {
+        max-width: 82%;
+        padding: 10px 14px;
+        border-radius: 12px;
+        font-size: var(--wj-fs-md);
+        line-height: 1.55;
         word-break: break-word;
       }
-      .dsb-reasoning[hidden] { display: none !important; }
-
-      .dsb-reasoning__label {
-        font-size: var(--wj-fs-lg);
-        font-weight: 700;
-        color: var(--wj-primary, #3a6ff0);
-        letter-spacing: .8px;
-        line-height: 1;
-        margin-bottom: 8px;
-        opacity: .85;
-      }
-
-      .dsb-reasoning__body {
-        display: block;
+      .dsb-msg--user {
+        align-self: flex-end;
+        background: var(--wj-primary, #3a6ff0);
+        color: #fff;
+        border-bottom-right-radius: 4px;
         white-space: pre-wrap;
       }
-
-      .dsb-content {
-        font-size: var(--wj-fs-lg);
-        line-height: 1.6;
+      .dsb-msg--bot {
+        align-self: flex-start;
+        background: var(--wj-bg, #fff);
         color: var(--wj-text);
-        word-break: break-word;
-        white-space: normal;
+        border: 1px solid var(--wj-border, #e6e9ef);
+        border-bottom-left-radius: 4px;
+      }
+      .dsb-msg-body { white-space: pre-wrap; }
+
+      .dsb-disclaimer {
+        margin-top: 8px;
+        padding-top: 8px;
+        border-top: 1px dashed var(--wj-border, #e6e9ef);
+        font-size: var(--wj-fs-xs, 11px);
+        color: var(--wj-text-dim);
+        line-height: 1.4;
       }
 
-      .dsb-md__p   { margin: 0; }
-      .dsb-md__gap { height: 11px; }
-      .dsb-md__h   { font-weight: 700; margin: 14px 0 3px; }
-      .dsb-md__h1  { font-size: var(--wj-fs-2xl); }
-      .dsb-md__h2  { font-size: var(--wj-fs-xl); }
-      .dsb-md__h3  { font-size: var(--wj-fs-lg); }
-      .dsb-md__list { margin: 6px 0; padding-left: 28px; }
-      .dsb-md__list li { margin: 3px 0; }
-      .dsb-md__hr {
-        height: 1px; margin: 14px 0;
-        background: var(--wj-border, #e6e9ef);
+      .dsb-thinking {
+        display: inline-flex;
+        gap: 4px;
+        align-items: center;
+        padding: 3px 0;
       }
-      .dsb-md__quote {
-        margin: 6px 0; padding-left: 14px;
-        border-left: 4px solid var(--wj-border, #e6e9ef);
-        color: var(--wj-text-muted);
+      .dsb-thinking span {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: var(--wj-text-dim, #b0b6c0);
+        animation: dsb-blink 1.2s infinite;
       }
-      .dsb-md__icode {
-        padding: 1px 7px; border-radius: 6px;
-        background: var(--wj-bg-alt, #f2f4f8);
-        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-        font-size: .92em;
-        word-break: break-all;
+      .dsb-thinking span:nth-child(2) { animation-delay: .2s; }
+      .dsb-thinking span:nth-child(3) { animation-delay: .4s; }
+      @keyframes dsb-blink {
+        0%, 60%, 100% { opacity: .3; }
+        30% { opacity: 1; }
       }
-      .dsb-md__pre {
-        margin: 11px 0; padding: 14px 17px;
-        border-radius: 11px;
-        background: var(--wj-bg-alt, #f2f4f8);
-        overflow-x: hidden;   /* ★ 不再横向滚动 */
-      }
-      .dsb-md__pre code {
-        display: block;
-        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-        font-size: var(--wj-fs-xs);
-        line-height: 1.5;
-        /* ★ 自动换行：保留换行和空格，长行折断 */
-        white-space: pre-wrap;
-        word-break: break-word;
-        overflow-wrap: anywhere;
-      }
-      .dsb-md__a { color: var(--wj-primary, #3a6ff0); word-break: break-all; }
-
-      .dsb-error { color: var(--wj-danger, #e0356b); }
 
       .dsb-tts-row {
         display: flex;
         justify-content: flex-end;
-        margin-top: 6px;
+        margin-top: 4px;
       }
-      .dsb-tts {
+      .dsb-tts-btn {
         display: inline-flex;
         align-items: center;
-        gap: 6px;
-        height: 39px;
-        padding: 0 14px;
+        gap: 5px;
+        height: 48px;
+        padding: 0 16px;
         border: 1px solid var(--wj-border, #e6e9ef);
-        border-radius: 1399px;
+        border-radius: 15px;
         background: transparent;
-        color: var(--wj-text-muted);
+        color: var(--wj-text-dim);
         font: inherit;
-        font-size: var(--wj-fs-xs);
+        font-size: var(--wj-fs-xs, 12px);
         font-weight: 500;
-        letter-spacing: .3px;
         cursor: pointer;
-        transition: background .15s, color .15s, opacity .15s;
+        transition: color .15s, border-color .15s, background .15s, opacity .15s;
         -webkit-tap-highlight-color: transparent;
       }
-      .dsb-tts:active:not(:disabled) { transform: scale(.96); }
-      .dsb-tts:disabled { opacity: .45; cursor: not-allowed; }
-      .dsb-tts.is-speaking {
+      .dsb-tts-btn:hover:not(:disabled) {
+        color: var(--wj-primary, #3a6ff0);
+        border-color: var(--wj-primary, #3a6ff0);
+      }
+      .dsb-tts-btn:active:not(:disabled) { transform: scale(.96); }
+      .dsb-tts-btn:disabled { opacity: .45; cursor: not-allowed; }
+      .dsb-tts-btn.is-speaking {
         color: var(--wj-primary, #3a6ff0);
         border-color: var(--wj-primary, #3a6ff0);
         background: rgba(58, 111, 240, .08);
       }
-      .dsb-tts.is-loading {
-        color: var(--wj-text-muted);
-        border-color: var(--wj-border, #e6e9ef);
-      }
-      .dsb-tts__icon { font-size: var(--wj-fs-sm); line-height: 1; }
+      .dsb-tts-btn.is-loading { color: var(--wj-text-dim); }
+      .dsb-tts-icon { font-size: 13px; line-height: 1; }
 
       .dsb-footer {
         flex: 0 0 auto;
-        padding: 11px 14px calc(11px + env(safe-area-inset-bottom, 0px));
-        border-top: 1px solid var(--wj-border, #e6e9ef);
         display: flex;
         gap: 8px;
-        align-items: center;
+        padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px));
+        border-top: 1px solid var(--wj-border, #e6e9ef);
         background: var(--wj-bg);
       }
-
       .dsb-input {
         flex: 1 1 auto;
         min-width: 0;
-        height: 67px;
-        padding: 0 17px;
+        height: 60px;
+        padding: 0 14px;
         border: 1px solid var(--wj-border, #e6e9ef);
-        border-radius: 14px;
-        background: var(--wj-bg-alt);
+        border-radius: 10px;
+        background: var(--wj-bg-alt, #f5f6f8);
         color: var(--wj-text);
         font: inherit;
-        font-size: var(--wj-fs-lg);
+        font-size: var(--wj-fs-md, 14px);
         outline: none;
         box-sizing: border-box;
       }
-      .dsb-input:focus { border-color: var(--wj-primary, #3a6ff0); }
-      .dsb-input::placeholder { color: var(--wj-text-dim); }
-
+      .dsb-input:focus {
+        border-color: var(--wj-primary, #3a6ff0);
+        background: var(--wj-bg);
+      }
+      .dsb-input:disabled { opacity: .6; }
       .dsb-send {
         flex: 0 0 auto;
-        height: 67px;
-        padding: 0 22px;
+        height: 60px;
+        padding: 0 24px;
         border: 0;
-        border-radius: 14px;
+        border-radius: 10px;
         background: var(--wj-primary, #3a6ff0);
         color: #fff;
         font: inherit;
-        font-size: var(--wj-fs-lg);
+        font-size: var(--wj-fs-md, 14px);
         font-weight: 600;
         cursor: pointer;
         transition: opacity .15s, transform .1s;
         -webkit-tap-highlight-color: transparent;
-        white-space: nowrap;
       }
-      .dsb-send:active:not(:disabled) { transform: scale(.96); }
-      .dsb-send:disabled { opacity: .55; cursor: not-allowed; }
+      .dsb-send:disabled { opacity: .5; cursor: not-allowed; }
+      .dsb-send:active:not(:disabled) { transform: scale(.97); }
     `,
 
     routes: {
@@ -827,286 +914,157 @@
         render() {
           return `
             <div class="dsb-page">
-              <div class="dsb-header">
-                <div class="dsb-header__title">豆沙包</div>
-              </div>
-              <div class="dsb-body" id="dsbBody"></div>
+              <header class="dsb-header">
+                <div class="dsb-title">豆沙包</div>
+                <div class="dsb-subtitle">AI 助手</div>
+              </header>
+              <div class="dsb-chat" id="dsbChat"></div>
               <div class="dsb-footer">
-                <input class="dsb-input"
-                       id="dsbInput"
-                       type="text"
-                       placeholder="输入消息…"
-                       autocomplete="off"
-                       autocorrect="off"
-                       autocapitalize="off"
-                       spellcheck="false">
-                <button class="dsb-send" id="dsbSend" type="button">发送</button>
+                ${ window.WJ_IME
+                  ? '<div id="dsbInput" class="dsb-input" data-wj-field="1" data-wj-placeholder="输入你的问题…" tabindex="0" inputmode="none" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></div>'
+                  : '<input id="dsbInput" class="dsb-input" type="text" placeholder="输入你的问题…" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">'
+                }
+                <button id="dsbSend" class="dsb-send" type="button">发送</button>
               </div>
             </div>
           `;
         },
 
         mount(root, ctx) {
-          const bodyEl = root.querySelector('#dsbBody');
+          const chatEl = root.querySelector('#dsbChat');
           const inputEl = root.querySelector('#dsbInput');
           const sendBtn = root.querySelector('#dsbSend');
 
           let busy = false;
-          let abortController = null;
+          let disposed = false;
 
-          let reasoningText = '';
-          let contentBuf = null;
-          let inStream = false;
-          let reasoningEl = null;
-          let contentEl = null;
-          let ttsBtn = null;
+          const sleep = ms => new Promise(r => setTimeout(r, ms));
 
-          // 节流渲染状态
-          let renderScheduled = false;
-          let lastRenderAt = 0;
-          let renderTimer = null;
-
-          function renderIdle() {
-            bodyEl.innerHTML = `
-              <div class="dsb-state">
-                <div class="dsb-state__text">我是豆沙包，你的AI助手</div>
-              </div>
-            `;
-            bodyEl.scrollTop = 0;
+          function addUserMsg(text) {
+            const div = document.createElement('div');
+            div.className = 'dsb-msg dsb-msg--user';
+            div.textContent = text;
+            chatEl.appendChild(div);
+            chatEl.scrollTop = chatEl.scrollHeight;
           }
 
-          function renderThinking() {
-            bodyEl.innerHTML = `
-              <div class="dsb-state">
-                <div class="dsb-spinner"></div>
-                <div class="dsb-state__text">深度思考中...</div>
-              </div>
-            `;
-            bodyEl.scrollTop = 0;
+          function addBotShell() {
+            const wrap = document.createElement('div');
+            wrap.className = 'dsb-msg dsb-msg--bot';
+
+            const body = document.createElement('div');
+            body.className = 'dsb-msg-body';
+            wrap.appendChild(body);
+
+            const ttsRow = document.createElement('div');
+            ttsRow.className = 'dsb-tts-row';
+            const ttsBtn = document.createElement('button');
+            ttsBtn.className = 'dsb-tts-btn';
+            ttsBtn.type = 'button';
+            ttsBtn.disabled = true;
+            ttsBtn.innerHTML = '<span class="dsb-tts-icon">🔊</span><span class="dsb-tts-text">朗读</span>';
+            ttsRow.appendChild(ttsBtn);
+            wrap.appendChild(ttsRow);
+
+            const disclaimer = document.createElement('div');
+            disclaimer.className = 'dsb-disclaimer';
+            disclaimer.textContent = '内容由 AI 生成，请仔细甄别';
+            disclaimer.style.display = 'none';
+            wrap.appendChild(disclaimer);
+
+            chatEl.appendChild(wrap);
+            chatEl.scrollTop = chatEl.scrollHeight;
+            return { wrap, body, disclaimer, ttsBtn };
           }
 
-          function prepareStreamUI() {
-            if (inStream) return;
-            inStream = true;
-
-            bodyEl.innerHTML = `
-              <div class="dsb-answer">
-                <div class="dsb-reasoning" hidden>
-                  <div class="dsb-reasoning__label">思考过程</div>
-                  <div class="dsb-reasoning__body"></div>
-                </div>
-                <div class="dsb-content"></div>
-                <div class="dsb-tts-row">
-                  <button class="dsb-tts" id="dsbTtsBtn" type="button" disabled>
-                    <span class="dsb-tts__icon">🔊</span><span class="dsb-tts__text">朗读</span>
-                  </button>
-                </div>
-              </div>
-            `;
-            reasoningEl = bodyEl.querySelector('.dsb-reasoning');
-            contentEl = bodyEl.querySelector('.dsb-content');
-            ttsBtn = bodyEl.querySelector('#dsbTtsBtn');
-
-            if (ttsBtn) {
-              ttsBtn.addEventListener('click', onTtsClick);
-            }
-          }
-
-          function updateTtsUI(state) {
-            if (!ttsBtn) return;
-            ttsBtn.classList.remove('is-speaking', 'is-loading');
-
-            if (state === 'loading') {
-              ttsBtn.classList.add('is-loading');
-              ttsBtn.disabled = true;
-              ttsBtn.querySelector('.dsb-tts__icon').textContent = '⏳';
-              ttsBtn.querySelector('.dsb-tts__text').textContent = '合成中';
-              return;
-            }
-            if (state === 'playing') {
-              ttsBtn.classList.add('is-speaking');
-              ttsBtn.disabled = false;
-              ttsBtn.querySelector('.dsb-tts__icon').textContent = '⏹';
-              ttsBtn.querySelector('.dsb-tts__text').textContent = '停止';
-              return;
-            }
-            ttsBtn.disabled = false;
-            ttsBtn.querySelector('.dsb-tts__icon').textContent = '🔊';
-            ttsBtn.querySelector('.dsb-tts__text').textContent = '朗读';
-          }
-
-          async function onTtsClick() {
-            if (!ttsBtn || !contentBuf || !contentBuf.text.trim()) return;
-
-            if (ttsSpeaking) {
-              stopTts();
-              updateTtsUI('idle');
-              return;
-            }
-            if (ttsLoading) return;
-
-            await playTts(contentBuf.text, {
-              onStateChange: (state, msg) => {
-                if (!root.isConnected) return;
-                if (state === 'error') {
-                  updateTtsUI('idle');
-                  // 显示具体原因
-                  if (msg) {
-                    // 短暂改按钮文字提示
-                    const textEl = ttsBtn.querySelector('.dsb-tts__text');
-                    if (textEl) {
-                      textEl.textContent = msg.slice(0, 10);
-                      setTimeout(() => {
-                        if (ttsBtn && !ttsSpeaking && !ttsLoading) {
-                          textEl.textContent = '朗读';
-                        }
-                      }, 3000);
-                    }
-                  }
-                } else {
-                  updateTtsUI(state);
-                }
-              },
+          function streamText(el, text) {
+            return new Promise(resolve => {
+              let i = 0;
+              const len = text.length;
+              const baseSpeed = len < 60 ? 34 : len < 180 ? 22 : 14;
+              function step() {
+                if (i >= len) { resolve(); return; }
+                const ch = text[i];
+                el.textContent += ch;
+                i++;
+                chatEl.scrollTop = chatEl.scrollHeight;
+                let delay = baseSpeed;
+                if ('，、；：'.includes(ch)) delay = 160;
+                else if ('。！？'.includes(ch)) delay = 240;
+                else if (ch === '\n') delay = 110;
+                else if (Math.random() < 0.12) delay = baseSpeed * 1.7;
+                setTimeout(step, delay);
+              }
+              setTimeout(step, 20);
             });
           }
 
-          /* ---------- 节流渲染 ---------- */
-          function doRenderContent() {
-            if (!contentEl || !contentBuf) return;
-            const stick = isNearBottom(bodyEl);
-            contentEl.innerHTML = renderSegmented(contentBuf);
-            if (stick) bodyEl.scrollTop = bodyEl.scrollHeight;
-          }
+          async function handle() {
+            if (busy || disposed) return;
+            const getText = window.WJ_IME ? (() => window.WJ_IME.getFieldText(inputEl)) : (() => inputEl.value);
+            const raw = getText().trim();
+            if (!raw) return;
 
-          function scheduleRenderContent() {
-            if (renderScheduled) return;
-            renderScheduled = true;
-
-            const now = performance.now();
-            const delay = Math.max(0, RENDER_THROTTLE_MS - (now - lastRenderAt));
-
-            renderTimer = setTimeout(() => {
-              renderTimer = null;
-              renderScheduled = false;
-              lastRenderAt = performance.now();
-              if (!root.isConnected) return;
-              doRenderContent();
-            }, delay);
-          }
-
-          function flushRenderContent() {
-            if (renderTimer) {
-              clearTimeout(renderTimer);
-              renderTimer = null;
-            }
-            renderScheduled = false;
-            lastRenderAt = performance.now();
-            doRenderContent();
-          }
-
-          function appendReasoning(text) {
-            prepareStreamUI();
-            reasoningEl.hidden = false;
-            const stick = isNearBottom(bodyEl);
-            reasoningText += text;
-            reasoningEl.querySelector('.dsb-reasoning__body').textContent =
-              normalizeReasoning(reasoningText);
-            if (stick) bodyEl.scrollTop = bodyEl.scrollHeight;
-          }
-
-          function appendContent(text) {
-            prepareStreamUI();
-            contentBuf.text += text;
-            scheduleRenderContent();
-          }
-
-          async function send() {
-            if (busy) return;
-            const text = inputEl.value.trim();
-            if (!text) return;
-
-            stopTts();
-            ttsBtn = null;
-            ttsSpeaking = false;
-            ttsLoading = false;
+            // #2 先取出文本再清空：用 IME 接口清空（自绘 div / input 都适用），避免清空后 IME 又把内容填回。
+            if (window.WJ_IME) window.WJ_IME.clearField(inputEl); else inputEl.value = '';
+            addUserMsg(raw);
 
             busy = true;
             sendBtn.disabled = true;
-            inputEl.value = '';
+            inputEl.disabled = true;
 
-            reasoningText = '';
-            contentBuf = createSegmentBuffer();
-            inStream = false;
-            reasoningEl = null;
-            contentEl = null;
-
-            renderThinking();
-
-            abortController = new AbortController();
-
-            try {
-              const model = await ensureModel();
-              if (!root.isConnected) return;
-
-              await streamChat(model, text, {
-                signal: abortController.signal,
-                onReasoning: appendReasoning,
-                onContent: appendContent,
-              });
-
-              if (!root.isConnected) return;
-
-              if (!inStream) {
-                bodyEl.innerHTML = `
-                  <div class="dsb-state">
-                    <div class="dsb-state__text">没有收到回答</div>
-                  </div>
-                `;
-              } else {
-                // 流式结束，强制渲染一次最终结果
-                flushRenderContent();
-                bodyEl.scrollTop = bodyEl.scrollHeight;
-                if (ttsBtn) ttsBtn.disabled = false;
-              }
-            } catch (err) {
-              if (err.name === 'AbortError') return;
-              console.error('[doushabao]', err);
-              if (!root.isConnected) return;
-              bodyEl.innerHTML = `
-                <div class="dsb-state">
-                  <div class="dsb-state__text dsb-error">
-                    请求失败：${escapeHtml(err.message || '网络错误')}
-                  </div>
-                </div>
-              `;
-            } finally {
-              busy = false;
-              sendBtn.disabled = false;
-              abortController = null;
+            // 打断上一条正在播的朗读，并复位它的按钮
+            if (activeTtsBtn) {
+              resetTtsUI(activeTtsBtn);
+              activeTtsBtn = null;
             }
+            stopTts();
+
+            const { body, disclaimer, ttsBtn } = addBotShell();
+            body.innerHTML = '<span class="dsb-thinking"><span></span><span></span><span></span></span>';
+
+            const t0 = Date.now();
+            await loadKB();
+            if (disposed) return;
+
+            const matched = matchRule(raw);
+            const answer = matched ? matched.answer : randomFallback();
+
+            const elapsed = Date.now() - t0;
+            const minThink = matched ? 350 : 600;
+            if (elapsed < minThink) await sleep(minThink - elapsed);
+
+            body.innerHTML = '';
+            await streamText(body, answer);
+            disclaimer.style.display = 'block';
+
+            // 流式结束后启用朗读
+            ttsBtn.disabled = false;
+            ttsBtn.addEventListener('click', () => onTtsClick(ttsBtn, answer));
+
+            busy = false;
+            sendBtn.disabled = false;
+            inputEl.disabled = false;
           }
 
-          sendBtn.addEventListener('click', send);
-
-          inputEl.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) {
+          sendBtn.addEventListener('click', handle);
+          inputEl.addEventListener('keydown', e => {
+            if (e.key === 'Enter' && !e.isComposing) {
               e.preventDefault();
-              send();
+              handle();
             }
           });
 
-          renderIdle();
+          // 预加载知识库
+          loadKB();
 
           return () => {
+            disposed = true;
+            if (activeTtsBtn) {
+              resetTtsUI(activeTtsBtn);
+              activeTtsBtn = null;
+            }
             stopTts();
-            if (renderTimer) {
-              clearTimeout(renderTimer);
-              renderTimer = null;
-            }
-            if (abortController) {
-              try { abortController.abort(); } catch { }
-              abortController = null;
-            }
           };
         },
       },

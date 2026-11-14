@@ -54,7 +54,7 @@
     name: '牛奶百科',
     icon: ICON_URL,
     initialRoute: 'home',
-    version: '1.0.6',
+    version: '1.0.7',
 
     styles: `
       .bk-page {
@@ -501,10 +501,10 @@
                 <div class="bk-title">牛奶百科</div>
               </div>
               <div class="bk-search">
-                <input class="bk-input" id="bkInput" type="text"
-                       placeholder="搜索词条…"
-                       autocomplete="off" autocorrect="off"
-                       autocapitalize="off" spellcheck="false">
+                ${ window.WJ_IME
+                  ? '<div class="bk-input" id="bkInput" data-wj-field="1" data-wj-placeholder="搜索词条…" tabindex="0" inputmode="none" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></div>'
+                  : '<input class="bk-input" id="bkInput" type="text" placeholder="搜索词条…" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">'
+                }
                 <button class="bk-search-btn" id="bkSearchBtn" type="button">搜索</button>
               </div>
               <div class="bk-body">
@@ -526,20 +526,21 @@
           const searchBtn = root.querySelector('#bkSearchBtn');
           const bodyEl = root.querySelector('.bk-body');
 
+          function getText() { return window.WJ_IME ? window.WJ_IME.getFieldText(inputEl) : inputEl.value; }
           function doSearch(word) {
             const w = String(word || '').trim();
             if (!w) return;
-            inputEl.value = w;
+            if (window.WJ_IME) window.WJ_IME.setFieldText(inputEl, w); else inputEl.value = w;
             if (navigator.vibrate) { try { navigator.vibrate(8); } catch { } }
             ctx.push('result', { word: w });
           }
 
-          searchBtn.addEventListener('click', () => doSearch(inputEl.value));
+          searchBtn.addEventListener('click', () => doSearch(getText()));
 
           inputEl.addEventListener('keydown', e => {
             if (e.key === 'Enter' && !e.isComposing) {
               e.preventDefault();
-              doSearch(inputEl.value);
+              doSearch(getText());
             }
           });
 

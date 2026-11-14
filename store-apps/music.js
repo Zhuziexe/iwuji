@@ -153,7 +153,7 @@
     name: '吴际音乐',
     icon: ICON_URL,
     initialRoute: 'home',
-    version: '1.0.4',
+    version: '1.0.5',
 
     onShutdown() {
       if (activeVideo) {
@@ -541,10 +541,10 @@
                 <div class="mv-title">吴际音乐</div>
               </div>
               <div class="mv-search">
-                <input class="mv-input" id="mvInput" type="text"
-                       placeholder="搜索 MV…"
-                       autocomplete="off" autocorrect="off"
-                       autocapitalize="off" spellcheck="false">
+                ${ window.WJ_IME
+                  ? '<div class="mv-input" id="mvInput" data-wj-field="1" data-wj-placeholder="搜索 MV…" tabindex="0" inputmode="none" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></div>'
+                  : '<input class="mv-input" id="mvInput" type="text" placeholder="搜索 MV…" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">'
+                }
                 <button class="mv-search-btn" id="mvSearchBtn" type="button">
                   ${ICON_SEARCH}<span>搜索</span>
                 </button>
@@ -627,18 +627,20 @@
             });
           }
 
+          function getText() { return window.WJ_IME ? window.WJ_IME.getFieldText(inputEl) : inputEl.value; }
+          function setText(t) { if (window.WJ_IME) window.WJ_IME.setFieldText(inputEl, t); else inputEl.value = t; }
           async function doSearch(keyword) {
             if (searching || disposed) return;
             const kw = String(keyword || '').trim();
 
             if (!kw) {
               // 空搜索 → 回到热门
-              inputEl.value = '';
+              setText('');
               renderHot();
               return;
             }
 
-            inputEl.value = kw;
+            setText(kw);
             searching = true;
             bodyEl.innerHTML = `
               <div class="mv-state">
@@ -680,11 +682,11 @@
             }
           }
 
-          searchBtn.addEventListener('click', () => doSearch(inputEl.value));
+          searchBtn.addEventListener('click', () => doSearch(getText()));
           inputEl.addEventListener('keydown', e => {
             if (e.key === 'Enter' && !e.isComposing) {
               e.preventDefault();
-              doSearch(inputEl.value);
+              doSearch(getText());
             }
           });
 
