@@ -368,7 +368,7 @@
     name: '吴际小鸡',
     icon: ICON_URL,
     initialRoute: 'home',
-    version: '1.2.1',
+    version: '1.2.2',
 
     onBoot() {
       checkPetStatus().catch(() => { });
@@ -381,6 +381,7 @@
       .chick-page {
         position: absolute;
         inset: 0;
+        isolation: isolate; /* 建立独立层叠上下文，避免内部正 z-index 元素穿透到其它页面 */
         display: flex;
         flex-direction: column;
         background: linear-gradient(160deg, #fff8e1 0%, #ffe082 100%);
@@ -676,6 +677,7 @@
       .chick-diary-page {
         position: absolute;
         inset: 0;
+        isolation: isolate;
         display: flex;
         flex-direction: column;
         background: linear-gradient(160deg, #fff8e1 0%, #ffe082 100%);
@@ -721,6 +723,7 @@
       .chick-wardrobe-page {
         position: absolute;
         inset: 0;
+        isolation: isolate;
         display: flex;
         flex-direction: column;
         background: linear-gradient(160deg, #fff8e1 0%, #ffe082 100%);

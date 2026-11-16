@@ -307,7 +307,7 @@
     name: '牛奶地图',
     icon: './assets/map.svg',
     initialRoute: 'home',
-    version: '1.0.3',
+    version: '1.0.8',
 
     styles: `
       .map-page {
@@ -532,6 +532,12 @@
         font: inherit; font-size: 18px; color: #1c1c1e;
         outline: 0; -webkit-tap-highlight-color: transparent;
         touch-action: manipulation;
+      }
+      /* 自绘 div 字段：原生 <input> 的文字默认垂直居中，div 不会，
+         用 flex 让文字 + 光标垂直居中，并锁定字号/行高避免被宿主样式压小。 */
+      div.map-sp__input {
+        display: flex; align-items: center; line-height: 1.2;
+        font-size: 18px; white-space: nowrap; overflow-x: auto; overflow-y: hidden;
       }
       .map-sp__go {
         flex: 0 0 auto;
@@ -896,6 +902,10 @@
              本路由带 slide 转场残留 transform，形成 z:auto 的 stacking context，
              需给路由本身一个高于首页子元素(最大 z:7)的 z-index 才能压住地图。 */
           root.style.zIndex = '100';
+
+          // 转场遗留内联样式的清理统一交给 navigation.js 的 enter 清理逻辑，
+          // 本页不再自行处理；输入框普通点击经 focusin 自然弹出输入法。
+
           const input = root.querySelector('#mapSearchInput');
           const goBtn = root.querySelector('#mapSearchGo');
           const body  = root.querySelector('#mapSearchBody');
@@ -940,13 +950,8 @@
             renderResults(results, note);
           };
           goBtn?.addEventListener('click', doSearch);
-          // #3 输入不会弹：首次进搜索页时面板动画未稳定，focusin 抓到的 rect 不对导致不弹；
-          // 这里等面板可见后再聚焦，确保 IME 正确弹出。
-          if (input) {
-            requestAnimationFrame(() => requestAnimationFrame(() => {
-              if (!disposed && input.isConnected) { try { input.focus(); } catch (e) {} }
-            }));
-          }
+          // #10 不自动聚焦：输入框靠原生 focusin 弹出输入法，
+          // 转场样式已由 navigation.js 统一清理，普通点击即可正常聚焦。
           return () => {
             // #5 搜索页滑走时收起 IME（页面级，避免地图页还留着键盘）。
             if (window.WJ_IME) window.WJ_IME.hide();

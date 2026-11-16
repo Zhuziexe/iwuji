@@ -68,7 +68,7 @@
     name: '备忘录',
     icon: './assets/note.svg',
     initialRoute: 'home',
-    version: '1.0.7',
+    version: '1.1.7',
     styles: `
       /* ==================== 主页 ==================== */
       .note-page {
@@ -81,27 +81,38 @@
       }
 
       .note-header {
-        flex: 0 0 auto;
+        flex: 0 0 96px;              /* 固定高度，不随标题/提示字体变化抖动 */
+        height: 96px;
+        box-sizing: border-box;
         display: flex;
         align-items: center;
         gap: 17px;
-        padding: 14px 22px 11px;
+        padding: 0 22px;
       }
 
       .note-header__text {
         flex: 1 1 auto;
         min-width: 0;
+        height: 100%;
         display: flex;
         flex-direction: column;
         justify-content: center;
-        gap: 0;
+        gap: 14px;                /* 标题“全部备忘”与提示“长按删除”之间的间距 */
+      }
+
+      /* 固定行高并清除 h2 默认外边距，header 高度不再随字体/内容变化 */
+      .note-header .wj-title {
+        margin: 0;
+        line-height: 34px;
+        height: 34px;
       }
 
       .note-hint {
-        font-size: var(--wj-fs-md);
+        font-size: var(--wj-fs-lg);        /* 整体调大 */
         color: var(--wj-text-dim);
         letter-spacing: .3px;
-        line-height: 1.15;
+        line-height: 28px;
+        height: 28px;
       }
 
       .note-add-btn {
@@ -161,7 +172,7 @@
       }
 
       .note-card__title {
-        font-size: 18px;                 /* ★ 16 → 18 */
+        font-size: 22px;                 /* ★ 整体调大 18 → 22 */
         font-weight: 600;
         color: var(--wj-text);
         letter-spacing: .2px;
@@ -176,8 +187,8 @@
       }
 
       .note-card__content {
-        margin-top: 4px;                 /* ★ 6 → 4 */
-        font-size: 15px;                 /* ★ 13 → 15 */
+        margin-top: 5px;                 /* ★ 整体调大后略增间距 */
+        font-size: 18px;                 /* ★ 整体调大 15 → 18 */
         line-height: 1.45;               /* ★ 收紧 */
         color: var(--wj-text-muted);
         display: -webkit-box;
@@ -191,7 +202,7 @@
         padding: 112px 28px;
         text-align: center;
         color: var(--wj-text-dim);
-        font-size: 15px;                 /* ★ 14 → 15 */
+        font-size: 18px;                 /* ★ 整体调大 15 → 18 */
         letter-spacing: .5px;
         line-height: 1.8;
       }
@@ -204,23 +215,29 @@
         flex-direction: column;
         padding-top: var(--statusbar-h);
         background: var(--wj-bg);
+        /* #10 整页纵向滚动：内容多时页面滚动，顶部标题输入框随之滚出视口（自动隐藏） */
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        overscroll-behavior: contain;
       }
 
       .note-edit__title {
-        flex: 0 0 auto;
+        flex: 0 0 76px;                  /* 固定高度：不随字体加载/内容变化 */
+        height: 76px;
         width: 100%;
         border: 0;
         outline: 0;
         background: transparent;
-        padding: 14px 20px;              /* ★ 16 → 14 */
+        padding: 0 20px;                 /* 垂直居中由 flex/line-height 保证 */
         font: inherit;
         font-family: inherit;
-        font-size: 28px;                 /* ★ 24 → 28 */
+        font-size: 32px;                 /* ★ 整体调大 28 → 32 */
         font-weight: 700;                /* ★ 600 → 700 更醒目 */
         color: var(--wj-text);
         letter-spacing: .3px;
-        line-height: 1.25;
+        line-height: 76px;               /* 与固定高度一致 → 单行垂直居中 */
         border-bottom: .5px solid var(--wj-border, #e6e9ef);
+        margin-bottom: 14px;             /* #10 分隔线下方灰色间距 */
         box-sizing: border-box;
       }
       .note-edit__title::placeholder {
@@ -229,125 +246,45 @@
       }
 
       .note-edit__content {
-        flex: 1 1 auto;
-        min-height: 0;
+        flex: 0 0 auto;                  /* #10 不再占满剩余空间，随内容撑高 */
         width: 100%;
         border: 0;
         outline: 0;
         background: transparent;
-        padding: 12px 20px 24px;         /* ★ 14 → 12 */
         font: inherit;
         font-family: inherit;
-        font-size: 20px;                 /* 保持 20 */
-        line-height: 1.6;                /* ★ 1.65 → 1.6 略紧 */
+        font-size: 24px;                 /* ★ 整体调大 20 → 24 */
+        line-height: 1.6;
         color: var(--wj-text);
         resize: none;
-        overflow-y: auto;
-        -webkit-overflow-scrolling: touch;
-        overscroll-behavior: contain;
         box-sizing: border-box;
       }
       .note-edit__content::placeholder {
         color: var(--wj-text-dim);
       }
-      /* #4 自绘 div 输入框：保持与原 input/textarea 一致的换行/滚动表现 */
-      div.note-edit__title { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-      div.note-edit__content { white-space: pre-wrap; word-break: break-word; }
-
-      /* ==================== 删除确认页 ==================== */
-      .note-confirm {
-        position: absolute;
-        inset: 0;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        padding: calc(var(--statusbar-h) + 28px) 42px 56px;
-        background: var(--wj-bg);
-        gap: 14px;
+      /* #4 自绘 div 输入框：保持与原 input/textarea 一致的换行/滚动表现。
+         单行标题用 flex 垂直居中，对齐原生 <input> 的居中效果。
+         多行正文：height:fit-content 随内容自适应高度，整页滚动而非内部滚动。 */
+      div.note-edit__title {
+        display: flex; align-items: center;
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      }
+      div.note-edit__content {
+        height: fit-content;             /* #10 随内容增长 */
+        min-height: 64px;
+        padding: 4px 20px 60px;          /* 顶部留白对齐分隔线上方；底部留足滚动余量 */
+        white-space: pre-wrap; word-break: break-word;
+      }
+      /* zhuzios 原生 <textarea>：无自绘 IME，保留内部滚动的旧行为，不强制 fit-content */
+      textarea.note-edit__content {
+        flex: 1 1 auto;
+        min-height: 0;
+        padding: 12px 20px 24px;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        overscroll-behavior: contain;
       }
 
-      .note-confirm__icon {
-        width: 68px;                     /* ★ 64 → 68 */
-        height: 95px;
-        border-radius: 50%;
-        background: #ffe4ec;
-        color: #e0356b;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin-bottom: 11px;
-      }
-      .note-confirm__icon svg {
-        width: 32px;                     /* ★ 30 → 32 */
-        height: 45px;
-        display: block;
-      }
-
-      .note-confirm__title {
-        font-size: 19px;                 /* ★ 17 → 19 */
-        font-weight: 700;
-        color: var(--wj-text);
-        letter-spacing: .3px;
-        text-align: center;
-      }
-
-      .note-confirm__msg {
-        font-size: 16px;                 /* ★ 14 → 16 */
-        line-height: 1.6;
-        color: var(--wj-text-muted);
-        text-align: center;
-        word-break: break-all;
-        max-width: 420px;
-        padding: 0 6px;
-      }
-      .note-confirm__msg strong {
-        color: var(--wj-text);
-        font-weight: 600;
-      }
-
-      .note-confirm__actions {
-        margin-top: 34px;
-        display: flex;
-        gap: 17px;
-        width: 100%;
-        max-width: 392px;
-      }
-
-      .note-confirm__btn {
-        flex: 1 1 0;
-        padding: 14px 20px;              /* ★ 13 → 14 */
-        border: 0;
-        border-radius: 1399px;
-        font: inherit;
-        font-size: 16px;                 /* ★ 15 → 16 */
-        font-weight: 600;
-        letter-spacing: .3px;
-        cursor: pointer;
-        transition: transform .1s ease, background .15s ease;
-        -webkit-tap-highlight-color: transparent;
-        user-select: none;
-        -webkit-user-select: none;
-      }
-      .note-confirm__btn:active {
-        transform: scale(.97);
-      }
-
-      .note-confirm__btn--cancel {
-        background: var(--wj-bg-alt);
-        color: var(--wj-text);
-      }
-      .note-confirm__btn--cancel:active {
-        background: #dae2f0;
-      }
-
-      .note-confirm__btn--confirm {
-        background: #e0356b;
-        color: #fff;
-      }
-      .note-confirm__btn--confirm:active {
-        background: #c02a58;
-      }
     `,
 
     routes: {
@@ -429,7 +366,23 @@
                   pressTimer  = null;
                   longPressed = true;
                   if (navigator.vibrate) { try { navigator.vibrate(10); } catch {} }
-                  ctx.push('confirm-delete', { id });
+                  // ★ 删除确认改用系统 WujiDialog，更好看更 wuji（替代自定义 confirm-delete 路由）。
+                  const note = findNote(id);
+                  const title = (note?.title || '').trim() || '无标题';
+                  window.WujiDialog.show({
+                    bundlename: BUNDLE,
+                    title: '删除后无法恢复',
+                    content: `确定要删除「${title}」吗？`,
+                    buttons: [
+                      { value: '取消' },
+                      { value: '删除', color: 'var(--wj-danger)', primary: true },
+                    ],
+                  }).then(res => {
+                    if (res !== '删除') return;
+                    deleteNote(id);
+                    if (navigator.vibrate) { try { navigator.vibrate([20, 40, 20]); } catch {} }
+                    renderList();
+                  }).catch(err => console.warn('[note] delete dialog', err));
                 }, 500);
               }, { passive: true });
 
@@ -513,7 +466,7 @@
             ? `<div class="note-edit__title" id="noteEditTitle" data-wj-field="1" data-wj-placeholder="标题" tabindex="0" inputmode="none" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></div>`
             : `<input class="note-edit__title" id="noteEditTitle" type="text" placeholder="标题" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" value="${escapeHtml(title)}">`;
           const contentField = window.WJ_IME
-            ? `<div class="note-edit__content" id="noteEditContent" data-wj-field="1" data-wj-placeholder="内容" tabindex="0" inputmode="none" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></div>`
+            ? `<div class="note-edit__content" id="noteEditContent" data-wj-field="1" data-wj-multiline="1" data-wj-placeholder="内容" tabindex="0" inputmode="none" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></div>`
             : `<textarea class="note-edit__content" id="noteEditContent" placeholder="内容" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">${escapeHtml(content)}</textarea>`;
 
           return `
@@ -579,58 +532,6 @@
             }
             flushSave();
           };
-        },
-      },
-
-      'confirm-delete': {
-        name: 'confirm-delete',
-
-        render(routeCtx) {
-          const id   = routeCtx.data?.id;
-          const note = findNote(id);
-          const title = (note?.title || '').trim() || '无标题';
-
-          return `
-            <div class="note-confirm">
-              <div class="note-confirm__icon">
-                <svg viewBox="0 0 24 24" fill="none"
-                     stroke="currentColor" stroke-width="2"
-                     stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M3 6h18"/>
-                  <path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2"/>
-                  <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
-                  <path d="M10 11v6"/>
-                  <path d="M14 11v6"/>
-                </svg>
-              </div>
-              <div class="note-confirm__title">删除后无法恢复</div>
-              <div class="note-confirm__msg">
-                你确定要删除 <strong>"${escapeHtml(title)}"</strong> 吗？
-              </div>
-              <div class="note-confirm__actions">
-                <button class="note-confirm__btn note-confirm__btn--cancel"
-                        id="noteCancelBtn" type="button">取消</button>
-                <button class="note-confirm__btn note-confirm__btn--confirm"
-                        id="noteConfirmBtn" type="button">确定</button>
-              </div>
-            </div>
-          `;
-        },
-
-        mount(root, ctx) {
-          const id = ctx.data?.id;
-
-          root.querySelector('#noteCancelBtn').addEventListener('click', () => {
-            ctx.pop();
-          });
-
-          root.querySelector('#noteConfirmBtn').addEventListener('click', () => {
-            if (id) deleteNote(id);
-            if (navigator.vibrate) {
-              try { navigator.vibrate([20, 40, 20]); } catch {}
-            }
-            ctx.pop();
-          });
         },
       },
     },

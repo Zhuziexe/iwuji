@@ -30,18 +30,25 @@
   });
 
   /* ---------- 图鉴数据（常量） ----------
-     weight = 该鱼种在「钓到鱼」时的相对出现权重，总和 100。
-     概率越小 → 越稀有 → 单价越高（单价由概率反推，见 unitPrice）。
+     按稀有度从高到低排列（越靠前越稀有、越值钱），单价随之递减。
+     weight = 该鱼种在「钓到鱼」时的相对出现权重（按权重归一化）。
+     base   = 该鱼种基础单价（小鱼币）。稀有鱼越稀有越贵，常见鱼 1~3 币。
      ------------------------------------- */
   const FISH_SPECIES = [
-    { id: 'hongyu',  name: '红小鲫',   weight: 28, color: '#ef5350', accent: '#ffcdd2' },
-    { id: 'lanwe',   name: '蓝尾鱼',   weight: 22, color: '#42a5f5', accent: '#bbdefb' },
-    { id: 'jinli',   name: '锦鲤',     weight: 16, color: '#ff7a59', accent: '#ffd166' },
-    { id: 'mojin',   name: '墨金鱼',   weight: 12, color: '#37474f', accent: '#ffca28' },
-    { id: 'boli',    name: '玻璃鱼',   weight: 8,  color: '#80deea', accent: '#e0f7fa' },
-    { id: 'xingyu',  name: '星星鱼',   weight: 6,  color: '#7e57c2', accent: '#ffe082' },
-    { id: 'yueliang',name: '月光鱼',   weight: 5,  color: '#5c6bc0', accent: '#fff59d' },
-    { id: 'longyu',  name: '小金龙',   weight: 3,  color: '#f9a825', accent: '#fff8e1' },
+    /* 稀有鱼：越稀有单价越高 */
+    { id: 'longyu',  name: '小金龙',   weight: 2,  color: '#f9a825', accent: '#fff8e1', base: 25 },
+    { id: 'yueliang',name: '月光鱼',   weight: 3,  color: '#5c6bc0', accent: '#fff59d', base: 20 },
+    { id: 'xingyu',  name: '星星鱼',   weight: 4,  color: '#7e57c2', accent: '#ffe082', base: 18 },
+    { id: 'boli',    name: '玻璃鱼',   weight: 6,  color: '#80deea', accent: '#e0f7fa', base: 16 },
+    { id: 'mojin',   name: '墨金鱼',   weight: 7,  color: '#37474f', accent: '#ffca28', base: 14 },
+    { id: 'jinli',   name: '锦鲤',     weight: 9,  color: '#ff7a59', accent: '#ffd166', base: 12 },
+    /* 常见便宜鱼 */
+    { id: 'nqiu',    name: '泥鳅',     weight: 8,  color: '#8d6e63', accent: '#d7ccc8', base: 1 },
+    { id: 'jili',    name: '鲫鱼',     weight: 10, color: '#ffb74d', accent: '#ffe0b2', base: 2 },
+    { id: 'caoyu',   name: '草鱼',     weight: 14, color: '#9ccc65', accent: '#dce775', base: 1 },
+    { id: 'luyu',    name: '鲈鱼',     weight: 18, color: '#78909c', accent: '#cfd8dc', base: 1 },
+    { id: 'lanwe',   name: '蓝尾鱼',   weight: 22, color: '#42a5f5', accent: '#bbdefb', base: 3 },
+    { id: 'hongyu',  name: '红小鲫',   weight: 28, color: '#ef5350', accent: '#ffcdd2', base: 2 },
   ];
 
   const JUNK = [
@@ -50,6 +57,13 @@
     { id: 'shuye',   name: '烂树叶',   color: '#7cb342' },
     { id: 'yilaguan',name: '易拉罐',   color: '#90a4ae' },
     { id: 'wangqiu', name: '旧网球',   color: '#cddc39' },
+    { id: 'baozhi',  name: '旧报纸',   color: '#b0bec5' },
+    { id: 'suliao',  name: '塑料袋',   color: '#eee' },
+    { id: 'suipian', name: '碎玻璃',   color: '#26a69a' },
+    { id: 'shengzi', name: '烂绳子',   color: '#a1887f' },
+    { id: 'hezi',    name: '小木盒',   color: '#795548' },
+    { id: 'dianchi', name: '旧电池',   color: '#546e7a' },
+    { id: 'maozi',   name: '破帽子',   color: '#5d4037' },
   ];
 
   const NOTHING_RATE = 0.4;   /* 没钓到 */
@@ -58,12 +72,11 @@
   const FISH_TOTAL_WEIGHT = FISH_SPECIES.reduce((s, f) => s + f.weight, 0);
   const probOf = sp => sp.weight / FISH_TOTAL_WEIGHT;
   const absProbOf = sp => FISH_RATE * probOf(sp);
-  const PRICE_K = 2;
-  const unitPrice = sp => Math.max(1, Math.round(PRICE_K / probOf(sp)));
+  const unitPrice = sp => Math.max(1, Number(sp.base) || 1);
 
   const QUALITIES = [
-    { min: 0.85, label: '极品', mult: 3.0 },
-    { min: 0.60, label: '优良', mult: 1.8 },
+    { min: 0.85, label: '极品', mult: 2.0 },
+    { min: 0.60, label: '优良', mult: 1.4 },
     { min: 0.00, label: '普通', mult: 1.0 },
   ];
   const qualityOf = q => QUALITIES.find(x => q >= x.min) || QUALITIES[QUALITIES.length - 1];
@@ -132,6 +145,13 @@
       shuye:   `<path d="M24 66 Q38 30 92 40 Q86 84 44 82 Q30 80 24 66 Z" fill="${c}"/><path d="M30 70 Q56 56 84 44" stroke="#33691e" stroke-width="2" fill="none"/>`,
       yilaguan:`<rect x="42" y="34" width="36" height="54" rx="6" fill="${c}"/><rect x="46" y="38" width="28" height="46" rx="3" fill="#eceff1" opacity=".5"/>`,
       wangqiu: `<circle cx="60" cy="62" r="28" fill="${c}"/><path d="M36 50 Q60 62 84 50 M36 74 Q60 62 84 74" stroke="#fff" stroke-width="2.5" fill="none"/>`,
+      baozhi:  `<path d="M28 32 L88 32 L88 88 L28 88 Z" fill="#eceff1" stroke="${c}" stroke-width="2"/><path d="M34 44 H82 M34 54 H82 M34 64 H70 M34 74 H78" stroke="${c}" stroke-width="3"/>`,
+      suliao:  `<path d="M34 34 Q60 26 86 34 L80 86 Q60 94 40 86 Z" fill="#fff" opacity=".7" stroke="${c}" stroke-width="3"/><path d="M42 40 Q38 62 44 82" stroke="#fff" stroke-width="3" fill="none" opacity=".9"/>`,
+      suipian: `<path d="M26 84 L44 34 L66 52 L84 30 L94 84 Z" fill="${c}" opacity=".85"/><path d="M44 34 L58 62 M84 30 L74 60" stroke="#fff" stroke-width="2" fill="none" opacity=".7"/>`,
+      shengzi: `<path d="M24 62 Q44 34 64 58 T100 56" stroke="${c}" stroke-width="9" fill="none" stroke-linecap="round"/><path d="M24 62 Q44 34 64 58 T100 56" stroke="#fff" stroke-width="2" fill="none" stroke-dasharray="4 6" opacity=".5"/>`,
+      hezi:    `<rect x="30" y="46" width="60" height="40" rx="4" fill="${c}"/><path d="M30 58 L60 74 L90 58" stroke="#fff" stroke-width="3" fill="none" opacity=".6"/><rect x="30" y="42" width="60" height="12" rx="4" fill="#a1887f"/>`,
+      dianchi: `<rect x="44" y="34" width="32" height="58" rx="4" fill="${c}"/><rect x="52" y="28" width="16" height="8" rx="2" fill="#b0bec5"/><path d="M48 46 H72 M48 52 H72" stroke="#ffe082" stroke-width="4"/>`,
+      maozi:   `<path d="M30 72 Q28 40 60 40 Q92 40 90 72 Z" fill="${c}"/><path d="M20 74 Q60 66 100 74 L100 82 Q60 74 20 82 Z" fill="${c}" opacity=".8"/>`,
     };
     return `<svg class="${cls}" width="${size}" height="${size}" viewBox="0 0 120 120" aria-hidden="true">${shapes[j.id] || shapes.kongping}</svg>`;
   }
@@ -150,6 +170,7 @@
       db: AppStorage.for(BUNDLE),
       readyPromise: null,
       scroll: { all: 0, book: 0 },   /* 列表页滚动位置，返回详情时保留 */
+      allLimit: 30,                  /* 「全部小鱼」分页：当前渲染条数 */
     };
     S.load = async function () {
       let s = await S.db.get(KEY, null);
@@ -221,6 +242,21 @@
     S.state.earned += value;
     await S.save();
     return { ok: true, value };
+  }
+
+  /* 批量卖出：一次改内存、一次落盘，鱼多时避免 N 次存储写入 */
+  async function sellMany(S, ids) {
+    const set = new Set(ids);
+    const sold = S.state.fish.filter(f => set.has(f.id) && f.id !== S.state.likedId);
+    if (!sold.length) return { count: 0, total: 0 };
+    const keep = new Set(sold.map(f => f.id));
+    S.state.fish = S.state.fish.filter(f => !keep.has(f.id));
+    const total = sold.reduce((s, f) => s + valueOfFish(f), 0);
+    S.state.coins += total;
+    S.state.soldCount += sold.length;
+    S.state.earned += total;
+    await S.save();
+    return { count: sold.length, total };
   }
 
   /* ---------- 公共 UI 片段 ---------- */
@@ -372,6 +408,7 @@
     .xy-cell__val { font-size:18px; color:#f9a825; font-weight:800; margin-top:2px; }
     .xy-cell__star { color:#f9a825; font-size:18px; }
     .xy-empty { text-align:center; color: var(--wj-text-muted); padding:50px 0; font-size:20px; }
+    .xy-more { display:block; width:100%; margin-top:12px; }
 
     /* 详情 */
     .xy-detail { text-align:center; }
@@ -384,11 +421,18 @@
     .xy-detail__val { font-size:22px; color:#f9a825; font-weight:800; margin-top:6px; }
     .xy-detail__rare { font-size:18px; color:#8e24aa; margin-top:4px; font-weight:700; }
     .xy-detail__prob { font-size:18px; color: var(--wj-text-muted); margin-top:2px; }
-    .xy-sell { display:flex; align-items:center; justify-content:center; gap:6px;
-      margin:16px auto 0; max-width:320px; }
+    /* 详情页底部条：左星星 + 右侧圆角卖出按钮占满剩余宽度 */
+    .xy-detail-bar { position:sticky; bottom:-2px; z-index:2;
+      display:flex; align-items:center; gap:10px;
+      margin-top:14px; padding:10px 0 2px; border-top:1px solid #e0e8ef;
+      background:#fff; }
+    .xy-detail-bar .xy-star { width:52px; height:52px; margin:0; flex:0 0 52px; font-size:40px; }
+    .xy-detail-bar__sell { flex:1 1 auto; display:flex; align-items:center; justify-content:center;
+      gap:6px; width:auto; margin:0; }
+    .xy-detail-bar__sell svg { display:block; flex:0 0 auto; }
+    .xy-detail-bar__val { font-weight:800; }
     .xy-btn--sell { background:linear-gradient(135deg,#ffb74d,#f57c00); color:#fff; }
     .xy-btn--sell:disabled { background:#e0e0e0; color:#9e9e9e; }
-    .xy-sell__note { text-align:center; font-size:18px; color: var(--wj-text-muted); margin-top:8px; }
     .xy-sellbar { display:flex; gap:10px; align-items:center; margin-bottom:10px; }
     .xy-sellbar__info { flex:1; font-size:18px; color: var(--wj-text-muted); line-height:1.35; }
     .xy-sellbar .xy-btn { flex:0 0 auto; padding:10px 16px; font-size:20px; }
@@ -461,7 +505,7 @@
       render(routeCtx) {
         const S = session(routeCtx.nav);
         return page(
-          header(S, '钓鱼', `<span class="xy-bait">🪱 鱼饵 ${S.state.bait}<button class="xy-plus" id="xyAddBait" type="button" aria-label="兑换鱼饵">+</button></span>`),
+          header(S, '钓鱼', `<span class="xy-bait">鱼饵 ${S.state.bait}<button class="xy-plus" id="xyAddBait" type="button" aria-label="兑换鱼饵">+</button></span>`),
           `
           <div class="xy-rod">
             <svg width="120" height="80" viewBox="0 0 120 80" aria-hidden="true">
@@ -493,7 +537,7 @@
           const coinEl = root.querySelector('.xy-coin span');
           if (coinEl) coinEl.textContent = S.state.coins;
           const baitEl = root.querySelector('.xy-bait');
-          if (baitEl) baitEl.innerHTML = `🪱 鱼饵 ${S.state.bait}<button class="xy-plus" id="xyAddBait" type="button" aria-label="兑换鱼饵">+</button>`;
+          if (baitEl) baitEl.innerHTML = `鱼饵 ${S.state.bait}<button class="xy-plus" id="xyAddBait" type="button" aria-label="兑换鱼饵">+</button>`;
           bindBait();
         }
         function bindBait() {
@@ -586,9 +630,12 @@
       name: 'all',
       render(routeCtx) {
         const S = session(routeCtx.nav);
-        const sellable = S.state.fish.filter(f => f.id !== S.state.likedId);
+        const all = S.state.fish;
+        const sellable = all.filter(f => f.id !== S.state.likedId);
         const total = sellable.reduce((s, f) => s + valueOfFish(f), 0);
-        const cells = S.state.fish.map(f => {
+        const limit = S.allLimit || 30;
+        const shown = all.slice(0, limit);
+        const cells = shown.map(f => {
           const sp = findFish(f.species) || FISH_SPECIES[0];
           const star = f.id === S.state.likedId ? '<span class="xy-cell__star">★</span>' : '';
           const val = valueOfFish(f);
@@ -598,14 +645,17 @@
             <div class="xy-cell__val">${val} 币</div>
           </div>`;
         }).join('');
+        const more = all.length > limit
+          ? `<button class="xy-btn xy-btn--ghost xy-more" id="xyMore" type="button">加载更多（还有 ${all.length - limit} 条）</button>`
+          : '';
         return page(header(S, '全部小鱼'), `
-          ${S.state.fish.length ? `
+          ${all.length ? `
             <div class="xy-sellbar">
-              <div class="xy-sellbar__info">共 ${S.state.fish.length} 条${S.state.likedId ? '（喜欢的 1 条不卖）' : ''}<br>可卖 ${sellable.length} 条 · 预计 ${total} 币</div>
+              <div class="xy-sellbar__info">共 ${all.length} 条${S.state.likedId ? '（喜欢的 1 条不卖）' : ''}<br>可卖 ${sellable.length} 条 · 预计 ${total} 币</div>
               <button class="xy-btn xy-btn--sell" id="xySellAll" type="button" ${sellable.length ? '' : 'disabled'}>一键卖出</button>
             </div>` : ''}
           ${cells
-            ? `<div class="xy-grid">${cells}</div>`
+            ? `<div class="xy-grid">${cells}</div>${more}`
             : `<div class="xy-empty">还没有小鱼，去钓鱼吧 🎣</div>`}
         `);
       },
@@ -620,6 +670,13 @@
             ctx.push('fishDetail', { id: el.dataset.id });
           });
         });
+        const more = root.querySelector('#xyMore');
+        if (more) more.addEventListener('click', () => {
+          if (bodyEl) S.scroll.all = bodyEl.scrollTop;
+          S.allLimit = (S.allLimit || 30) + 30;
+          root.innerHTML = routes.all.render(ctx);
+          routes.all.mount(root, ctx);
+        });
         const sellAll = root.querySelector('#xySellAll');
         if (sellAll) sellAll.addEventListener('click', async () => {
           const sellable = S.state.fish.filter(f => f.id !== S.state.likedId);
@@ -632,8 +689,9 @@
             buttons: [{ value: '取消' }, { value: '卖出', primary: true }],
           });
           if (res !== '卖出') return;
-          for (const f of sellable) await sellFish(S, f.id);
-          try { WujiToast.show(`卖出 ${sellable.length} 条，+${total} 小鱼币`); } catch { }
+          const result = await sellMany(S, sellable.map(f => f.id));
+          try { WujiToast.show(`卖出 ${result.count} 条，+${result.total} 小鱼币`); } catch { }
+          S.scroll.all = 0;
           root.innerHTML = routes.all.render(ctx);
           routes.all.mount(root, ctx);
         });
@@ -659,14 +717,12 @@
             <div class="xy-detail__rare">${starsText(rare.stars)} ${esc(rare.label)} · 出现概率约 ${pct}%</div>
             <div class="xy-detail__q">质量：${esc(qualityOf(f.quality).label)}</div>
             <div class="xy-detail__val">价值 ${val} 小鱼币</div>
+          </div>
+          <div class="xy-detail-bar">
             <button class="xy-star ${liked ? 'is-on' : ''}" id="xyStar" type="button"
               aria-label="${liked ? '取消喜欢' : '喜欢'}">★</button>
-            <div class="xy-tip" id="xyStarTip">${liked ? '这是你喜欢的那只小鱼' : '点一下，把它设为喜欢的小鱼'}</div>
-            <div class="xy-sell">
-              <button class="xy-btn xy-btn--sell" id="xySellOne" type="button"
-                ${liked ? 'disabled' : ''}>${liked ? '喜欢中，不可卖' : `卖出 · +${val} 小鱼币`}</button>
-            </div>
-            <div class="xy-sell__note">${liked ? '取消喜欢后才能卖出这条' : '卖出后这条小鱼会离开鱼群'}</div>
+            <button class="xy-btn xy-btn--sell xy-detail-bar__sell" id="xySellOne" type="button"
+              ${liked ? 'disabled' : ''}>${COIN_SVG(24)}<span class="xy-detail-bar__val">${val}</span> 卖出</button>
           </div>
         `);
       },
@@ -674,19 +730,18 @@
         const S = session(ctx.nav);
 
         const star = root.querySelector('#xyStar');
-        const tip = root.querySelector('#xyStarTip');
         const sellBtn = root.querySelector('#xySellOne');
 
+        const setSellLabel = (btn, val, liked) => {
+          if (!btn) return;
+          btn.disabled = !!liked;
+          btn.innerHTML = `${COIN_SVG(24)}<span class="xy-detail-bar__val">${val}</span> 卖出`;
+        };
         const syncSellBtn = () => {
           if (!sellBtn) return;
           const f = S.state.fish.find(x => x.id === ctx.data.id);
           const liked = f && f.id === S.state.likedId;
-          sellBtn.disabled = !!liked;
-          sellBtn.textContent = liked
-            ? '喜欢中，不可卖'
-            : `卖出 · +${f ? valueOfFish(f) : 0} 小鱼币`;
-          const note = root.querySelector('.xy-sell__note');
-          if (note) note.textContent = liked ? '取消喜欢后才能卖出这条' : '卖出后这条小鱼会离开鱼群';
+          setSellLabel(sellBtn, f ? valueOfFish(f) : 0, liked);
         };
 
         if (star) star.addEventListener('click', async () => {
@@ -696,7 +751,6 @@
           const on = S.state.likedId === id;
           star.classList.toggle('is-on', on);
           star.setAttribute('aria-label', on ? '取消喜欢' : '喜欢');
-          if (tip) tip.textContent = on ? '这是你喜欢的那只小鱼' : '点一下，把它设为喜欢的小鱼';
           syncSellBtn();
           try { WujiToast.show(on ? '已设为喜欢的小鱼 ⭐' : '已取消喜欢'); } catch { }
           if (navigator.vibrate) { try { navigator.vibrate(8); } catch { } }
@@ -746,7 +800,7 @@
         function renderCards() {
           tabs.forEach(t => t.classList.toggle('is-on', t.dataset.tab === tab));
           if (tab === 'fish') {
-            const sorted = [...FISH_SPECIES].sort((a, b) => b.weight - a.weight);
+            const sorted = FISH_SPECIES; /* 已按稀有度从高到低排列 */
             cards.innerHTML = sorted.map(sp => {
               const got = S.state.fishCatalog.includes(sp.id);
               const rare = rarityOf(sp);
@@ -907,7 +961,7 @@
     name: '杨梅小鱼',
     icon: './assets/xiaoyu.svg',
     initialRoute: 'home',
-    version: '1.3.0',
+    version: '1.4.0',
     devices: ['iwuji', 'pc'],
     styles,
     routes: wrappedRoutes,

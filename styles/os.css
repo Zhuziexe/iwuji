@@ -198,9 +198,16 @@ img {
   display: inline-block;
   width: 30px;
   height: 17px;
+  opacity: .96;
+}
+
+/* 电池本体：负责圆角，并裁掉超出的填充；突起/闪电挂在外层，不受裁剪影响 */
+.battery__body {
+  position: absolute;
+  inset: 0;
   background: #d8dbdf;
   border-radius: 4px;
-  opacity: .96;
+  overflow: hidden;
 }
 
 .battery::after {
@@ -213,6 +220,7 @@ img {
   height: 9px;
   background: #d8dbdf;
   border-radius: 0 3px 3px 0;
+  transition: background .3s ease;
 }
 
 .battery i {
@@ -222,8 +230,12 @@ img {
   height: 100%;
   width: 50%;
   background: #34383f;
-  border-radius: 4px 0 0 4px;
   transition: width .4s ease, background .3s ease;
+}
+
+/* 满电：突起变黑（其余状态保持浅灰）；填充为矩形，右侧圆角由本体裁出 */
+.battery.is-full::after {
+  background: #34383f;
 }
 
 .battery.is-low i {
@@ -247,7 +259,7 @@ img {
 }
 
 .battery.is-charging {
-  margin-right: 22px;
+  margin-right: 12px;
 }
 
 .battery.is-charging::before {

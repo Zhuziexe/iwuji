@@ -1,0 +1,882 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>iWuji Neo</title>
+  <style>
+    :root {
+      --bar-h: 48px;
+      --gap: 16px;
+      --radius: 28px;
+      --design-w: 420px;
+      --design-h: 560px;
+      --key-w: 12px;
+      --dw: 320px;
+      /* 机身宽度，由 JS 实时更新 */
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      -webkit-font-smoothing: antialiased;
+      -webkit-text-size-adjust: none !important;
+      -moz-text-size-adjust: none !important;
+      text-size-adjust: none !important;
+      background: #000;
+      color: #fff;
+    }
+
+    html {
+      font-size: 16px !important;
+    }
+
+    body {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      height: 100dvh;
+      overflow: hidden;
+      overscroll-behavior: none;
+      background: #0f1116;
+      color: #e9ecf2;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI",
+        "PingFang SC", "Microsoft YaHei", sans-serif;
+    }
+
+    /* ============ 标题栏 ============ */
+    .titlebar {
+      flex: 0 0 auto;
+      height: var(--bar-h);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 0 16px;
+      background: #1a1d24;
+      border-bottom: 1px solid #2a2f3a;
+      user-select: none;
+      position: relative;
+      z-index: 100;
+    }
+
+    .titlebar .title {
+      font-size: 16px;
+      font-weight: 600;
+      letter-spacing: .6px;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .tb-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    .tb-btn {
+      font: inherit;
+      font-size: 13px;
+      line-height: 1;
+      padding: 7px 12px;
+      color: #8ad4ff;
+      background: rgba(138, 212, 255, .08);
+      border: 1px solid rgba(138, 212, 255, .35);
+      border-radius: 6px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background .15s, transform .05s, color .15s;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .tb-btn:hover {
+      background: rgba(138, 212, 255, .18);
+    }
+
+    .tb-btn:active {
+      transform: translateY(1px);
+    }
+
+    .tb-btn:disabled {
+      opacity: .4;
+      cursor: not-allowed;
+    }
+
+    .tb-btn--icon {
+      width: 32px;
+      height: 32px;
+      padding: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .tb-btn--icon svg {
+      width: 16px;
+      height: 16px;
+      display: block;
+    }
+
+    .tb-btn--icon.is-open {
+      background: rgba(138, 212, 255, .22);
+      border-color: rgba(138, 212, 255, .55);
+    }
+
+    /* ============ 下拉菜单 ============ */
+    .tb-menu {
+      position: absolute;
+      top: calc(100% + 4px);
+      right: 12px;
+      z-index: 100;
+      min-width: 200px;
+      padding: 6px;
+      border-radius: 10px;
+      background: #20242d;
+      border: 1px solid #2f3540;
+      box-shadow:
+        0 12px 32px rgba(0, 0, 0, .45),
+        0 0 0 1px rgba(0, 0, 0, .3);
+      display: flex;
+      flex-direction: column;
+      gap: 1px;
+      animation: tbMenuIn .14s cubic-bezier(.2, .7, .3, 1);
+    }
+
+    .tb-menu[hidden] {
+      display: none;
+    }
+
+    @keyframes tbMenuIn {
+      from {
+        opacity: 0;
+        transform: translateY(-4px) scale(.97);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    .tb-menu__item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      width: 100%;
+      padding: 9px 12px;
+      border: 0;
+      border-radius: 6px;
+      background: transparent;
+      color: #d0d6e1;
+      font: inherit;
+      font-size: 13px;
+      line-height: 1;
+      text-align: left;
+      text-decoration: none;
+      white-space: nowrap;
+      cursor: pointer;
+      transition: background .12s, color .12s;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .tb-menu__item:hover {
+      background: rgba(138, 212, 255, .10);
+      color: #e9ecf2;
+    }
+
+    .tb-menu__item:active {
+      background: rgba(138, 212, 255, .16);
+    }
+
+    .tb-menu__item:disabled {
+      opacity: .4;
+      cursor: not-allowed;
+    }
+
+    .tb-menu__item--danger {
+      color: #ff9fb5;
+    }
+
+    .tb-menu__item--danger:hover {
+      background: rgba(224, 53, 107, .12);
+      color: #ff9fb5;
+    }
+
+    .tb-menu__hint {
+      color: #6b7280;
+      font-size: 12px;
+      font-weight: 400;
+      transition: color .12s;
+    }
+
+    .tb-menu__item:hover .tb-menu__hint {
+      color: #8ad4ff;
+    }
+
+    .tb-menu__state {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: .3px;
+      color: #6b7280;
+      transition: color .15s;
+    }
+
+    .tb-menu__state.is-on {
+      color: #5bd67f;
+    }
+
+    .tb-menu__sep {
+      height: 1px;
+      margin: 4px 6px;
+      background: #2f3540;
+    }
+
+    @media (max-width: 380px) {
+      .tb-menu {
+        left: 12px;
+        right: 12px;
+        min-width: 0;
+      }
+    }
+
+    .stage {
+      flex: 1 1 auto;
+      min-height: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: var(--gap) calc(var(--gap) + 20px);
+      overflow: hidden;
+      background: radial-gradient(1200px 600px at 50% 0%, #171b23 0%, #0f1116 70%);
+    }
+
+    .device {
+      position: relative;
+      max-width: 100%;
+      max-height: 100%;
+    }
+
+    .body {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      border-radius: 8.75% / 5.23%;
+      overflow: hidden;
+      background: linear-gradient(180deg, #f2f3f6 0%, #f0f1f4 50%, #eceef2 100%);
+    }
+
+    .device-header {
+      flex: 0 0 8.37%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: calc(var(--dw) * 0.07);
+      font-weight: 600;
+      color: #4a4f5a;
+      user-select: none;
+      padding-top: .4%;
+    }
+
+    /* ============ 屏幕区（iframe 3:4，四周留边距） ============ */
+    .screen-area {
+      flex: 1 1 0;
+      min-height: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1% 3%;
+      overflow: hidden;
+    }
+
+    .screen-wrap {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 3 / 4;
+      overflow: hidden;
+      background: #000;
+    }
+
+    .screen-wrap iframe {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: var(--design-w);
+      height: var(--design-h);
+      border: 0;
+      display: block;
+      background: #000;
+      transform-origin: center center;
+      transform: translate(-50%, -50%) scale(1);
+      will-change: transform;
+      -webkit-text-size-adjust: none;
+      -moz-text-size-adjust: none;
+      text-size-adjust: none;
+    }
+
+    .camera-notch {
+      position: absolute;
+      top: 3.0%;
+      left: 5.0%;
+      width: 5%;
+      aspect-ratio: 1;
+      border-radius: 50%;
+      background: #05070c;
+      z-index: 5;
+      pointer-events: none;
+      box-shadow: inset 0 -1px 3px rgba(90, 130, 255, .6)
+    }
+
+    .camera-notch::after {
+      content: "";
+      position: absolute;
+      top: 18%;
+      left: 18%;
+      width: 34%;
+      height: 34%;
+      border-radius: 50%;
+      background: rgba(170, 210, 255, .45);
+      filter: blur(.6px);
+    }
+
+    /* ============ 底部 Home 区（高度 = 0.26W） ============ */
+    .home-area {
+      flex: 0 0 15.54%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .home-key {
+      position: relative;
+      width: 15%;
+      aspect-ratio: 1;
+      padding: 0;
+      border: 0;
+      border-radius: 50%;
+      background: linear-gradient(180deg, #ffffff 0%, #f2f2f5 100%);
+      box-shadow:
+        0 2px 6px rgba(0, 0, 0, .14),
+        0 1px 2px rgba(0, 0, 0, .08),
+        inset 0 1px 0 rgba(255, 255, 255, .95),
+        inset 0 -1px 2px rgba(0, 0, 0, .06);
+      cursor: pointer;
+      transition: transform .09s, box-shadow .12s, background .12s;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: none;
+    }
+
+    .home-key::after {
+      content: "";
+      position: absolute;
+      inset: 30%;
+      border: 1.5px solid rgba(120, 140, 170, .45);
+      border-radius: 22%;
+      transition: border-color .12s;
+    }
+
+    .home-key:active {
+      transform: scale(.94);
+      background: linear-gradient(180deg, #e8e8ec, #f5f5f8);
+      box-shadow:
+        0 1px 3px rgba(0, 0, 0, .12),
+        inset 0 1px 3px rgba(0, 0, 0, .08);
+    }
+
+    .home-key:active::after {
+      border-color: rgba(74, 125, 255, .85);
+    }
+
+    .home-key:focus-visible {
+      outline: 2px solid #4a7dff;
+      outline-offset: 3px;
+    }
+
+    /* ============ 侧边硬件键 ============ */
+    .hw-rail {
+      position: absolute;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      z-index: 2;
+    }
+
+    .hw-rail--right {
+      left: 100%;
+      margin-left: 3px;
+      top: 24%;
+    }
+
+    .hw-key {
+      position: relative;
+      width: var(--key-w);
+      padding: 0;
+      border: 0;
+      border-radius: 4px;
+      background: linear-gradient(180deg, #fafafc, #e2e2e7);
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, .95),
+        inset 0 -1px 0 rgba(0, 0, 0, .1),
+        0 2px 4px rgba(0, 0, 0, .35);
+      cursor: pointer;
+      transition: transform .1s, background .1s, box-shadow .1s;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: none;
+    }
+
+    .hw-key::before {
+      content: "";
+      position: absolute;
+      inset: -8px -12px;
+      border-radius: inherit;
+    }
+
+    .hw-key:hover {
+      background: linear-gradient(180deg, #ffffff, #eaeaee);
+    }
+
+    .hw-key:active {
+      transform: scaleX(.7);
+      background: linear-gradient(180deg, #4a7dff, #2b5adf);
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, .35),
+        0 0 16px rgba(74, 125, 255, .8);
+    }
+
+    .hw-key--vol-up,
+    .hw-key--vol-down {
+      height: 58px;
+    }
+
+    /* ============ 全屏 ============ */
+    .device:fullscreen,
+    .device:-webkit-full-screen {
+      width: 100vw !important;
+      height: 100vh !important;
+      max-width: none !important;
+      max-height: none !important;
+      background: #000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .device:fullscreen .body,
+    .device:-webkit-full-screen .body {
+      position: relative;
+      inset: auto;
+      flex: 0 0 auto;
+      width: min(88vw, calc(88vh * 3 / 5.02));
+      aspect-ratio: 3 / 5.02;
+    }
+
+    .device::backdrop {
+      background: #000;
+    }
+
+    /* ============ 窄屏 ============ */
+    @media (max-width: 480px) {
+      .titlebar {
+        padding: 0 12px;
+      }
+
+      .stage {
+        padding: 10px calc(10px + 12px);
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <header class="titlebar">
+    <span class="title">iWuji Neo</span>
+
+    <div class="tb-actions">
+      <button class="tb-btn tb-btn--icon" id="fsBtn" type="button" title="全屏" aria-label="全屏">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"
+          stroke-linejoin="round">
+          <path d="M4 9V5a1 1 0 0 1 1-1h4" />
+          <path d="M20 9V5a1 1 0 0 0-1-1h-4" />
+          <path d="M4 15v4a1 1 0 0 0 1 1h4" />
+          <path d="M20 15v4a1 1 0 0 1-1 1h-4" />
+        </svg>
+      </button>
+
+      <button class="tb-btn tb-btn--icon" id="menuBtn" type="button" title="菜单" aria-label="菜单" aria-haspopup="menu"
+        aria-expanded="false">
+        <svg viewBox="0 0 24 24" fill="currentColor">
+          <circle cx="5" cy="12" r="1.8" />
+          <circle cx="12" cy="12" r="1.8" />
+          <circle cx="19" cy="12" r="1.8" />
+        </svg>
+      </button>
+    </div>
+
+    <div class="tb-menu" id="tbMenu" hidden role="menu">
+      <a class="tb-menu__item" href="./studio.html" target="_blank" rel="noopener" role="menuitem">
+        <span>iWuji Studio</span>
+        <span class="tb-menu__hint">↗</span>
+      </a>
+      <a class="tb-menu__item" href="./" role="menuitem">
+        <span>iWuji</span>
+      </a>
+      <div class="tb-menu__sep"></div>
+
+      <button class="tb-menu__item" id="manualBtn" type="button" role="menuitem">
+        <span>说明书</span>
+      </button>
+      <button class="tb-menu__item" id="wakeBtn" type="button" role="menuitem">
+        <span>不息屏</span>
+        <span class="tb-menu__state" id="wakeState">关</span>
+      </button>
+
+      <div class="tb-menu__sep"></div>
+
+      <button class="tb-menu__item tb-menu__item--danger" id="clearDataBtn" type="button" role="menuitem">
+        <span>清除数据</span>
+      </button>
+    </div>
+  </header>
+
+  <main class="stage">
+    <div class="device" id="device">
+      <div class="body">
+        <div class="camera-notch" aria-hidden="true"></div>
+
+        <div class="device-header" aria-hidden="true">iWuji</div>
+
+        <div class="screen-area">
+          <div class="screen-wrap" id="screen">
+            <iframe id="osFrame" src="wujios.html" title="iWuji" allow="camera; microphone; geolocation"></iframe>
+          </div>
+        </div>
+
+        <div class="home-area">
+          <button class="home-key" id="homeKey" type="button" aria-label="Home 键" title="短按息屏/亮屏 · 长按弹出菜单"></button>
+        </div>
+
+      </div>
+
+      <div class="hw-rail hw-rail--right">
+        <button class="hw-key hw-key--vol-up" id="volUpKey" type="button" aria-label="音量加"></button>
+        <button class="hw-key hw-key--vol-down" id="volDownKey" type="button" aria-label="音量减"></button>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    const DESIGN_W = 420, DESIGN_H = 560;
+    const LONG_PRESS_MS = 650;
+
+    // 顶部文字 0.14W + 屏幕区（含边距）约 0.72W + Home 区 0.26W
+    const DEVICE_W_RATIO = 3;
+    const DEVICE_H_RATIO = 5.02;
+
+    const stageEl = document.querySelector('.stage');
+    const deviceEl = document.getElementById('device');
+    const bodyEl = document.querySelector('.body');
+    const screenEl = document.getElementById('screen');
+    const osFrame = document.getElementById('osFrame');
+
+    const fsBtn = document.getElementById('fsBtn');
+    const menuBtn = document.getElementById('menuBtn');
+    const tbMenu = document.getElementById('tbMenu');
+    const manualBtn = document.getElementById('manualBtn');
+    const wakeBtn = document.getElementById('wakeBtn');
+    const clearDataBtn = document.getElementById('clearDataBtn');
+
+    const homeKey = document.getElementById('homeKey');
+    const volUpKey = document.getElementById('volUpKey');
+    const volDownKey = document.getElementById('volDownKey');
+
+    /* =========================================================
+       尺寸适配：先算机身尺寸，再算 iframe 缩放
+       ========================================================= */
+    function isDeviceFullscreen() {
+      return document.fullscreenElement === deviceEl ||
+        document.webkitFullscreenElement === deviceEl;
+    }
+
+    function fit() {
+      const fs = isDeviceFullscreen();
+
+      if (!fs) {
+        const cs = getComputedStyle(stageEl);
+        const padX = parseFloat(cs.paddingLeft) + parseFloat(cs.paddingRight);
+        const padY = parseFloat(cs.paddingTop) + parseFloat(cs.paddingBottom);
+
+        const availW = Math.max(0, stageEl.clientWidth - padX);
+        const availH = Math.max(0, stageEl.clientHeight - padY);
+
+        const w = Math.min(availW, availH * DEVICE_W_RATIO / DEVICE_H_RATIO);
+        if (w > 0) {
+          deviceEl.style.width = w + 'px';
+          deviceEl.style.height = (w * DEVICE_H_RATIO / DEVICE_W_RATIO) + 'px';
+        }
+      }
+
+      // 用机身实际渲染宽度更新 --dw（驱动字体大小）
+      const dw = bodyEl.getBoundingClientRect().width;
+      if (dw > 0) {
+        deviceEl.style.setProperty('--dw', dw + 'px');
+      }
+
+      // iframe 缩放
+      const r = screenEl.getBoundingClientRect();
+      if (!r.width || !r.height) return;
+      const scale = Math.min(r.width / DESIGN_W, r.height / DESIGN_H);
+      osFrame.style.transform = `translate(-50%,-50%) scale(${scale})`;
+    }
+
+    // 观察舞台尺寸即可覆盖窗口/全屏变化；机身尺寸由 fit 主动设置，无需自循环
+    new ResizeObserver(fit).observe(stageEl);
+    osFrame.addEventListener('load', fit);
+    window.addEventListener('load', fit);
+    window.addEventListener('resize', fit);
+    document.addEventListener('fullscreenchange', () => setTimeout(fit, 60));
+    document.addEventListener('webkitfullscreenchange', () => setTimeout(fit, 60));
+    fit();
+
+    function sendToOS(action, payload = {}) {
+      try {
+        osFrame.contentWindow?.postMessage(
+          { type: 'iwuji:control', action, payload }, '*');
+      } catch { }
+    }
+
+    /* =========================================================
+       全屏
+       ========================================================= */
+    fsBtn.addEventListener('click', async () => {
+      try {
+        if (!document.fullscreenElement) await deviceEl.requestFullscreen();
+        else await document.exitFullscreen();
+      } catch (err) { console.error(err); }
+    });
+
+    /* =========================================================
+       标题栏下拉菜单
+       ========================================================= */
+    function openMenu() {
+      tbMenu.hidden = false;
+      menuBtn.classList.add('is-open');
+      menuBtn.setAttribute('aria-expanded', 'true');
+    }
+
+    function closeMenu() {
+      tbMenu.hidden = true;
+      menuBtn.classList.remove('is-open');
+      menuBtn.setAttribute('aria-expanded', 'false');
+    }
+
+    function toggleMenu() {
+      if (tbMenu.hidden) openMenu();
+      else closeMenu();
+    }
+
+    menuBtn.addEventListener('click', e => {
+      e.stopPropagation();
+      toggleMenu();
+    });
+
+    document.addEventListener('pointerdown', e => {
+      if (tbMenu.hidden) return;
+      if (menuBtn.contains(e.target)) return;
+      if (tbMenu.contains(e.target)) return;
+      closeMenu();
+    }, true);
+
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape' && !tbMenu.hidden) closeMenu();
+    });
+
+    tbMenu.querySelectorAll('.tb-menu__item').forEach(el => {
+      el.addEventListener('click', () => {
+        if (el.id === 'wakeBtn') return;
+        closeMenu();
+      });
+    });
+
+    /* =========================================================
+       清除数据
+       ========================================================= */
+    clearDataBtn.addEventListener('click', () => {
+      if (!confirm('确定清除 iWuji 的全部用户数据？')) return;
+      sendToOS('clear-data');
+    });
+
+    /* =========================================================
+       不息屏（Screen Wake Lock）
+       ========================================================= */
+    const WAKE_KEY = 'iwuji:wakelock';
+    const wakeSupported = 'wakeLock' in navigator;
+    const wakeStateEl = document.getElementById('wakeState');
+
+    let wakeLock = null;
+    let wakeEnabled = true;
+
+    try {
+      const saved = localStorage.getItem(WAKE_KEY);
+      if (saved !== null) wakeEnabled = saved === '1';
+    } catch { }
+
+    if (!wakeSupported) {
+      wakeBtn.disabled = true;
+      wakeEnabled = false;
+    }
+
+    function updateWakeBtn() {
+      if (!wakeSupported) {
+        wakeBtn.disabled = true;
+        if (wakeStateEl) {
+          wakeStateEl.textContent = '不支持';
+          wakeStateEl.classList.remove('is-on');
+        }
+        return;
+      }
+
+      if (!wakeEnabled) {
+        if (wakeStateEl) {
+          wakeStateEl.textContent = '关';
+          wakeStateEl.classList.remove('is-on');
+        }
+        return;
+      }
+
+      if (wakeStateEl) {
+        wakeStateEl.textContent = wakeLock ? '开' : '开（待激活）';
+        wakeStateEl.classList.toggle('is-on', !!wakeLock);
+      }
+    }
+
+    async function requestWake() {
+      if (!wakeSupported || !wakeEnabled) return;
+      if (wakeLock) return;
+      if (document.visibilityState !== 'visible') return;
+
+      try {
+        wakeLock = await navigator.wakeLock.request('screen');
+        wakeLock.addEventListener('release', () => {
+          wakeLock = null;
+          updateWakeBtn();
+        });
+      } catch (err) {
+        console.warn('[wakelock] 请求失败', err.name, err.message);
+        wakeLock = null;
+      }
+      updateWakeBtn();
+    }
+
+    async function releaseWake() {
+      if (!wakeLock) return;
+      try { await wakeLock.release(); } catch { }
+      wakeLock = null;
+      updateWakeBtn();
+    }
+
+    wakeBtn.addEventListener('click', async () => {
+      if (!wakeSupported) return;
+
+      wakeEnabled = !wakeEnabled;
+      try { localStorage.setItem(WAKE_KEY, wakeEnabled ? '1' : '0'); } catch { }
+
+      if (wakeEnabled) await requestWake();
+      else await releaseWake();
+
+      updateWakeBtn();
+    });
+
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible' && wakeEnabled) {
+        requestWake();
+      }
+    });
+
+    if (wakeEnabled) requestWake();
+    updateWakeBtn();
+
+    /* =========================================================
+       Home 键：短按 / 长按（与原来的电源键行为一致）
+       ========================================================= */
+    function bindPowerKey(el) {
+      let pressStartAt = 0;
+      let longPressTimer = null;
+      let longPressed = false;
+
+      el.addEventListener('pointerdown', e => {
+        e.preventDefault();
+        try { el.setPointerCapture(e.pointerId); } catch { }
+        pressStartAt = Date.now();
+        longPressed = false;
+        clearTimeout(longPressTimer);
+        longPressTimer = setTimeout(() => {
+          longPressed = true;
+          if (navigator.vibrate) { try { navigator.vibrate(18); } catch { } }
+          sendToOS('hw:power-long');
+        }, LONG_PRESS_MS);
+      });
+
+      el.addEventListener('pointerup', () => {
+        clearTimeout(longPressTimer);
+        const d = Date.now() - pressStartAt;
+        if (!longPressed && d < LONG_PRESS_MS) {
+          sendToOS('hw:power-short');
+        }
+        longPressed = false;
+      });
+
+      el.addEventListener('pointercancel', () => {
+        clearTimeout(longPressTimer);
+        longPressed = false;
+      });
+    }
+
+    bindPowerKey(homeKey);
+
+    /* =========================================================
+       音量键：按下 / 松开
+       ========================================================= */
+    function bindVolumeKey(el, dir) {
+      const pressAction = dir === 'up' ? 'hw:vol-up-press' : 'hw:vol-down-press';
+      const releaseAction = dir === 'up' ? 'hw:vol-up-release' : 'hw:vol-down-release';
+
+      el.addEventListener('pointerdown', e => {
+        e.preventDefault();
+        try { el.setPointerCapture(e.pointerId); } catch { }
+        sendToOS(pressAction);
+      });
+      el.addEventListener('pointerup', () => sendToOS(releaseAction));
+      el.addEventListener('pointercancel', () => sendToOS(releaseAction));
+      el.addEventListener('pointerleave', () => sendToOS(releaseAction));
+    }
+    bindVolumeKey(volUpKey, 'up');
+    bindVolumeKey(volDownKey, 'down');
+
+    /* =========================================================
+       键盘快捷键：Ctrl+Alt+P = 电源短按
+       ========================================================= */
+    window.addEventListener('keydown', e => {
+      if ((e.ctrlKey || e.metaKey) && e.altKey && e.key.toLowerCase() === 'p') {
+        e.preventDefault();
+        sendToOS('hw:power-short');
+      }
+    });
+  </script>
+  <script src="manual.js"></script>
+</body>
+
+</html>

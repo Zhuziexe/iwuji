@@ -234,6 +234,12 @@
 
   // 显示值 = 已提交文本 + 在光标处插入“组合显示” + 光标后的文本（支持中间插入）
   function isFieldDiv(el) { return !!el && el.tagName === 'DIV' && el.getAttribute && el.getAttribute('data-wj-field') === '1'; }
+  // 多行输入框：自绘 div 用 data-wj-multiline="1" 标记；原生 textarea 天然多行。
+  function isMultiline(el) {
+    if (!el) return false;
+    if (el.tagName === 'TEXTAREA') return true;
+    return !!(el.getAttribute && el.getAttribute('data-wj-multiline') === '1');
+  }
   function displayValue() {
     return state.base.slice(0, state.cursor) + composeDisplay() + state.base.slice(state.cursor);
   }
@@ -251,8 +257,24 @@
     if (isFieldDiv(state.el)) {
       // 自绘 div：把“已上屏文本 + 光标处组合预览”整体渲染，光标置于组合预览之后（与 input 一致）。
       var comp = composeDisplay(), caretPos = state.cursor + comp.length;
-      renderFieldDiv(state.el, displayValue(), caretPos);
+      renderFieldDiv(state.el, displayValue(), caretPos, state.shown);
+      // 输入/移动光标后，只把光标带进可视区（水平+垂直），不再盲目滚到底部。
+      if (state.shown) { revealCaret(state.el); revealCaretV(state.el); }
+      // 光标多行移动会改变字段高度/位置，重算键盘顶起，避免输入框被遮挡或过度上移。
+      if (state.shown) computePush();
     } else { state.el.value = displayValue(); placeCaret(); }
+  }
+  // 依据光标 span 与字段可视框的相对位置，调整 el.scrollLeft，使光标始终可见。
+  function revealCaret(el) {
+    if (!el || !isFieldDiv(el)) return;
+    try {
+      var fr = el.getBoundingClientRect();
+      var ce = el.querySelector('.wj-caret');
+      if (!ce) return;
+      var cr = ce.getBoundingClientRect();
+      if (cr.left < fr.left - 1) el.scrollLeft -= (fr.left - cr.left);
+      else if (cr.right > fr.right + 1) el.scrollLeft += (cr.right - fr.right);
+    } catch (e) {}
   }
   // 在光标处插入纯文本（英文/标点/空格），并推进光标
   function insertTextAtCursor(txt) {
@@ -472,7 +494,19 @@
     state.segs = null; state.segIdx = 0; state.keyPos = 0;
     applyValue(); dispatchInput();
   }
-  function done() { finalizeAll(); hideKeyboard(); }
+  // 完成键：多行输入框变成“换行”——上屏未完成拼音、插入换行、保持键盘打开；
+  // 单行输入框仍是“完成”——上屏并收起键盘。
+  function newline() {
+    if (state.candidates.length || (state.mode === MODE.EN ? state.composing : (state.digits || state.composing))) {
+      finalizeAll();   // 先把正在拼读的内容上屏，避免换行把它冲掉
+    }
+    insertTextAtCursor('\n');
+  }
+  function done() {
+    if (isMultiline(state.el)) { newline(); return; }
+    finalizeAll(); hideKeyboard();
+  }
+  function doneLabel() { return isMultiline(state.el) ? '换行' : '完成'; }
 
   function setMode(m) {
     if (state.shown) flushInput();   // 切换前把当前拼音上屏（#2）
@@ -529,7 +563,7 @@
     grid.appendChild(letterGroupBtn('PQRS', 7));
     grid.appendChild(letterGroupBtn('TUV', 8));
     grid.appendChild(letterGroupBtn('WXYZ', 9));
-    var doneBtn = grayBtn('完成', done); doneBtn.className = 'wj-k gray tall'; grid.appendChild(doneBtn);
+    var doneBtn = grayBtn(doneLabel(), done); doneBtn.className = 'wj-k gray tall'; grid.appendChild(doneBtn);
     // 第 4 行：🌐(切换) | 空格(宽，跨三列) | （完成延续）
     var globe = el('div', 'wj-k emoji gray', '🌐'); globe.title = '切换输入法'; globe.onclick = cycleMode; grid.appendChild(globe);
     var spLabel = state.mode === MODE.EN ? 'space' : '空格';
@@ -571,7 +605,7 @@
     var spLabel = state.mode === MODE.EN ? 'space' : '空格';
     var sp = el('div', 'wj-k wide', spLabel); sp.onclick = onSpace; row4.appendChild(sp);
     var dot = el('div', 'wj-k gray', '.'); dot.onclick = function () { typePunct('.'); }; row4.appendChild(dot);
-    var dn = el('div', 'wj-k gray', '完成'); dn.onclick = done; row4.appendChild(dn);
+    var dn = el('div', 'wj-k gray', doneLabel()); dn.onclick = done; row4.appendChild(dn);
     box.appendChild(row4);
     root.appendChild(box);
   }
@@ -613,57 +647,113 @@
   }
 
   /* ============ 显示 / 隐藏 ============ */
-  // 键盘是 body 上的 fixed overlay（在 #os 之外）。当聚焦输入框被键盘遮挡时，
-  // 通过 translateY 把整个应用 (#os) 上移，露出输入框。隐藏时复位。
+  // 键盘是 body 上的 fixed overlay（在 #os 之外）。不再用 translateY 顶起整个应用，
+  // 改为：若输入框被键盘遮住，就把 #appView 压缩到键盘上沿（应用内部本就可滚动），
+  // 让输入框落在上半屏可见；没被遮住则保持原样（不压缩）。
+  function appViewEl() { return document.getElementById('appView'); }
+  // 采集 t 祖先链上所有“可滚动容器”的 scrollTop/scrollLeft（含 Shadow 内 .note-edit、body）。
+  function captureScroll(t) {
+    var list = [], n = t, guard = 0;
+    while (n && guard++ < 40) {
+      if (n.nodeType === 1) {
+        var s = (n.ownerDocument.defaultView || window).getComputedStyle(n);
+        if (/(auto|scroll)/.test(s.overflowY + ' ' + s.overflow)) list.push({ n: n, x: n.scrollLeft, y: n.scrollTop });
+      }
+      // 跨越 ShadowRoot：parentNode 为 DocumentFragment 时用其 host 继续往上。
+      var p = n.parentNode;
+      if (!p && n.getRootNode) {
+        var root = n.getRootNode();
+        if (root && root.host) p = root.host;
+      }
+      n = p;
+    }
+    return list;
+  }
+  function restoreScroll(list) {
+    for (var i = 0; i < list.length; i++) {
+      try { list[i].n.scrollLeft = list[i].x; list[i].n.scrollTop = list[i].y; } catch (e) {}
+    }
+  }
   function computePush() {
-    var osEl = document.getElementById('os');
+    var av = appViewEl();
     var t = state.el;
-    if (!osEl || !t || !t.isConnected) { resetPush(); return; }
+    if (!av || !t || !t.isConnected) { resetPush(); return; }
+    // 撤销压缩→测量自然位置→重新压缩，会导致内部滚动容器高度突变、滚动锚点重置（自动滚到顶）。
+    // 因此先保存滚动位置，全部操作完成后原样恢复。
+    var scrolls = captureScroll(t);
+    var hadCompress = !!av.style.height;
+    if (hadCompress) { av.style.height = ''; av.style.overflow = ''; }
     var kbTop = (window.innerHeight || 0) - KB_HEIGHT;   // 键盘上沿的视口 y
-    var rect = t.getBoundingClientRect();
-    // 减去当前已施加的 translateY，得到“未上移”时的自然位置（#9：重聚焦时不要复位上移）。
-    var cur = 0;
-    if (osEl.style.transform) { var m = /translateY\((-?[\d.]+)px\)/.exec(osEl.style.transform); if (m) cur = parseFloat(m[1]) || 0; }
-    var natBottom = rect.bottom - cur;
-    // 输入框底部若落在键盘区域内（留 8px 余量），计算需要上移的距离
-    var overflow = natBottom - kbTop + 8;
-    if (overflow <= 0) return;   // 已可见：保持当前上移（不复位）
-    osEl.style.transition = 'transform .18s ease';
-    osEl.style.transform = 'translateY(' + (-overflow) + 'px)';
+    var fieldBottom = t.getBoundingClientRect().bottom;   // 输入框自然底部（视口坐标）
+    var avTop = av.getBoundingClientRect().top;
+    var targetH = Math.max(0, kbTop - avTop);
+    // 没被遮住：撤销压缩、保持原状
+    if (fieldBottom <= kbTop - 8) {
+      if (hadCompress) { av.style.height = ''; av.style.overflow = ''; }
+      restoreScroll(scrolls);
+      return;
+    }
+    // 被遮住：把 appView 底部收到键盘上沿（应用内部可滚动）。
+    av.style.height = targetH + 'px';
+    av.style.overflow = 'hidden';
+    restoreScroll(scrolls);
+    // 不做 scrollIntoView：它会把多行字段底部对齐到可视区（即滚到最后一行），
+    // 既破坏点击时的坐标，又让 caret 看起来永远在最后一行。压缩后应用本身可滚动即可。
   }
   function resetPush() {
-    var osEl = document.getElementById('os');
-    if (osEl && osEl.style.transform) {
-      osEl.style.transition = 'transform .18s ease';
-      osEl.style.transform = '';
-    }
+    var av = appViewEl();
+    if (!av) return;
+    if (av.style.height || av.style.overflow) { av.style.height = ''; av.style.overflow = ''; }
   }
 
   // #4 自建不可编辑输入框：把文本渲染进自绘 div，并在光标处插入闪烁的光标 span。
   // caret 用 inline style（跨 Shadow DOM 也可生效，因为元素直接建在 field div 内）。
   // 占位符用 ::before+attr（不污染 textContent），保证 getFieldText 读到的就是纯文本。
-  function renderFieldDiv(div, text, cursor) {
+  function renderFieldDiv(div, text, cursor, showCaret) {
     if (!div || div.getAttribute('data-wj-field') !== '1') return;
+    if (showCaret === undefined) showCaret = true;
     if (cursor < 0) cursor = 0;
     if (cursor > text.length) cursor = text.length;
     var left = text.slice(0, cursor), right = text.slice(cursor);
-    var caret = '<span class="wj-caret" style="' +
-      'display:inline-block;width:2px;height:1.1em;vertical-align:text-bottom;' +
-      'background:#0a84ff;margin:0 -1px;animation:wj-blink 1s step-start infinite;' +
-      'box-shadow:0 0 0 0.5px rgba(10,132,255,0.4);"></span>';
+    var caret = showCaret ? '<span class="wj-caret"></span>' : '';
     if (!text) {
-      // 空内容：仅放光标，占位符交给 CSS ::before（避免污染 textContent）
+      // 空内容：若不显示光标，仅留空（占位符交给 CSS ::before，且不污染 textContent）
       div.classList.add('wj-field-empty');
       div.innerHTML = caret;
     } else {
       div.classList.remove('wj-field-empty');
       div.innerHTML = escHtml(left) + caret + escHtml(right);
     }
-    // 滚到光标可见
-    try { div.scrollTop = div.scrollHeight; } catch (e) {}
+    // 不在这里滚动：盲目 scrollTop=scrollHeight 会导致“自动滚到最底部”，
+    // 并让点击坐标失效。光标可见性交给 applyValue 中的 revealCaretV 按实际光标位置处理。
   }
   function escHtml(s) {
     return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  // 自绘 div 输入框专属样式：占位符 ::before 与光标闪烁。
+  // 这些规则必须注入到“字段所在的文档树”（应用内是 Shadow Root），
+  // 仅注入 document.head 无法穿透 Shadow DOM，导致占位符不显示、光标不闪。
+  var FIELD_CSS =
+    '@keyframes wj-blink{0%,50%{opacity:1;}50.01%,100%{opacity:0;}}' +
+    // 占位符：仅在“空 + 聚焦 + 输入法已收起”时显示（wj-ime-open 表示输入法打开）。
+    // 未聚焦时一律隐藏，符合“不自动焦点、手动点击后才提示”的要求。
+    '.wj-field-empty:focus:not(.wj-ime-open):before{content:attr(data-wj-placeholder);color:#9a9aa0;}' +
+    '.wj-caret{display:inline-block;width:2px;height:1.1em;vertical-align:text-bottom;' +
+    'background:#0a84ff;margin:0 -1px;animation:wj-blink 1s step-start infinite;' +
+    'box-shadow:0 0 0 0.5px rgba(10,132,255,0.4);pointer-events:none;}' +
+    // 失去焦点或输入法关闭时，光标一律隐藏
+    'div[data-wj-field]:not(:focus) .wj-caret{display:none;}';
+  function ensureFieldStyle(root) {
+    if (!root) return;
+    // 字段在普通文档中时 root 为 document，style 需挂到 head。
+    if (root.nodeType === 9) root = document.head || root;
+    if (root.__wjFieldStyle) return;
+    root.__wjFieldStyle = true;
+    var s = document.createElement('style');
+    s.dataset.wjFieldStyle = '1';
+    s.textContent = FIELD_CSS;
+    root.appendChild(s);
   }
 
   function ensureKeyboard() {
@@ -673,26 +763,29 @@
       '.wj-ime{position:fixed;left:0;right:0;bottom:0;z-index:9000;background:#eef0f3;overflow:hidden;' +
       '-webkit-tap-highlight-color:transparent;' +
       'font:18px/1 -apple-system,"PingFang SC",sans-serif;border-top:1px solid #d0d0d4;display:flex;flex-direction:column;}' +
-      /* 候选条（唯一一条）：固定高度，▼ 在最右，候选词占剩余部分 */
-      '.wj-cands{display:flex;flex:0 0 56px;height:56px;box-sizing:border-box;gap:10px;' +
-      'padding:0 10px;background:#fff;border-bottom:1px solid #e5e5e8;align-items:center;}' +
+      /* 候选条（唯一一条）：固定高度，无上下内边距，候选项/关闭键撑满整条高度 */
+      '.wj-cands{display:flex;flex:0 0 56px;height:56px;box-sizing:border-box;gap:6px;' +
+      'padding:0 8px;background:#fff;border-bottom:1px solid #e5e5e8;align-items:stretch;}' +
       /* 候选词容器：占剩余空间，可横向滚动 */
-      '.wj-candlist{flex:1 1 auto;display:flex;gap:10px;overflow-x:auto;align-items:center;height:100%;' +
+      '.wj-candlist{flex:1 1 auto;display:flex;gap:6px;overflow-x:auto;align-items:stretch;height:100%;' +
       'scrollbar-width:none;}' +
       '.wj-candlist::-webkit-scrollbar{display:none;}' +
-      /* 候选词条：默认透明背景、黑色文字；:active 浅灰背景、文字仍黑 */
-      '.wj-chip{color:#111;padding:4px 12px;cursor:pointer;white-space:nowrap;font-size:24px;' +
-      'background:transparent;border:none;border-radius:10px;' +
+      /* 候选词条：无上下 padding、热区撑满候选条高度并左右加宽 */
+      '.wj-chip{color:#111;padding:0 16px;min-width:44px;height:100%;cursor:pointer;white-space:nowrap;font-size:24px;' +
+      'display:flex;align-items:center;justify-content:center;' +
+      'background:transparent;border:none;border-radius:8px;' +
       '-webkit-tap-highlight-color:transparent;}' +
       '.wj-chip:hover{color:#111;}' +
       '.wj-chip:active{background:#d8d8d8;color:#111;}' +
       /* 当前选中项：保持透明背景、黑色文字，不加任何边框 */
       '.wj-chip.sel{background:transparent;color:#111;}' +
       /* 拼音无效 / 英文 占位 */
-      '.wj-ph{flex:1;text-align:center;color:#999;font-size:22px;cursor:pointer;}' +
-      /* 末尾 ▼：固定在最右边，点击关闭输入法 */
-      '.wj-dropchip{flex:0 0 auto;color:#888;font-size:22px;padding:6px 12px;cursor:pointer;' +
-      'background:transparent;border:1px solid transparent;border-radius:10px;user-select:none;' +
+      '.wj-ph{flex:1;height:100%;display:flex;align-items:center;justify-content:center;' +
+      'color:#999;font-size:22px;cursor:pointer;}' +
+      /* 末尾 ▼：固定在最右边，热区撑满候选条高度并加宽，点击关闭输入法 */
+      '.wj-dropchip{flex:0 0 auto;color:#888;font-size:24px;padding:0 16px;min-width:52px;height:100%;' +
+      'display:flex;align-items:center;justify-content:center;cursor:pointer;' +
+      'background:transparent;border:none;border-radius:8px;user-select:none;' +
       '-webkit-tap-highlight-color:transparent;}' +
       '.wj-dropchip:active{background:#cfd6e0;}' +
       /* 主键区：4 行 5 列网格（9 键） */
@@ -732,9 +825,14 @@
     buildKeyboard();
     kbEl.style.display = '';
     state.shown = true;
+    // #10 标记输入法打开：占位符仅在“空+聚焦+未打开(wj-ime-open 不存在)”时显示。
+    if (isFieldDiv(target)) { try { target.classList.add('wj-ime-open'); } catch (e) {} }
     // #4 自绘 div：点击定位光标 + 方向键移动光标（光标可在中间任意位置插入，解决首插问题）。
     if (isFieldDiv(target)) {
-      target.onclick = function (ev) { positionCaretAt(target, ev.clientX); };
+      // 占位符 / 光标闪烁样式随字段所在树注入（Shadow Root 或 文档），穿透样式隔离。
+      try { ensureFieldStyle(target.getRootNode()); } catch (e) {}
+      // 点击定位光标已在 document 捕获阶段 onClickField 中、布局改变之前完成（calcCaretAtPoint）。
+      // 这里不再绑定 onclick，避免键盘弹出/压缩后坐标失效导致 caret 错位。
       target.onkeydown = function (ev) {
         if (ev && (ev.key === 'ArrowLeft' || ev.key === 'ArrowRight' || ev.key === 'Home' || ev.key === 'End')) {
           ev.preventDefault();
@@ -749,16 +847,19 @@
       };
     }
     // 立即渲染一次（div 首屏光标；input 保持原生光标）。
+    // applyValue 内部已按当前光标位置调用 computePush（其自带撤销测量，无需再 resetPush）。
     applyValue();
-    // #9 仅当聚焦到“新的输入框”时才复位上移；同一输入框重聚焦（被键盘顶起后）保持上移。
-    if (isNew) resetPush();
-    computePush();
     refreshCandidates();
   }
   function hideKeyboard() {
     if (state.shown) flushInput();   // 收起前把未完成拼音上屏（#1）
     state.shown = false;
     if (kbEl) kbEl.style.display = 'none';
+    // 输入法关闭后，自绘 div 的光标必须移除（输入法关闭光标关闭）
+    if (state.el && isFieldDiv(state.el)) {
+      try { state.el.classList.remove('wj-ime-open'); } catch (e) {}
+      applyValue();   // 重新渲染：移除光标；若空+聚焦则露出占位符
+    }
     resetPush();
     resetCursorHint();
   }
@@ -788,34 +889,138 @@
     for (var i = 0; i < path.length; i++) { if (isInput(path[i])) return path[i]; }
     return null;
   }
-  // 自绘 div：点击任意位置把光标定位到该处（按字符数近似）。
-  function positionCaretAt(el, clientX) {
-    if (!isFieldDiv(el)) return;
-    var rect = el.getBoundingClientRect();
-    var text = state.base || '';
-    if (!text) { state.cursor = 0; return; }
-    var approx = Math.round(((clientX - rect.left) / rect.width) * text.length);
-    if (approx < 0) approx = 0;
-    if (approx > text.length) approx = text.length;
-    state.cursor = approx; state.cursorMoved = true;
-    applyValue();
+  // 自绘 div：根据点击的视口坐标算出光标应落在的字符索引（纯计算，不改 state / DOM / 不渲染）。
+  // 必须在 showIME 改变布局之前调用，否则坐标对应旧布局，命中会错位。
+  // 支持单行/多行/连续空行/混排/滚动；点空白优先向左找最近文字边界。
+  function _pxNum(v, fb) { var n = parseFloat(v); return isNaN(n) ? fb : n; }
+  // 用离屏“镜像”测量字符位置：单一文本节点、复刻字段样式，让浏览器用标准 pre-wrap 排版。
+  // 真实字段里 caret 是 inline-block span，把文本切成两个文本节点，空行处的折叠/字符 Range
+  // 会被 caret 干扰而 top 不准（有内容正常、空行失灵的根因）。镜像不碰真实 DOM，也不会触发滚动塌陷。
+  function _caretMirror(el, text) {
+    var doc = el.ownerDocument, win = doc.defaultView || window;
+    var cs = win.getComputedStyle(el), fr = el.getBoundingClientRect();
+    var m = doc.createElement('div'), s = m.style;
+    s.position = 'fixed'; s.left = fr.left + 'px'; s.top = fr.top + 'px';
+    s.width = fr.width + 'px'; s.height = 'auto'; s.margin = '0';
+    s.boxSizing = cs.boxSizing || 'border-box';
+    s.fontStyle = cs.fontStyle; s.fontVariant = cs.fontVariant; s.fontWeight = cs.fontWeight;
+    s.fontSize = cs.fontSize; s.fontFamily = cs.fontFamily; s.lineHeight = cs.lineHeight;
+    s.letterSpacing = cs.letterSpacing; s.wordSpacing = cs.wordSpacing;
+    s.textTransform = cs.textTransform; s.textIndent = cs.textIndent; s.tabSize = cs.tabSize;
+    s.paddingTop = cs.paddingTop; s.paddingRight = cs.paddingRight;
+    s.paddingBottom = cs.paddingBottom; s.paddingLeft = cs.paddingLeft;
+    s.borderTopWidth = cs.borderTopWidth; s.borderRightWidth = cs.borderRightWidth;
+    s.borderBottomWidth = cs.borderBottomWidth; s.borderLeftWidth = cs.borderLeftWidth;
+    s.borderTopStyle = 'solid'; s.borderRightStyle = 'solid'; s.borderBottomStyle = 'solid'; s.borderLeftStyle = 'solid';
+    s.borderTopColor = 'transparent'; s.borderRightColor = 'transparent';
+    s.borderBottomColor = 'transparent'; s.borderLeftColor = 'transparent';
+    s.whiteSpace = (cs.whiteSpace && cs.whiteSpace !== 'normal') ? cs.whiteSpace : 'pre-wrap';
+    s.overflowWrap = cs.overflowWrap; s.wordBreak = cs.wordBreak; s.direction = cs.direction;
+    s.overflow = 'visible'; s.visibility = 'hidden'; s.pointerEvents = 'none'; s.zIndex = '-99999';
+    // 在每个光标边界插入一个真实标记（零宽空格 span）：浏览器标准排版会把空行处的标记
+    // 物理放到空行上，直接读它的 rect 即可——无需任何行号数学推算（那正是空行出错之源）。
+    // 结构：MK0 + c0 + MK1 + c1 + ... + c(N-1) + MKN
+    var markers = [], i;
+    for (i = 0; i <= text.length; i++) {
+      var mk = doc.createElement('span');
+      mk.appendChild(doc.createTextNode('\u200b'));       // 零宽空格：宽度为 0、不撑行高，但能返回准确 rect
+      m.appendChild(mk);
+      markers.push(mk);
+      if (i < text.length) m.appendChild(doc.createTextNode(text.charAt(i)));
+    }
+    (doc.body || doc.documentElement).appendChild(m);
+    return { el: m, markers: markers, cs: cs };
   }
-  function onFocusIn(e) {
-    var t = getInput(e);
-    if (t) {
-      if (state.el !== t) {
-        state.base = isFieldDiv(t) ? (t.textContent || '') : (t.value || '');
-        state.composing = ''; state.digits = ''; state.segs = null;
-        state.segIdx = 0; state.keyPos = 0; state.cursorMoved = false;
+  function calcCaretAtPoint(el, clientX, clientY) {
+    var text = state.base || '';
+    var N = text.length;
+    if (!N) return 0;
+    if (typeof clientX !== 'number' || isNaN(clientX)) clientX = -1;
+    if (typeof clientY !== 'number' || isNaN(clientY)) {
+      var rr0 = el.getBoundingClientRect();
+      clientY = rr0.top + rr0.height / 2;
+    }
+    var mir = _caretMirror(el, text);
+    try {
+      var marks = mir.markers, i;
+      // 每个标记的真实位置：y(中心) 判定所在行，x 判定行内插入点。
+      var pts = [];
+      for (i = 0; i <= N; i++) {
+        var rc = marks[i].getBoundingClientRect();
+        pts.push({ off: i, x: rc.left, top: rc.top, bottom: rc.bottom });
       }
-      // #4 光标同步：input 用原生 selectionStart；自绘 div 默认末位（除非用户已移动）。
-      state.cursor = (typeof t.selectionStart === 'number') ? t.selectionStart
-        : (state.cursorMoved ? state.cursor : state.base.length);
-      showIME(t);
+      // 行高基准：优先用样式计算值（如 line-height:1.6 → 精确 38.4px），
+      // normal 时回退到标记实测高度，再回退 fontSize 经验值。选“行中心”要用精确行高才不会点偏行。
+      var lineH = _pxNum(mir.cs.lineHeight, 0);
+      if (!lineH || lineH <= 0) {
+        for (i = 0; i <= N; i++) { if (pts[i].bottom - pts[i].top > 0) { lineH = pts[i].bottom - pts[i].top; break; } }
+      }
+      if (!lineH || lineH <= 0) lineH = _pxNum(mir.cs.fontSize, 16) * 1.2;
+      // 按 top（行顶）把标记聚类成行：同一行标记 top 相同；换行/空行 top 递增一行高。
+      // 用 top 而非 cy，避免“零宽空格与普通位置行盒高度不同 → cy 不等 → 同行被误拆”。
+      var rows = [], cur = null;
+      for (i = 0; i <= N; i++) {
+        var p = pts[i];
+        if (!cur || Math.abs(p.top - cur.top) > Math.max(4, lineH * 0.5)) {
+          cur = { top: p.top, pts: [p] };
+          rows.push(cur);
+        } else {
+          cur.pts.push(p);
+        }
+      }
+      // 选与点击 y 最近的行：用“行顶 + 行高/2”作为该行中心来比较。
+      var target = rows[0], rowD = Infinity;
+      for (i = 0; i < rows.length; i++) {
+        var d = Math.abs((rows[i].top + lineH / 2) - clientY);
+        if (d < rowD) { rowD = d; target = rows[i]; }
+      }
+      // 行内按 x 选最近的标记（标记的 left 即插入位置），平手偏左。
+      var line = target.pts, best = line[0].off, bestD = Infinity;
+      for (i = 0; i < line.length; i++) {
+        var dx = line[i].x - clientX;
+        var score = Math.abs(dx) + (dx > 0 ? 0.5 : 0);
+        if (score < bestD) { bestD = score; best = line[i].off; }
+      }
+      if (clientX < 0) return line[0].off;
+      return Math.max(0, Math.min(N, best));
+    } finally {
+      try { mir.el.parentNode && mir.el.parentNode.removeChild(mir.el); } catch (e) {}
     }
   }
-  // 注意：浏览器/页面获得焦点时【不】自动关闭输入法，仅页面真正销毁才关闭
-  function onFocusOut() { /* 不隐藏，保持输入法 */ }
+  // 光标垂直可见：caret 相对字段可视框超出时滚动字段容器。
+  function revealCaretV(el) {
+    try {
+      var ce = el.querySelector('.wj-caret'); if (!ce) return;
+      var fr = el.getBoundingClientRect(), cr = ce.getBoundingClientRect();
+      if (cr.bottom > fr.bottom + 1) el.scrollTop += (cr.bottom - fr.bottom) + 2;
+      else if (cr.top < fr.top - 1) el.scrollTop -= (fr.top - cr.top) + 2;
+    } catch (e) {}
+  }
+  // 只靠点击弹输入法：document 级 click 委托，沿 composedPath 找 field/input。
+  // 不再监听 focusin/focusout——避免“点空白处移开焦点再点回来才弹”等焦点时序问题。
+  // 捕获阶段注册，避免被业务层 stopPropagation 吞掉。
+  function onClickField(e) {
+    var t = getInput(e);
+    if (!t) return;
+    var isNewField = (state.el !== t);
+    // 切换到新字段时重置输入法状态（原 focusin 逻辑），避免串字串。
+    if (isNewField) {
+      state.base = isFieldDiv(t) ? (t.textContent || '') : (t.value || '');
+      state.composing = ''; state.digits = ''; state.segs = null;
+      state.segIdx = 0; state.keyPos = 0; state.cursorMoved = false;
+    }
+    // ★ 自绘 div：必须在 showIME（弹键盘/压缩 appView，会改变布局）之前，
+    //   用点击的原始视口坐标算出光标位置。否则坐标对应的是旧布局，命中会错位
+    //   （点击处被键盘盖住时布局变化最大 → caret 落到最后一行）。
+    if (isFieldDiv(t)) {
+      state.cursor = calcCaretAtPoint(t, e.clientX, e.clientY);
+      state.cursorMoved = true;
+    } else {
+      // input 用原生 selectionStart。
+      state.cursor = (typeof t.selectionStart === 'number') ? t.selectionStart : state.base.length;
+    }
+    showIME(t);
+  }
 
   /* ============ 给页面/app 使用的 API ============ */
   // 清空某个输入框（自绘 div 清 textContent，input 清 value），并让 IME 内部 base 同步为空。
@@ -844,8 +1049,7 @@
   function hide() { hideKeyboard(); }
 
   function init() {
-    document.addEventListener('focusin', onFocusIn, true);
-    document.addEventListener('focusout', onFocusOut, true);
+    document.addEventListener('click', onClickField, true);
     window.addEventListener('resize', function () { if (state.shown) { computeKBHeight(); if (kbEl) kbEl.style.height = KB_HEIGHT + 'px'; computePush(); buildKeyboard(); refreshCandidates(); } });
     var osEl = document.getElementById('os');
     if (osEl) {

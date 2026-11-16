@@ -727,7 +727,7 @@
     name: '豆沙包',
     icon: './assets/doushabao.svg',
     initialRoute: 'home',
-    version: '1.2.2',
+    version: '1.2.3',
     devices: ['iwuji', 'pc'],
 
     styles: `
@@ -752,11 +752,6 @@
         font-weight: 700;
         color: var(--wj-text);
         letter-spacing: .3px;
-      }
-      .dsb-subtitle {
-        font-size: var(--wj-fs-xs);
-        color: var(--wj-text-dim);
-        margin-top: 2px;
       }
 
       .dsb-chat {
@@ -883,11 +878,13 @@
         outline: none;
         box-sizing: border-box;
       }
-      .dsb-input:focus {
-        border-color: var(--wj-primary, #3a6ff0);
-        background: var(--wj-bg);
-      }
       .dsb-input:disabled { opacity: .6; }
+      /* 自绘 div 字段：用 flex 垂直居中（固定高度 + border-box，避免高度内缩、文字不居中） */
+      div.dsb-input {
+        display: flex; align-items: center;
+        line-height: 1.2; white-space: nowrap;
+        overflow-x: auto; overflow-y: hidden;
+      }
       .dsb-send {
         flex: 0 0 auto;
         height: 60px;
@@ -915,8 +912,7 @@
           return `
             <div class="dsb-page">
               <header class="dsb-header">
-                <div class="dsb-title">豆沙包</div>
-                <div class="dsb-subtitle">AI 助手</div>
+                <div class="dsb-title">豆沙包 - AI 助手</div>
               </header>
               <div class="dsb-chat" id="dsbChat"></div>
               <div class="dsb-footer">

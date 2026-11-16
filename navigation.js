@@ -107,9 +107,9 @@ window.WujiNavigation = class WujiNavigation {
             requestAnimationFrame(() => {
               el.style.transform = 'translate(0, 0) scale(1)';
               el.style.opacity = '1';
-              setTimeout(() => { delete el.dataset.zooming; }, 400);
             });
           });
+          setTimeout(() => { delete el.dataset.zooming; }, 400);
         },
 
         exit(el, origin) {

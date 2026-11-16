@@ -25,8 +25,10 @@
       <span class="right">
         <span>5G</span>
         <span class="battery">
-          <i></i>
-          <span class="battery__pct" id="batteryPct">--</span>
+          <span class="battery__body">
+            <i></i>
+            <span class="battery__pct" id="batteryPct">--</span>
+          </span>
         </span>
       </span>
     </div>
@@ -373,6 +375,7 @@
         battEl.title = pctRounded + '%' + (charging ? ' · 充电中' : '');
         battEl.classList.toggle('is-charging', !!charging);
         battEl.classList.toggle('is-low', pct <= 0.2);
+        battEl.classList.toggle('is-full', pct >= 1);
       }
 
       function fallbackBattery() {
@@ -438,7 +441,13 @@
       });
     }
 
-    function renderHome() {
+    function renderHome(skipPrune) {
+      /* 每次重绘桌面时自愈：删掉多余的空白页（例如把某页唯一应用拖走后，
+         那一页就空了）。swap() 内部虽会清理，但落地动画/取消/飞回等路径
+         未必都走到 swap，故在渲染统一兜底。
+         例外：拖动到屏幕边缘自动 addPage()/addPageAt() 后要保留刚建的空白页，
+         此时调用方传 skipPrune=true。 */
+      if (!skipPrune) DesktopLayout.cleanupEmptyPages();
       const pages = DesktopLayout.snapshot();
 
       desktopTrackEl.innerHTML = pages.map((page, pi) => `
@@ -814,7 +823,7 @@
           DesktopLayout.addPage();
           const newIndex = total;
           currentPage = total - 1;
-          renderHome();
+          renderHome(true);           /* 刚建的空页要留着，别被自愈清理掉 */
           syncDragSource();
           requestAnimationFrame(() => goToPage(newIndex));
           return true;
@@ -826,7 +835,7 @@
 
           DesktopLayout.addPageAt(0);
           currentPage = 1;
-          renderHome();
+          renderHome(true);          /* 刚建的空页要留着，别被自愈清理掉 */
           syncDragSource();
           requestAnimationFrame(() => goToPage(0));
           return true;
@@ -3074,6 +3083,8 @@
       /* 保险再 seed 一次（restore 里 registerMeta 已触发事件，
          但如果没有应用需要恢复，这里确保桌面是最新的） */
       try {
+        /* restore() 已完成、注册表齐全 → 允许清理“幽灵图标” */
+        DesktopLayout.setReady(true);
         DesktopLayout.seedFromRegistry();
         renderHome();
       } catch (e) { console.warn('[boot] reseed failed', e); }

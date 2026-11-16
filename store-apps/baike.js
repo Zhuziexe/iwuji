@@ -54,7 +54,7 @@
     name: '牛奶百科',
     icon: ICON_URL,
     initialRoute: 'home',
-    version: '1.0.7',
+    version: '1.0.8',
 
     styles: `
       .bk-page {
@@ -100,6 +100,12 @@
       }
       .bk-input:focus { border-color: var(--wj-primary, #3a6ff0); }
       .bk-input::placeholder { color: var(--wj-text-dim); }
+      /* 自绘 div 字段：用 flex 垂直居中（固定高度 + border-box，避免高度内缩、文字不居中） */
+      div.bk-input {
+        display: flex; align-items: center;
+        line-height: 1.2; white-space: nowrap;
+        overflow-x: auto; overflow-y: hidden;
+      }
 
       .bk-search-btn {
         flex: 0 0 auto;

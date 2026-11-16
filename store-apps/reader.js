@@ -277,7 +277,7 @@
     name: NAME,
     icon: ICON_URL,
     initialRoute: 'home',
-    version: '1.0.0',
+    version: '1.0.2',
     author: AUTHOR,
     description: '牛奶阅读官方正版',
     longdescription: '联网阅读维基文库公有领域图书，搜索书名即可开读。',
@@ -324,6 +324,12 @@
         background: var(--wj-surface, #f2f4f8); border-radius: 999px;
         padding: 11px 16px; font: inherit; font-size: var(--wj-fs-md, 16px); color: inherit;
       }
+      /* 自绘 div 字段：用 flex 垂直居中，锁定字号/行高，避免被宿主样式压小/顶到上方 */
+      div.rd-input {
+        display: flex; align-items: center;
+        font-size: var(--wj-fs-md, 16px); line-height: 1.2;
+        white-space: nowrap; overflow-x: auto; overflow-y: hidden;
+      }
       .rd-go {
         flex: 0 0 auto; border: 0; border-radius: 999px;
         background: var(--wj-primary, #3a6ff0); color: #fff; font: inherit;
@@ -369,8 +375,12 @@
                 <button class="rd-lang" data-act="lang">${site.label} ⇋</button>
               </div>
               <div class="rd-search-row">
+                ${window.WJ_IME ? `
+                <div class="rd-input" id="rdInput" tabindex="0" inputmode="none"
+                     autocapitalize="off" autocomplete="off" autocorrect="off" spellcheck="false"
+                     data-wj-field="1" data-wj-placeholder="搜索书名 / 作者…"></div>` : `
                 <input class="rd-input" placeholder="搜索书名 / 作者…" value="${escapeHtml(q)}"
-                       enterkeyhint="search" />
+                       enterkeyhint="search" />`}
                 <button class="rd-go" data-act="search">搜索</button>
               </div>
               <div class="rd-list" data-role="list">
@@ -383,6 +393,8 @@
           let loading = false;
 
           const input = root.querySelector('.rd-input');
+          const hasIME = !!(window.WJ_IME);
+          const readText = () => hasIME ? window.WJ_IME.getFieldText(input) : input.value;
           const listEl = root.querySelector('[data-role="list"]');
           const langBtn = root.querySelector('[data-act="lang"]');
           const goBtn = root.querySelector('[data-act="search"]');
@@ -392,16 +404,18 @@
             site = SITES[(SITES.indexOf(site) + 1) % SITES.length];
             langBtn.textContent = `${site.label} ⇋`;
             ctx.setState?.({ site });
-            const q = input.value.trim();
+            const q = readText().trim();
             if (q) doSearch(q);
           });
 
           function runSearch() {
-            const q = input.value.trim();
+            const q = readText().trim();
             if (q) doSearch(q);
           }
           goBtn.addEventListener('click', runSearch);
-          input.addEventListener('keydown', e => { if (e.key === 'Enter') runSearch(); });
+          if (!hasIME) {
+            input.addEventListener('keydown', e => { if (e.key === 'Enter') runSearch(); });
+          }
 
           async function doSearch(q) {
             if (loading) return;
@@ -434,7 +448,11 @@
           }
 
           const initQ = ctx.state?.q;
-          if (initQ) { input.value = initQ; doSearch(initQ); }
+          if (initQ) {
+            if (hasIME) window.WJ_IME.setFieldText(input, initQ);
+            else input.value = initQ;
+            doSearch(initQ);
+          }
         },
       },
 

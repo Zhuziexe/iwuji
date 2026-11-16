@@ -9,7 +9,11 @@ window.DesktopLayout = (() => {
   const VERSION = 2;
 
   let data = null;
-  let lastRemoved = null
+  let lastRemoved = null;
+  /* 注册表是否已就绪：restore() 是异步的，启动早期安装应用还没 registerMeta，
+     此时不能用“注册表里查不到”来判定失效 bundle，否则会误删尚未恢复的图标。
+     wujios.html 在 restore() 完成后调用 setReady(true)。 */
+  let registryReady = false;
 
   function newPageId() {
     return 'p_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7);
@@ -67,8 +71,31 @@ window.DesktopLayout = (() => {
     return p.slots.every(s => !s);
   }
 
+  /* 清理“幽灵图标”：槽位里残留着字符串，但该 bundle 已不在注册表里
+     （应用已卸载 / 历史脏数据）。snapshot() 会把它们渲染成空格子，看起来是空页，
+     但 isEmptyPage() 只看字符串、判为非空 → 空页永远删不掉，新应用也被挤到后面。
+     仅在 registryReady（restore 完成）后执行，避免把还没恢复的应用误清掉。 */
+  function normalizeSlots() {
+    if (!registryReady) return false;
+    const Apps = (typeof WujiApps !== 'undefined' && WujiApps)
+      || (typeof window !== 'undefined' && window.WujiApps) || null;
+    if (!Apps || !Apps.get) return false;
+    const d = ensureData();
+    let changed = false;
+    for (const p of d.pages) {
+      if (!Array.isArray(p.slots)) continue;
+      for (let i = 0; i < p.slots.length; i++) {
+        const b = p.slots[i];
+        if (b && !Apps.get(b)) { p.slots[i] = ''; changed = true; }
+      }
+    }
+    return changed;
+  }
+
   function cleanupEmptyPages() {
     const d = ensureData();
+    /* 先把失效 bundle 清成 ''，否则它们会让“看起来空的页”被判为非空、删不掉 */
+    normalizeSlots();
 
     /* 全部删空 → 留一页 */
     if (d.pages.length === 0) {
@@ -138,6 +165,7 @@ window.DesktopLayout = (() => {
 
     snapshot() {
       const d = ensureData();
+      if (normalizeSlots()) persist();   /* 幽灵图标就地清成空格子并持久化 */
       return d.pages.map(p => {
         let slots = p.slots;
         if (!Array.isArray(slots) || slots.length !== PER_PAGE) {
@@ -233,6 +261,9 @@ window.DesktopLayout = (() => {
       cleanupEmptyPages();
       persist();
     },
+
+    /* 注册表就绪开关：wujios.html 在 restore() 完成后置 true */
+    setReady(v) { registryReady = !!v; },
 
     reset() {
       data = { version: VERSION, pages: [emptyPage()] };

@@ -9,7 +9,6 @@
     :root {
       --bar-h: 48px;
       --gap: 16px;
-      --radius: 28px;
       --design-w: 420px;
       --design-h: 560px;
       --key-w: 14px;
@@ -132,7 +131,6 @@
       border-color: rgba(138, 212, 255, .55);
     }
 
-    /* ============ 下拉菜单 ============ */
     .tb-menu {
       position: absolute;
       top: calc(100% + 4px);
@@ -242,7 +240,6 @@
       background: #2f3540;
     }
 
-    /* 窄屏：菜单铺满 */
     @media (max-width: 380px) {
       .tb-menu {
         left: 12px;
@@ -251,7 +248,6 @@
       }
     }
 
-    /* ============ 舞台 ============ */
     .stage {
       flex: 1 1 auto;
       min-height: 0;
@@ -260,16 +256,16 @@
       justify-content: center;
       padding: var(--gap) calc(var(--gap) + 20px);
       overflow: hidden;
-      container-type: size;
       background: radial-gradient(1200px 600px at 50% 0%, #171b23 0%, #0f1116 70%);
     }
 
     .device {
       position: relative;
       aspect-ratio: 3 / 4;
-      width: min(100cqw, calc(100cqh * 3 / 4));
-      max-width: 100%;
+      width: min(100%,
+          calc((100dvh - var(--bar-h) - 2 * var(--gap)) * 3 / 4));
       max-height: 100%;
+      max-width: 100%;
     }
 
     .screen-wrap {
@@ -282,7 +278,7 @@
       inset: 0;
       overflow: hidden;
       background: #000;
-      border-radius: var(--radius);
+      border-radius: 6.7% / 5%;
       box-shadow: 0 10px 40px rgba(0, 0, 0, .55), 0 0 0 1px #2a2f3a;
       z-index: 1;
     }
@@ -308,17 +304,14 @@
       position: absolute;
       top: 2.2%;
       right: 3.6%;
-      width: clamp(12px, 4.5%, 18px);
+      width: 4.5%;
       aspect-ratio: 1;
       border-radius: 50%;
       background: #05070c;
       z-index: 5;
       pointer-events: none;
       box-shadow:
-        inset 0 0 0 1px rgba(255, 255, 255, .06),
-        inset 0 -1px 3px rgba(90, 130, 255, .6),
-        inset 0 1.5px 2px rgba(0, 0, 0, 1),
-        0 0 6px rgba(0, 0, 0, .65);
+        inset 0 -1px 3px rgba(90, 130, 255, .6)
     }
 
     .camera-notch::after {
@@ -424,7 +417,6 @@
       background: #000;
     }
 
-    /* ============ 窄屏 ============ */
     @media (max-width: 480px) {
       .titlebar {
         padding: 0 12px;
@@ -468,7 +460,9 @@
         <span>iWuji Studio</span>
         <span class="tb-menu__hint">↗</span>
       </a>
-
+      <a class="tb-menu__item" href="./iwuji_neo.html" role="menuitem">
+        <span>iWuji Neo</span>
+      </a>
       <div class="tb-menu__sep"></div>
 
       <button class="tb-menu__item" id="manualBtn" type="button" role="menuitem">
