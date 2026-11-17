@@ -91,7 +91,7 @@
     name: '吴际哔哩',
     icon: './assets/wujibili.svg',
     initialRoute: 'home',
-    version: '1.0.4',
+    version: '1.0.5',
 
     styles: `
       .bli-page {
@@ -128,7 +128,7 @@
         background: var(--wj-primary, #3a6ff0);
         color: #fff;
         font-family: inherit;
-        font-size: 18px;
+        font-size: 20px;
         font-weight: 600;
         cursor: pointer;
         -webkit-tap-highlight-color: transparent;
@@ -148,16 +148,19 @@
         flex: 1;
         min-width: 0;
         min-height: 42px;
+        box-sizing: border-box;
         padding: 0 12px;
         border: 1px solid var(--wj-border, #e6e9ef);
         border-radius: 10px;
         background: var(--wj-bg-alt, #fff);
         color: var(--wj-text, #18191c);
         font-family: inherit;
-        font-size: 16px;
+        font-size: 18px;
         outline: none;
         transition: border-color .15s;
       }
+      /* IME 自绘 div：垂直居中文字（input 默认居中，div 需显式） */
+      div.bli-input { display: flex; align-items: center; white-space: nowrap; overflow: hidden; }
       .bli-input:focus { border-color: var(--wj-primary, #3a6ff0); }
 
       .bli-search-btn,
@@ -168,7 +171,7 @@
         border: 0;
         border-radius: 10px;
         font-family: inherit;
-        font-size: 18px;
+        font-size: 20px;
         font-weight: 600;
         cursor: pointer;
         -webkit-tap-highlight-color: transparent;
@@ -232,7 +235,7 @@
       }
 
       .bli-card-title {
-        font-size: 18px;
+        font-size: 20px;
         font-weight: 600;
         color: var(--wj-text, #18191c);
         line-height: 1.35;
@@ -245,7 +248,7 @@
       .bli-meta {
         display: flex;
         gap: 10px;
-        font-size: 16px;
+        font-size: 18px;
         color: var(--wj-text-dim, #9499a0);
         overflow: hidden;
         font-weight: 500;
@@ -270,7 +273,7 @@
         justify-content: center;
         padding: 40px 16px;
         color: var(--wj-text-muted, #61666d);
-        font-size: 16px;
+        font-size: 18px;
         text-align: center;
         gap: 14px;
       }
@@ -316,7 +319,7 @@
         border-radius: 50%;
         background: rgba(0, 0, 0, .6);
         color: #fff;
-        font-size: 24px;
+        font-size: 26px;
         line-height: 1;
         cursor: pointer;
         display: flex;
@@ -333,7 +336,7 @@
         align-items: center;
         justify-content: center;
         color: #fff;
-        font-size: 16px;
+        font-size: 18px;
       }
     `,
 
@@ -351,8 +354,10 @@
                   <button class="bli-refresh" id="bliRefresh" type="button">刷新</button>
                 </div>
                 <div class="bli-search-row">
-                  <input class="bli-input" id="bliSearchInput" type="text"
-                         placeholder="搜索视频..." autocomplete="off" />
+                  ${ window.WJ_IME
+                    ? '<div class="bli-input" id="bliSearchInput" data-wj-field="1" data-wj-placeholder="搜索视频..." tabindex="0" inputmode="none" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></div>'
+                    : '<input class="bli-input" id="bliSearchInput" type="text" placeholder="搜索视频..." autocomplete="off" />'
+                  }
                   <button class="bli-search-btn" id="bliSearchBtn" type="button">搜索</button>
                   <button class="bli-clear-btn" id="bliClearBtn" type="button" hidden>✕</button>
                 </div>
@@ -381,6 +386,13 @@
           const searchBtn = root.querySelector('#bliSearchBtn');
           const clearBtn = root.querySelector('#bliClearBtn');
           const feedEl = root.querySelector('#bliFeed');
+
+          // IME 自绘 div 与原生 input 的统一读写（对齐 baike.js 的做法）
+          function getText() { return window.WJ_IME ? window.WJ_IME.getFieldText(searchInput) : searchInput.value; }
+          function setText(v) {
+            if (window.WJ_IME) window.WJ_IME.setFieldText(searchInput, v || '');
+            else searchInput.value = v || '';
+          }
 
           let disposed = false;
 
@@ -539,7 +551,7 @@
 
           // ---------- 取消搜索 ----------
           function cancelSearch() {
-            searchInput.value = '';
+            setText('');
             state.fresh_idx = 1;
             loadRecommend();
           }
@@ -552,7 +564,7 @@
           });
 
           searchBtn.addEventListener('click', () => {
-            const kw = searchInput.value.trim();
+            const kw = getText().trim();
             if (!kw) {
               if (state.mode === 'search') cancelSearch();
               return;
@@ -568,8 +580,10 @@
             }
           });
 
+          // IME 自绘 div 没有原生 input 事件，改用键盘/IME 已知的变更点检测空串。
+          // 主要靠搜索按钮读取；这里保留 input 事件给原生 input 分支。
           searchInput.addEventListener('input', () => {
-            if (state.mode === 'search' && !searchInput.value.trim()) {
+            if (state.mode === 'search' && !getText().trim()) {
               cancelSearch();
             }
           });

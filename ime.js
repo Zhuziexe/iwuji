@@ -736,14 +736,14 @@
   // 仅注入 document.head 无法穿透 Shadow DOM，导致占位符不显示、光标不闪。
   var FIELD_CSS =
     '@keyframes wj-blink{0%,50%{opacity:1;}50.01%,100%{opacity:0;}}' +
-    // 占位符：仅在“空 + 聚焦 + 输入法已收起”时显示（wj-ime-open 表示输入法打开）。
-    // 未聚焦时一律隐藏，符合“不自动焦点、手动点击后才提示”的要求。
-    '.wj-field-empty:focus:not(.wj-ime-open):before{content:attr(data-wj-placeholder);color:#9a9aa0;}' +
+    // 占位符：空就显示；输入法打开时不显示（避免和 caret 重叠）。
+    // 用 ::after 放到内容/caret 右侧，caret 始终在最左边。::after 不污染 textContent。
+    '.wj-field-empty:not(.wj-ime-open):after{content:attr(data-wj-placeholder);color:#9a9aa0;pointer-events:none;}' +
     '.wj-caret{display:inline-block;width:2px;height:1.1em;vertical-align:text-bottom;' +
     'background:#0a84ff;margin:0 -1px;animation:wj-blink 1s step-start infinite;' +
     'box-shadow:0 0 0 0.5px rgba(10,132,255,0.4);pointer-events:none;}' +
-    // 失去焦点或输入法关闭时，光标一律隐藏
-    'div[data-wj-field]:not(:focus) .wj-caret{display:none;}';
+    // 光标可见性只跟输入法开关走：输入法打开就显示（在最左），收起就隐藏。
+    'div[data-wj-field]:not(.wj-ime-open) .wj-caret{display:none;}';
   function ensureFieldStyle(root) {
     if (!root) return;
     // 字段在普通文档中时 root 为 document，style 需挂到 head。
@@ -807,8 +807,9 @@
       '.wj-k.caps{font-size:28px;background:#e3e3e8;}' +
       /* 自绘 div 输入框光标闪烁 */
       '@keyframes wj-blink{0%,50%{opacity:1;}50.01%,100%{opacity:0;}}' +
-      '.wj-field-empty:before{content:attr(data-wj-placeholder);color:#9a9aa0;}' +
-      '.wj-caret{animation:wj-blink 1s step-start infinite;}';
+      '.wj-field-empty:not(.wj-ime-open):after{content:attr(data-wj-placeholder);color:#9a9aa0;pointer-events:none;}' +
+      '.wj-caret{animation:wj-blink 1s step-start infinite;}' +
+      'div[data-wj-field]:not(.wj-ime-open) .wj-caret{display:none;}';
     document.head.appendChild(style);
 
     // 必须挂在 body（在 #os 之外）：overlay 在底部，不顶起应用。
@@ -825,7 +826,7 @@
     buildKeyboard();
     kbEl.style.display = '';
     state.shown = true;
-    // #10 标记输入法打开：占位符仅在“空+聚焦+未打开(wj-ime-open 不存在)”时显示。
+    // 自绘 div：打 wj-ime-open（光标显示、占位符隐藏）。
     if (isFieldDiv(target)) { try { target.classList.add('wj-ime-open'); } catch (e) {} }
     // #4 自绘 div：点击定位光标 + 方向键移动光标（光标可在中间任意位置插入，解决首插问题）。
     if (isFieldDiv(target)) {

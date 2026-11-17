@@ -36,7 +36,7 @@
     name: '吴际商城',
     icon: './assets/wmall.svg',
     initialRoute: 'home',
-    version: '1.0.7',
+    version: '1.0.8',
     styles: `
   .wmall-page {
     position: absolute;
@@ -232,8 +232,7 @@
   .wmall-chip {
     display: inline-flex;
     align-items: center;
-    gap: 4px;
-    padding: 3px 10px 3px 3px;
+    padding: 4px 12px 4px 12px;
     border: 2px solid var(--wj-border, #e6e9ef);
     border-radius: 999px;
     background: var(--wj-bg-alt);
@@ -246,15 +245,6 @@
     -webkit-tap-highlight-color: transparent;
   }
   .wmall-chip:active { transform: scale(.96); }
-  .wmall-chip img {
-    width: 36px; height: 36px;
-    border-radius: 50%;
-    object-fit: cover;
-    background: #fff;
-    display: block;
-    pointer-events: none;
-    -webkit-user-drag: none;
-  }
   .wmall-chip.is-active {
     border-color: #3a6ff0;
     background: rgba(58, 111, 240, .10);
@@ -569,7 +559,6 @@
                                data-image="${esc(c.image)}"
                                data-buyable="${c.buyable ? '1' : '0'}"
                                role="button" tabindex="0">
-                            <img src="${esc(c.image)}" alt="">
                             <span>${esc(c.text)}</span>
                           </div>
                         `).join('')}

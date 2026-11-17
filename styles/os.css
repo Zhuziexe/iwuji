@@ -190,7 +190,29 @@ img {
 .statusbar .right {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 6px;
+}
+
+.statusbar-net {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  height: 17px;
+}
+.net-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 17px;
+  line-height: 1;
+}
+.net-icon[hidden] {
+  display: none;
+}
+.net-icon svg {
+  height: 17px;
+  width: auto;
+  display: block;
 }
 
 .battery {

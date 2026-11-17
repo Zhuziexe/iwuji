@@ -23,7 +23,33 @@
         <span class="statusbar-notif-icons" id="statusbarNotifIcons" hidden></span>
       </span>
       <span class="right">
-        <span>5G</span>
+        <span class="statusbar-net" id="statusbarNet">
+          <span class="net-icon net-icon--signal" aria-label="信号">
+            <svg viewBox="0 0 24 24" fill="currentColor">
+              <rect x="1.4" y="16" width="3.4" height="6" />
+              <rect x="5.8" y="12.5" width="3.4" height="9.5" />
+              <rect x="10.2" y="9" width="3.4" height="13" />
+              <rect x="14.6" y="5.5" width="3.4" height="16.5" />
+              <rect x="19" y="2" width="3.4" height="20" />
+            </svg>
+          </span>
+          <span class="net-icon net-icon--wifi" id="netWifi" hidden aria-label="WLAN">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.9" stroke-linecap="round">
+              <path d="M2 9a15 15 0 0 1 20 0" />
+              <path d="M5.5 12.6a10 10 0 0 1 13 0" />
+              <path d="M9 16.2a5.2 5.2 0 0 1 6 0" />
+              <circle cx="12" cy="20.2" r="1.4" fill="currentColor" stroke="none" />
+            </svg>
+          </span>
+          <span class="net-icon net-icon--cellular" id="netCellular" hidden aria-label="移动数据">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.9" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M8 21V4" />
+              <path d="M8 4 4.5 7.5" />
+              <path d="M16 3v17" />
+              <path d="M16 20l3.5-3.5" />
+            </svg>
+          </span>
+        </span>
         <span class="battery">
           <span class="battery__body">
             <i></i>
@@ -256,11 +282,10 @@
     </svg>`,
       cellular: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
          stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M2 22h.01"/>
-      <path d="M7 22v-4"/>
-      <path d="M12 22V12"/>
-      <path d="M17 22V6"/>
-      <path d="M22 22V2"/>
+      <path d="M8 21V4"/>
+      <path d="M8 4 4.5 7.5"/>
+      <path d="M16 3v17"/>
+      <path d="M16 20l3.5-3.5"/>
     </svg>`,
       ring: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
          stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -399,6 +424,35 @@
       } else {
         fallbackBattery();
       }
+    })();
+
+    /* =========================================================
+       状态栏网络图标：根据控制中心 WLAN / 移动数据开关显示
+       - WLAN 开（无论移动数据）→ 显示 WiFi
+       - WLAN 关 + 移动数据开 → 显示移动数据
+       - 都关 → 什么都不显示
+       ========================================================= */
+    (function initStatusBarNet() {
+      const wifiEl = document.getElementById('netWifi');
+      const cellEl = document.getElementById('netCellular');
+      if (!wifiEl || !cellEl) return;
+
+      function sync() {
+        const wifi = !!Store.get('wujios.wifi', false);
+        const cellular = !!Store.get('wujios.cellular', false);
+        // 都打开时优先显示 WLAN
+        wifiEl.hidden = !wifi;
+        cellEl.hidden = wifi || !cellular;
+      }
+
+      sync();
+      window.addEventListener('wuji:cc-toggle-change', (e) => {
+        const key = e?.detail?.key;
+        if (key === 'wifi' || key === 'cellular') sync();
+      });
+      window.addEventListener('storage', (e) => {
+        if (e.key === 'wujios.wifi' || e.key === 'wujios.cellular') sync();
+      });
     })();
 
     /* =========================================================

@@ -59,7 +59,7 @@
     name: '吴际诗词',
     icon: './assets/wujipoe.svg',
     initialRoute: 'home',
-    version: '1.0.1',
+    version: '1.0.2',
     devices: ['iwuji', 'pc'],
 
     styles: `
@@ -89,10 +89,13 @@
         border-radius: 999px;
         padding: 9px 16px;
       }
-      .wp-search input {
-        flex: 1; border: 0; background: transparent; outline: none;
+      .wp-search input,
+      .wp-search [data-wj-field] {
+        flex: 1 1 auto; min-width: 0; min-height: 32px; border: 0; background: transparent; outline: none;
         font: inherit; font-size: var(--wj-fs-md); color: var(--wj-text);
       }
+      /* 自绘 div 字段：给固定最小高度 + 垂直居中，保证有可点击区域（否则高度塌陷点不到） */
+      .wp-search div[data-wj-field] { display: flex; align-items: center; line-height: 1.2; }
       .wp-search input::placeholder { color: var(--wj-text-dim); }
       .wp-search button {
         border: 0; background: var(--wj-primary); color: #fff;
