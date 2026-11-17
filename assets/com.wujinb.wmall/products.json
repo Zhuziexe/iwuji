@@ -103,7 +103,7 @@
           "id": "sky",
           "text": "天空蓝",
           "image": "./assets/com.wujinb.wmall/wujibuds_sky.png",
-          "buyable": true
+          "buyable": false
         },
         {
           "id": "blue",
