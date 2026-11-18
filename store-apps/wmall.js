@@ -36,7 +36,7 @@
     name: '吴际商城',
     icon: './assets/wmall.svg',
     initialRoute: 'home',
-    version: '1.0.8',
+    version: '1.0.9',
     styles: `
   .wmall-page {
     position: absolute;
@@ -406,6 +406,43 @@
     color: var(--wj-text-muted);
     letter-spacing: .5px;
   }
+
+  /* ===== 隐藏彩蛋：余额不足 → 观看视频 ===== */
+  .wmall-watch-btn {
+    margin-top: 8px;
+    padding: 14px 34px;
+    border: 0;
+    border-radius: 999px;
+    background: var(--wj-bg-alt);
+    color: var(--wj-primary);
+    font: inherit;
+    font-size: var(--wj-fs-md);
+    font-weight: 600;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .wmall-watch-btn[hidden] { display: none !important; }
+  .wmall-watch-btn:active { filter: brightness(.94); }
+
+  /* 视频模式：覆盖整个结算页，无提示、无关闭按钮 */
+  .wmall-egg {
+    position: absolute;
+    inset: 0;
+    z-index: 20;
+    background: #000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+  }
+  .wmall-egg.is-on {
+    display: flex;
+  }
+  .wmall-egg video {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+  }
   .wmall-spinner {
     width: 48px;
     height: 48px;
@@ -421,7 +458,8 @@
   }
 
   .wmall-checkout__loading[hidden],
-  .wmall-checkout__error[hidden] {
+  .wmall-checkout__error[hidden],
+  .wmall-watch-btn[hidden] {
     display: none !important;
   }
 `,
@@ -631,8 +669,15 @@
 
               <div class="wmall-checkout__error" id="wjPayError" hidden>余额不足</div>
 
+              <button class="wmall-watch-btn" id="wjWatchBtn" type="button" hidden>观看视频</button>
+
               <div class="wmall-checkout__ad">
                 <img src="./assets/com.wujinb.wmall/ad_bar.png" alt="">
+              </div>
+
+              <div class="wmall-egg" id="wjEgg">
+                <video id="wjEggVideo" loop playsinline preload="none"
+                       src="./assets/com.wujinb.wmall/nb.mp4"></video>
               </div>
             </div>
           `;
@@ -644,6 +689,41 @@
           const token = ++this._token;
           const loading = root.querySelector('#wjPayLoading');
           const error = root.querySelector('#wjPayError');
+          const watchBtn = root.querySelector('#wjWatchBtn');
+          const egg = root.querySelector('#wjEgg');
+          const video = root.querySelector('#wjEggVideo');
+          let detachVolume = null;
+
+          /* 媒体音量曲线：与 baike/music/piano 保持一致 */
+          function computeGain(volume100) {
+            const v = Math.max(0, Math.min(100, Number(volume100) || 0)) / 100;
+            return Math.max(0, Math.min(1, Math.pow(v, 1.6) * 0.9));
+          }
+          function applyVolume() {
+            try { video.volume = computeGain(Store.get('wujios.volume', 60)); } catch { }
+          }
+
+          /* 点击「观看视频」：结算页内容被视频替换，无提示、无关闭按钮，
+             返回由系统返回手势关闭整个 checkout 页（见 unmount 清理）。 */
+          function openEgg() {
+            if (token !== this._token) return;
+            if (!egg?.isConnected || !video?.isConnected) return;
+            if (navigator.vibrate) { try { navigator.vibrate(10); } catch { } }
+
+            egg.classList.add('is-on');
+
+            /* 跟随系统媒体音量；点击即用户手势，可直接带声音播放 */
+            applyVolume();
+            window.addEventListener('wuji:cc-volume-change', applyVolume);
+            detachVolume = () => window.removeEventListener('wuji:cc-volume-change', applyVolume);
+
+            try { video.currentTime = 0; } catch { }
+            const p = video.play();
+            if (p) p.catch(() => { });
+          }
+          const openEggBound = openEgg.bind(this);
+
+          if (watchBtn) watchBtn.addEventListener('click', openEggBound);
 
           this._timer = setTimeout(() => {
             this._timer = null;
@@ -655,11 +735,18 @@
             loading.hidden = true;
             error.hidden = false;
             error.classList.add('is-angry');
+            if (watchBtn) watchBtn.hidden = false;
 
             if (navigator.vibrate) {
               try { navigator.vibrate([80, 40, 80, 40, 200]); } catch { }
             }
           }, 3000);
+
+          /* unmount 时暂停视频、移除音量监听；返回手势会触发本清理 */
+          this._eggCleanup = () => {
+            try { video.pause(); } catch { }
+            if (detachVolume) detachVolume();
+          };
         },
 
         unmount() {
@@ -668,6 +755,10 @@
           if (this._timer) {
             clearTimeout(this._timer);
             this._timer = null;
+          }
+          if (this._eggCleanup) {
+            this._eggCleanup();
+            this._eggCleanup = null;
           }
         },
       },
