@@ -277,7 +277,7 @@
     name: NAME,
     icon: ICON_URL,
     initialRoute: 'home',
-    version: '1.0.2',
+    version: '1.0.3',
     author: AUTHOR,
     description: '牛奶阅读官方正版',
     longdescription: '联网阅读维基文库公有领域图书，搜索书名即可开读。',
@@ -322,7 +322,8 @@
       .rd-input {
         flex: 1 1 auto; min-width: 0; border: 0; outline: 0;
         background: var(--wj-surface, #f2f4f8); border-radius: 999px;
-        padding: 11px 16px; font: inherit; font-size: var(--wj-fs-md, 16px); color: inherit;
+        height: 48px; box-sizing: border-box; padding: 0 16px;
+        font: inherit; font-size: var(--wj-fs-md, 16px); color: inherit;
       }
       /* 自绘 div 字段：用 flex 垂直居中，锁定字号/行高，避免被宿主样式压小/顶到上方 */
       div.rd-input {

@@ -1,8 +1,12 @@
 /* =========================================================
    theme.js —— 主题引擎（Shadow DOM 版）
 
-   主题 = 一个 JS 文件，执行时调用 WujiTheme.define({...}) 自注册。
-   加载后挂载到 #wallpaperHost 的 Shadow DOM 里，主题可以：
+   主题 = 一个 JS 文件，源码里调用 WujiTheme.define({...}) 注册。
+   加载方式：fetch 取源码 → new Function 在受限作用域内执行 →
+   主题定义只落入本次的局部收件箱（不写 window、不插 <script> 标签），
+   执行完销毁函数，内存里只保留当前主题的一份定义。切主题时重新请求。
+
+   挂载到 #wallpaperHost 的 Shadow DOM，主题可以：
      - 用 CSS 动画 / canvas / requestAnimationFrame 跑壁纸
      - 通过 vars 设置锁屏时钟/日期的 CSS 变量
      - 通过 ctx.onStateChange 订阅 OS 状态（view / power / 解锁进度）
@@ -108,24 +112,29 @@ window.WujiTheme = (() => {
     return src;
   }
 
-  async function loadScript(src) {
-    if (window.WujiAppLoader && typeof WujiAppLoader.load === 'function') {
-      await WujiAppLoader.load(src);
-      return;
-    }
-    await new Promise((resolve, reject) => {
-      const s = document.createElement('script');
-      s.src = src;
-      s.onload = () => resolve();
-      s.onerror = () => reject(new Error('load failed: ' + src));
-      document.head.appendChild(s);
-    });
-  }
+  /* 取主题源码并在受限作用域内执行：
+     - 用 fetch 取文本，不插 <script> 标签；走浏览器正常 HTTP 缓存
+     - new Function 只在本次调用的参数里给它一个 WujiTheme.define，
+       主题定义落入局部 inbox，不写 window.__WUJI_THEMES__
+     - 函数执行完即弃，内存里只由 load() 保留 currentDef 一份 */
+  async function fetchThemeDef(src) {
+    const res = await fetch(src);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const code = await res.text();
 
-  function define(def) {
-    if (!def || !def.id) return false;
-    (window.__WUJI_THEMES__ = window.__WUJI_THEMES__ || {})[def.id] = def;
-    return true;
+    const inbox = { def: null };
+    const scopedTheme = {
+      define(def) {
+        if (def && inbox.def === null) inbox.def = def;
+        return true;
+      },
+    };
+
+    // 主题脚本里只需 WujiTheme；其余全局（document/Math/...）由 new Function
+    // 的正常全局作用域解析，无需注入，从而不污染 window。
+    const fn = new Function('WujiTheme', code);
+    fn(scopedTheme);
+    return inbox.def;
   }
 
   async function findMeta(id) {
@@ -161,14 +170,14 @@ window.WujiTheme = (() => {
     currentMeta = meta;
     ready = false;
 
+    let def;
     try {
-      await loadScript(src);
+      def = await fetchThemeDef(src);
     } catch (e) {
-      console.error('[theme] 加载脚本失败', src, e);
+      console.error('[theme] 加载主题失败', src, e);
       return false;
     }
 
-    const def = (window.__WUJI_THEMES__ || {})[id];
     if (!def) {
       console.warn('[theme] 主题脚本没有调用 WujiTheme.define()', id);
       return false;
@@ -176,7 +185,6 @@ window.WujiTheme = (() => {
     currentDef = def;
 
     applyVars(def.vars);
-    applyTone(def.tone || 'dark');
     applyLockStyle(def.lockstyle || 'large');
     const host = ensureHost();
     if (!host || !shadow) return false;
@@ -266,7 +274,6 @@ window.WujiTheme = (() => {
 
     if (shadow) shadow.innerHTML = '';
     clearVars();
-    clearTone();
     clearLockStyle();
 
     currentDef = null;
@@ -308,7 +315,6 @@ window.WujiTheme = (() => {
     init,
     load,
     unmount,
-    define,
     post,
     postProgress,
     get current() { return currentId; },

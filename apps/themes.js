@@ -152,7 +152,7 @@
                   ${top3.map(t => `
                     <div class="theme-card" data-id="${esc(t.id)}">
                       <div class="theme-card__thumb">
-                        <img src="${esc(t.storeimg || t.static || '')}" alt="">
+                        <img src="${esc(t.storeimg || '')}" alt="">
                       </div>
                       <div class="theme-card__name">${esc(t.name)}</div>
                     </div>
@@ -203,7 +203,7 @@
                 ${all.map(t => `
                   <div class="theme-card" data-id="${esc(t.id)}">
                     <div class="theme-card__thumb">
-                      <img src="${esc(t.storeimg || t.static || '')}" alt="">
+                      <img src="${esc(t.storeimg || '')}" alt="">
                     </div>
                     <div class="theme-card__name">${esc(t.name)}</div>
                   </div>
@@ -243,7 +243,7 @@
               <div class="theme-detail__scroll">
                 <div class="theme-detail__name">${esc(theme.name)}</div>
                 <div class="theme-detail__hero">
-                  <img src="${esc(theme.storeimg || theme.static || '')}" alt="">
+                  <img src="${esc(theme.storeimg || '')}" alt="">
                 </div>
                 ${theme.longdescription
                   ? `<div class="theme-detail__desc">${esc(theme.longdescription)}</div>`
@@ -311,11 +311,13 @@
                     id: theme.id, name: theme.name, author: theme.author,
                     version: theme.version, description: theme.description,
                     longdescription: theme.longdescription,
-                    src: theme.src, static: theme.static, storeimg: theme.storeimg,
+                    src: theme.src, storeimg: theme.storeimg,
                     installedAt: Date.now(),
                   });
                   await setDownloaded(list);
                 }
+                /* 通知“设置-主题”页刷新“我的主题”（返回设置时列表才不会是旧的） */
+                try { document.dispatchEvent(new CustomEvent('wj:themes-changed', { detail: { id: theme.id, action: 'download' } })); } catch (e) { }
                 await WujiTheme.load(theme.id);
                 busy = false;
                 refresh();

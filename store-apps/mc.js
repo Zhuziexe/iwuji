@@ -66,7 +66,7 @@
     name: '吴际MC',
     icon: './assets/mc.svg',
     initialRoute: 'main',
-    version: '1.4.5',
+    version: '1.4.7',
     devices: ['iwuji'],
     styles: `
       .mc-wrap { position: absolute; inset: 0; background: #000; overflow: hidden; }
@@ -334,6 +334,7 @@
     routes: {
       main: {
         name: 'main',
+        statusBar: { immersive: true },
         render() {
           return `
             <div class="mc-wrap">

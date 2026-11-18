@@ -1,20 +1,25 @@
-<svg width="256" height="256" viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg">
-  <!-- 白色圆角方形背景 -->
-  <rect width="256" height="256" fill="#FFFFFF" stroke="#E5E5EA" stroke-width="2"/>
-
-  <!-- 地图道路（浅灰路网） -->
-  <path d="M 40 96 L 216 96 M 128 40 L 128 216 M 64 176 L 196 64"
-        fill="none" stroke="#E8EBF0" stroke-width="16" stroke-linecap="round"/>
-
-  <!-- 蓝色主干道 -->
-  <path d="M 48 200 L 208 56" fill="none" stroke="#0A84FF" stroke-width="14" stroke-linecap="round"/>
-
-  <!-- 定位针 -->
-  <path d="M 128 60
-           C 100 60 82 80 82 104
-           C 82 138 128 188 128 188
-           C 128 188 174 138 174 104
-           C 174 80 156 60 128 60 Z"
-        fill="#FF453A"/>
-  <circle cx="128" cy="104" r="20" fill="#FFFFFF"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+  <rect width="256" height="256" fill="#5BC0EB"/>
+  <path d="M 0 256 L 0 145 
+           C 50 145, 80 160, 130 155 
+           C 170 150, 200 135, 256 145 
+           L 256 256 Z" 
+        fill="#00D26A"/>
+  <path d="M 0 256 L 0 175 
+           C 50 175, 80 190, 130 185 
+           C 170 180, 200 165, 256 175 
+           L 256 256 Z" 
+        fill="#FFFFFF"/>
+  <path d="M 0 256 L 0 205 
+           C 50 205, 80 220, 130 215 
+           C 170 210, 200 195, 256 205 
+           L 256 256 Z" 
+        fill="#E2E8F0"/>
+  <path d="M 128 25
+           C 85 25 58 58 58 95
+           C 58 145 128 205 128 205
+           C 128 205 198 145 198 95
+           C 198 58 171 25 128 25 Z"
+        fill="#FF3B30"/>
+  <circle cx="128" cy="95" r="28" fill="#FFFFFF"/>
 </svg>

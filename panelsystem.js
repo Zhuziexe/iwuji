@@ -60,9 +60,16 @@ window.PanelSystem = (() => {
     osEl.classList.toggle('cc-open', open && panel === 'cc');
   }
 
+  /* 沉浸态（statusBar.immersive）下禁止打开通知/控制中心：
+     状态栏此时被隐藏，顶部下拉手势应按“没有状态栏”处理。 */
+  function panelsBlocked() {
+    return !!(osEl && osEl.dataset.statusbar === 'immersive');
+  }
+
   /* ---------------- 打开 / 关闭 / 切 pane ---------------- */
   function openPanel(p, animate = true) {
     if (!ready) return;
+    if (panelsBlocked()) return;
     panel = (p === 'cc') ? 'cc' : 'nc';
     h = (panel === 'nc') ? 0 : -50;
     v = 0;
@@ -107,6 +114,7 @@ window.PanelSystem = (() => {
     if (window.WujiOverlay?.isOpen) return false;
     if (osEl.dataset.power !== 'running') return false;
     if (osEl.dataset.view === 'locked') return false;
+    if (!open && panelsBlocked()) return false;
     if (gesture) return false;
 
     if (target && target.closest && target.closest('.cc-slider-card')) return false;

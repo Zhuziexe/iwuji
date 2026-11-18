@@ -59,7 +59,7 @@
     name: '吴际诗词',
     icon: './assets/wujipoe.svg',
     initialRoute: 'home',
-    version: '1.0.2',
+    version: '1.0.3',
     devices: ['iwuji', 'pc'],
 
     styles: `
@@ -94,7 +94,6 @@
         flex: 1 1 auto; min-width: 0; min-height: 32px; border: 0; background: transparent; outline: none;
         font: inherit; font-size: var(--wj-fs-md); color: var(--wj-text);
       }
-      /* 自绘 div 字段：给固定最小高度 + 垂直居中，保证有可点击区域（否则高度塌陷点不到） */
       .wp-search div[data-wj-field] { display: flex; align-items: center; line-height: 1.2; }
       .wp-search input::placeholder { color: var(--wj-text-dim); }
       .wp-search button {
@@ -176,8 +175,8 @@
                 <div class="wp-header__title">吴际诗词</div>
                 <div class="wp-search">
                   ${ window.WJ_IME
-                    ? '<div id="wp-q" data-wj-field="1" data-wj-placeholder="搜索诗句 / 标题，如「明月」「静夜思」" tabindex="0" inputmode="none" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></div>'
-                    : '<input id="wp-q" type="search" placeholder="搜索诗句 / 标题，如「明月」「静夜思」" />'
+                    ? '<div id="wp-q" data-wj-field="1" data-wj-placeholder="搜索诗句 / 标题" tabindex="0" inputmode="none" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></div>'
+                    : '<input id="wp-q" type="search" placeholder="搜索诗句 / 标题" />'
                   }
                   <button id="wp-go" type="button">搜索</button>
                 </div>

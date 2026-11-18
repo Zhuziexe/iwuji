@@ -34,7 +34,7 @@
             </svg>
           </span>
           <span class="net-icon net-icon--wifi" id="netWifi" hidden aria-label="WLAN">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.9" stroke-linecap="round">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.9">
               <path d="M2 9a15 15 0 0 1 20 0" />
               <path d="M5.5 12.6a10 10 0 0 1 13 0" />
               <path d="M9 16.2a5.2 5.2 0 0 1 6 0" />
@@ -42,7 +42,7 @@
             </svg>
           </span>
           <span class="net-icon net-icon--cellular" id="netCellular" hidden aria-label="移动数据">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.9" stroke-linecap="round" stroke-linejoin="round">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.9">
               <path d="M8 21V4" />
               <path d="M8 4 4.5 7.5" />
               <path d="M16 3v17" />
@@ -334,6 +334,12 @@
     function setView(v) {
       S.view = v;
       osEl.dataset.view = v;
+
+      /* 桌面/锁屏（无活动应用导航）：深色遮罩 + 白字（light-gradient 档）。
+         应用内由 WujiNavigation._syncStatusBar 按 route.statusBar 声明接管（默认 dark-gradient）。 */
+      if ((v === 'home' || v === 'locked') && !currentNav) {
+        osEl.dataset.statusbar = 'light-gradient';
+      }
 
       if (v === 'locked') {
         appView.style.pointerEvents = 'none';
@@ -1835,6 +1841,13 @@
         const appStyleEl = document.createElement('style');
         shadow.appendChild(appStyleEl);
 
+        /* 应用内容挂在这个 ShadowRoot 里，自绘输入框（data-wj-field）也在这里。
+           全局 head 的样式穿不透 Shadow DOM → 必须在这里注入 IME 字段样式，
+           否则初始空字段不显示 placeholder（要等第一次弹输入法才注入）。 */
+        if (window.WJ_IME && window.WJ_IME.ensureFieldStyle) {
+          try { window.WJ_IME.ensureFieldStyle(shadow); } catch (e) { console.warn('[ime] ensureFieldStyle', e); }
+        }
+
         const navHost = document.createElement('div');
         navHost.id = 'navHost';
         navHost.style.cssText = 'position:absolute;inset:0;overflow:hidden;';
@@ -2801,7 +2814,7 @@
         console.log(`[update] 市场应用更新完成：${ok}/${appResults.length}`);
       }
 
-      Store.set('wujios.lastbootversion', '1.0.116');
+      Store.set('wujios.lastbootversion', '1.0.117');
 
       await sleep(400);
       setPower('shuttingdown');
@@ -2820,9 +2833,9 @@
 
       if (lastVersion === null) {
         /* 首次开机：直接写版本，正常开机 */
-        Store.set('wujios.lastbootversion', '1.0.116');
-      } else if (lastVersion !== '1.0.116') {
-        /* 已有旧版本号且不是 1.0.116 → 更新 */
+        Store.set('wujios.lastbootversion', '1.0.117');
+      } else if (lastVersion !== '1.0.117') {
+        /* 已有旧版本号且不是 1.0.117 → 更新 */
         await runUpdate();
         return;
       }

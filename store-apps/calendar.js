@@ -8,7 +8,7 @@
     name: '日历',
     icon: './assets/calendar.svg',
     initialRoute: 'home',
-    version: '1.0.1',
+    version: '1.0.2',
 
     styles: `
       .cal-page {
@@ -25,7 +25,6 @@
         box-sizing: border-box;
       }
 
-      /* ---------------- 标题（左上） ---------------- */
       .cal-title {
         flex: 0 0 auto;
         align-self: flex-start;
@@ -37,7 +36,6 @@
         margin-bottom: 20px;
       }
 
-      /* ---------------- 月份栏 ---------------- */
       .cal-bar {
         flex: 0 0 auto;
         display: flex;
@@ -55,7 +53,7 @@
         letter-spacing: .3px;
         white-space: nowrap;
         overflow: hidden;
-        text-overflow: ellipsis;
+        text-overflow: clip;
         font-variant-numeric: tabular-nums;
       }
 
@@ -95,14 +93,13 @@
       .cal-nav-btn:active { background: #e2e8f2; transform: scale(.92); }
       .cal-nav-btn svg { width: 25px; height: 25px; display: block; }
 
-      /* ---------------- 星期行 ---------------- */
       .cal-weekdays {
         flex: 0 0 auto;
         display: grid;
         grid-template-columns: repeat(7, minmax(0, 1fr));
         gap: 3px;
         padding: 0 3px 8px;
-        font-size: var(--wj-fs-xs);
+        font-size: var(--wj-fs-sm);
         font-weight: 600;
         color: #9aa4b8;
         letter-spacing: .3px;
@@ -112,7 +109,6 @@
       .cal-weekdays span:first-child,
       .cal-weekdays span:last-child { color: #e0356b; }
 
-      /* ---------------- 日期网格 ---------------- */
       .cal-grid {
         flex: 1 1 auto;
         min-height: 0;
@@ -129,7 +125,7 @@
         border-radius: 17px;
         color: #101828;
         font: inherit;
-        font-size: clamp(20px, 4.2vw, 24px);
+        font-size: var(--wj-fs-md);
         font-weight: 500;
         font-variant-numeric: tabular-nums;
         cursor: pointer;

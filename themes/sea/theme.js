@@ -8,7 +8,6 @@ WujiTheme.define({
     '--wj-lock-date-color': '#e8f0ff',
     '--wj-lock-date-shadow': '0 1px 6px rgba(20, 40, 80, .7)',
   },
-  tone: 'light',  
 
   styles: `
     :host { display: block; }

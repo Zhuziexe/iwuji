@@ -5,7 +5,6 @@ WujiApps.register({
   initialRoute: 'calc',
 
   styles: `
-    /* ---------------- 页面骨架 ---------------- */
     .calc-page {
       flex: 1 1 auto;
       min-height: 0;
@@ -18,7 +17,6 @@ WujiApps.register({
       -webkit-user-select: none;
     }
 
-    /* ---------------- 显示区（更紧凑） ---------------- */
     .calc-display {
       flex: 1 1 auto;
       min-height: 0;

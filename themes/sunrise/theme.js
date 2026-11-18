@@ -12,7 +12,6 @@ WujiTheme.define({
   '--wj-lock-date-color': '#ffe9c0',
   '--wj-lock-date-shadow': '0 1px 8px rgba(180, 100, 40, .55)',
 },
- tone: 'dark',
 
   styles: `
     :host { display: block; }

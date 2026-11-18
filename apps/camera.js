@@ -87,7 +87,7 @@
     routes: {
       home: {
         name: 'home',
-
+        statusBar: { immersive: true },
         render() {
           return `
             <div class="cam-page">

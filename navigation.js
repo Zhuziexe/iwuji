@@ -28,9 +28,40 @@ window.WujiNavigation = class WujiNavigation {
   }
 
   _emitChange() {
+    this._syncStatusBar();
     this._listeners.forEach(fn => {
       try { fn(); } catch (e) { console.error('[WujiNavigation]', e); }
     });
+  }
+
+  /* 依据当前 route 的 statusBar 声明同步状态栏外观。
+     声明格式（route 上）：
+       statusBar: {
+         immersive: true,          // 沉浸：隐藏状态栏（游戏类等）
+         color: 'dark' | 'light',  // 黑字 / 白字，默认 'dark'
+         gradient: true | false    // 是否带渐变遮罩，默认 true
+       }
+     未声明 → 'dark-gradient'（黑字 + 白色渐变，系统默认）。 */
+  _syncStatusBar() {
+    const osEl = document.getElementById('os');
+    if (!osEl) return;
+    const item = this.current;
+    const cfg = (item && item.route && item.route.statusBar) || null;
+    let mode = 'dark-gradient';
+    if (cfg && typeof cfg === 'object') {
+      if (cfg.immersive) mode = 'immersive';
+      else {
+        const color = cfg.color === 'light' ? 'light' : 'dark';
+        const grad = cfg.gradient === false ? 'flat' : 'gradient';
+        mode = color + '-' + grad;
+      }
+    }
+    osEl.dataset.statusbar = mode;
+
+    /* 进入沉浸页（状态栏隐藏）时收起通知/控制中心，避免“无状态栏却挂着面板” */
+    if (mode === 'immersive') {
+      try { if (window.PanelSystem?.isOpen) window.PanelSystem.close(); } catch { }
+    }
   }
 
   /* =========================================================

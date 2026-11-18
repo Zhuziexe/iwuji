@@ -147,7 +147,7 @@
     routes: {
       main: {
         name: 'main',
-
+        statusBar: { color: 'light', gradient: false },
         render(routeCtx) {
           const file = routeCtx.data?.file;
           const name = file?.name || '文件预览';

@@ -85,36 +85,23 @@ img {
   font-size: var(--wj-fs-xs);
   font-weight: 600;
 
-  color: #fff;
-  background: linear-gradient(to bottom,
-      rgba(0, 0, 0, .35) 0%,
-      rgba(0, 0, 0, .12) 55%,
-      rgba(0, 0, 0, 0) 100%);
-  text-shadow: 0 1px 3px rgba(0, 0, 0, .45);
-
+  /* 外观由 .os[data-statusbar] 统一控制（见下方各档），这里只放与模式无关的公共项 */
   z-index: 601;
   pointer-events: none;
   opacity: 1;
   transition: opacity .25s, color .25s, background .25s, text-shadow .25s;
 }
 
-.os[data-view="locked"] .statusbar,
-.os:not([data-power="running"]) .statusbar {
-  opacity: 0;
-}
+/* ============ 状态栏外观档位（由 route.statusBar 声明驱动） ============
+   dark-gradient  黑字 + 白色渐变（默认）
+   dark-flat      黑字 + 无渐变
+   light-gradient 白字 + 黑色渐变
+   light-flat     白字 + 无渐变
+   immersive      隐藏状态栏（游戏类应用）                        */
+.os .statusbar { color: #000; background: transparent; text-shadow: none; }
 
-/* ★ 亮色主题：桌面状态下用黑字 + 浅色渐变（应用状态和面板不受此影响） */
-.os[data-theme-tone="light"]:not([data-view="app"]) .statusbar {
-  color: #000;
-  background: linear-gradient(to bottom,
-      rgba(255, 255, 255, .48) 0%,
-      rgba(255, 255, 255, .18) 55%,
-      rgba(255, 255, 255, 0) 100%);
-  text-shadow: 0 1px 3px rgba(255, 255, 255, .55);
-}
-
-/* ★ 打开应用：黑字 + 浅色渐变（无论什么主题都一样） */
-.os[data-view="app"] .statusbar {
+.os[data-statusbar="dark-gradient"] .statusbar,
+.os:not([data-statusbar]) .statusbar {
   color: #000;
   background: linear-gradient(to bottom,
       rgba(255, 255, 255, .55) 0%,
@@ -122,10 +109,29 @@ img {
       rgba(255, 255, 255, 0) 100%);
   text-shadow: none;
 }
+.os[data-statusbar="dark-flat"] .statusbar {
+  color: #000; background: transparent; text-shadow: none;
+}
+.os[data-statusbar="light-gradient"] .statusbar {
+  color: #fff;
+  background: linear-gradient(to bottom,
+      rgba(0, 0, 0, .42) 0%,
+      rgba(0, 0, 0, .16) 55%,
+      rgba(0, 0, 0, 0) 100%);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, .45);
+}
+.os[data-statusbar="light-flat"] .statusbar {
+  color: #fff; background: transparent; text-shadow: 0 1px 3px rgba(0, 0, 0, .45);
+}
+.os[data-statusbar="immersive"] .statusbar { opacity: 0; }
 
-/* ★ 面板打开：白字 + 透明背景（优先级最高，覆盖一切） */
+.os[data-view="locked"] .statusbar,
+.os:not([data-power="running"]) .statusbar {
+  opacity: 0;
+}
+
+/* ★ 面板打开：白字 + 透明背景（优先级最高，覆盖 data-statusbar 各档） */
 .os.panel-open .statusbar,
-.os.panel-open[data-theme-tone="light"] .statusbar,
 .os.panel-open[data-view="app"] .statusbar {
   color: #fff;
   background: transparent;
@@ -292,8 +298,12 @@ img {
   transform: translateY(-50%);
   width: 16px;
   height: 18px;
-  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%2334383f' d='M13 2 4 14h6l-1 8 9-12h-6z'/%3E%3C/svg%3E") center / contain no-repeat;
   pointer-events: none;
+  /* 用 mask 让闪电取当前文字色：随状态栏 dark(黑)/light(白) 档位自动切换。
+     data URI 里的 fill 无法继承 currentColor，故不用 background 贴图。 */
+  background: currentColor;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M13 2 4 14h6l-1 8 9-12h-6z'/%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M13 2 4 14h6l-1 8 9-12h-6z'/%3E%3C/svg%3E") center / contain no-repeat;
 }
 
 .view {

@@ -736,9 +736,10 @@
   // 仅注入 document.head 无法穿透 Shadow DOM，导致占位符不显示、光标不闪。
   var FIELD_CSS =
     '@keyframes wj-blink{0%,50%{opacity:1;}50.01%,100%{opacity:0;}}' +
-    // 占位符：空就显示；输入法打开时不显示（避免和 caret 重叠）。
+    // 占位符：字段真正为空(:empty)就显示——初始渲染即命中，无需等第一次打开输入法。
+    // 输入法打开时 div 内有 caret span → 非 :empty → 自动隐藏；关闭后 caret 被移除 → :empty → 又显示。
     // 用 ::after 放到内容/caret 右侧，caret 始终在最左边。::after 不污染 textContent。
-    '.wj-field-empty:not(.wj-ime-open):after{content:attr(data-wj-placeholder);color:#9a9aa0;pointer-events:none;}' +
+    'div[data-wj-field]:empty:after{content:attr(data-wj-placeholder);color:#9a9aa0;pointer-events:none;}' +
     '.wj-caret{display:inline-block;width:2px;height:1.1em;vertical-align:text-bottom;' +
     'background:#0a84ff;margin:0 -1px;animation:wj-blink 1s step-start infinite;' +
     'box-shadow:0 0 0 0.5px rgba(10,132,255,0.4);pointer-events:none;}' +
@@ -807,7 +808,7 @@
       '.wj-k.caps{font-size:28px;background:#e3e3e8;}' +
       /* 自绘 div 输入框光标闪烁 */
       '@keyframes wj-blink{0%,50%{opacity:1;}50.01%,100%{opacity:0;}}' +
-      '.wj-field-empty:not(.wj-ime-open):after{content:attr(data-wj-placeholder);color:#9a9aa0;pointer-events:none;}' +
+      'div[data-wj-field]:empty:after{content:attr(data-wj-placeholder);color:#9a9aa0;pointer-events:none;}' +
       '.wj-caret{animation:wj-blink 1s step-start infinite;}' +
       'div[data-wj-field]:not(.wj-ime-open) .wj-caret{display:none;}';
     document.head.appendChild(style);
@@ -1076,6 +1077,9 @@
     readAll: readAll, parseT9: parseT9, guessPinyin: guessPinyin,
     // 给 app 用的便捷接口（配合自绘 div 输入框）
     clearField: clearField, setFieldText: setFieldText, getFieldText: getFieldText, hide: hide,
-    isFieldDiv: isFieldDiv
+    isFieldDiv: isFieldDiv,
+    // 把自绘字段样式（占位符 :empty + 光标）注入到指定文档树。
+    // app 挂载到 ShadowRoot 后应调用一次，否则初始空字段看不到 placeholder。
+    ensureFieldStyle: ensureFieldStyle
   };
 })();

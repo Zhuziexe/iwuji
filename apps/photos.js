@@ -25,7 +25,7 @@
     name: '图库',
     icon: './assets/photos.svg',
     initialRoute: 'home',
-    version: '1.1.0',
+    version: '1.1.4',
 
     styles: `
       .ph-page {
@@ -178,47 +178,72 @@
       .ph-detail {
         position: absolute; inset: 0;
         display: flex; flex-direction: column;
-        background: #000;
-        color: #fff;
-        padding-top: var(--statusbar-h, 0px);
+        background: #fff;
+        color: #18191c;
+        padding-top: var(--statusbar-h, 0px);   /* 让开状态栏（系统默认黑字渐变正常显示） */
       }
       .ph-detail__stage {
         flex: 1 1 auto;
         min-height: 0;
         display: flex; align-items: center; justify-content: center;
         overflow: hidden;
-        cursor: pointer;
       }
       .ph-detail__img {
         max-width: 100%; max-height: 100%;
-        object-fit: contain;
+        width: 100%; height: 100%;
+        object-fit: contain;                 /* 中间 contain 显示 */
         display: block;
         pointer-events: none;
       }
       .ph-detail__bar {
         flex: 0 0 auto;
-        display: flex; align-items: center; justify-content: center;
-        gap: 24px;
-        padding: 16px 0 calc(20px + env(safe-area-inset-bottom, 0px));
-        background: rgba(0,0,0,.75);
+        align-self: center;
+        display: flex; align-items: center; justify-content: space-around;
+        gap: 4px;
+        height: 60px;
+        width: 240px;                  /* 4:1 比例，宽度更窄、居中 */
+        max-width: calc(100% - 32px);
+        margin: 18px 0 calc(14px + env(safe-area-inset-bottom, 0px)); /* 与图片拉开距离 */
+        padding: 0 6px;
+        border-radius: 14px;           /* 圆角再小一点 */
+        background: #fff;
+        box-shadow: none;
+        border: 1px solid rgba(0,0,0,.12);   /* 不要阴影，只用边框 */
       }
       .ph-detail__btn {
-        width: 52px; height: 52px;
-        border: 0; border-radius: 50%;
-        background: rgba(255,255,255,.12);
-        color: #fff;
+        width: 50px; height: 50px;      /* 图标按钮更占满胶囊 */
+        border: 0; border-radius: 12px;
+        background: transparent;
+        color: #3a3d45;
         display: inline-flex; align-items: center; justify-content: center;
         cursor: pointer;
         -webkit-tap-highlight-color: transparent;
-        transition: background .12s;
+        transition: background .12s, opacity .12s;
       }
-      .ph-detail__btn:active { background: rgba(255,255,255,.28); }
-      .ph-detail__btn--danger {
-        background: rgba(224,53,107,.18);
-        color: #ff8098;
+      .ph-detail__btn:active { background: rgba(0,0,0,.07); }
+      .ph-detail__btn:disabled { opacity: .3; cursor: default; }
+      .ph-detail__btn--danger { color: #e0356b; }
+      .ph-detail__btn--danger:active { background: rgba(224,53,107,.16); }
+      .ph-detail__btn svg { width: 28px; height: 28px; display: block; }
+
+      .ph-info {
+        position: absolute; inset: 0;
+        display: flex; flex-direction: column;
+        background: #fff; color: #18191c;
+        padding-top: var(--statusbar-h, 0px);
       }
-      .ph-detail__btn--danger:active { background: rgba(224,53,107,.4); }
-      .ph-detail__btn svg { width: 22px; height: 22px; display: block; }
+      .ph-info__title {
+        padding: 10px 20px 14px;
+        font-size: var(--wj-fs-2xl); font-weight: 700;
+      }
+      .ph-info__row {
+        display: flex; justify-content: space-between; gap: 16px;
+        padding: 14px 20px;
+        border-top: 1px solid #eceef2;
+        font-size: 20px;
+      }
+      .ph-info__row span:first-child { color: var(--wj-text-dim); flex: 0 0 auto; }
+      .ph-info__row span:last-child { color: #18191c; text-align: right; word-break: break-all; }
     `,
 
     routes: {
@@ -608,7 +633,7 @@
       detail: {
         name: 'detail',
         transition: 'zoom',
-
+        /* 去掉 statusBar 覆盖：让系统默认状态栏（黑字白渐变）在白底上正常显示 */
         render(routeCtx) {
           const name = routeCtx.data?.name || '';
           return `
@@ -617,6 +642,11 @@
                 <img class="ph-detail__img" id="phImg" alt="">
               </div>
               <div class="ph-detail__bar">
+                <button class="ph-detail__btn" id="phPrevBtn" type="button" aria-label="上一张">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M15 18l-6-6 6-6"/>
+                  </svg>
+                </button>
                 <button class="ph-detail__btn ph-detail__btn--danger"
                         id="phDeleteBtn" type="button" aria-label="删除">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -625,6 +655,17 @@
                     <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
                     <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
                     <path d="M10 11v6M14 11v6"/>
+                  </svg>
+                </button>
+                <button class="ph-detail__btn" id="phInfoBtn" type="button" aria-label="属性">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="9"/>
+                    <path d="M12 11v5"/><path d="M12 8h.01"/>
+                  </svg>
+                </button>
+                <button class="ph-detail__btn" id="phNextBtn" type="button" aria-label="下一张">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M9 18l6-6-6-6"/>
                   </svg>
                 </button>
               </div>
@@ -639,23 +680,90 @@
           const imgEl = root.querySelector('#phImg');
           const stageEl = root.querySelector('#phStage');
           const delBtn = root.querySelector('#phDeleteBtn');
+          const prevBtn = root.querySelector('#phPrevBtn');
+          const nextBtn = root.querySelector('#phNextBtn');
+          const infoBtn = root.querySelector('#phInfoBtn');
 
+          let currentName = name;
+          let list = [];                 // 图片文件元数据（按 mtime 降序，与主页一致）
           let url = null;
           let disposed = false;
           let busy = false;
 
-          (async () => {
+          function idx() { return list.findIndex(f => f.name === currentName); }
+
+          function freeUrl() { if (url) { URL.revokeObjectURL(url); url = null; } }
+
+          async function loadCurrent() {
+            imgEl.style.opacity = '0';
             try {
-              const f = await WujiFileSystem.read(['Pictures', name]);
-              if (!f || disposed) return;
+              const f = await WujiFileSystem.read(['Pictures', currentName]);
+              if (disposed || !f) return;
+              freeUrl();
               url = URL.createObjectURL(f);
               imgEl.src = url;
+              imgEl.style.opacity = '1';
             } catch (e) {
               console.warn('[photos] detail load failed', e);
             }
+          }
+
+          function syncNav() {
+            const i = idx();
+            if (prevBtn) prevBtn.disabled = i <= 0;
+            if (nextBtn) nextBtn.disabled = i < 0 || i >= list.length - 1;
+            if (infoBtn) infoBtn.disabled = i < 0;
+          }
+
+          /* 切换图片后同步“返回 zoom”的目标矩形：指向当前图片在主页对应的缩略图，
+             否则返回时仍缩放回最初点击的那张，造成目标矩形不对。 */
+          function syncZoomOrigin() {
+            try {
+              const nav = ctx.nav;
+              const cur = nav && nav.current;
+              if (!cur) return;
+              const home = nav.stack.find(it => it && it.route && it.route.name === 'home');
+              let cell = null;
+              if (home && home.element) {
+                const cells = home.element.querySelectorAll('.ph-cell');
+                for (let k = 0; k < cells.length; k++) {
+                  if (cells[k].dataset.name === currentName) { cell = cells[k]; break; }
+                }
+              }
+              if (!cell) return;
+              const r = cell.getBoundingClientRect();
+              cur.transitionOrigin = { x: r.left, y: r.top, w: r.width, h: r.height };
+            } catch (e) { /* 取不到就沿用原 origin */ }
+          }
+
+          async function showAt(i) {
+            if (i < 0 || i >= list.length) return;
+            currentName = list[i].name;
+            if (ctx.data) ctx.data.name = currentName;   // 让属性页/返回拿到当前张
+            syncZoomOrigin();
+            await loadCurrent();
+            syncNav();
+          }
+
+          (async () => {
+            try {
+              const items = await WujiFileSystem.list(['Pictures']);
+              list = (Array.isArray(items) ? items : [])
+                .filter(it => it.kind === 'file' && hasImgExt(it.name))
+                .sort((a, b) => (b.mtime || 0) - (a.mtime || 0));
+            } catch (e) { /* 列表失败也不影响单图查看 */ }
+            if (disposed) return;
+            syncNav();
+            await loadCurrent();
           })();
 
-          stageEl.addEventListener('click', () => ctx.pop());
+          if (prevBtn) prevBtn.addEventListener('click', e => { e.stopPropagation(); showAt(idx() - 1); });
+          if (nextBtn) nextBtn.addEventListener('click', e => { e.stopPropagation(); showAt(idx() + 1); });
+          if (infoBtn) infoBtn.addEventListener('click', e => {
+            e.stopPropagation();
+            const f = list[idx()];
+            ctx.push('info', { name: currentName, file: f || null }, { transition: 'slide' });
+          });
 
           delBtn.addEventListener('click', async (e) => {
             e.stopPropagation();
@@ -681,10 +789,14 @@
             if (!ok) { busy = false; return; }
 
             try {
-              await WujiFileSystem.remove(['Pictures', name]);
+              await WujiFileSystem.remove(['Pictures', currentName]);
               window.dispatchEvent(new CustomEvent('wuji:photos-changed'));
               if (navigator.vibrate) { try { navigator.vibrate(12); } catch { } }
-              ctx.pop();
+              const i = idx();
+              list.splice(i, 1);
+              busy = false;
+              if (list.length) await showAt(Math.min(i, list.length - 1));  // 删后显示相邻一张
+              else ctx.pop();                                              // 删光则退出
             } catch (err) {
               console.error('[photos] delete failed', err);
               busy = false;
@@ -693,8 +805,38 @@
 
           return () => {
             disposed = true;
-            if (url) { URL.revokeObjectURL(url); url = null; }
+            freeUrl();
           };
+        },
+      },
+
+      info: {
+        name: 'info',
+        transition: 'slide-up',
+        render(routeCtx) {
+          const f = routeCtx.data?.file || {};
+          const name = routeCtx.data?.name || f.name || '';
+          let size = '—';
+          if (typeof f.size === 'number') {
+            size = f.size < 1024 ? f.size + ' B'
+              : f.size < 1048576 ? (f.size / 1024).toFixed(1) + ' KB'
+              : (f.size / 1048576).toFixed(2) + ' MB';
+          }
+          let date = '—';
+          if (f.mtime) {
+            try { date = new Date(f.mtime).toLocaleString(); } catch (e) { date = String(f.mtime); }
+          }
+          const ext = (name.split('.').pop() || '').toUpperCase();
+          return `
+            <div class="ph-info">
+              <div class="ph-info__title">属性</div>
+              <div class="ph-info__row"><span>名称</span><span>${escapeHtml(name)}</span></div>
+              <div class="ph-info__row"><span>类型</span><span>${escapeHtml(ext ? ext + ' 图片' : '图片')}</span></div>
+              <div class="ph-info__row"><span>大小</span><span>${escapeHtml(size)}</span></div>
+              <div class="ph-info__row"><span>修改日期</span><span>${escapeHtml(date)}</span></div>
+              <div class="ph-info__row"><span>位置</span><span>Pictures</span></div>
+            </div>
+          `;
         },
       },
     },

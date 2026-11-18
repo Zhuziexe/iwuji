@@ -54,7 +54,7 @@
     name: '牛奶百科',
     icon: ICON_URL,
     initialRoute: 'home',
-    version: '1.0.8',
+    version: '1.0.9',
 
     styles: `
       .bk-page {
@@ -875,7 +875,7 @@
       fullscreen: {
         name: 'fullscreen',
         transition: 'zoom',
-
+        statusBar: { immersive: true },
         render(routeCtx) {
           const src = routeCtx.data?.src || '';
           return `

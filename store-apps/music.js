@@ -153,7 +153,7 @@
     name: '吴际音乐',
     icon: ICON_URL,
     initialRoute: 'home',
-    version: '1.0.6',
+    version: '1.0.7',
 
     onShutdown() {
       if (activeVideo) {
@@ -167,7 +167,6 @@
     },
 
     styles: `
-      /* ---------- 首页 ---------- */
       .mv-page {
         position: absolute;
         inset: 0;
@@ -704,7 +703,6 @@
 
       player: {
         name: 'player',
-
         render(routeCtx) {
           return `
             <div class="mv-player">
@@ -887,7 +885,7 @@
       fullscreen: {
         name: 'fullscreen',
         transition: 'zoom',
-
+        statusBar: { immersive: true },
         render(routeCtx) {
           const src = routeCtx.data?.src || '';
           return `

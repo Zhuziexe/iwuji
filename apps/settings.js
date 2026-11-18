@@ -628,6 +628,17 @@
         letter-spacing: .2px;
       }
 
+      .storage-hint {
+        padding: 0 25px 14px;
+        margin-top: -8px;
+        font-size: var(--wj-fs-xs);
+        color: var(--wj-text-dim);
+        line-height: 1.4;
+      }
+      .storage-hint + .settings-row {
+        border-top: 1px solid rgba(0, 0, 0, .07);
+      }
+
       .app-item {
         gap: 17px;
       }
@@ -1331,7 +1342,7 @@
 
               <div class="settings-about-card">
                 <div class="settings-about-card__title">WujiOS</div>
-                <div class="settings-about-card__version">1.0.116</div>
+                <div class="settings-about-card__version">1.0.117</div>
                 <div class="settings-about-card__btn" id="checkUpdateBtn">检查更新</div>
               </div>
 
@@ -1346,7 +1357,7 @@
                 </div>
                 <div class="settings-row settings-row--tap" id="aboutVersionRow">
                   <span>WujiOS版本</span>
-                  <span class="settings-row__value">1.0.116</span>
+                  <span class="settings-row__value">1.0.117</span>
                 </div>
                 <div class="settings-row">
                   <span>OpenWuji版本</span>
@@ -1518,16 +1529,21 @@
 
               <div class="settings-section">
                 <div class="settings-row">
-                  <span>应用</span>
-                  <span class="settings-row__value" id="storageAppCode">计算中...</span>
-                </div>
-                <div class="settings-row">
-                  <span>数据</span>
+                  <span>应用和数据</span>
                   <span class="settings-row__value" id="storageAppData">计算中...</span>
                 </div>
                 <div class="settings-row">
+                  <span>用户数据</span>
+                  <span class="settings-row__value" id="storageUser">计算中...</span>
+                </div>
+                <div class="storage-hint">用户数据包括图片、视频、文档等</div>
+                <div class="settings-row">
+                  <span>系统数据</span>
+                  <span class="settings-row__value" id="storageSystem">计算中...</span>
+                </div>
+                <div class="settings-row">
                   <span>WujiOS</span>
-                  <span class="settings-row__value">4.3 GB</span>
+                  <span class="settings-row__value">2.8 GB</span>
                 </div>
               </div>
             </div>
@@ -1539,14 +1555,47 @@
           const fillEl = root.querySelector('#storageFill');
           const usedEl = root.querySelector('#storageUsed');
           const freeEl = root.querySelector('#storageFree');
-          const codeEl = root.querySelector('#storageAppCode');
           const dataEl = root.querySelector('#storageAppData');
+          const userEl = root.querySelector('#storageUser');
+          const sysEl = root.querySelector('#storageSystem');
 
           const TOTAL_BYTES = 64 * 1024 * 1024 * 1024;
-          const SYSTEM_BYTES = 4.3 * 1024 * 1024 * 1024;
+          const SYSTEM_BYTES = 2.8 * 1024 * 1024 * 1024;
+
+          /* 系统数据 = localStorage 所有 key+value 的 UTF-8 字节 */
+          function measureLocalStorage() {
+            let bytes = 0;
+            try {
+              for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key == null) continue;
+                let val = '';
+                try { val = localStorage.getItem(key) || ''; } catch { }
+                bytes += new Blob([key]).size + new Blob([val]).size;
+              }
+            } catch (e) {
+              console.warn('[storage] localStorage measure failed', e);
+            }
+            return bytes;
+          }
+
+          async function measureUserData() {
+            const fs = window.WujiFileSystem;
+            if (!fs || !fs.supported) return 0;
+            let bytes = 0;
+            try {
+              const items = await fs.walkAll([]);
+              for (const it of items) {
+                if (it.kind === 'file') bytes += it.size || 0;
+              }
+            } catch (e) {
+              console.warn('[storage] OPFS measure failed', e);
+            }
+            return bytes;
+          }
 
           async function update() {
-            /* 1. 应用数据（AppStorage） */
+            /* 1. 应用和数据 = 应用代码(wujios-appcode) + AppStorage IndexedDB */
             let dataBytes = 0;
             try {
               const usage = await AppStorage.usageAll();
@@ -1557,22 +1606,26 @@
               console.warn('[storage] usageAll failed', e);
             }
 
-            /* 2. 应用代码（wujios-appcode） */
-            let codeBytes = 0;
             try {
               const rows = await WujiAppCode.list();
               for (const r of rows) {
                 if (r && r.code) {
-                  try { codeBytes += new Blob([r.code]).size; } catch { }
+                  try { dataBytes += new Blob([r.code]).size; } catch { }
                 }
               }
             } catch (e) {
               console.warn('[storage] appcode list failed', e);
             }
 
+            /* 2. 用户数据（OPFS） */
+            const userBytes = await measureUserData();
+
+            /* 3. 系统数据（localStorage） */
+            const systemBytes = measureLocalStorage();
+
             if (!root.isConnected) return;
 
-            const used = SYSTEM_BYTES + codeBytes + dataBytes;
+            const used = SYSTEM_BYTES + dataBytes + userBytes + systemBytes;
             const free = Math.max(0, TOTAL_BYTES - used);
             const pct = Math.min(100, (used / TOTAL_BYTES) * 100);
 
@@ -1581,8 +1634,9 @@
             usedEl.textContent = '已使用 ' + formatBytes(used);
             freeEl.textContent = '可用 ' + formatBytes(free);
 
-            codeEl.textContent = formatBytes(codeBytes);
             dataEl.textContent = formatBytes(dataBytes);
+            userEl.textContent = formatBytes(userBytes);
+            sysEl.textContent = formatBytes(systemBytes);
           }
 
           update();
@@ -2145,24 +2199,12 @@
         name: 'personalize',
 
         render() {
-          const themeMeta = window.WujiTheme?.meta;
-          const storeImg = themeMeta?.storeimg || '';
-          const iconHtml = storeImg
-            ? `<img src="${escapeHtml(storeImg)}" alt="">`
-            : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                 stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                 <circle cx="12" cy="12" r="9"/>
-               </svg>`;
-
           return `
             <div class="settings-page">
               <div class="wj-title">桌面和个性化</div>
 
               <div class="settings-section">
                 <div class="settings-item" data-act="themes">
-                  <div class="settings-item__icon" style="background:#ff375f">
-                    ${iconHtml}
-                  </div>
                   <span>主题</span>
                 </div>
               </div>
@@ -2189,7 +2231,7 @@
               <div class="theme-grid" id="sysThemeGrid">
                 ${sys.map(t => `
                   <div class="theme-card" data-id="${escapeHtml(t.id)}" data-sys="1"
-                       data-src="${escapeHtml(t.storeimg || t.static || '')}">
+                       data-src="${escapeHtml(t.storeimg || '')}">
                     <div class="theme-card__thumb"></div>
                     <div class="theme-card__name">${escapeHtml(t.name)}</div>
                   </div>
@@ -2339,6 +2381,7 @@
                   }
                 }
                 await renderMine();
+                try { document.dispatchEvent(new CustomEvent('wj:themes-changed', { detail: { id: theme.id, action: 'delete' } })); } catch (e) { }
               }, 600);
 
               const cleanup = () => {
@@ -2385,7 +2428,7 @@
 
             myGrid.innerHTML = list.map(t => `
               <div class="theme-card" data-id="${escapeHtml(String(t.id))}" data-mine="1"
-                   data-src="${escapeHtml(t.storeimg || t.static || '')}">
+                   data-src="${escapeHtml(t.storeimg || '')}">
                 <div class="theme-card__thumb"></div>
                 <div class="theme-card__name">${escapeHtml(t.name || '')}</div>
               </div>
@@ -2424,6 +2467,14 @@
 
           renderMine();
 
+          /* 主题市场下载/更新主题后会派发 wj:themes-changed；
+             设置页可能仍在后台未销毁，监听它即可在返回时刷新“我的主题”。 */
+          const onThemesChanged = (e) => {
+            if (e && e.detail && e.detail.action === 'delete') return; // 删除本页已自行刷新
+            renderMine();
+          };
+          document.addEventListener('wj:themes-changed', onThemesChanged);
+
           gotoBtn.addEventListener('click', () => {
             try {
               window.WujiAppLauncher?.open('com.wujios.themes', {});
@@ -2431,6 +2482,7 @@
           });
 
           return () => {
+            document.removeEventListener('wj:themes-changed', onThemesChanged);
             hideMenu();
           };
         },
@@ -2467,7 +2519,7 @@
 
           const hero = root.querySelector('#themeHero');
           if (hero) {
-            const src = theme.storeimg || theme.static || '';
+            const src = theme.storeimg || '';
             if (src) hero.appendChild(imgToCanvasNatural(src, 800));
           }
 
