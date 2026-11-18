@@ -5,6 +5,34 @@
 (() => {
   const BUNDLE = 'com.wujios.camera';
 
+  /* 切换摄像头图标（环形双箭头） */
+  const ICON_SWITCH = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M20 11a8 8 0 0 0-14.3-4.9" />
+    <path d="M4 4v2.6h2.6" />
+    <path d="M4 13a8 8 0 0 0 14.3 4.9" />
+    <path d="M20 20v-2.6h-2.6" />
+  </svg>`;
+
+  /* 水印开关：审批印章（往下的箭头落在横线上） */
+  const ICON_STAMP_ON = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M12 3v10" />
+    <path d="M8.5 9.5 12 13l3.5-3.5" />
+    <path d="M5 17h14" />
+    <path d="M7 20h10" />
+  </svg>`;
+
+  /* 水印关闭：印章被斜线划掉 */
+  const ICON_STAMP_OFF = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M12 3v10" />
+    <path d="M8.5 9.5 12 13l3.5-3.5" />
+    <path d="M5 17h14" />
+    <path d="M7 20h10" />
+    <line x1="3" y1="3" x2="21" y2="21" />
+  </svg>`;
+
   WujiApps.register({
     bundlename: BUNDLE,
     name: '相机',
@@ -62,8 +90,8 @@
         position: absolute;
         left: 0; right: 0;
         bottom: 0;
-        padding: 24px 0 calc(28px + env(safe-area-inset-bottom, 0px));
-        display: flex; align-items: center; justify-content: center;
+        padding: 24px 24px calc(28px + env(safe-area-inset-bottom, 0px));
+        display: flex; align-items: center; justify-content: space-between;
         z-index: 3;
         pointer-events: none;
       }
@@ -82,6 +110,23 @@
       }
       .cam-shutter:active { transform: scale(.92); background: #e5e5e5; }
       .cam-shutter:disabled { opacity: .4; cursor: not-allowed; }
+
+      .cam-tool {
+        pointer-events: auto;
+        flex: 0 0 auto;
+        width: 58px; height: 58px;
+        border: 0;
+        border-radius: 50%;
+        background: rgba(0,0,0,.4);
+        color: #fff;
+        display: flex; align-items: center; justify-content: center;
+        cursor: pointer;
+        z-index: 4;
+        -webkit-tap-highlight-color: transparent;
+      }
+      .cam-tool:active { transform: scale(.92); background: rgba(0,0,0,.6); }
+      .cam-tool[disabled] { opacity: .45; cursor: not-allowed; }
+      .cam-tool svg { width: 30px; height: 30px; display: block; }
     `,
 
     routes: {
@@ -95,8 +140,12 @@
                      autoplay playsinline muted></video>
               <div class="cam-flash" id="camFlash"></div>
               <div class="cam-shutter-bar">
+                <button class="cam-tool cam-tool--switch" id="camSwitch"
+                        type="button" aria-label="切换摄像头" disabled>${ICON_SWITCH}</button>
                 <button class="cam-shutter" id="camShutter"
                         type="button" aria-label="拍照" disabled></button>
+                <button class="cam-tool cam-tool--mark" id="camWatermark"
+                        type="button" aria-label="水印开关">${ICON_STAMP_OFF}</button>
               </div>
               <div class="cam-error" id="camError" hidden></div>
               <canvas id="camCanvas" hidden></canvas>
@@ -110,10 +159,14 @@
           const shutterEl = root.querySelector('#camShutter');
           const errorEl = root.querySelector('#camError');
           const canvasEl = root.querySelector('#camCanvas');
+          const switchEl = root.querySelector('#camSwitch');
+          const markEl = root.querySelector('#camWatermark');
 
           let stream = null;
           let disposed = false;
           let busy = false;
+          let facing = 'environment';   // 'user' 前置 / 'environment' 后置
+          let watermark = false;        // 水印开关，默认关
 
           function showError(title, msg) {
             errorEl.hidden = false;
@@ -123,6 +176,7 @@
             `;
             videoEl.style.display = 'none';
             shutterEl.disabled = true;
+            if (switchEl) switchEl.disabled = true;
           }
 
           async function init() {
@@ -139,7 +193,7 @@
             try {
               stream = await navigator.mediaDevices.getUserMedia({
                 video: {
-                  facingMode: { ideal: 'environment' },
+                  facingMode: { ideal: facing },
                   width: { ideal: 1920 },
                   height: { ideal: 1080 },
                 },
@@ -167,6 +221,53 @@
             videoEl.srcObject = stream;
             try { await videoEl.play(); } catch { }
             shutterEl.disabled = false;
+            if (switchEl) switchEl.disabled = false;
+          }
+
+          /* 切换摄像头：先试 applyConstraints，失败则重启流 */
+          async function switchCamera() {
+            if (busy || !stream) return;
+            busy = true;
+            if (switchEl) switchEl.disabled = true;
+
+            const next = facing === 'environment' ? 'user' : 'environment';
+            let ok = false;
+
+            try {
+              const track = stream.getVideoTracks()[0];
+              if (track && track.applyConstraints) {
+                try {
+                  await track.applyConstraints({ facingMode: { ideal: next } });
+                  ok = true;
+                } catch { }
+              }
+              if (!ok) {
+                stream.getTracks().forEach(t => t.stop());
+                stream = await navigator.mediaDevices.getUserMedia({
+                  video: {
+                    facingMode: { ideal: next },
+                    width: { ideal: 1920 },
+                    height: { ideal: 1080 },
+                  },
+                  audio: false,
+                });
+                if (disposed) {
+                  stream.getTracks().forEach(t => t.stop());
+                  stream = null;
+                  return;
+                }
+                videoEl.srcObject = stream;
+                try { await videoEl.play(); } catch { }
+                ok = true;
+              }
+              if (ok) facing = next;
+            } catch (e) {
+              console.error('[camera] switch failed', e);
+              try { window.WujiToast?.show?.('切换摄像头失败'); } catch { }
+            } finally {
+              busy = false;
+              if (!disposed && switchEl) switchEl.disabled = false;
+            }
           }
 
           async function capture() {
@@ -197,8 +298,33 @@
               canvasEl.width = outW;
               canvasEl.height = outH;
 
-              canvasEl.getContext('2d')
-                .drawImage(videoEl, sx, sy, sw, sh, 0, 0, outW, outH);
+              const ctx = canvasEl.getContext('2d');
+              ctx.drawImage(videoEl, sx, sy, sw, sh, 0, 0, outW, outH);
+
+              if (watermark) {
+                const wmSize = Math.max(14, Math.round(outW * 0.038));
+                ctx.font = `600 ${wmSize}px -apple-system, "PingFang SC", sans-serif`;
+                ctx.fillStyle = '#fff';
+                ctx.shadowColor = 'rgba(0,0,0,.5)';
+                ctx.shadowBlur = wmSize * 0.5;
+                ctx.textBaseline = 'bottom';
+
+                const pad = Math.round(wmSize * 0.8);
+                const model = (window.WujiDevices?.deviceModel?.() || 'WujiOS');
+                const now = new Date();
+                const mo = String(now.getMonth() + 1).padStart(2, '0');
+                const dd = String(now.getDate()).padStart(2, '0');
+                const hh = String(now.getHours()).padStart(2, '0');
+                const mm = String(now.getMinutes()).padStart(2, '0');
+                const timeText = `${now.getFullYear()}-${mo}-${dd} ${hh}:${mm}`;
+
+                ctx.textAlign = 'left';
+                ctx.fillText(model, pad, outH - pad);
+                ctx.textAlign = 'right';
+                ctx.fillText(timeText, outW - pad, outH - pad);
+                ctx.shadowColor = 'transparent';
+                ctx.shadowBlur = 0;
+              }
 
               const blob = await new Promise((resolve, reject) => {
                 canvasEl.toBlob(
@@ -227,6 +353,20 @@
           }
 
           shutterEl.addEventListener('click', capture);
+
+          if (switchEl) switchEl.addEventListener('click', switchCamera);
+
+          if (markEl) {
+            markEl.addEventListener('click', () => {
+              watermark = !watermark;
+              markEl.innerHTML = watermark ? ICON_STAMP_ON : ICON_STAMP_OFF;
+              if (navigator.vibrate) { try { navigator.vibrate(8); } catch { } }
+              try {
+                window.WujiToast?.show?.(watermark ? '水印已开启' : '水印已关闭');
+              } catch { }
+            });
+          }
+
           init();
 
           return () => {

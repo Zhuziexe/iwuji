@@ -1212,7 +1212,7 @@
                   <div class="settings-item__icon">
                     <img src="./assets/com.wujios.settings/iwuji.png" alt="">
                   </div>
-                  <span>这台iWuji</span>
+                  <span>这台${WujiDevices.deviceModel()}</span>
                 </div>
               </div>
 
@@ -1349,11 +1349,11 @@
               <div class="settings-section">
                 <div class="settings-row">
                   <span>设备名称</span>
-                  <span class="settings-row__value">iWuji</span>
+                  <span class="settings-row__value">${WujiDevices.deviceModel()}</span>
                 </div>
                 <div class="settings-row">
                   <span>型号</span>
-                  <span class="settings-row__value">IWUJI-1</span>
+                  <span class="settings-row__value">${WujiDevices.deviceModel() === 'iWuji' ? 'IWUJI-1' : (WujiDevices.deviceModel() === 'iWuji Neo' ? 'IWUJINEO' : 'WujiOS')}</span>
                 </div>
                 <div class="settings-row settings-row--tap" id="aboutVersionRow">
                   <span>WujiOS版本</span>

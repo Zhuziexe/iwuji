@@ -35,6 +35,28 @@ window.WujiDevices = (() => {
   }
 
   /**
+   * 设备型号名（用于展示）：
+   *   - ZhuziOS 平台 → 电脑
+   *   - 外壳通过 window.__OPENWUJI_DEVICE_MODEL 传入 iWuji / iWuji Neo
+   *   - 未知 → WujiOS
+   */
+  function deviceModel() {
+    if (toDeviceId(window.__OPENWUJI_PLATFORM || '') === 'pc') return '电脑';
+    // OS 跑在外壳的同域 iframe 中，型号变量由外壳设在父窗口上；
+    // 兼容直接打开 OS（parent === window）或变量就设在自身的情况。
+    let raw = window.__OPENWUJI_DEVICE_MODEL;
+    try {
+      if (!raw && window.parent && window.parent !== window) {
+        raw = window.parent.__OPENWUJI_DEVICE_MODEL;
+      }
+    } catch (e) { /* 跨域父窗口不可读，忽略 */ }
+
+    const m = String(raw || '').trim();
+    if (m === 'iWuji' || m === 'iWuji Neo') return m;
+    return 'WujiOS';
+  }
+
+  /**
    * 从任意 meta / record 取出规范 devices 数组。
    * 优先 devices，其次旧的 platforms；缺失/空/非数组 → null（视为全设备）。
    * 返回的数组已做值映射、去重、去空。
@@ -189,6 +211,7 @@ window.WujiDevices = (() => {
   return {
     toDeviceId,
     currentDevice,
+    deviceModel,
     normalizeDevices,
     deviceAllowed,
     label,
