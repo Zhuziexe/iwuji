@@ -121,10 +121,31 @@
       "buyable": true
     },
     {
-      "id": "case",
-      "icon": "./assets/com.wujinb.wmall/iwuji_baohuke.png",
+      "id": "iwuji_case",
+      "icon": "./assets/com.wujinb.wmall/iwuji_case.png",
       "name": "iWuji透明保护壳",
       "price": 39,
+      "buyable": true
+    },
+    {
+      "id": "iwuji_neo_case",
+      "icon": "./assets/com.wujinb.wmall/iwuji_neo_case.png",
+      "name": "iWuji Neo透明保护壳",
+      "price": 39,
+      "buyable": true
+    },
+    {
+      "id": "iwuji_glass",
+      "icon": "./assets/com.wujinb.wmall/iwuji_glass.png",
+      "name": "iWuji钢化膜",
+      "price": 29,
+      "buyable": true
+    },
+    {
+      "id": "iwuji_neo_glass",
+      "icon": "./assets/com.wujinb.wmall/iwuji_neo_glass.png",
+      "name": "iWuji Neo钢化膜",
+      "price": 29,
       "buyable": true
     },
     {

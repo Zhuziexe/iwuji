@@ -6,17 +6,20 @@ const FILE = path.join('assets', 'com.wujinb.wmall', 'products.json');
 // 缺货概率表
 // key: 有 colors 的商品用 `${productId}:${colorId}`，无 colors 的用 `${productId}`
 const OUT_OF_STOCK_CHANCE = {
-  'iwuji:blue':   0.5,
-  'iwuji:white':  0.7,
-  'iwuji:black':  0.5,
+  'iwuji:blue': 0.5,
+  'iwuji:white': 0.7,
+  'iwuji:black': 0.5,
   'iwuji_neo:red': 0.7,
   'iwuji_neo:white': 0.5,
   'iwuji_neo:purple': 0.3,
   'wujibuds:sky': 0.3,
-  'wujibuds:blue':0.6,
-  'charger':      0.2,
-  'case':         0.1,
-  'nb_baohuke':   0.2
+  'wujibuds:blue': 0.6,
+  'charger': 0.2,
+  'iwuji_case': 0.1,
+  'iwuji_neo_case': 0.2,
+  'iwuji_glass': 0.1,
+  'iwuji_neo_glass': 0.2,
+  'nb_baohuke': 0.2
 };
 
 const raw = fs.readFileSync(FILE, 'utf8');

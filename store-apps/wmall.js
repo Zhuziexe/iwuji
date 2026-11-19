@@ -36,7 +36,7 @@
     name: '吴际商城',
     icon: './assets/wmall.svg',
     initialRoute: 'home',
-    version: '1.0.9',
+    version: '1.1.0',
     styles: `
   .wmall-page {
     position: absolute;
@@ -69,74 +69,99 @@
     -webkit-user-drag: none;
   }
 
-  .wmall-grid {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 17px;
-    padding: 20px 20px 0;
-  }
+.wmall-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  padding: 18px 12px 0;
+}
 
-  .wmall-card {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 14px;
-    padding: 20px 14px 17px;
-    border-radius: 22px;
-    background: var(--wj-bg-alt);
-    text-align: center;
-    transition: transform .12s, background .15s;
-    -webkit-tap-highlight-color: transparent;
-  }
-  .wmall-card:active { transform: scale(.96); background: #dae2f0; }
+.wmall-card {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0;
+  padding: 0;
+  border-radius: 12px;
+  background: var(--wj-bg-alt);
+  text-align: left;
+  overflow: hidden;
+  border: 2px solid var(--wj-border, #e6e9ef);
+  box-shadow:
+    0 4px 12px rgba(15, 20, 45, .09),
+    0 1px 3px rgba(15, 20, 45, .05);
+  transition: transform .12s, box-shadow .12s, border-color .15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.wmall-card:active {
+  transform: scale(.98);
+  border-color: #3a6ff0;
+  box-shadow: 0 2px 6px rgba(15, 20, 45, .07);
+}
 
-  .wmall-card__icon {
-    width: 100%;
-    aspect-ratio: 1;
-    max-width: 126px;
-    border-radius: 20px;
-    overflow: hidden;
-    background: #fff;
-    display: flex; align-items: center; justify-content: center;
-    box-shadow: 0 3px 11px rgba(15, 20, 45, .08);
-  }
-  .wmall-card__icon img {
-    width: 100%; height: 100%;
-    object-fit: cover;
-    display: block;
-    pointer-events: none;
-    user-select: none;
-    -webkit-user-drag: none;
-  }
+.wmall-card__icon {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  max-width: none;
+  flex-shrink: 0;
+  border-radius: 0;
+  overflow: hidden;
+  display: block;
+  box-shadow: none;
+}
+.wmall-card__icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-drag: none;
+}
 
-  .wmall-card__name {
-    font-size: var(--wj-fs-sm);
-    color: var(--wj-text);
-    line-height: 1.3;
-    max-width: 100%;
-  }
+.wmall-card__body {
+  padding: 8px 10px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
 
-  .wmall-card__price {
-    font-size: var(--wj-fs-lg);
-    font-weight: 600;
-    color: #e0356b;
-    letter-spacing: .3px;
-  }
-  .wmall-card__price::before {
-    content: "¥";
-    font-size: var(--wj-fs-xs);
-    margin-right: 1px;
-  }
+.wmall-card__name {
+  font-size: var(--wj-fs-md);
+  line-height: 1.3;
+  color: var(--wj-text);
+  text-align: left;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  min-height: 2.6em;
+}
+
+.wmall-card__price {
+  font-size: var(--wj-fs-lg);
+  font-weight: 600;
+  line-height: 1.2;
+  color: #e0356b;
+  text-align: left;
+  letter-spacing: 0;
+  font-variant-numeric: tabular-nums;
+}
+.wmall-card__price::before {
+  content: "¥";
+  font-size: var(--wj-fs-sm);
+  font-weight: 500;
+  margin-right: 1px;
+}
 
   .wmall-end {
     text-align: center;
-    font-size: var(--wj-fs-xs);
+    font-size: var(--wj-fs-sm);
     color: var(--wj-text-dim);
     padding: 25px 20px 8px;
     letter-spacing: .5px;
   }
 
-  /* ==================== 加载中 ==================== */
   .wmall-loading {
     display: flex;
     flex-direction: column;
@@ -150,7 +175,6 @@
   }
   .wmall-loading[hidden] { display: none !important; }
 
-  /* ==================== 详情页 ==================== */
   .wmall-detail {
     position: absolute;
     inset: 0;
@@ -171,7 +195,7 @@
 
   .wmall-detail__hero {
     width: 100%;
-    aspect-ratio: 16 / 9;
+    aspect-ratio: 4 / 3;
     flex-shrink: 0;
     background: var(--wj-bg-alt);
     display: flex;
@@ -380,23 +404,6 @@
     60%  { transform: translateX(6px)  scale(1.1); }
     100% { transform: translateX(0)    scale(1); }
   }
-
-  .wmall-checkout__ad {
-    margin-top: auto;
-    width: calc(100% + 56px);
-    margin-left: -20px;
-    margin-right: -20px;
-    display: block;
-    -webkit-tap-highlight-color: transparent;
-  }
-  .wmall-checkout__ad img {
-    display: block;
-    width: 100%;
-    height: auto;
-    pointer-events: none;
-    user-select: none;
-    -webkit-user-drag: none;
-  }
   .wmall-checkout__loading {
     display: flex;
     flex-direction: column;
@@ -517,15 +524,17 @@
               </div>
 
               <div class="wmall-grid">
-                ${rest.map(p => `
-                  <div class="wmall-card" data-id="${esc(p.id)}">
-                    <div class="wmall-card__icon">
-                      <img src="${esc(p.icon)}" alt="${esc(p.name)}">
-                    </div>
-                    <div class="wmall-card__name">${esc(p.name)}</div>
-                    <div class="wmall-card__price">${p.price}</div>
-                  </div>
-                `).join('')}
+               ${rest.map(p => `
+  <div class="wmall-card" data-id="${esc(p.id)}">
+    <div class="wmall-card__icon">
+      <img src="${esc(p.icon)}" alt="${esc(p.name)}">
+    </div>
+    <div class="wmall-card__body">
+      <div class="wmall-card__name">${esc(p.name)}</div>
+      <div class="wmall-card__price">${p.price}</div>
+    </div>
+  </div>
+`).join('')}
               </div>
 
               <div class="wmall-end">没有更多了</div>
@@ -670,10 +679,6 @@
               <div class="wmall-checkout__error" id="wjPayError" hidden>余额不足</div>
 
               <button class="wmall-watch-btn" id="wjWatchBtn" type="button" hidden>观看视频</button>
-
-              <div class="wmall-checkout__ad">
-                <img src="./assets/com.wujinb.wmall/ad_bar.png" alt="">
-              </div>
 
               <div class="wmall-egg" id="wjEgg">
                 <video id="wjEggVideo" loop playsinline preload="none"
