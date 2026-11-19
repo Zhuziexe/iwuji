@@ -3,7 +3,7 @@
     {
       "id": "iwuji",
       "icon": "./assets/com.wujinb.wmall/iwuji_blue.png",
-      "banner": "./assets/com.wujinb.wmall/iwuji_banner.png",
+      "banner": "./assets/com.wujinb.wmall/iwuji_banner.jpg",
       "name": "iWuji",
       "price": 2999,
       "colors": [
@@ -50,6 +50,7 @@
     {
       "id": "iwuji_neo",
       "icon": "./assets/com.wujinb.wmall/iwuji_neo_red.png",
+      "banner": "./assets/com.wujinb.wmall/iwuji_neo_banner.jpg",
       "name": "iWuji Neo",
       "price": 2399,
       "colors": [

@@ -36,7 +36,7 @@
     name: '吴际商城',
     icon: './assets/wmall.svg',
     initialRoute: 'home',
-    version: '1.1.0',
+    version: '1.1.1',
     styles: `
   .wmall-page {
     position: absolute;
@@ -51,6 +51,7 @@
     flex-direction: column;
   }
 
+  .wmall-banner[hidden] { display: none !important; }
   .wmall-banner {
     width: 100%;
     aspect-ratio: 16 / 9;
@@ -67,6 +68,26 @@
     pointer-events: none;
     user-select: none;
     -webkit-user-drag: none;
+    opacity: 0;
+    transition: opacity .5s ease;
+    position: absolute;
+    inset: 0;
+  }
+  .wmall-banner img.is-active { opacity: 1; }
+  .wmall-banner__dots {
+    position: absolute;
+    left: 0; right: 0; bottom: 8px;
+    display: flex; justify-content: center; gap: 6px;
+    z-index: 2;
+    pointer-events: none;
+  }
+  .wmall-banner__dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: rgba(255,255,255,.55);
+    transition: background .25s, transform .25s;
+  }
+  .wmall-banner__dot.is-active {
+    background: #fff; transform: scale(1.35);
   }
 
 .wmall-grid {
@@ -494,6 +515,7 @@
           const loadingEl = root.querySelector('#wjHomeLoading');
           const bodyEl = root.querySelector('#wjHomeBody');
           let cancelled = false;
+          let bannerCarouselCleanup = null;
 
           (async () => {
             let products;
@@ -516,15 +538,22 @@
               return;
             }
 
-            const [first, ...rest] = products;
+            /* banner 轮播：只用带 banner 图（960x540 JPG）的商品；grid 显示全部商品 */
+            const bannerItems = products.filter(p => p.banner);
 
             bodyEl.innerHTML = `
-              <div class="wmall-banner" data-id="${esc(first.id)}">
-                <img src="${esc(first.banner || first.icon)}" alt="${esc(first.name)}">
+              <div class="wmall-banner" id="wjBanner" data-id="${esc(bannerItems[0]?.id || '')}">
+                ${bannerItems.map((p, i) => `
+                  <img class="${i === 0 ? 'is-active' : ''}" data-i="${i}"
+                       src="${esc(p.banner)}" alt="${esc(p.name)}">`).join('')}
+                <div class="wmall-banner__dots">
+                  ${bannerItems.map((_, i) => `
+                    <span class="wmall-banner__dot ${i === 0 ? 'is-active' : ''}"></span>`).join('')}
+                </div>
               </div>
 
               <div class="wmall-grid">
-               ${rest.map(p => `
+               ${products.map(p => `
   <div class="wmall-card" data-id="${esc(p.id)}">
     <div class="wmall-card__icon">
       <img src="${esc(p.icon)}" alt="${esc(p.name)}">
@@ -539,6 +568,28 @@
 
               <div class="wmall-end">没有更多了</div>
             `;
+
+            /* ---- 轮播逻辑 ---- */
+            const banner = bodyEl.querySelector('#wjBanner');
+            if (!bannerItems.length) banner.hidden = true;
+            const imgs = [...banner.querySelectorAll('img[data-i]')];
+            const dots = [...banner.querySelectorAll('.wmall-banner__dot')];
+            let cur = 0;
+            let bannerTimer = null;
+            function showBanner(i) {
+              if (!imgs.length) return;
+              cur = (i + imgs.length) % imgs.length;
+              imgs.forEach((im, k) => im.classList.toggle('is-active', k === cur));
+              dots.forEach((dot, k) => dot.classList.toggle('is-active', k === cur));
+              banner.dataset.id = bannerItems[cur].id;
+            }
+            function startBanner() {
+              if (imgs.length < 2) return;
+              clearInterval(bannerTimer);
+              bannerTimer = setInterval(() => showBanner(cur + 1), 3500);
+            }
+            startBanner();
+            bannerCarouselCleanup = () => clearInterval(bannerTimer);
 
             bodyEl.querySelectorAll('[data-id]').forEach(el => {
               el.addEventListener('click', () => {
@@ -560,7 +611,10 @@
             });
           } catch { }
 
-          return () => { cancelled = true; };
+          return () => {
+            cancelled = true;
+            if (bannerCarouselCleanup) bannerCarouselCleanup();
+          };
         },
       },
 
