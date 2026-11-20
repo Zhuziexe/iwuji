@@ -53,11 +53,12 @@
     name: '吴际商城',
     icon: './assets/wmall.svg',
     initialRoute: 'home',
-    version: '1.1.2',
+    version: '1.1.3',
     styles: `
  .wmall-page {
    position: absolute;
    inset: 0;
+   isolation: isolate;
    overflow-y: auto;
    -webkit-overflow-scrolling: touch;
    overscroll-behavior: contain;
