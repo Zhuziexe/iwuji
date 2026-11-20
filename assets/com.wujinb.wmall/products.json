@@ -5,6 +5,7 @@
       "icon": "./assets/com.wujinb.wmall/iwuji_blue.png",
       "banner": "./assets/com.wujinb.wmall/iwuji_banner.jpg",
       "name": "iWuji",
+      "shop": "iWuji官方旗舰店",
       "price": 2999,
       "colors": [
         {
@@ -52,7 +53,9 @@
       "icon": "./assets/com.wujinb.wmall/iwuji_neo_red.png",
       "banner": "./assets/com.wujinb.wmall/iwuji_neo_banner.jpg",
       "name": "iWuji Neo",
+      "shop": "iWuji官方旗舰店",
       "price": 2399,
+      "badge": "热销",
       "colors": [
         {
           "id": "red",
@@ -98,6 +101,7 @@
       "id": "wujibuds",
       "icon": "./assets/com.wujinb.wmall/wujibuds_sky.png",
       "name": "WujiBuds",
+      "shop": "iWuji官方旗舰店",
       "price": 599,
       "colors": [
         {
@@ -118,6 +122,7 @@
       "id": "charger",
       "icon": "./assets/com.wujinb.wmall/iwuji_charger.png",
       "name": "iWuji快充充电器",
+      "shop": "iWuji官方旗舰店",
       "price": 79,
       "buyable": true
     },
@@ -125,6 +130,7 @@
       "id": "iwuji_case",
       "icon": "./assets/com.wujinb.wmall/iwuji_case.png",
       "name": "iWuji透明保护壳",
+      "shop": "iWuji官方旗舰店",
       "price": 39,
       "buyable": true
     },
@@ -132,6 +138,7 @@
       "id": "iwuji_neo_case",
       "icon": "./assets/com.wujinb.wmall/iwuji_neo_case.png",
       "name": "iWuji Neo透明保护壳",
+      "shop": "iWuji官方旗舰店",
       "price": 39,
       "buyable": true
     },
@@ -139,6 +146,7 @@
       "id": "iwuji_glass",
       "icon": "./assets/com.wujinb.wmall/iwuji_glass.png",
       "name": "iWuji钢化膜",
+      "shop": "iWuji官方旗舰店",
       "price": 29,
       "buyable": true
     },
@@ -146,6 +154,7 @@
       "id": "iwuji_neo_glass",
       "icon": "./assets/com.wujinb.wmall/iwuji_neo_glass.png",
       "name": "iWuji Neo钢化膜",
+      "shop": "iWuji官方旗舰店",
       "price": 29,
       "buyable": false
     },
@@ -153,6 +162,7 @@
       "id": "nb_baohuke",
       "icon": "./assets/com.wujinb.wmall/nb_baohuke.png",
       "name": "牛逼素皮保护壳",
+      "shop": "iWuji官方旗舰店",
       "price": 109,
       "buyable": false
     }

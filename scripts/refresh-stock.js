@@ -19,7 +19,10 @@ const OUT_OF_STOCK_CHANCE = {
   'iwuji_neo_case': 0.2,
   'iwuji_glass': 0.1,
   'iwuji_neo_glass': 0.2,
-  'nb_baohuke': 0.2
+  'nb_baohuke': 0.2,
+  'nb_sticker': 0.1,
+  'nb_sticker_big': 0.1,
+  'nb_ball': 0.1
 };
 
 const raw = fs.readFileSync(FILE, 'utf8');

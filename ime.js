@@ -458,8 +458,12 @@
       else state.composing = state.composing.slice(0, -1);
       state.segIdx = 0; state.keyPos = 0; state.segs = null;
       refreshCandidates();
-    } else if (state.base) {
-      state.base = state.base.slice(0, -1); applyValue(); dispatchInput();
+    } else if (state.base && state.cursor > 0) {
+      // 退格删光标前一个字符（不是末尾），并同步移动光标
+      state.base = state.base.slice(0, state.cursor - 1) + state.base.slice(state.cursor);
+      state.cursor -= 1;
+      state.cursorMoved = true;
+      applyValue(); dispatchInput();
     }
   }
   function clearAll() {

@@ -21,6 +21,7 @@ Written in plain **HTML / CSS / JavaScript** — no build step, no `node_modules
 
 > ⚠️ **Do NOT just double-click `index.html` (the `file://` protocol).**
 > The app store manifest (`store/apps.json`), store product data, meal data, and app source code during installation are all loaded via `fetch()`. The `file://` protocol is blocked by browser CORS policy, leaving the store empty and apps uninstallable. 
+
 Use any local HTTP server instead:
 
 ```bash

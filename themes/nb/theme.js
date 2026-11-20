@@ -39,17 +39,20 @@ WujiTheme.define({
         radial-gradient(circle at 32% 36%, #000 0 5.5%, transparent 6%),
         radial-gradient(circle at 68% 36%, #000 0 5.5%, transparent 6%);
     }
-    /* 笑嘴：椭圆实心，只露出下半 → 一个大大的笑脸弧 */
-    .smiley::after {
-      content: ''; position: absolute;
-      left: 23%; top: 52%; width: 54%; height: 26%;
-      /* 闭嘴大笑：只保留底边，粗圆弧 → 一条夸张的上扬笑月牙（不张嘴） */
-      border: solid #000;
-      border-width: 0 0 3.6vmin 0;
-      border-radius: 0 0 50% 50% / 0 0 100% 100%;
-    }
+.smiley::after {
+  content: '';
+  position: absolute;
+  left: 8%;
+  top: 45%;
+  width: 84%;
+  height: 55%;
 
-    /* 底部大标语：随 --p 过半淡入上浮（纯 CSS calc，无 JS 逐帧） */
+  background: #000;
+
+  -webkit-mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 50' preserveAspectRatio='none'><path d='M0,0 Q50,58 100,0' fill='none' stroke='black' stroke-width='4' stroke-linecap='round'/></svg>");
+  mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 50' preserveAspectRatio='none'><path d='M0,0 Q50,58 100,0' fill='none' stroke='black' stroke-width='4' stroke-linecap='round'/></svg>");
+}
+
     .slogan {
       position: absolute; left: 0; right: 0; bottom: 8%;
       text-align: center;
@@ -71,7 +74,6 @@ WujiTheme.define({
       </div>
     `;
     const stage = root.querySelector('.stage');
-    // 只写一个 CSS 变量，位置/缩放/淡入全部由 CSS calc 计算 → 无逐帧 JS 布局。
     const off = ctx.onStateChange(s => {
       const p = Math.max(0, Math.min(1, typeof s.unlockProgress === 'number' ? s.unlockProgress : 0));
       stage.style.setProperty('--p', p.toFixed(3));
