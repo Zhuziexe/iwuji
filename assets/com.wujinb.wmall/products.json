@@ -18,7 +18,7 @@
           "id": "white",
           "text": "牛逼白",
           "image": "./assets/com.wujinb.wmall/iwuji_white.png",
-          "buyable": false
+          "buyable": true
         },
         {
           "id": "black",
@@ -61,7 +61,7 @@
           "id": "red",
           "text": "牛逼红",
           "image": "./assets/com.wujinb.wmall/iwuji_neo_red.png",
-          "buyable": true
+          "buyable": false
         },
         {
           "id": "white",
@@ -108,13 +108,13 @@
           "id": "sky",
           "text": "天空蓝",
           "image": "./assets/com.wujinb.wmall/wujibuds_sky.png",
-          "buyable": true
+          "buyable": false
         },
         {
           "id": "blue",
           "text": "牛逼蓝",
           "image": "./assets/com.wujinb.wmall/wujibuds_blue.png",
-          "buyable": false
+          "buyable": true
         }
       ]
     },
@@ -140,7 +140,7 @@
       "name": "iWuji Neo透明保护壳",
       "shop": "iWuji官方旗舰店",
       "price": 39,
-      "buyable": true
+      "buyable": false
     },
     {
       "id": "iwuji_glass",
@@ -156,7 +156,7 @@
       "name": "iWuji Neo钢化膜",
       "shop": "iWuji官方旗舰店",
       "price": 29,
-      "buyable": false
+      "buyable": true
     },
     {
       "id": "nb_baohuke",
@@ -164,7 +164,7 @@
       "name": "牛逼素皮保护壳",
       "shop": "iWuji官方旗舰店",
       "price": 109,
-      "buyable": false
+      "buyable": true
     },
     {
       "id": "nb_sticker",
