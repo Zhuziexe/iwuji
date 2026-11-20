@@ -165,6 +165,32 @@
       "shop": "iWuji官方旗舰店",
       "price": 109,
       "buyable": false
+    },
+    {
+      "id": "nb_sticker",
+      "icon": "./assets/com.wujinb.wmall/nb_sticker.png",
+      "name": "吴际牛逼贴纸",
+      "shop": "吴际玩具官方旗舰店",
+      "price": 12,
+      "buyable": true
+    },
+    {
+      "id": "nb_sticker_big",
+      "icon": "./assets/com.wujinb.wmall/nb_sticker_big.png",
+      "name": "吴际牛逼贴纸大号",
+      "shop": "吴际玩具官方旗舰店",
+      "badge": "新品",
+      "price": 12,
+      "buyable": true
+    },
+    {
+      "id": "nb_ball",
+      "icon": "./assets/com.wujinb.wmall/nb_ball.png",
+      "name": "吴际牛逼笑脸(玩具)",
+      "shop": "吴际玩具官方旗舰店",
+      "badge": "新品",
+      "price": 14,
+      "buyable": true
     }
   ]
 }
