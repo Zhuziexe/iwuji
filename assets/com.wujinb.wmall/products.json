@@ -12,13 +12,13 @@
           "id": "blue",
           "text": "牛逼蓝",
           "image": "./assets/com.wujinb.wmall/iwuji_blue.png",
-          "buyable": true
+          "buyable": false
         },
         {
           "id": "white",
           "text": "牛逼白",
           "image": "./assets/com.wujinb.wmall/iwuji_white.png",
-          "buyable": true
+          "buyable": false
         },
         {
           "id": "black",
@@ -73,7 +73,7 @@
           "id": "purple",
           "text": "牛逼紫",
           "image": "./assets/com.wujinb.wmall/iwuji_neo_purple.png",
-          "buyable": false
+          "buyable": true
         }
       ],
       "specs": [
@@ -108,7 +108,7 @@
           "id": "sky",
           "text": "天空蓝",
           "image": "./assets/com.wujinb.wmall/wujibuds_sky.png",
-          "buyable": false
+          "buyable": true
         },
         {
           "id": "blue",
@@ -140,7 +140,7 @@
       "name": "iWuji Neo透明保护壳",
       "shop": "iWuji官方旗舰店",
       "price": 39,
-      "buyable": false
+      "buyable": true
     },
     {
       "id": "iwuji_glass",
@@ -181,7 +181,7 @@
       "shop": "吴际玩具官方旗舰店",
       "badge": "新品",
       "price": 12,
-      "buyable": true
+      "buyable": false
     },
     {
       "id": "nb_ball",
@@ -190,7 +190,7 @@
       "shop": "吴际玩具官方旗舰店",
       "badge": "新品",
       "price": 14,
-      "buyable": true
+      "buyable": false
     }
   ]
 }
