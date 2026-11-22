@@ -12,7 +12,7 @@
           "id": "blue",
           "text": "牛逼蓝",
           "image": "./assets/com.wujinb.wmall/iwuji_blue.png",
-          "buyable": false
+          "buyable": true
         },
         {
           "id": "white",
@@ -24,7 +24,7 @@
           "id": "black",
           "text": "牛逼黑",
           "image": "./assets/com.wujinb.wmall/iwuji_black.png",
-          "buyable": false
+          "buyable": true
         }
       ],
       "specs": [
@@ -156,7 +156,7 @@
       "name": "iWuji Neo钢化膜",
       "shop": "iWuji官方旗舰店",
       "price": 29,
-      "buyable": true
+      "buyable": false
     },
     {
       "id": "nb_baohuke",
@@ -181,7 +181,7 @@
       "shop": "吴际玩具官方旗舰店",
       "badge": "新品",
       "price": 12,
-      "buyable": false
+      "buyable": true
     },
     {
       "id": "nb_ball",
@@ -190,7 +190,7 @@
       "shop": "吴际玩具官方旗舰店",
       "badge": "新品",
       "price": 14,
-      "buyable": false
+      "buyable": true
     }
   ]
 }
