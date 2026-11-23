@@ -214,6 +214,20 @@
     name: '天气',
     icon: './assets/weather.svg',
     initialRoute: 'home',
+    version: '1.1.5',
+
+    /* ★ 生命周期：后台时清理定时器，被杀时清空全局缓存 */
+    background() {
+      if (cooldownTimer)    { clearInterval(cooldownTimer);    cooldownTimer = null; }
+      if (autoRefreshTimer) { clearTimeout(autoRefreshTimer);  autoRefreshTimer = null; }
+      loading = false;
+    },
+    onShutdown() {
+      if (cooldownTimer)    { clearInterval(cooldownTimer);    cooldownTimer = null; }
+      if (autoRefreshTimer) { clearTimeout(autoRefreshTimer);  autoRefreshTimer = null; }
+      weatherData = null;
+      loading = false;
+    },
 
     styles: `
       .weather-page {

@@ -1,0 +1,275 @@
+/* =========================================================
+   styles/wuji-edge.css
+   边缘侧滑吸附手柄 + 多任务界面样式
+   ========================================================= */
+
+/* ---------------- 边缘吸附手柄 ----------------
+   形状是一整条平滑曲线（像机子边框被向外拉弯）：
+   上下两端贴边、中段外凸，无折角、无胶囊突块。 */
+.wj-edge-handle {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 36px;
+  height: 120px;
+  color: #f4f5f7;
+  z-index: 560;               /* 低于面板(599/600)，高于普通 view */
+  pointer-events: none;
+  opacity: 0;
+  /* 从边缘沿 X 缩放展开：左侧 transform-origin 在左边 */
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform .18s cubic-bezier(.22,.61,.36,1), opacity .16s ease;
+  will-change: transform, top;
+}
+.wj-edge-handle.is-show {
+  opacity: 1;
+  transform: scaleX(1);
+}
+.wj-edge-handle[data-side="right"] {
+  left: auto;
+  right: 0;
+  transform-origin: right center;
+}
+.wj-edge-handle.no-anim { transition: none !important; }
+
+/* 曲线本体：灰色填充 */
+.wj-edge-handle__curve {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.wj-edge-handle__curve-path {
+  fill: rgba(120, 124, 132, .9);
+}
+
+/* 图标落在曲线凸出区内、左右镜像对称：
+   左曲线中段填充区 x∈[0,~23] → 图标中心 x=11；
+   右曲线中段填充区 x∈[~13,36] → 图标中心 x=25（即距右 11），完全镜像。 */
+.wj-edge-handle__icon {
+  position: absolute;
+  top: 50%;
+  left: 11px;
+  transform: translate(-50%, -50%);
+  width: 14px;
+  height: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.wj-edge-handle[data-side="right"] .wj-edge-handle__icon {
+  left: 25px;
+  right: auto;
+}
+.wj-edge-handle__icon svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* ---------------- 多任务层 ---------------- */
+.wj-multitask {
+  position: absolute;
+  inset: 0;
+  z-index: 40;                /* 高于 app(10)/home(1)，低于 panel(599)/screen-off(1000) */
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  background: transparent;    /* 露出壁纸 */
+  overflow: hidden;
+  touch-action: none;
+}
+.wj-multitask.is-open {
+  visibility: visible;
+  pointer-events: auto;
+}
+
+.wj-mt-canvas {
+  position: absolute;
+  inset: 0 0 70px 0;
+  overflow: hidden;
+}
+.wj-mt-track {
+  position: absolute;
+  inset: 0;
+  will-change: transform;
+}
+
+/* 需求7：无应用提示 */
+.wj-mt-empty {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, .45);
+  pointer-events: none;
+}
+.wj-mt-empty[hidden] { display: none !important; }
+
+/* 需求5：应用是一个透明容器，上图标+文字，下面是整张白色圆角卡片 */
+.wj-mt-card {
+  position: absolute;
+  top: 50%;   /* 与 cardY() 的 -totalH/2 配合实现垂直居中 */
+  left: 0;
+  width: 60%;
+  max-width: 340px;
+  /* 高度由内部 panel 的 aspect-ratio 撑开，整体透明 */
+  background: transparent;
+  box-shadow: none;
+  transform-origin: center center;
+  will-change: transform, opacity;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.wj-mt-card__head {
+  height: 50px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 4px;
+  margin-bottom: 8px;
+  color: #fff;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, .3);
+}
+.wj-mt-card__icon {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;          /* 小图标圆角 */
+  overflow: hidden;
+  flex: 0 0 auto;
+  background: rgba(255, 255, 255, .28);
+}
+.wj-mt-card__icon img { border-radius: inherit; }
+.wj-mt-card__name {
+  font-size: 20px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.wj-mt-card__body {
+  width: 100%;
+}
+/* 卡片本体：白色圆角矩形 3:4 */
+.wj-mt-card__panel {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  background: #fff;
+  border-radius: 22px;
+  box-shadow: 0 16px 44px rgba(0, 0, 0, .22);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+/* 大图标：和桌面图标一样大（73px）、一样圆角（17px） */
+.wj-mt-card__panel > img,
+.wj-mt-card__panel > span {
+  width: 73px;
+  height: 73px;
+  max-width: 73px;
+  max-height: 73px;
+  object-fit: contain;
+  border-radius: 17px;
+  overflow: hidden;
+}
+
+/* 需求1：底部容器透明，按钮半透明胶囊、无图标、字大 */
+.wj-mt-bottom {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 16px;
+  height: 70px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 26px;
+  background: transparent;
+}
+.wj-mt-btn {
+  min-width: 118px;
+  height: 54px;
+  padding: 0 34px;
+  border: 0;
+  border-radius: 999px;        /* 胶囊 */
+  background: rgba(255, 255, 255, .42);
+  color: #fff;
+  font-family: var(--wj-font, system-ui, sans-serif);
+  font-size: 22px;             /* 字大一点 */
+  font-weight: 600;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, .25);
+  cursor: pointer;
+  transition: transform .12s ease, background .12s ease;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;       /* 不要模糊，性能 */
+}
+.wj-mt-btn:active {
+  transform: scale(.94);
+  background: rgba(255, 255, 255, .55);
+}
+
+/* 转场飞行层 */
+.wj-mt-snapshot {
+  position: absolute;
+  inset: 0;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 30;
+  opacity: 0;
+  pointer-events: none;
+  will-change: transform, opacity;
+}
+.wj-mt-snapshot__inner {
+  /* 与卡片/桌面图标一致，收缩全程保持 73px，避免结束时突然闪小 */
+  width: 73px;
+  height: 73px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 17px;
+  overflow: hidden;
+}
+.wj-mt-snapshot__inner img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: inherit;
+}
+.wj-mt-fly {
+  position: absolute;
+  background: #fff;
+  z-index: 35;
+  pointer-events: none;
+  overflow: hidden;
+  will-change: left, top, width, height;
+}
+.wj-mt-fly__icon {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  border-radius: 17px;
+  transition: opacity .2s ease;
+}
+.wj-mt-fly__icon img,
+.wj-mt-fly__icon span {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: inherit;
+}

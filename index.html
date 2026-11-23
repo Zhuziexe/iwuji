@@ -364,11 +364,19 @@
       touch-action: none;
     }
 
+    /* 热区只向机身外侧扩展，不往屏幕边框内侧扩展，避免触摸边框误触 */
     .hw-key::before {
       content: "";
       position: absolute;
-      inset: -8px -12px;
+      top: -8px;
+      bottom: -8px;
+      left: 0;
+      right: -16px;
       border-radius: inherit;
+    }
+    .hw-rail--left .hw-key::before {
+      left: -16px;
+      right: 0;
     }
 
     .hw-key:hover {

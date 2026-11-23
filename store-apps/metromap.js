@@ -27,7 +27,7 @@
     name: '地铁图',
     icon: './assets/metromap.svg',
     initialRoute: 'home',
-    version: '1.0.6',
+    version: '1.0.7',
     styles: `
       .mm-page {
         position: absolute;
@@ -294,7 +294,6 @@
 
       map: {
         name: 'map',
-        disableBackGesture: true,
 
         render(routeCtx) {
           const city =

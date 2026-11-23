@@ -118,10 +118,13 @@ window.WujiApps = (() => {
       styles: app.styles || '',
       onBoot: app.onBoot || null,
       onShutdown: app.onShutdown || null,
+      foreground: app.foreground || null,
+      background: app.background || null,
       _src: app.src || app._src || '',
       _metaOnly: false,
       fileTypes: Array.isArray(app.fileTypes) ? app.fileTypes.slice() : null,
       hidden: !!app.hidden,
+      disablebackgesture: !!app.disablebackgesture,
     };
 
     /* 统一输出 devices（兼容入参里残留的旧 platforms） */

@@ -421,6 +421,12 @@
       top: 24%;
     }
 
+    .hw-rail--left {
+      right: 100%;
+      margin-right: 3px;
+      top: 22%;
+    }
+
     .hw-key {
       position: relative;
       width: var(--key-w);
@@ -438,11 +444,19 @@
       touch-action: none;
     }
 
+    /* 热区只向机身外侧扩展，避免触摸边框误触 */
     .hw-key::before {
       content: "";
       position: absolute;
-      inset: -8px -12px;
+      top: -8px;
+      bottom: -8px;
+      left: 0;
+      right: -16px;
       border-radius: inherit;
+    }
+    .hw-rail--left .hw-key::before {
+      left: -16px;
+      right: 0;
     }
 
     .hw-key:hover {
@@ -460,6 +474,9 @@
     .hw-key--vol-up,
     .hw-key--vol-down {
       height: 58px;
+    }
+    .hw-key--power {
+      height: 72px;
     }
 
     /* ============ 全屏 ============ */
@@ -567,14 +584,20 @@
         </div>
 
         <div class="home-area">
-          <button class="home-key" id="homeKey" type="button" aria-label="Home 键" title="短按息屏/亮屏 · 长按弹出菜单"></button>
+          <button class="home-key" id="homeKey" type="button" aria-label="Home 键" title="短按回桌面 · 长按进入多任务"></button>
         </div>
 
       </div>
 
-      <div class="hw-rail hw-rail--right">
+      <!-- ★ 音量键移到左侧，右侧改为开关机键 -->
+      <div class="hw-rail hw-rail--left">
         <button class="hw-key hw-key--vol-up" id="volUpKey" type="button" aria-label="音量加"></button>
         <button class="hw-key hw-key--vol-down" id="volDownKey" type="button" aria-label="音量减"></button>
+      </div>
+
+      <div class="hw-rail hw-rail--right">
+        <button class="hw-key hw-key--power" id="powerKey" type="button" aria-label="电源键"
+          title="短按息屏/亮屏 · 长按弹出菜单"></button>
       </div>
     </div>
   </main>
@@ -601,6 +624,7 @@
     const clearDataBtn = document.getElementById('clearDataBtn');
 
     const homeKey = document.getElementById('homeKey');
+    const powerKey = document.getElementById('powerKey');
     const volUpKey = document.getElementById('volUpKey');
     const volDownKey = document.getElementById('volDownKey');
 
@@ -811,9 +835,9 @@
     updateWakeBtn();
 
     /* =========================================================
-       Home 键：短按 / 长按（与原来的电源键行为一致）
+       短按 / 长按两用键：电源键用 power-short/long，Home 键用 home/home-long
        ========================================================= */
-    function bindPowerKey(el) {
+    function bindDualKey(el, shortAction, longAction) {
       let pressStartAt = 0;
       let longPressTimer = null;
       let longPressed = false;
@@ -827,7 +851,7 @@
         longPressTimer = setTimeout(() => {
           longPressed = true;
           if (navigator.vibrate) { try { navigator.vibrate(18); } catch { } }
-          sendToOS('hw:power-long');
+          sendToOS(longAction);
         }, LONG_PRESS_MS);
       });
 
@@ -835,7 +859,7 @@
         clearTimeout(longPressTimer);
         const d = Date.now() - pressStartAt;
         if (!longPressed && d < LONG_PRESS_MS) {
-          sendToOS('hw:power-short');
+          sendToOS(shortAction);
         }
         longPressed = false;
       });
@@ -846,7 +870,9 @@
       });
     }
 
-    bindPowerKey(homeKey);
+    /* Home 键：短按回桌面，长按进多任务；右侧电源键：短按息屏/长按菜单 */
+    bindDualKey(homeKey, 'hw:home', 'hw:home-long');
+    bindDualKey(powerKey, 'hw:power-short', 'hw:power-long');
 
     /* =========================================================
        音量键：按下 / 松开

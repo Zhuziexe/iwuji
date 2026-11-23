@@ -68,7 +68,13 @@
     name: '备忘录',
     icon: './assets/note.svg',
     initialRoute: 'home',
-    version: '1.1.7',
+    version: '1.1.8',
+    /* ★ 生命周期：被杀时释放缓存（后台保留以便快速恢复） */
+    onShutdown() {
+      notesCache = [];
+      notesLoaded = false;
+      loadingPromise = null;
+    },
     styles: `
       /* ==================== 主页 ==================== */
       .note-page {

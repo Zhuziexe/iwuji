@@ -538,7 +538,28 @@
     name: '吴际财富',
     icon: './assets/stock.svg',
     initialRoute: 'home',
-    version: '1.1.7',
+    version: '1.1.8',
+
+    /* ★ 生命周期：后台停掉行情轮询，被杀清空缓存 */
+    foreground() {
+      if (listeners.size > 0 && !pollTimer) {
+        pollTimer = setInterval(tick, POLL_INTERVAL);
+        tick();
+      }
+    },
+    background() {
+      // 后台停轮询省电；listeners 保留，回到前台 mount 会重新拉起
+      if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
+      polling = false;
+    },
+    onShutdown() {
+      if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
+      polling = false;
+      activeViews = 0;
+      listeners.clear();
+      quoteCache.clear();
+      historyCache.clear();
+    },
 
     styles: `
       .stk-page {

@@ -1,31 +1,28 @@
 window.WujiNavigation = class WujiNavigation {
-  constructor({ host, routes, onChange, backGesture = true } = {}) {
+  constructor({ host, routes, onChange } = {}) {
     this.host = host;
     this.routes = routes || {};
     this._listeners = new Set();
     if (typeof onChange === 'function') this._listeners.add(onChange);
     this.stack = [];
     this._dragActive = false;
-
-    this.backGesture = backGesture !== false;
   }
 
   get depth() { return this.stack.length; }
   get current() { return this.stack[this.stack.length - 1] || null; }
 
-  isGestureBlocked() {
-    const cur = this.current;
-    if (!cur) return false;
-    if (cur.route && cur.route.disableBackGesture) return true;
-    if (cur.element && cur.element.dataset &&
-      cur.element.dataset.blockBackGesture === '1') return true;
-    return false;
-  }
+  /* ★ 应用不再动态设置是否允许返回手势；侧滑返回不与中间横滑冲突。
+     仅通过全局 disablebackgesture（3D 游戏类）在宿主侧整体关闭。
+     页面级 dataset.blockBackGesture 仅用于控制输入法/浮层，不拦截侧滑。 */
+  isGestureBlocked() { return false; }
 
   onChange(fn) {
     this._listeners.add(fn);
     return () => this._listeners.delete(fn);
   }
+
+  /** 公开：恢复前台/切 view 后，按当前 route 重新同步状态栏声明 */
+  syncStatusBar() { this._syncStatusBar(); }
 
   _emitChange() {
     this._syncStatusBar();
@@ -46,6 +43,9 @@ window.WujiNavigation = class WujiNavigation {
     const osEl = document.getElementById('os');
     if (!osEl) return;
     const item = this.current;
+    /* ★ 没有活动页面（栈被 destroy 清空）且当前不在应用页时，不要改状态栏，
+       否则杀后台时 nav.destroy() 会把多任务/桌面的白色状态栏改成默认黑字。 */
+    if (!item && osEl.dataset.view !== 'app') return;
     const cfg = (item && item.route && item.route.statusBar) || null;
     let mode = 'dark-gradient';
     if (cfg && typeof cfg === 'object') {

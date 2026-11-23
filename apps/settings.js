@@ -1342,7 +1342,7 @@
 
               <div class="settings-about-card">
                 <div class="settings-about-card__title">WujiOS</div>
-                <div class="settings-about-card__version">1.0.117</div>
+                <div class="settings-about-card__version">1.1.101</div>
                 <div class="settings-about-card__btn" id="checkUpdateBtn">检查更新</div>
               </div>
 
@@ -1357,7 +1357,7 @@
                 </div>
                 <div class="settings-row settings-row--tap" id="aboutVersionRow">
                   <span>WujiOS版本</span>
-                  <span class="settings-row__value">1.0.117</span>
+                  <span class="settings-row__value">1.1.101</span>
                 </div>
                 <div class="settings-row">
                   <span>OpenWuji版本</span>

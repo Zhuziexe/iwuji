@@ -38,7 +38,7 @@
     name: '相机',
     icon: './assets/camera.svg',
     initialRoute: 'home',
-    version: '1.0.0',
+    version: '1.0.1',
 
     styles: `
       .cam-page {
@@ -369,13 +369,31 @@
 
           init();
 
-          return () => {
-            disposed = true;
+          /* ★ 后台时停掉摄像头采集（省电 + 隐私），回前台再重新采集。
+             不用 onShutdown，因为后台不卸载；用系统广播的事件。 */
+          function stopStream() {
             if (stream) {
               stream.getTracks().forEach(t => t.stop());
               stream = null;
             }
             try { videoEl.srcObject = null; } catch { }
+          }
+          function onBg(e) {
+            if (e?.detail?.bundle !== BUNDLE) return;
+            stopStream();
+          }
+          function onFg(e) {
+            if (e?.detail?.bundle !== BUNDLE) return;
+            if (!disposed && !stream) init();
+          }
+          window.addEventListener('wuji:app-background', onBg);
+          window.addEventListener('wuji:app-foreground', onFg);
+
+          return () => {
+            disposed = true;
+            window.removeEventListener('wuji:app-background', onBg);
+            window.removeEventListener('wuji:app-foreground', onFg);
+            stopStream();
           };
         },
       },

@@ -66,8 +66,9 @@
     name: '吴际MC',
     icon: './assets/mc.svg',
     initialRoute: 'main',
-    version: '1.4.7',
+    version: '1.4.8',
     devices: ['iwuji'],
+    disablebackgesture: true,  // 3D 游戏：全局禁用侧滑返回
     styles: `
       .mc-wrap { position: absolute; inset: 0; background: #000; overflow: hidden; }
       .mc-stage {
@@ -398,9 +399,6 @@
           const mcInvBackdrop = root.querySelector('#mcInvBackdrop');
           const invGrid = root.querySelector('#mcInvGrid');
 
-          const routeEl = ctx.nav?.current?.element;
-          if (routeEl) routeEl.dataset.blockBackGesture = '1';
-
           const db = AppStorage.for(BUNDLE);
 
           (async () => {
@@ -601,7 +599,6 @@
           return () => {
             disposed = true;
             if (closeTimer) clearTimeout(closeTimer);
-            if (routeEl) delete routeEl.dataset.blockBackGesture;
             if (game) { try { game.destroy(); } catch { } }
           };
         },

@@ -307,7 +307,7 @@
     name: '牛奶地图',
     icon: './assets/map.svg',
     initialRoute: 'home',
-    version: '1.0.8',
+    version: '1.0.9',
 
     styles: `
       .map-page {
@@ -575,7 +575,6 @@
     routes: {
       home: {
         name: 'home',
-        disableBackGesture: true,  // 地图需要横向拖拽平移，禁用系统返回手势避免冲突
 
         render() {
           return `

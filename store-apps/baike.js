@@ -54,7 +54,7 @@
     name: '牛奶百科',
     icon: ICON_URL,
     initialRoute: 'home',
-    version: '1.0.9',
+    version: '1.1.0',
 
     styles: `
       .bk-page {
@@ -1000,7 +1000,6 @@
               v.removeAttribute('src');
               v.load();
             } catch { }
-            delete root.dataset.blockBackGesture;
           };
         },
       },
@@ -1044,7 +1043,6 @@
       dragging = false;
       const pid = activePid;
       activePid = null;
-      if (root) delete root.dataset.blockBackGesture;
       onDragEnd?.();
       try { progress.releasePointerCapture(pid); } catch { }
     }
@@ -1055,7 +1053,6 @@
       if (activePid !== null) return;
       activePid = e.pointerId;
       dragging = true;
-      if (root) root.dataset.blockBackGesture = '1';
       onDragStart?.();
       try { progress.setPointerCapture(e.pointerId); } catch { }
       seekTo(e.clientX, e.clientY);

@@ -10,6 +10,7 @@
   <link rel="stylesheet" href="styles/tokens.css">
   <link rel="stylesheet" href="styles/components.css">
   <link rel="stylesheet" href="styles/os.css">
+  <link rel="stylesheet" href="styles/wuji-edge.css">
   <script>window.__OPENWUJI_PLATFORM = 'wujios';</script>
   <script src="https://unpkg.com/js-md5@0.9.2/build/md5.min.js"></script>
 </head>
@@ -109,6 +110,8 @@
       <div class="app-screen-frozen" id="appScreenFrozen" hidden></div>
       <div class="app-screen" id="appScreen"></div>
     </div>
+
+    <!-- ============ 多任务（由 wuji-multitask.js 注入 #os） ============ -->
 
 
     <!-- ============ PanelSystem ============ -->
@@ -226,6 +229,9 @@
   </div>
 
   <script src="navigation.js"></script>
+  <script src="wuji-life.js"></script>
+  <script src="wuji-edge-gesture.js"></script>
+  <script src="wuji-multitask.js"></script>
   <script src="device-compat.js"></script>
   <script src="core.js"></script>
   <script src="app-storage.js"></script>
@@ -318,7 +324,8 @@
       view: 'locked',
       currentBundle: null,
       currentParams: null,
-      frozenState: null,
+      frozenState: null,        // 兼容旧路径
+      backgroundApps: [],       // 后台应用栈：[{bundle, params, hostEl, nav, backHandler, meta}]
       power: 'off',
       viewBeforeLock: 'home',
       screenOff: false,
@@ -334,9 +341,15 @@
       S.view = v;
       osEl.dataset.view = v;
 
-      /* 桌面/锁屏（无活动应用导航）：深色遮罩 + 白字（light-gradient 档）。
+      /* ★ 回到桌面时，清除进入多任务时加的内联淡出，确保桌面图标一定可见 */
+      if (v === 'home') {
+        homeView.style.transition = '';
+        homeView.style.removeProperty('opacity');
+      }
+
+      /* 桌面/锁屏/多任务（无活动应用导航）：白字（light-gradient 档）。
          应用内由 WujiNavigation._syncStatusBar 按 route.statusBar 声明接管（默认 dark-gradient）。 */
-      if ((v === 'home' || v === 'locked') && !currentNav) {
+      if ((v === 'home' || v === 'locked' || v === 'multitask') && !currentNav) {
         osEl.dataset.statusbar = 'light-gradient';
       }
 
@@ -605,6 +618,14 @@
         if (DesktopDrag.state === 'dragging') return;
         if (window.WujiDialog?.isOpen) return;
         if (e.pointerType === 'mouse' && e.button !== 0) return;
+        // ★ 边缘侧滑手势激活时，桌面不处理横滑切页
+        if (window.WujiEdgeGestureInstance?.active) return;
+        /* ★ pointerdown 早于 touchstart：此时 edge 还没 active。
+           直接按「起点是否在左右边缘激活区」排除，避免桌面横滑与侧滑同时触发。 */
+        const vpRect = desktopViewportEl.getBoundingClientRect();
+        const EDGE = window.WujiEdgeGesture?.EDGE_W || 28;
+        if ((e.clientX - vpRect.left) <= EDGE ||
+            (vpRect.right - e.clientX) <= EDGE) return;
 
         pointerState = {
           startX: e.clientX,
@@ -1621,67 +1642,141 @@
       });
     }
     const appScreenFrozen = document.getElementById('appScreenFrozen');
-    function freezeCurrentApp() {
-      if (!S.currentBundle) return;
 
-      if (S.frozenState) destroyFrozenApp();
+    /* =========================================================
+       后台应用管理（替代旧 app-frozen）
+       - 应用退到后台：保留真实 DOM/导航，移到独立隐藏容器，不 unmount
+       - foreground/background：通知应用与生命周期状态系统
+       - zhuzios（电脑/窗口化）不走后台：直接 dispose
+       ========================================================= */
+    const IS_PC = () => (window.WujiDevices?.currentDevice?.() === 'pc') ||
+      window.__OPENWUJI_PLATFORM === 'zhuzios';
 
+    function notifyForeground(bundle) {
+      try { window.WujiLife?.foreground?.(bundle); } catch { }
+      const app = WujiApps.get(bundle);
+      try { app?.foreground?.(); } catch (e) { console.error('[foreground]', bundle, e); }
+      window.dispatchEvent(new CustomEvent('wuji:app-foreground', { detail: { bundle } }));
+    }
+    function notifyBackground(bundle) {
+      try { window.WujiLife?.background?.(bundle); } catch { }
+      const app = WujiApps.get(bundle);
+      try { app?.background?.(); } catch (e) { console.error('[background]', bundle, e); }
+      window.dispatchEvent(new CustomEvent('wuji:app-background', { detail: { bundle } }));
+    }
+
+    function findBackground(bundle) {
+      return S.backgroundApps.find(e => e.bundle === bundle) || null;
+    }
+
+    /* 把当前前台应用移到后台（保留 DOM 与导航）；返回 entry 或 null */
+    function backgroundCurrentApp() {
+      const bundle = S.currentBundle;
+      if (!bundle) return null;
+
+      // zhuzios 窗口化系统无需后台：直接销毁
+      if (IS_PC()) {
+        disposeCurrentApp();
+        return null;
+      }
+
+      // 重复进入后台：先清旧的同 bundle 后台
+      const dup = findBackground(bundle);
+      if (dup) killBackground(bundle);
+
+      /* ★ 媒体后台策略：进入后台一律暂停 audio/video（性能优先，不留后台播放）。
+         恢复前台不自动 resume —— 由用户/应用自行决定，避免状态错乱。 */
       appScreen.querySelectorAll('audio, video').forEach(el => {
         try { el.pause(); } catch { }
       });
 
-      appScreenFrozen.innerHTML = '';
-      while (appScreen.firstChild) {
-        appScreenFrozen.appendChild(appScreen.firstChild);
-      }
+      // 应用页面 DOM 容器（保留引用，不销毁）
+      const host = document.createElement('div');
+      host.className = 'wj-bg-host';
+      host.style.cssText = 'position:absolute;inset:0;overflow:hidden;visibility:hidden;pointer-events:none;';
+      while (appScreen.firstChild) host.appendChild(appScreen.firstChild);
+      appScreenFrozen.appendChild(host);
       appScreenFrozen.hidden = false;
 
-      S.frozenState = {
-        bundle: S.currentBundle,
+      const entry = {
+        bundle,
         params: S.currentParams,
+        hostEl: host,
         nav: currentNav,
         backHandler: currentBackHandler,
       };
+      S.backgroundApps.push(entry);
+
+      notifyBackground(bundle);
 
       S.currentBundle = null;
       S.currentParams = null;
       currentNav = null;
       currentBackHandler = null;
+      return entry;
     }
 
-    function destroyFrozenApp() {
-      if (!S.frozenState) return;
-      try { S.frozenState.nav?.destroy(); } catch { }
-      appScreenFrozen.innerHTML = '';
-      appScreenFrozen.hidden = true;
-      S.frozenState = null;
+    /* 彻底杀死一个后台应用：destroy 导航/DOM + 生命周期全局变量 + 页面变量 */
+    function killBackground(bundle) {
+      const i = S.backgroundApps.findIndex(e => e.bundle === bundle);
+      if (i < 0) return false;
+      const entry = S.backgroundApps.splice(i, 1)[0];
+      try { entry.nav?.destroy?.(); } catch (e) { console.error('[killBackground nav]', e); }
+      try { entry.hostEl?.remove?.(); } catch { }
+      try { window.WujiDialog?.closeByBundle?.(bundle); } catch { }
+      try { WujiApps.shutdownOne?.(bundle); } catch { }
+      try { window.WujiLife?.kill?.(bundle); } catch { }
+      if (!S.backgroundApps.length) appScreenFrozen.hidden = true;
+      window.dispatchEvent(new CustomEvent('wuji:app-killed', { detail: { bundle } }));
+      return true;
     }
 
-    function restoreFrozenApp() {
-      if (!S.frozenState) return false;
+    function killAllBackground() {
+      const bundles = S.backgroundApps.map(e => e.bundle);
+      bundles.forEach(b => killBackground(b));
+    }
 
-      /* 清空当前 appScreen（新应用的 DOM） */
+    /* 把某后台应用切回前台（多任务点击卡片） */
+    function foregroundBackground(bundle) {
+      const i = S.backgroundApps.findIndex(e => e.bundle === bundle);
+      if (i < 0) return false;
+      const entry = S.backgroundApps.splice(i, 1)[0];
       appScreen.innerHTML = '';
       appScreen.style.transition = 'none';
       appScreen.style.transform = '';
       appScreen.style.opacity = '';
+      while (entry.hostEl.firstChild) appScreen.appendChild(entry.hostEl.firstChild);
+      entry.hostEl.remove();
+      if (!S.backgroundApps.length) appScreenFrozen.hidden = true;
 
-      /* 把冻结的内容搬回 appScreen */
-      while (appScreenFrozen.firstChild) {
-        appScreen.appendChild(appScreenFrozen.firstChild);
-      }
-      appScreenFrozen.hidden = true;
-
-      /* 恢复状态 */
-      S.currentBundle = S.frozenState.bundle;
-      S.currentParams = S.frozenState.params;
-      currentNav = S.frozenState.nav;
-      currentBackHandler = S.frozenState.backHandler;
-      S.frozenState = null;
-
+      S.currentBundle = entry.bundle;
+      S.currentParams = entry.params;
+      currentNav = entry.nav;
+      currentBackHandler = entry.backHandler;
+      notifyForeground(bundle);
+      setView('app');
+      // ★ 恢复该应用顶层页面声明的状态栏颜色
+      try { currentNav?.syncStatusBar?.(); } catch { }
       return true;
     }
+
+    /* 兼容旧路径：freezeCurrentApp 现在等同 backgroundCurrentApp */
+    function freezeCurrentApp() { return backgroundCurrentApp(); }
+    function destroyFrozenApp() { killAllBackground(); }
+    function restoreFrozenApp() {
+      // 旧 goBackApp 用 frozenState；后台栈以最新后台为目标
+      const last = S.backgroundApps[S.backgroundApps.length - 1];
+      return last ? foregroundBackground(last.bundle) : false;
+    }
     async function openApp(bundle, sourceEl, params, animType) {
+      /* ★ 任何路径打开应用（含通知中心点击）都要先清掉多任务界面，避免残留；
+         并恢复桌面 opacity，保证随后回桌面时图标可见。 */
+      if (window.WujiMultitaskInstance?.isOpen) {
+        try { window.WujiMultitaskInstance.hide(); } catch { }
+        try { window.PanelSystem?.close?.(); } catch { }
+        homeView.style.transition = '';
+        homeView.style.removeProperty('opacity');
+      }
       let app = WujiApps.get(bundle);
       if (!app) {
         const rec = window.WujiAppInstaller?.get?.(bundle);
@@ -1775,6 +1870,15 @@
       try {
         S.currentBundle = bundle;
         currentBackHandler = null;
+
+        /* ★ 前台生命周期 + OOM：通知应用进入前台，并在后台过多时随机杀一个 */
+        notifyForeground(bundle);
+        if (!IS_PC() && window.WujiMultitaskInstance) {
+          // 后台数超阈值时随机杀死一个（前台刚启动，不会被选为后台）
+          if (S.backgroundApps.length > (window.WujiMultitask.OOM_THRESHOLD || 6)) {
+            try { window.WujiMultitaskInstance.oomKill(); } catch { }
+          }
+        }
 
         setView('app');
         appScreen.style.transition = 'none';
@@ -1962,11 +2066,16 @@
       appScreen.style.opacity = '';
 
       S.currentBundle = null;
+      S.currentParams = null;
       currentBackHandler = null;
 
       try { window.WujiDialog?.closeByBundle?.(closingBundle); } catch { }
+      if (closingBundle) {
+        try { WujiApps.shutdownOne?.(closingBundle); } catch { }
+        try { window.WujiLife?.kill?.(closingBundle); } catch { }
+      }
 
-      destroyFrozenApp();
+      // 注意：不再 killAllBackground —— 关闭前台应用不影响其它后台
       return closingBundle;
     }
 
@@ -2358,6 +2467,10 @@
     })();
 
     (function bindAppGesture() {
+      /* ★ 已被 WujiEdgeGesture（边缘侧滑）取代。
+         保留空壳避免后续代码引用出错；页面内容不再随手指横移，
+         转场固定时长、目标固定，性能更好。 */
+      return;
       let dragging = false;
       let startX = 0, startY = 0;
       let deltaX = 0;
@@ -2813,7 +2926,7 @@
         console.log(`[update] 市场应用更新完成：${ok}/${appResults.length}`);
       }
 
-      Store.set('wujios.lastbootversion', '1.0.117');
+      Store.set('wujios.lastbootversion', '1.1.101');
 
       await sleep(400);
       setPower('shuttingdown');
@@ -2832,9 +2945,9 @@
 
       if (lastVersion === null) {
         /* 首次开机：直接写版本，正常开机 */
-        Store.set('wujios.lastbootversion', '1.0.117');
-      } else if (lastVersion !== '1.0.117') {
-        /* 已有旧版本号且不是 1.0.117 → 更新 */
+        Store.set('wujios.lastbootversion', '1.1.101');
+      } else if (lastVersion !== '1.1.101') {
+        /* 已有旧版本号且不是 1.1.101 → 更新 */
         await runUpdate();
         return;
       }
@@ -3349,6 +3462,31 @@
       switch (d.action) {
         case 'hw:power-short': HardwareUI.powerShort(); break;
         case 'hw:power-long': HardwareUI.powerLong(); break;
+        /* ★ Home 键：短按回桌面，长按进多任务 */
+        case 'hw:home':
+          if (S.power !== 'running' || S.view === 'locked') break;
+          if (window.WujiMultitaskInstance?.isOpen) {
+            window.WujiMultitaskInstance.hide();
+            break;
+          }
+          if (S.view === 'app') {
+            try { window.WujiOverlay?.closeAll?.(); } catch { }
+            backgroundCurrentApp();
+            appScreen.style.transition = 'none';
+            appScreen.style.transform = '';
+            setView('home');
+            try { WujiTheme.post('app-exit', {}); } catch { }
+            notifyParent('app-close', {});
+          } else {
+            setView('home');
+          }
+          break;
+        case 'hw:home-long':
+          if (S.power !== 'running' || S.view === 'locked') break;
+          if (window.WujiEnterMultitask) {
+            window.WujiEnterMultitask(S.view === 'app' ? S.currentBundle : null);
+          }
+          break;
         case 'hw:vol-up-press': HardwareUI.volumePress(+1); break;
         case 'hw:vol-up-release': HardwareUI.volumeRelease(); break;
         case 'hw:vol-down-press': HardwareUI.volumePress(-1); break;
@@ -3368,6 +3506,221 @@
         console.warn('[restore] auto power-on failed', e);
       }
     })();
+    /* =========================================================
+       边缘侧滑手势 + 多任务 + OOMKiller 集成
+       ========================================================= */
+    (function initEdgeGestureAndMultitask() {
+      if (IS_PC()) return;   // ★ zhuzios（电脑/窗口化）不启用侧滑返回与后台
+
+      /* ---------- 多任务模块 ---------- */
+      const mt = window.WujiMultitask.create({
+        osEl,
+        getAppMeta(bundle) {
+          const app = WujiApps.get(bundle) ||
+            (window.WujiAppInstaller?.get?.(bundle));
+          return app ? { name: app.name, icon: app.icon, iconStyle: app.iconStyle } : { name: bundle };
+        },
+        getBackgroundList() {
+          return S.backgroundApps.map(e => ({
+            bundle: e.bundle,
+            params: e.params,
+            nav: e.nav,
+            backHandler: e.backHandler,
+          }));
+        },
+        getBackgroundCount() { return S.backgroundApps.length; },
+        /* 点击中间卡片：切回该应用到前台 */
+        onSwitchTo(bundle) {
+          if (!foregroundBackground(bundle)) {
+            // 后台已无该应用 → 当作新应用打开
+            openApp(bundle, null, null, 'slide-up');
+          }
+          setView('app');
+          appScreen.style.transition = 'none';
+          appScreen.style.transform = '';
+          appScreen.style.opacity = '1';
+          try { WujiTheme.post('app-enter', { bundle }); } catch { }
+          /* ★ 立刻隐藏多任务层，确保应用露出（不要等 fly 结束） */
+          try { mt.hide(); } catch { }
+        },
+        /* 桌面/清除/侧滑退出：回桌面 */
+        onGoHome({ clearAll }) {
+          if (clearAll) killAllBackground();
+          // 恢复进入多任务时淡出的桌面
+          homeView.style.transition = 'opacity .22s ease';
+          homeView.style.opacity = '1';
+          setTimeout(() => {
+            homeView.style.transition = '';
+            homeView.style.removeProperty('opacity');
+          }, 230);
+          setView('home');
+          try { WujiTheme.post('app-exit', {}); } catch { }
+          notifyParent('app-close', {});
+        },
+        /* 杀后台（卡片上滑 / OOM） */
+        onKill(bundle) {
+          killBackground(bundle);
+        },
+        notifyOOM(bundle) {
+          try { WujiToast?.show?.(`已释放后台：${WujiApps.get(bundle)?.name || bundle}`); } catch { }
+        },
+      });
+      window.WujiMultitaskInstance = mt;
+
+      /* ---------- 进入多任务 ----------
+         fromApp != null 时（从应用进入）：先在当前页面淡入白底遮罩+大图标，
+         盖住应用后把应用移到后台，再飞入中间卡片。 */
+      async function enterMultitask(fromApp) {
+        if (S.power !== 'running' || S.view === 'locked') return;
+        if (mt.isOpen) return;
+        animatingGuard = true;
+        try { window.WJ_IME?.hide?.(); } catch { }
+        try { window.PanelSystem?.close?.(); } catch { }
+
+        if (fromApp && S.view === 'app' && S.currentBundle) {
+          /* ★ 先把白底遮罩铺满盖住应用（prepareSnapshot），此时应用还在前台；
+             再把它移到后台；最后才 show() 让多任务按"已含该应用"的列表渲染卡片。
+             顺序很关键：否则 renderCards 读到的后台列表不含当前应用，只剩旧卡片。 */
+          const fromBundle = S.currentBundle;
+          mt.prepareSnapshot(fromBundle);
+          await sleep(180);                       // 白底淡入盖住应用
+          backgroundCurrentApp();                 // 盖住后才移到后台（列表立即含它）
+          appScreen.style.opacity = '';
+          appScreen.style.transition = 'none';
+          await mt.show();                        // 渲染卡片：当前应用为最后一张
+          mt.setIndex(Math.max(0, (window.WujiMultitaskInstance?.cardCount || 1) - 1));
+        } else {
+          // 桌面进入：桌面图标 fade 出，卡片 fade 入
+          homeView.style.transition = 'opacity .2s ease';
+          homeView.style.opacity = '0';
+          await mt.show();
+        }
+        setView('multitask');
+        osEl.dataset.statusbar = 'light-gradient';
+        // 阶段2：遮罩缩小飞入中间卡片
+        if (fromApp) mt.flyToCard();
+        setTimeout(() => { animatingGuard = false; }, 500);
+      }
+
+      /* ---------- 侧滑回调 ---------- */
+      let animatingGuard = false;
+
+      /* canStart：锁屏/密码、下拉面板、应用根路由禁用 等统一拦截 */
+      function canStartEdge(x, y, side) {
+        if (S.power !== 'running' || S.view === 'locked' || S.screenOff) return false;
+        if (window.WujiDialog?.isOpen) return false;
+        if (window.PanelSystem?.isOpen) return false;
+        const rect = osEl.getBoundingClientRect();
+        // 顶部 30px 是通知/控制中心下拉区，不触发侧滑
+        if (y - rect.top < 30) return false;
+
+        if (mt.isOpen || S.view === 'multitask') return true; // 多任务内始终可侧滑退出
+        if (S.view === 'app') {
+          // ★ 3D 游戏类应用通过 disablebackgesture 全局禁用侧滑返回
+          const app = S.currentBundle ? WujiApps.get(S.currentBundle) : null;
+          if (app?.disablebackgesture) return false;
+          return true;
+        }
+        // 桌面：桌面横滑切页仍有效，侧滑进入多任务
+        return true;
+      }
+
+      function modeForSide(side) {
+        // 桌面：≡（进入多任务）；应用内：< 或 >（长按变 ≡ 进入多任务）；
+        // 多任务：< 或 >（多久都是箭头，侧滑退出多任务回桌面）
+        if (S.view === 'home') return 'home';
+        return 'back';
+      }
+
+      const edge = window.WujiEdgeGesture.create({
+        host: osEl,
+        threshold: () => Math.min(75, Math.max(48, osEl.clientWidth * 0.15)),
+        canStart: canStartEdge,
+        modeForSide,
+        allowHold: side => S.view === 'app' && !mt.isOpen, // ★ 仅应用内回退图标会长按变 ≡
+        onCommit(side, mode) {
+          if (animatingGuard) return;
+          if (mode === 'home') {
+            // 三条横线 → 进入/退出多任务
+            if (mt.isOpen || S.view === 'multitask') {
+              mt.hide().then(() => {
+                // 恢复桌面（进入时被淡出）
+                homeView.style.transition = 'opacity .22s ease';
+                homeView.style.opacity = '1';
+                setTimeout(() => {
+                  homeView.style.transition = '';
+                  homeView.style.removeProperty('opacity');
+                }, 230);
+                setView('home');
+                try { WujiTheme.post('app-exit', {}); } catch { }
+              });
+            } else {
+              enterMultitask(S.view === 'app' ? S.currentBundle : null);
+            }
+          } else {
+            // "<" / ">" → 返回 / 退出应用（主页直接 unmount/后台）
+            if (mt.isOpen) {
+              mt.hide().then(() => {
+                homeView.style.transition = 'opacity .22s ease';
+                homeView.style.opacity = '1';
+                setTimeout(() => {
+                  homeView.style.transition = '';
+                  homeView.style.removeProperty('opacity');
+                }, 230);
+                setView('home');
+              });
+              return;
+            }
+            handleAppBack();
+          }
+        },
+        onCancel() { },
+      });
+      window.WujiEdgeGestureInstance = edge;
+
+      /* ---------- 应用返回处理 ----------
+         应用主页（栈深<=1）侧滑：直接退出应用并移到后台（不回上个应用）。
+         有路由栈：pop 页面（销毁页面局部变量）。 */
+      function handleAppBack() {
+        if (S.view !== 'app') return;
+        if (currentNav && currentNav.depth > 1) {
+          const item = currentNav.current;
+          if (item) {
+            try { window.WujiLife?.popPage?.(S.currentBundle, item.route?.name || String(item)); } catch { }
+          }
+          currentNav.pop();
+          return;
+        }
+        // 主页：退出应用 → 移到后台（保留 DOM/状态），回桌面
+        try { window.WujiOverlay?.closeAll?.(); } catch { }
+        if (currentBackHandler) {
+          try { if (currentBackHandler()) return; } catch { }
+        }
+        // 淡出当前应用
+        const w = appView.offsetWidth;
+        appScreen.style.transition = 'transform .26s cubic-bezier(.4,0,.6,1)';
+        appScreen.style.transform = `translateX(${sideIsRight() ? w : -w}px)`;
+        setTimeout(() => {
+          backgroundCurrentApp();
+          appScreen.style.transform = '';
+          setView('home');
+          try { WujiTheme.post('app-exit', {}); } catch { }
+          notifyParent('app-close', {});
+        }, 260);
+      }
+      function sideIsRight() { return true; } // 右侧滑出（退出统一向右）
+
+      /* ---------- 卸载应用时杀后台 ---------- */
+      window.addEventListener('wuji:app-uninstalled', e => {
+        const bundle = e?.detail?.bundle;
+        if (bundle) killBackground(bundle);
+      });
+
+      /* ---------- 对外暴露 enterMultitask 供桌面/菜单调用 ---------- */
+      window.WujiEnterMultitask = enterMultitask;
+
+    })();
+
     notifyParent('statechange', { state: S.power });
   </script>
 

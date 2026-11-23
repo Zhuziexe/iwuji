@@ -38,7 +38,7 @@
     name: '吴际沙盒',
     icon: './assets/voxel.svg',
     initialRoute: 'main',
-    version: '1.3.2',
+    version: '1.3.3',
 
     styles: `
       .vx-wrap { position: absolute; inset: 0; background: #0a1428; overflow: hidden; }
@@ -170,9 +170,6 @@
           const loading = root.querySelector('#vxLoading');
           const exitBtn = root.querySelector('#vxExit');
 
-          const routeEl = ctx.nav?.current?.element;
-          if (routeEl) routeEl.dataset.blockBackGesture = '1';
-
           let disposed = false;
           let api = null;
 
@@ -195,7 +192,6 @@
 
           return () => {
             disposed = true;
-            if (routeEl) delete routeEl.dataset.blockBackGesture;
             if (api) { try { api.destroy(); } catch {} }
           };
         },

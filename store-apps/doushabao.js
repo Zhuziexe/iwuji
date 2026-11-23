@@ -727,8 +727,12 @@
     name: '豆沙包',
     icon: './assets/doushabao.svg',
     initialRoute: 'home',
-    version: '1.2.3',
+    version: '1.2.4',
     devices: ['iwuji', 'pc'],
+
+    /* ★ 生命周期：后台/被杀时停掉 TTS 朗读 */
+    background() { stopTts(); },
+    onShutdown() { stopTts(); },
 
     styles: `
       .dsb-page {
