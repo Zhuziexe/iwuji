@@ -18,7 +18,7 @@
           "id": "white",
           "text": "牛逼白",
           "image": "./assets/com.wujinb.wmall/iwuji_white.png",
-          "buyable": true
+          "buyable": false
         },
         {
           "id": "black",
@@ -61,13 +61,13 @@
           "id": "red",
           "text": "牛逼红",
           "image": "./assets/com.wujinb.wmall/iwuji_neo_red.png",
-          "buyable": false
+          "buyable": true
         },
         {
           "id": "white",
           "text": "牛逼白",
           "image": "./assets/com.wujinb.wmall/iwuji_neo_white.png",
-          "buyable": false
+          "buyable": true
         },
         {
           "id": "purple",
@@ -108,7 +108,7 @@
           "id": "sky",
           "text": "天空蓝",
           "image": "./assets/com.wujinb.wmall/wujibuds_sky.png",
-          "buyable": true
+          "buyable": false
         },
         {
           "id": "blue",
@@ -124,7 +124,7 @@
       "name": "iWuji快充充电器",
       "shop": "iWuji官方旗舰店",
       "price": 79,
-      "buyable": false
+      "buyable": true
     },
     {
       "id": "iwuji_case",
@@ -140,7 +140,7 @@
       "name": "iWuji Neo透明保护壳",
       "shop": "iWuji官方旗舰店",
       "price": 39,
-      "buyable": true
+      "buyable": false
     },
     {
       "id": "iwuji_glass",
@@ -156,7 +156,7 @@
       "name": "iWuji Neo钢化膜",
       "shop": "iWuji官方旗舰店",
       "price": 29,
-      "buyable": true
+      "buyable": false
     },
     {
       "id": "nb_baohuke",
@@ -190,7 +190,7 @@
       "shop": "吴际玩具官方旗舰店",
       "badge": "新品",
       "price": 14,
-      "buyable": false
+      "buyable": true
     }
   ]
 }
