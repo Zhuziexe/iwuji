@@ -140,7 +140,18 @@ window.WujiNavigation = class WujiNavigation {
               el.style.opacity = '1';
             });
           });
-          setTimeout(() => { delete el.dataset.zooming; }, 400);
+          /* ★ 动画结束后彻底清掉 transform / transformOrigin / will-change：
+             残留的 transform 会留下一个合成层，在窗口 overflow:visible 的场景下
+             可能越出窗口下缘，画出一条被裁切的图片行（图库打开图片时的“小横条”）。 */
+          setTimeout(() => {
+            delete el.dataset.zooming;
+            if (el.style.transform === 'translate(0, 0) scale(1)') {
+              el.style.transition = '';
+              el.style.transform = '';
+              el.style.transformOrigin = '';
+              el.style.willChange = '';
+            }
+          }, 420);
         },
 
         exit(el, origin) {

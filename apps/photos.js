@@ -10,6 +10,9 @@
 
   const IMG_EXT = new Set(['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg']);
 
+  /* 当前挂载页面的刷新回调（foreground 钩子调用） */
+  let foregroundRefresh = null;
+
   function hasImgExt(name) {
     const dot = name.lastIndexOf('.');
     if (dot < 0) return false;
@@ -25,7 +28,13 @@
     name: '图库',
     icon: './assets/photos.svg',
     initialRoute: 'home',
-    version: '1.1.4',
+    version: '1.1.7',
+
+    /* ★ 回到前台时重新加载列表（拍照/删除后切回即最新）。
+       用函数钩子，不再依赖事件广播。 */
+    foreground() {
+      try { foregroundRefresh?.(); } catch (e) { console.error('[photos foreground]', e); }
+    },
 
     styles: `
       .ph-page {
@@ -187,11 +196,13 @@
         min-height: 0;
         display: flex; align-items: center; justify-content: center;
         overflow: hidden;
+        /* 图片用 contain 缩放，这里再兜一层裁剪，防止亚像素溢出到操作栏 */
+        contain: paint;
       }
       .ph-detail__img {
+        /* 只用 max-* 约束，不再强制 100%/100%：避免 img 撑出 stage 产生 1px 溢出行 */
         max-width: 100%; max-height: 100%;
-        width: 100%; height: 100%;
-        object-fit: contain;                 /* 中间 contain 显示 */
+        object-fit: contain;
         display: block;
         pointer-events: none;
       }
@@ -614,8 +625,11 @@
           });
           ro.observe(scrollEl);
 
-          const onPhotosChanged = () => reload();
-          window.addEventListener('wuji:photos-changed', onPhotosChanged);
+          /* ★ 前台刷新：注册到模块级钩子，由 foreground() 调用。 */
+          foregroundRefresh = () => {
+            if (disposed) return;
+            reload();
+          };
 
           loadFiles();
 
@@ -623,7 +637,7 @@
             disposed = true;
             clearTimeout(resizeTimer);
             ro.disconnect();
-            window.removeEventListener('wuji:photos-changed', onPhotosChanged);
+            if (foregroundRefresh) foregroundRefresh = null;
             for (const rec of cells.values()) destroyCell(rec);
             cells.clear();
           };

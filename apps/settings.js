@@ -1,4 +1,7 @@
 (() => {
+  /* 当前挂载页面的主题列表刷新回调（foreground 钩子调用） */
+  let foregroundRefresh = null;
+
   const ICON = {
     wifi: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>`,
     bluetooth: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 6.5l11 11L12 23V1l5.5 5.5-11 11"/></svg>`,
@@ -324,7 +327,13 @@
     name: '设置',
     icon: './assets/settings.svg',
     initialRoute: 'home',
-    version: '1.1.4',
+    version: '1.1.6',
+
+    /* ★ 回到前台时刷新主题列表（主题市场下载/删除后切回即最新）。
+       用函数钩子，不再依赖事件广播。 */
+    foreground() {
+      try { foregroundRefresh?.(); } catch (e) { console.error('[settings foreground]', e); }
+    },
     styles: `
       .settings-page {
         position: absolute;
@@ -2467,13 +2476,8 @@
 
           renderMine();
 
-          /* 主题市场下载/更新主题后会派发 wj:themes-changed；
-             设置页可能仍在后台未销毁，监听它即可在返回时刷新“我的主题”。 */
-          const onThemesChanged = (e) => {
-            if (e && e.detail && e.detail.action === 'delete') return; // 删除本页已自行刷新
-            renderMine();
-          };
-          document.addEventListener('wj:themes-changed', onThemesChanged);
+          /* ★ 前台刷新：注册到模块级钩子，由 foreground() 调用。 */
+          foregroundRefresh = () => { try { renderMine(); } catch (e) { console.error(e); } };
 
           gotoBtn.addEventListener('click', () => {
             try {
@@ -2482,7 +2486,7 @@
           });
 
           return () => {
-            document.removeEventListener('wj:themes-changed', onThemesChanged);
+            foregroundRefresh = null;
             hideMenu();
           };
         },

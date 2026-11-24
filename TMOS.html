@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>TMOS 手机系统</title>
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: system-ui, -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #000;
+  color: #fff;
+  overscroll-behavior: none;
+}
+/* ========== 开机画面 ========== */
+.boot-screen {
+  position: fixed;
+  inset: 0;
+  background: #000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 60;
+  transition: opacity 0.7s ease;
+}
+.boot-screen h1 {
+  font-size: 72px;
+  font-weight: 300;
+  color: #fff;
+  letter-spacing: 14px;
+}
+.boot-screen.fadeout {
+  opacity: 0;
+  pointer-events: none;
+}
+/* ========== 手机容器 ========== */
+.phone {
+  position: fixed;
+  inset: 0;
+  background: linear-gradient(180deg, #131720 0%, #1c2130 45%, #2a3142 100%);
+  display: none;
+  z-index: 1;
+}
+.phone.active {
+  display: block;
+}
+/* ========== 状态栏模拟 ========== */
+.status-bar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 44px;
+  padding: 0 22px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 14px;
+  color: #fff;
+  z-index: 5;
+}
+/* ========== 桌面 ========== */
+.desktop {
+  position: absolute;
+  top: 44px;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 18px 14px 110px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-auto-rows: 92px;
+  gap: 14px 10px;
+  z-index: 2;
+}
+/* ========== 应用图标 ========== */
+.app-icon {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+  cursor: pointer;
+  will-change: transform, opacity;
+  transition: opacity 0.2s ease;
+}
+.icon-tile {
+  width: 64px;
+  height: 64px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+.icon-tile svg {
+  width: 34px;
+  height: 34px;
+  display: block;
+}
+.app-label {
+  font-size: 13px;
+  color: #f4f6fb;
+  text-align: center;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+}
+/* ========== 应用过渡层：白遮罩 + 飞行图标 ========== */
+.app-morph-layer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 40;
+}
+.app-white-mask {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 64px;
+  height: 64px;
+  border-radius: 16px;
+  background: #ffffff;
+  will-change: transform, opacity, border-radius;
+  opacity:0;
+  transform-origin: center center;
+  z-index: 1; /* 遮罩在飞行图标下面 */
+}
+.app-flying-icon {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 64px;
+  height: 64px;
+  border-radius: 16px;
+  will-change: transform, opacity;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform-origin: center center;
+  z-index: 2; /* 飞行图标在遮罩上面 */
+}
+.app-flying-icon svg {
+  width: 34px;
+  height: 34px;
+  display: block;
+}
+/* ========== 应用页面 ========== */
+.app-window {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: #ffffff;
+  color: #1f2430;
+  z-index: 30;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  pointer-events: none;
+  opacity: 0;
+  transform: none;
+}
+.app-window.open {
+  pointer-events: auto;
+  opacity: 1;
+}
+.app-content {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 18px;
+  padding: 20px;
+}
+.app-content h2 {
+  font-size: 26px;
+  font-weight: 600;
+  color: #111827;
+}
+.app-content p {
+  font-size: 15px;
+  color: #5b6472;
+}
+/* ========== 底部导航条 ========== */
+.nav-bar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 6px;
+  height: 34px;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 45;
+}
+.indicator {
+  width: 64px;
+  height: 5px;
+  border-radius: 3px;
+  background: #cfd4dc;
+}
+</style>
+</head>
+<body>
+  <!-- 开机画面 -->
+  <div class="boot-screen" id="boot">
+    <h1>TMOS</h1>
+  </div>
+
+  <!-- 手机主体 -->
+  <div class="phone" id="phone">
+    <div class="status-bar">
+      <span>9:41</span>
+      <span>TMOS</span>
+      <span>100%</span>
+    </div>
+
+    <div class="desktop" id="desktop">
+      <div class="app-icon" data-app="相册">
+        <div class="icon-tile" style="background:linear-gradient(145deg,#5499ff,#2f6ee0)">
+          <svg viewBox="0 0 24 24" fill="#ffffff">
+            <path d="M4 4h16v16H4V4zm2 2v12h12V6H6zm2 2l4 5 3-4 3 5H8z"/>
+          </svg>
+        </div>
+        <div class="app-label">相册</div>
+      </div>
+
+      <div class="app-icon" data-app="信息">
+        <div class="icon-tile" style="background:linear-gradient(145deg,#5dd367,#2aa544)">
+          <svg viewBox="0 0 24 24" fill="#ffffff">
+            <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/>
+          </svg>
+        </div>
+        <div class="app-label">信息</div>
+      </div>
+
+      <div class="app-icon" data-app="电话">
+        <div class="icon-tile" style="background:linear-gradient(145deg,#ff6f61,#e53935)">
+          <svg viewBox="0 0 24 24" fill="#ffffff">
+            <path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/>
+          </svg>
+        </div>
+        <div class="app-label">电话</div>
+      </div>
+
+      <div class="app-icon" data-app="浏览器">
+        <div class="icon-tile" style="background:linear-gradient(145deg,#ffc857,#f59e0b)">
+          <svg viewBox="0 0 24 24" fill="#ffffff">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/>
+          </svg>
+        </div>
+        <div class="app-label">浏览器</div>
+      </div>
+
+      <div class="app-icon" data-app="音乐">
+        <div class="icon-tile" style="background:linear-gradient(145deg,#b085f5,#7c4dff)">
+          <svg viewBox="0 0 24 24" fill="#ffffff">
+            <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/>
+          </svg>
+        </div>
+        <div class="app-label">音乐</div>
+      </div>
+
+      <div class="app-icon" data-app="时钟">
+        <div class="icon-tile" style="background:linear-gradient(145deg,#42e6c7,#14b8a6)">
+          <svg viewBox="0 0 24 24" fill="#ffffff">
+            <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm.5-13H11v6l5.2 3.2.8-1.3-4.5-2.7V7z"/>
+          </svg>
+        </div>
+        <div class="app-label">时钟</div>
+      </div>
+
+      <div class="app-icon" data-app="相机">
+        <div class="icon-tile" style="background:linear-gradient(145deg,#ff9a3c,#fb6a1b)">
+          <svg viewBox="0 0 24 24" fill="#ffffff">
+            <path d="M12 9c-1.6 0-2.9 1.3-2.9 2.9s1.3 2.9 2.9 2.9 2.9-1.3 2.9-2.9S13.6 9 12 9zm0-7C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm0 18c-4.4 0-8-3.6-8-8s3.6-8 8-8 8 3.6 8 8-3.6 8-8 8z"/>
+          </svg>
+        </div>
+        <div class="app-label">相机</div>
+      </div>
+
+      <div class="app-icon" data-app="文件">
+        <div class="icon-tile" style="background:linear-gradient(145deg,#64748b,#334155)">
+          <svg viewBox="0 0 24 24" fill="#ffffff">
+            <path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm4 18H6V4h7v5h5v11z"/>
+          </svg>
+        </div>
+        <div class="app-label">文件</div>
+      </div>
+
+      <div class="app-icon" data-app="天气">
+        <div class="icon-tile" style="background:linear-gradient(145deg,#4fc3f7,#0288d1)">
+          <svg viewBox="0 0 24 24" fill="#ffffff">
+            <path d="M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zM2 13h2c.55 0 1-.45 1-1s-.45-1-1-1H2c-.55 0-1 .45-1 1s.45 1 1 1zm18 0h2c.55 0 1-.45 1-1s-.45-1-1-1h-2c-.55 0-1 .45-1 1s.45 1 1 1zM11 2v2c0 .55.45 1 1 1s1-.45 1-1V2c0-.55-.45-1-1-1s-1 .45-1 1zm0 18v2c0 .55.45 1 1 1s1-.45 1-1v-2c0-.55-.45-1-1-1s-1 .45-1 1zM5.99 4.58c-.39-.39-1.03-.39-1.41 0-.39.39-.39 1.03 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0 .39-.39.39-1.03 0-1.41l-1.06-1.06zm12.37 12.37c-.39-.39-1.03-.39-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41.39.39 1.03.39 1.41 0l1.06-1.06c.39-.39.39-1.03 0-1.41zm1.06-10.96c.39-.39.39-1.03 0-1.41-.39-.39-1.03-.39-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41.39.39 1.03.39 1.41 0l1.06-1.06zM7.05 18.36l-1.06 1.06c-.39.39-.39 1.03 0 1.41.39.39 1.03.39 1.41 0l1.06-1.06c.39-.39.39-1.03 0-1.41-.39-.39-1.03-.39-1.41 0z"/>
+          </svg>
+        </div>
+        <div class="app-label">天气</div>
+      </div>
+
+      <div class="app-icon" data-app="设置">
+        <div class="icon-tile" style="background:linear-gradient(145deg,#9aa7bd,#64748b)">
+          <svg viewBox="0 0 24 24" fill="#ffffff">
+            <path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.56-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/>
+          </svg>
+        </div>
+        <div class="app-label">设置</div>
+      </div>
+
+      <div class="app-icon" data-app="计算器">
+        <div class="icon-tile" style="background:linear-gradient(145deg,#ffb74d,#f57c00)">
+          <svg viewBox="0 0 24 24" fill="#ffffff">
+            <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 14h-2v-2h2v2zm0-4h-2V9h2v4zm4 4h-2v-2h2v2zm0-4h-2V9h2v2zm-8 4H6v-2h2v2zm0-4H6V9h2v2z"/>
+          </svg>
+        </div>
+        <div class="app-label">计算器</div>
+      </div>
+
+      <div class="app-icon" data-app="地图">
+        <div class="icon-tile" style="background:linear-gradient(145deg,#81c784,#388e3c)">
+          <svg viewBox="0 0 24 24" fill="#ffffff">
+            <path d="M9 3L3 6v15l6-3 6 3 6-3V3l-6 3-6-3zm0 2.18l6 3v10.7l-6-3V5.18zm12 0v10.7l-4 2V7.18l4-2z"/>
+          </svg>
+        </div>
+        <div class="app-label">地图</div>
+      </div>
+    </div>
+
+    <!-- 应用过渡层 -->
+    <div class="app-morph-layer" id="morphLayer">
+      <div class="app-white-mask" id="whiteMask"></div>
+      <div class="app-flying-icon" id="flyingIcon"></div>
+    </div>
+
+    <!-- 应用页面 -->
+    <div class="app-window" id="appWin">
+      <div class="app-content">
+        <h2 id="appTitle">应用页面</h2>
+        <p>这是 TMOS 应用内容区域</p>
+      </div>
+      <div class="nav-bar" id="navBar">
+        <div class="indicator"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+const boot = document.getElementById('boot');
+const phone = document.getElementById('phone');
+const desktop = document.getElementById('desktop');
+const appWin = document.getElementById('appWin');
+const appTitle = document.getElementById('appTitle');
+const navBar = document.getElementById('navBar');
+const icons = document.querySelectorAll('.app-icon');
+const morphLayer = document.getElementById('morphLayer');
+const whiteMask = document.getElementById('whiteMask');
+const flyingIcon = document.getElementById('flyingIcon');
+
+let activeIcon = null;
+let animating = false;
+
+/* ========== 开机 ========== */
+setTimeout(() => {
+  boot.classList.add('fadeout');
+  setTimeout(() => {
+    boot.style.display = 'none';
+    phone.classList.add('active');
+  }, 700);
+}, 1200);
+
+/* ========== 工具函数：坐标 ========== */
+function getIconCenter(el) {
+  const rect = el.getBoundingClientRect();
+  return {
+    x: rect.left + rect.width / 2,
+    y: rect.top + rect.height / 2,
+    size: rect.width
+  };
+}
+
+function getScreenCenter() {
+  return {
+    x: window.innerWidth / 2,
+    y: window.innerHeight / 2
+  };
+}
+
+// 克隆桌面图标到飞行层（必须用 appendChild，不能用 innerHTML 赋值节点）
+function cloneIconToFlying(iconEl) {
+  flyingIcon.innerHTML = "";
+  const clone = iconEl.querySelector('.icon-tile').cloneNode(true);
+  flyingIcon.appendChild(clone);
+}
+
+// 重置应用窗口状态，清除拖拽残留transform
+function resetAppWindow() {
+  appWin.style.transition = "none";
+  appWin.style.transform = "";
+  appWin.style.opacity = "0";
+  appWin.classList.remove('open');
+  appWin.style.pointerEvents = "none";
+  // 强制刷新
+  appWin.offsetHeight;
+}
+
+/* ========== 打开应用 ========== */
+function openApp(iconEl) {
+  if (animating) return;
+  animating = true;
+  activeIcon = iconEl;
+  const name = iconEl.dataset.app;
+  const iconCenter = getIconCenter(iconEl.querySelector('.icon-tile'));
+  const screenCenter = getScreenCenter();
+
+  // 打开前强制重置页面，消除上一次残留状态，解决闪烁
+  resetAppWindow();
+
+  // 复制图标到飞行层
+  cloneIconToFlying(iconEl);
+
+  morphLayer.style.pointerEvents = "auto";
+  morphLayer.style.opacity = "1";
+
+  // 飞行图标出现瞬间，桌面图标隐藏
+  iconEl.style.opacity = "0";
+
+  flyingIcon.style.transition = "none";
+  whiteMask.style.transition = "none";
+
+  // 起点：图标中心，轻微放大 1.06
+  flyingIcon.style.transform = `translate(${iconCenter.x}px, ${iconCenter.y}px) translate(-50%, -50%) scale(1.06)`;
+  whiteMask.style.transform = `translate(${iconCenter.x}px, ${iconCenter.y}px) translate(-50%, -50%) scale(1)`;
+  whiteMask.style.width = iconCenter.size + "px";
+  whiteMask.style.height = iconCenter.size + "px";
+  whiteMask.style.borderRadius = "16px";
+  whiteMask.style.opacity = "1";
+  flyingIcon.style.opacity = "1";
+
+  morphLayer.offsetHeight;
+
+  // iOS 曲线 cubic-bezier(0.32,0.72,0,1)，速度略微调慢
+  const easeIOS = "cubic-bezier(0.32,0.72,0,1)";
+  const dur = 0.55;
+
+  whiteMask.style.transition = `transform ${dur}s ${easeIOS}, width ${dur}s ${easeIOS}, height ${dur}s ${easeIOS}, border-radius ${dur}s ${easeIOS}`;
+  flyingIcon.style.transition = `transform ${dur}s ${easeIOS}, opacity ${dur*0.7}s ease`;
+
+  whiteMask.style.width = window.innerWidth + "px";
+  whiteMask.style.height = window.innerHeight + "px";
+  whiteMask.style.borderRadius = "0";
+  whiteMask.style.transform = `translate(${screenCenter.x}px, ${screenCenter.y}px) translate(-50%, -50%)`;
+
+  flyingIcon.style.transform = `translate(${screenCenter.x}px, ${screenCenter.y}px) translate(-50%, -50%) scale(0.92)`;
+  flyingIcon.style.opacity = "0";
+
+  // 延后页面淡入
+  const winFadeDelay = dur * 1000 * 0.25;
+  const winFadeDur = dur * 0.6;
+  setTimeout(() => {
+    appTitle.textContent = name + " 应用页面";
+    appWin.style.transition = `opacity ${winFadeDur}s ease`;
+    appWin.style.opacity = "1";
+    appWin.classList.add('open');
+    appWin.style.pointerEvents = "auto";
+
+    // 关键：等到应用页面 opacity 完全到 1 之后，再缓慢隐藏遮罩
+    setTimeout(() => {
+      whiteMask.style.transition = "opacity 0.45s ease";
+      whiteMask.style.opacity = "0";
+      morphLayer.style.pointerEvents = "none";
+      animating = false;
+    }, winFadeDur * 1000);
+  }, winFadeDelay);
+}
+
+/* ========== 关闭应用（松手惯性曲线动画） ========== */
+function closeAppByInertia() {
+  if (!activeIcon || animating) return;
+  animating = true;
+  const iconCenter = getIconCenter(activeIcon.querySelector('.icon-tile'));
+
+  // 先抓取应用页当前（拖拽后）的位置与尺寸，遮罩从这里出发
+  const pageRect = appWin.getBoundingClientRect();
+  const pageCenter = {
+    x: pageRect.left + pageRect.width / 2,
+    y: pageRect.top + pageRect.height / 2
+  };
+
+  /* ---- 第一阶段：松手瞬间同步落地，不挂任何过渡 ---- */
+  morphLayer.style.pointerEvents = "auto";
+  whiteMask.style.transition = "none";
+  flyingIcon.style.transition = "none";
+
+  // 遮罩贴合页面当前位置和大小（在下层），不瞬间铺满全屏
+  whiteMask.style.width = pageRect.width + "px";
+  whiteMask.style.height = pageRect.height + "px";
+  whiteMask.style.borderRadius = "0";
+  whiteMask.style.transform = `translate(${pageCenter.x}px, ${pageCenter.y}px) translate(-50%, -50%)`;
+  whiteMask.style.opacity = "1";
+
+  // 飞行图标出现在页面中心（在上层，不透明）
+  cloneIconToFlying(activeIcon);
+  flyingIcon.style.opacity = "1";
+  flyingIcon.style.transform = `translate(${pageCenter.x}px, ${pageCenter.y}px) translate(-50%, -50%) scale(0.92)`;
+
+  // 遮罩已盖住，应用页立即、无渐隐地一次性消失
+  resetAppWindow();
+
+  /* ---- 第二阶段：等起始态绘制两帧后，再挂过渡飞回，避免被过渡带跑 ---- */
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      morphLayer.offsetHeight;
+
+      const easeCurve = "cubic-bezier(0.22, 1, 0.25, 1)";
+      const animDuration = 0.5;
+
+      whiteMask.style.transition = `transform ${animDuration}s ${easeCurve}, width ${animDuration}s ${easeCurve}, height ${animDuration}s ${easeCurve}, border-radius ${animDuration}s ${easeCurve}`;
+      flyingIcon.style.transition = `transform ${animDuration}s ${easeCurve}`;
+
+      // 目标：遮罩缩回到图标位置，图标同步飞回
+      whiteMask.style.width = iconCenter.size + "px";
+      whiteMask.style.height = iconCenter.size + "px";
+      whiteMask.style.borderRadius = "16px";
+      whiteMask.style.transform = `translate(${iconCenter.x}px, ${iconCenter.y}px) translate(-50%, -50%)`;
+
+      flyingIcon.style.transform = `translate(${iconCenter.x}px, ${iconCenter.y}px) translate(-50%, -50%) scale(1.06)`;
+
+      setTimeout(() => {
+        // 1. 先恢复下方原桌面图标：去掉透明度过渡，立即出现（不渐显）
+        activeIcon.style.transition = "none";
+        activeIcon.style.opacity = "1";
+        activeIcon.offsetHeight;
+        activeIcon.style.transition = "";
+
+        // 2. 立即、无动画地销毁飞行图标与遮罩（不做淡出，避免出现两个图标）
+        flyingIcon.style.transition = "none";
+        flyingIcon.style.opacity = "0";
+        flyingIcon.innerHTML = "";
+
+        whiteMask.style.transition = "none";
+        whiteMask.style.opacity = "0";
+
+        morphLayer.style.pointerEvents = "none";
+        activeIcon = null;
+        animating = false;
+      }, animDuration * 1000);
+    });
+  });
+}
+
+/* ========== 手势：上下缩放 + 左右跟手，计算滑动速度 ========== */
+let startX = 0;
+let startY = 0;
+let currentX = 0;
+let currentY = 0;
+let prevX = 0;
+let prevY = 0;
+let prevTime = 0;
+let dragging = false;
+let velocityY = 0;
+
+function onStart(x, y) {
+  if (!appWin.classList.contains('open') || animating) return;
+  dragging = true;
+  startX = x;
+  startY = y;
+  currentX = x;
+  currentY = y;
+  prevX = x;
+  prevY = y;
+  prevTime = performance.now();
+  velocityY = 0;
+  appWin.style.transition = "none";
+}
+
+function onMove(x, y) {
+  if (!dragging) return;
+  const now = performance.now();
+  const dt = now - prevTime;
+  if (dt > 0) {
+    velocityY = (prevY - y) / dt;
+  }
+  prevX = x;
+  prevY = y;
+  prevTime = now;
+  currentX = x;
+  currentY = y;
+
+  const deltaY = startY - currentY;
+  // 上滑越多，页面缩得越小（幅度加大）
+  const progress = Math.min(Math.max(deltaY / 220, 0), 1);
+  const scale = 1 - progress * 0.45;
+  const translateY = -progress * 150;
+  // 横向直接跟随手指，带一点阻尼
+  const translateX = (currentX - startX) * 0.55;
+  // 关闭全程页面 opacity 保持 1
+  appWin.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scale})`;
+  appWin.style.opacity = "1";
+}
+
+function onEnd() {
+  if (!dragging) return;
+  dragging = false;
+  const deltaY = startY - currentY;
+
+  // 阈值：满足距离 或者 足够快的上滑速度（横向摆动不触发关闭）
+  const thresholdDist = 80;
+  const thresholdVel = 0.35;
+
+  if (deltaY > thresholdDist || velocityY > thresholdVel) {
+    closeAppByInertia();
+  } else {
+    // 回弹回到全屏
+    appWin.style.transition = "transform 0.4s cubic-bezier(0.34,1.56,0.64,1)";
+    appWin.style.transform = "translate(0, 0) scale(1)";
+    appWin.style.opacity = "1";
+  }
+}
+
+/* ========== 图标点击打开 ========== */
+icons.forEach(icon => {
+  icon.addEventListener('click', (e) => {
+    e.stopPropagation();
+    openApp(icon);
+  });
+});
+
+/* ========== 触摸/鼠标监听 ========== */
+document.addEventListener('touchstart', (e) => {
+  const t = e.touches[0];
+  const h = window.innerHeight;
+  if (t.clientY > h - 80) {
+    onStart(t.clientX, t.clientY);
+  }
+}, { passive: true });
+
+document.addEventListener('touchmove', (e) => {
+  if (dragging) {
+    const t = e.touches[0];
+    onMove(t.clientX, t.clientY);
+  }
+}, { passive: true });
+document.addEventListener('touchend', onEnd);
+
+// 鼠标模拟
+document.addEventListener('mousedown', (e) => {
+  const h = window.innerHeight;
+  if (e.clientY > h - 80) {
+    onStart(e.clientX, e.clientY);
+  }
+});
+document.addEventListener('mousemove', (e) => {
+  if (dragging) onMove(e.clientX, e.clientY);
+});
+document.addEventListener('mouseup', onEnd);
+</script>
+</body>
+</html>

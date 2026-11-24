@@ -540,7 +540,6 @@
     initialRoute: 'home',
     version: '1.1.8',
 
-    /* ★ 生命周期：后台停掉行情轮询，被杀清空缓存 */
     foreground() {
       if (listeners.size > 0 && !pollTimer) {
         pollTimer = setInterval(tick, POLL_INTERVAL);
@@ -548,7 +547,6 @@
       }
     },
     background() {
-      // 后台停轮询省电；listeners 保留，回到前台 mount 会重新拉起
       if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
       polling = false;
     },

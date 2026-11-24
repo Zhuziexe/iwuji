@@ -5,6 +5,10 @@
 (() => {
   const BUNDLE = 'com.wujios.camera';
 
+  /* 当前挂载页面的采集控制回调（foreground/background 钩子调用） */
+  let foregroundResume = null;
+  let backgroundPause = null;
+
   /* 切换摄像头图标（环形双箭头） */
   const ICON_SWITCH = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
       stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
@@ -38,7 +42,16 @@
     name: '相机',
     icon: './assets/camera.svg',
     initialRoute: 'home',
-    version: '1.0.1',
+    version: '1.0.2',
+
+    /* ★ 前台恢复采集 / 后台停止采集（省电 + 隐私）。
+       用函数钩子，不再依赖事件广播。 */
+    foreground() {
+      try { foregroundResume?.(); } catch (e) { console.error('[camera foreground]', e); }
+    },
+    background() {
+      try { backgroundPause?.(); } catch (e) { console.error('[camera background]', e); }
+    },
 
     styles: `
       .cam-page {
@@ -177,6 +190,15 @@
             videoEl.style.display = 'none';
             shutterEl.disabled = true;
             if (switchEl) switchEl.disabled = true;
+          }
+
+          /* 停掉摄像头采集（后台/销毁时调用） */
+          function stopStream() {
+            if (stream) {
+              stream.getTracks().forEach(t => t.stop());
+              stream = null;
+            }
+            try { videoEl.srcObject = null; } catch { }
           }
 
           async function init() {
@@ -369,30 +391,19 @@
 
           init();
 
-          /* ★ 后台时停掉摄像头采集（省电 + 隐私），回前台再重新采集。
-             不用 onShutdown，因为后台不卸载；用系统广播的事件。 */
-          function stopStream() {
-            if (stream) {
-              stream.getTracks().forEach(t => t.stop());
-              stream = null;
-            }
-            try { videoEl.srcObject = null; } catch { }
-          }
-          function onBg(e) {
-            if (e?.detail?.bundle !== BUNDLE) return;
-            stopStream();
-          }
-          function onFg(e) {
-            if (e?.detail?.bundle !== BUNDLE) return;
+          /* ★ 后台停采集、回前台重新采集：注册到模块级钩子，
+             由 background()/foreground() 调用，不再用系统事件广播。 */
+          foregroundResume = () => {
             if (!disposed && !stream) init();
-          }
-          window.addEventListener('wuji:app-background', onBg);
-          window.addEventListener('wuji:app-foreground', onFg);
+          };
+          backgroundPause = () => {
+            stopStream();
+          };
 
           return () => {
             disposed = true;
-            window.removeEventListener('wuji:app-background', onBg);
-            window.removeEventListener('wuji:app-foreground', onFg);
+            foregroundResume = null;
+            backgroundPause = null;
             stopStream();
           };
         },

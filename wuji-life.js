@@ -151,4 +151,27 @@
   };
 
   window.WujiLife = api;
+
+  /* --------------------------------------------------
+     生命周期通知（iWuji / ZhuziOS 共用）
+     - notifyForeground(bundle)：WujiLife.foreground + app.foreground()
+     - notifyBackground(bundle)：WujiLife.background + app.background()
+     应用只需实现模块级 foreground()/background() 函数钩子，不再走事件广播。
+     -------------------------------------------------- */
+  function notifyForeground(bundle) {
+    try { api.foreground(bundle); } catch { }
+    let app = null;
+    try { app = window.WujiApps?.get?.(bundle); } catch { }
+    try { app?.foreground?.(); } catch (e) { console.error('[foreground]', bundle, e); }
+  }
+
+  function notifyBackground(bundle) {
+    try { api.background(bundle); } catch { }
+    let app = null;
+    try { app = window.WujiApps?.get?.(bundle); } catch { }
+    try { app?.background?.(); } catch (e) { console.error('[background]', bundle, e); }
+  }
+
+  api.notifyForeground = notifyForeground;
+  api.notifyBackground = notifyBackground;
 })();

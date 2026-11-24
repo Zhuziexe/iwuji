@@ -90,8 +90,8 @@ window.WujiManual = (() => {
         <div class="wm-gesture">
           <div class="wm-gesture__icon">${ICON.swipeLeft}</div>
           <div class="wm-gesture__text">
-            <div class="wm-gesture__title">应用内左滑</div>
-            <div class="wm-gesture__desc">返回上一层，退到桌面</div>
+            <div class="wm-gesture__title">屏幕左/右边缘侧滑并停留</div>
+            <div class="wm-gesture__desc">进入多任务；轻滑不放不逗留则返回上一层</div>
           </div>
         </div>
         <div class="wm-gesture">

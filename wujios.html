@@ -1653,16 +1653,23 @@
       window.__OPENWUJI_PLATFORM === 'zhuzios';
 
     function notifyForeground(bundle) {
+      /* 统一走 wuji-life.js 的公共实现（WujiLife 状态 + app.foreground() 钩子） */
+      if (window.WujiLife?.notifyForeground) {
+        window.WujiLife.notifyForeground(bundle);
+        return;
+      }
       try { window.WujiLife?.foreground?.(bundle); } catch { }
       const app = WujiApps.get(bundle);
       try { app?.foreground?.(); } catch (e) { console.error('[foreground]', bundle, e); }
-      window.dispatchEvent(new CustomEvent('wuji:app-foreground', { detail: { bundle } }));
     }
     function notifyBackground(bundle) {
+      if (window.WujiLife?.notifyBackground) {
+        window.WujiLife.notifyBackground(bundle);
+        return;
+      }
       try { window.WujiLife?.background?.(bundle); } catch { }
       const app = WujiApps.get(bundle);
       try { app?.background?.(); } catch (e) { console.error('[background]', bundle, e); }
-      window.dispatchEvent(new CustomEvent('wuji:app-background', { detail: { bundle } }));
     }
 
     function findBackground(bundle) {
