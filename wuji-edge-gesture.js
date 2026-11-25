@@ -16,15 +16,14 @@
 (() => {
   'use strict';
 
-  /* 右侧边缘滑入 → "<"（尖端朝左）; 左侧边缘滑入 → ">"（尖端朝右） */
   const SVG_CHEVRON_LEFT = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 4 7 12l8 8"/></svg>`;
   const SVG_CHEVRON_RIGHT = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4l8 8-8 8"/></svg>`;
   const SVG_HOME = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>`;
 
   const HOLD_MS = 1200;
-  const EDGE_W = 28;          // 边缘激活区宽度(px)
+  const EDGE_W = 30;          // 边缘激活区宽度(px)
   const DIR_LOCK = 10;        // 方向锁定阈值(px)
-  const DEFAULT_THRESHOLD = 90; // 默认触发阈值(px)
+  const DEFAULT_THRESHOLD = 70; // 默认触发阈值(px)
 
   /**
    * @param {Object} cfg
@@ -59,8 +58,8 @@
     host.appendChild(handle);
 
     /* 平滑曲线：两段三次贝塞尔拼成的"月牙"。
-       关键：端点处控制点与端点同 x（切线竖直，与机身边框相切 → 无折角）；
-       中段两段在 (24,50) 处切线同为竖直 → 衔接处也无折角。
+    关键：端点处控制点与端点同 x（切线竖直，与机身边框相切 → 无折角）；
+    中段两段在 (24,50) 处切线同为竖直 → 衔接处也无折角。
        整体像边框被向外拉弯：上下贴边、中段凸出，连续一整条。 */
     const CURVE_LEFT = 'M 0 0 C 0 24, 30 36, 30 60 C 30 84, 0 96, 0 120 Z';
     const CURVE_RIGHT = 'M 36 0 C 36 24, 6 36, 6 60 C 6 84, 36 96, 36 120 Z';
@@ -167,7 +166,6 @@
       else if (localX >= rect.width - EDGE_W) s = 'right';
       if (!s) return false;
 
-      // 顶部状态栏下拉区 / 锁屏 / 面板由 canStart 统一拦截
       try {
         if (cfg.canStart && cfg.canStart(localX, localY, s) === false) return false;
       } catch { return false; }
