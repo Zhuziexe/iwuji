@@ -24,7 +24,7 @@
           "id": "black",
           "text": "牛逼黑",
           "image": "./assets/com.wujinb.wmall/iwuji_black.png",
-          "buyable": false
+          "buyable": true
         }
       ],
       "specs": [
@@ -61,13 +61,13 @@
           "id": "red",
           "text": "牛逼红",
           "image": "./assets/com.wujinb.wmall/iwuji_neo_red.png",
-          "buyable": true
+          "buyable": false
         },
         {
           "id": "white",
           "text": "牛逼白",
           "image": "./assets/com.wujinb.wmall/iwuji_neo_white.png",
-          "buyable": true
+          "buyable": false
         },
         {
           "id": "purple",
@@ -140,7 +140,7 @@
       "name": "iWuji Neo透明保护壳",
       "shop": "iWuji官方旗舰店",
       "price": 39,
-      "buyable": false
+      "buyable": true
     },
     {
       "id": "iwuji_glass",
