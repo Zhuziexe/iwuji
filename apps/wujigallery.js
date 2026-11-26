@@ -279,16 +279,24 @@ WujiApps.register({
 
           for (const rec of list) {
             const m = byBundle.get(rec.bundle);
-            const md = pick(m);
-            if (!md) continue;
+            if (!m) continue;                    /* 市场里没有这个应用，不动 */
 
+            /* ★ 市场条目没有 devices → 视为「全设备」。
+               此时旧记录里的设备限制必须清掉，否则应用被永久锁死在原设备上
+               （典型：开发者给应用加了 PC 支持，但老安装记录还写着仅 iwuji）。 */
+            const md = pick(m);                  /* null 表示不限设备 */
             const rd = pick(rec);
-            const same = Array.isArray(rd)
-              && rd.length === md.length
-              && rd.every((d, i) => d === md[i]);
+
+            const same = md
+              ? (Array.isArray(rd) && rd.length === md.length && rd.every((d, i) => d === md[i]))
+              : !rd;                             /* md 为 null 时，rd 也应为 null 才算一致 */
 
             if (!same) {
-              rec.devices = md.slice();
+              if (md) rec.devices = md.slice();
+              else {
+                delete rec.devices;
+                if (Object.prototype.hasOwnProperty.call(rec, 'platforms')) delete rec.platforms;
+              }
               /* 清掉残留的旧字段 */
               if (Object.prototype.hasOwnProperty.call(rec, 'platforms')) delete rec.platforms;
               changed++;

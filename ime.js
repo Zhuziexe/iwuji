@@ -880,13 +880,17 @@
   }
 
   /* ============ 事件 ============ */
-  // 受 IME 管辖的控件：普通 INPUT/TEXTAREA，或带 data-wj-field 的自绘 div。
+  // 受 IME 管辖的控件：只认带 data-wj-field 的自绘 div。
+  // ★ 原生 INPUT/TEXTAREA 不再接管：wujios 上所有文本输入都必须用自绘 div
+  //   （避免移动端原生焦点弹出系统键盘）。zhuzios 不加载 ime.js，继续用原生 input。
+  //   data-wj-ime-input="1" 可显式让某个 input 仍走自绘 IME（兼容存量场景）。
   function isInput(t) {
-    if (!t) return false;
-    if (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA') {
-      return t.type !== 'checkbox' && t.type !== 'radio' && t.type !== 'button';
+    if (!t || !t.getAttribute) return false;
+    if (t.getAttribute('data-wj-field') === '1') return true;
+    if (t.getAttribute('data-wj-ime-input') === '1') {
+      return t.tagName === 'INPUT' || t.tagName === 'TEXTAREA';
     }
-    return t.getAttribute && t.getAttribute('data-wj-field') === '1';
+    return false;
   }
   // focusin 是 composed 事件：Shadow DOM 内聚焦时 e.target 会被重定位到 host，
   // 所以必须沿 composedPath() 找真正的控件（跨 Shadow DOM 探测）。

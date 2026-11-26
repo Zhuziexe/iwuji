@@ -130,6 +130,19 @@
   box-shadow: 0 0 0 3px rgba(94, 240, 58, 0.15);
 }
 
+/* 自绘 div 输入框（仅在带 WJ_IME 的环境出现；zhuzios 用原生 input，不受影响） */
+div.wj-dialog__input {
+  min-height: 42px;
+  display: block;
+  white-space: pre-wrap;
+  word-break: break-word;
+  cursor: text;
+}
+div.wj-dialog__input.wj-ime-open {
+  border-color: var(--wj-primary, #17a821);
+  box-shadow: 0 0 0 3px rgba(94, 240, 58, 0.15);
+}
+
 .wj-dialog__error {
   display: none;
   margin-top: 6px;

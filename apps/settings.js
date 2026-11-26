@@ -234,17 +234,17 @@
       const w = sliderEl.clientWidth;
       if (!w) return;
 
-      const R_FILL = 14;
-      const PAD = 4;
+      /* 旋钮半径与内边距：左右必须留出相同空间，否则 100% 时旋钮贴边被裁、
+         或右侧出现过大/过小的空隙（旧版 PAD=4 导致右侧内边距偏小）。 */
+      const KNOB_R = 14;
+      const PAD = 7;
+      const usable = Math.max(1, w - (KNOB_R + PAD) * 2);
 
-      const px = w * vv / 100;
-
-      const knobX = Math.max(R_FILL + PAD, Math.min(w - R_FILL - PAD, px));
-
-      const fillWidth = Math.max(R_FILL * 2, knobX + R_FILL - PAD);
+      const knobX = PAD + KNOB_R + usable * vv / 100;
+      const fillWidth = knobX + KNOB_R - PAD;
 
       fillEl.style.width = fillWidth + 'px';
-      knobEl.style.left = knobX + 'px';
+      if (knobEl) knobEl.style.left = knobX + 'px';
       labelEl.textContent = vv + '%';
     }
     paint(value);

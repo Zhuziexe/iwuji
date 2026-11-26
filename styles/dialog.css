@@ -112,6 +112,19 @@
   box-shadow: 0 0 0 3px rgba(58, 111, 240, .15);
 }
 
+/* 自绘 div 输入框（wujios）：外观与原 input 一致，内容左对齐、可换行 */
+div.wj-dialog__input {
+  min-height: 44px;
+  display: block;
+  white-space: pre-wrap;
+  word-break: break-word;
+  cursor: text;
+}
+div.wj-dialog__input.wj-ime-open {
+  border-color: var(--wj-primary, #3a6ff0);
+  box-shadow: 0 0 0 3px rgba(58, 111, 240, .15);
+}
+
 .wj-dialog__error {
   display: none;
   margin-top: 6px;

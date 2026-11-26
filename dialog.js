@@ -144,17 +144,28 @@ window.WujiDialog = (() => {
       const titleHtml = opts.title ? `<div class="wj-dialog__title">${esc(opts.title)}</div>` : '';
       const contentHtml = opts.content ? `<div class="wj-dialog__content">${esc(opts.content)}</div>` : '';
 
-      // 输入框
+      // 输入框：wujios（有 WJ_IME）用自绘 div，避免移动端原生焦点弹系统键盘；
+      // zhuzios 无 WJ_IME，继续用原生 input。
       const inputOpt = (opts.input && typeof opts.input === 'object') ? opts.input : null;
+      const useImeField = !!window.WJ_IME;
       const inputHtml = inputOpt
-        ? `<div class="wj-dialog__field">
+        ? (useImeField
+          ? `<div class="wj-dialog__field">
+     <div class="wj-dialog__input" data-wj-field="1"
+          data-wj-placeholder="${esc(inputOpt.placeholder || '')}"
+          data-wj-value="${esc(inputOpt.value == null ? '' : inputOpt.value)}"
+          tabindex="0" inputmode="none"
+          autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></div>
+     <div class="wj-dialog__error"></div>
+   </div>`
+          : `<div class="wj-dialog__field">
      <input class="wj-dialog__input"
             type="${esc(inputOpt.type || 'text')}"
             value="${esc(inputOpt.value == null ? '' : inputOpt.value)}"
             placeholder="${esc(inputOpt.placeholder || '')}"
             autocomplete="off" autocapitalize="off" spellcheck="false">
      <div class="wj-dialog__error"></div>
-   </div>`
+   </div>`)
         : '';
 
       backdrop.innerHTML = `
@@ -186,7 +197,26 @@ window.WujiDialog = (() => {
         errEl.style.display = 'block';
       }
 
-      if (inputEl) {
+      /* 自绘 div 字段：把初始值写进去（占位符交给 CSS :empty）。
+         IME 的取值统一走 WJ_IME.getFieldText，原生 input 走 .value。 */
+      const isFieldDiv = !!inputEl && inputEl.tagName === 'DIV';
+      if (isFieldDiv) {
+        const initVal = inputEl.dataset.wjValue || '';
+        if (initVal) {
+          try { window.WJ_IME?.setFieldText?.(inputEl, initVal); }
+          catch { inputEl.textContent = initVal; }
+        }
+      }
+      function readInputValue() {
+        if (!inputEl) return undefined;
+        if (isFieldDiv) {
+          try { return window.WJ_IME?.getFieldText?.(inputEl) ?? inputEl.textContent ?? ''; }
+          catch { return inputEl.textContent || ''; }
+        }
+        return inputEl.value;
+      }
+
+      if (inputEl && !isFieldDiv) {
         inputEl.addEventListener('input', clearError);
       }
 
@@ -200,7 +230,7 @@ window.WujiDialog = (() => {
         const def = btns[idx];
         if (!def) return;
 
-        const rawValue = inputEl ? inputEl.value : undefined;
+        const rawValue = readInputValue();
 
         // 校验（只有带 input 且按钮定义了 validate 时才执行）
         if (inputEl && typeof def.validate === 'function') {
@@ -250,8 +280,14 @@ window.WujiDialog = (() => {
         requestAnimationFrame(() => {
           backdrop.classList.add('is-show');
           if (inputEl) {
-            inputEl.focus();
-            try { inputEl.select(); } catch (_) { /* ignore */ }
+            /* 自绘 div 不主动 focus 弹键盘：用户点一下字段才唤起 IME（和地图/备忘录一致）。
+               原生 input（zhuzios）保持原行为。 */
+            if (isFieldDiv) {
+              try { window.WJ_IME?.ensureFieldStyle?.(inputEl.getRootNode()); } catch { }
+            } else {
+              inputEl.focus();
+              try { inputEl.select(); } catch (_) { /* ignore */ }
+            }
           }
         });
       });

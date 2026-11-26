@@ -927,11 +927,16 @@
           rebind();
         };
 
+        /* ★ 修复时序竞态：render() 是同步的，此刻存档可能还没读完，
+           已用 DEFAULT_STATE() 生成了 DOM（金币默认值、没有喜欢的小鱼）。
+           mount() 在下一帧才跑，若此时 S.loaded 已为 true，旧逻辑只 rebind()
+           会把事件绑在「默认值 DOM」上 → 页面永远显示默认数据。
+           所以数据就绪时也必须 paint() 一次，用真实数据重画。 */
         if (S.loaded) {
-          rebind();
+          paint();
         } else {
           S.ready().then(() => { if (!disposed) paint(); })
-                   .catch(() => { if (!disposed) rebind(); });
+                   .catch(() => { if (!disposed) paint(); });
         }
 
         const off = ctx.nav.onChange(() => {
@@ -961,7 +966,7 @@
     name: '杨梅小鱼',
     icon: './assets/xiaoyu.svg',
     initialRoute: 'home',
-    version: '1.4.0',
+    version: '1.4.1',
     devices: ['iwuji', 'pc'],
     styles,
     routes: wrappedRoutes,
