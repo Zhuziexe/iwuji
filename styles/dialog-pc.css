@@ -1,0 +1,144 @@
+/* =========================================================
+   styles/dialog-pc.css —— Zhuzios（电脑系统）对话框样式
+
+   小圆角、圆角矩形按钮、按钮区分割线的旧样式。
+   挂在应用窗口的 ShadowRoot 内，backdrop 只覆盖当前窗口，
+   因此对话框在「窗口中央」而不是整屏中央。
+   ========================================================= */
+
+.wj-dialog-backdrop {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(0, 0, 0, 0);
+  pointer-events: auto;
+  transition: background .2s ease;
+  box-sizing: border-box;
+}
+
+.wj-dialog-backdrop.is-show {
+  background: rgba(0, 0, 0, .38);
+}
+
+.wj-dialog {
+  width: min(320px, 100%);
+  background: #ffffff;
+  border-radius: 10px;
+  padding: 24px 20px 16px;
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, .28);
+  transform: scale(.92);
+  opacity: 0;
+  transition: transform .2s cubic-bezier(.2, .7, .3, 1), opacity .2s ease;
+  will-change: transform, opacity;
+}
+
+.wj-dialog-backdrop.is-show .wj-dialog {
+  transform: scale(1);
+  opacity: 1;
+}
+
+.wj-dialog__title {
+  font-size: 17px;
+  font-weight: 600;
+  color: #101828;
+  line-height: 1.4;
+  margin-bottom: 8px;
+  word-break: break-word;
+}
+
+.wj-dialog__content {
+  font-size: 14px;
+  line-height: 1.55;
+  color: #5b6478;
+  margin-bottom: 20px;
+  word-break: break-word;
+}
+
+.wj-dialog__actions {
+  display: flex;
+  gap: 8px;
+  margin: 0 -20px -16px;
+  padding: 12px 16px 14px;
+  border-top: 1px solid rgba(0, 0, 0, .06); /* 按钮区分割线 */
+}
+
+.wj-dialog__btn {
+  flex: 1 1 0;
+  min-width: 0;
+  height: 40px;
+  border: 0;
+  border-radius: 8px; /* 小圆角矩形按钮 */
+  background: rgba(0, 0, 0, .04);
+  font: inherit;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--wj-primary, #17a821);
+  cursor: pointer;
+  transition: background .12s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.wj-dialog__btn:hover {
+  background: rgba(0, 0, 0, .07);
+}
+
+.wj-dialog__btn:active {
+  background: rgba(0, 0, 0, .1);
+}
+
+.wj-dialog__btn:disabled {
+  opacity: .5;
+  cursor: default;
+}
+
+#os.is-touch-mode .wj-dialog__btn:hover {
+  background: rgba(0, 0, 0, .04) !important;
+}
+
+/* ===== 输入框区域 ===== */
+.wj-dialog__field {
+  margin: 2px 0 14px;
+}
+
+.wj-dialog__input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 12px;
+  border: 1px solid rgba(0, 0, 0, .12);
+  border-radius: 8px;
+  font: inherit;
+  font-size: 15px;
+  line-height: 1.4;
+  color: inherit;
+  background: var(--wj-bg, #fff);
+  outline: none;
+  transition: border-color .15s ease, box-shadow .15s ease;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.wj-dialog__input::placeholder {
+  color: rgba(0, 0, 0, .35);
+}
+
+.wj-dialog__input:focus {
+  border-color: var(--wj-primary, #17a821);
+  box-shadow: 0 0 0 3px rgba(94, 240, 58, 0.15);
+}
+
+.wj-dialog__error {
+  display: none;
+  margin-top: 6px;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--wj-danger, #e5484d);
+}
+
+/* ===== 主按钮 ===== */
+.wj-dialog__btn--primary {
+  font-weight: 600;
+}

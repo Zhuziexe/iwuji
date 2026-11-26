@@ -307,7 +307,7 @@
     name: '牛奶地图',
     icon: './assets/map.svg',
     initialRoute: 'home',
-    version: '1.0.9',
+    version: '1.1.0',
 
     styles: `
       .map-page {
@@ -325,7 +325,7 @@
         z-index: 6;
         display: flex; gap: 8px;
         align-items: center;
-        justify-content: space-between;
+        justify-content: flex-end;
       }
       .map-topbtn {
         flex: 0 0 auto;
@@ -341,20 +341,6 @@
         touch-action: manipulation;
       }
       .map-topbtn:active { transform: scale(.94); }
-
-      .map-closebtn {
-        flex: 0 0 auto;
-        width: 50px; height: 50px; padding: 0;
-        border: 0; border-radius: 16px;
-        background: rgba(255,255,255,.94);
-        color: #1c1c1e;
-        display: flex; align-items: center; justify-content: center;
-        box-shadow: 0 4px 16px rgba(0,0,0,.18);
-        cursor: pointer;
-        -webkit-tap-highlight-color: transparent;
-        touch-action: manipulation;
-      }
-      .map-closebtn:active { transform: scale(.94); }
 
       .map-chips {
         position: absolute;
@@ -582,9 +568,6 @@
               <div id="mapC"></div>
 
               <div class="map-top">
-                <button class="map-closebtn" id="mapCloseBtn" type="button" title="退出" aria-label="退出">
-                  <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
-                </button>
                 <button class="map-topbtn" id="mapLayerBtn" type="button" title="切换瓦片源">图层</button>
               </div>
 
@@ -638,7 +621,6 @@
           const layerBtn = root.querySelector('#mapLayerBtn');
           const layerPanel = root.querySelector('#mapLayerPanel');
           const layerList = root.querySelector('#mapLayerList');
-          const closeBtn = root.querySelector('#mapCloseBtn');
           const zoomInBtn  = root.querySelector('#mapZoomIn');
           const zoomOutBtn = root.querySelector('#mapZoomOut');
 
@@ -656,11 +638,6 @@
           const getSource = id => TILE_SOURCES[id] || TILE_SOURCES[DEFAULT_SOURCE];
           const setStatus = (t) => { if (statusEl) statusEl.textContent = t; };
           const toast = (m) => { try { window.WujiToast?.show(m); } catch {} };
-
-          /* ---------- 退出应用（搜索框左侧叉号） ---------- */
-          closeBtn?.addEventListener('click', () => {
-            try { window.WujiAppLauncher?.close(); } catch { /* ignore */ }
-          });
 
           /**
            * 把“真实坐标”转为当前瓦片源下的显示坐标（Leaflet 内部按 WGS-84 处理，

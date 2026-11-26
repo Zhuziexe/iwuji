@@ -23,6 +23,12 @@ window.WujiApps = (() => {
   const listeners = new Set();
   let booted = false;
 
+  /* ★ 常驻应用白名单（只能由系统内置、且 bundle 精确匹配）。
+     电话需要后台常驻监听来电（PeerJS），不能随应用退出被卸载。
+     这是硬编码的系统级白名单：第三方应用即使声明 persistent 也无效，
+     杜绝绕过按需加载常驻内存。 */
+  const PERSISTENT_APPS = new Set(['com.wujios.phone']);
+
   /* =========================================================
      设备过滤
      ========================================================= */
@@ -192,7 +198,11 @@ window.WujiApps = (() => {
 
     emit({ type: 'registered', bundle: norm.bundlename, source, app: norm });
 
-    if (booted) safeInvoke(norm.onBoot, 'onBoot:' + norm.bundlename);
+    /* ★ 常驻应用（电话）的 onBoot 只由系统 boot() 触发；
+       其它应用在脚本注册时（=应用启动）触发 onBoot。 */
+    if (booted && !PERSISTENT_APPS.has(norm.bundlename)) {
+      safeInvoke(norm.onBoot, 'onBoot:' + norm.bundlename);
+    }
 
     return true;
   }
@@ -250,6 +260,58 @@ window.WujiApps = (() => {
       return true;
     },
 
+    /**
+     * ★ 把完整应用降级回 meta：丢弃 routes / styles / render / mount /
+     *   overlays / 生命周期钩子等函数引用，让这些闭包可被 GC 回收。
+     *   <script> 本身无法真正"卸载"，但丢掉注册对象里的函数引用后，
+     *   配合 WujiAppLoader.invalidate() 清缓存 + 提升 generation，
+     *   下次打开会重新注入脚本、重新 register，拿到全新定义。
+     *
+     *   注意：本方法不调用 onShutdown / unmount（由调用方先调），
+     *   也不发 unregistered 事件（桌面图标要保留）。
+     */
+    unload(bundle) {
+      if (!bundle) return false;
+      /* 常驻应用（仅系统白名单）永不降级，保证来电监听常驻 */
+      if (PERSISTENT_APPS.has(bundle)) return false;
+      const bucket = installed.has(bundle) ? installed : builtin;
+      const app = bucket.get(bundle);
+      if (!app || app._metaOnly) return false;
+
+      const meta = {
+        bundlename: bundle,
+        name: app.name,
+        icon: app.icon,
+        iconStyle: app.iconStyle,
+        version: app.version,
+        author: app.author,
+        description: app.description,
+        initialRoute: app.initialRoute,
+        fileTypes: app.fileTypes,
+        hidden: app.hidden,
+        disablebackgesture: app.disablebackgesture,
+        src: app._src || '',
+      };
+      const entry = normalize(meta);
+      entry._metaOnly = true;
+      entry._src = app._src || '';
+      entry._source = app._source || (bucket === installed ? 'installed' : 'builtin');
+      entry._registeredAt = app._registeredAt || Date.now();
+      if (!entry.devices && app.devices) entry.devices = app.devices.slice();
+      bucket.set(bundle, entry);
+      emit({ type: 'unloaded', bundle });
+      return true;
+    },
+
+    /** 应用代码是否已加载（非 meta-only） */
+    isLoaded(bundle) {
+      const app = installed.get(bundle) || builtin.get(bundle);
+      return !!app && !app._metaOnly;
+    },
+
+    /** 是否为系统级常驻应用（硬白名单，第三方无法声明） */
+    isPersistent(bundle) { return PERSISTENT_APPS.has(bundle); },
+
     get(bundle) {
       return installed.get(bundle) || builtin.get(bundle) || null;
     },
@@ -269,18 +331,36 @@ window.WujiApps = (() => {
       return () => listeners.delete(fn);
     },
 
+    /* ★ 生命周期钩子分两类触发时机：
+       - 常驻应用（电话，PERSISTENT_APPS）：onBoot/onShutdown 只在
+         系统开机 boot() / 系统关机 shutdown() 时触发（后台常驻监听来电）。
+       - 其它应用：onBoot 在脚本注册（应用启动）时触发；
+         onShutdown 在应用被杀死 shutdownOne() 时触发。 */
+
     boot() {
       booted = true;
-      eachFull(app => safeInvoke(app.onBoot, 'onBoot:' + app.bundlename));
+      for (const app of builtin.values()) {
+        if (app._metaOnly) continue;
+        if (PERSISTENT_APPS.has(app.bundlename)) {
+          safeInvoke(app.onBoot, 'onBoot:' + app.bundlename);
+        }
+      }
     },
 
     shutdown() {
       booted = false;
-      eachFull(app => safeInvoke(app.onShutdown, 'onShutdown:' + app.bundlename));
+      for (const app of builtin.values()) {
+        if (app._metaOnly) continue;
+        if (PERSISTENT_APPS.has(app.bundlename)) {
+          safeInvoke(app.onShutdown, 'onShutdown:' + app.bundlename);
+        }
+      }
     },
 
     shutdownOne(bundle) {
       if (!booted) return;
+      /* 常驻应用不随单个应用退出而 shutdown（保持后台监听） */
+      if (PERSISTENT_APPS.has(bundle)) return;
       const app = installed.get(bundle) || builtin.get(bundle) || null;
       if (!app || app._metaOnly) return;
       safeInvoke(app.onShutdown, 'onShutdown:' + bundle);

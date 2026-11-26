@@ -10,6 +10,7 @@
   <link rel="stylesheet" href="styles/tokens.css">
   <link rel="stylesheet" href="styles/components.css">
   <link rel="stylesheet" href="styles/os.css">
+  <link rel="stylesheet" href="styles/dialog.css">
   <link rel="stylesheet" href="styles/wuji-edge.css">
   <script>window.__OPENWUJI_PLATFORM = 'wujios';</script>
   <script src="https://unpkg.com/js-md5@0.9.2/build/md5.min.js"></script>
@@ -1676,6 +1677,60 @@
       return S.backgroundApps.find(e => e.bundle === bundle) || null;
     }
 
+    /* ---------- 卸载应用代码 ----------
+       <script> 无法真正卸载：降级为 meta（丢弃 routes/render 等函数引用）+ 清
+       loader 缓存（提升 generation），下次打开重新注入脚本拿到全新定义。
+       注意：应用正在前台/后台运行时不要调用，只在这些真正退出时调用。 */
+    function unloadAppCode(bundle) {
+      if (!bundle) return;
+      /* 常驻应用（电话）不卸载、不清缓存，保持来电监听常驻 */
+      if (WujiApps.isPersistent?.(bundle)) return;
+      const app = WujiApps.get(bundle);
+      const src = app?._src || WujiAppInstaller?.get?.(bundle)?.src || `idb://${bundle}`;
+      /* noBump：URL 保持稳定，内置应用走 HTTP 缓存、市场应用走 IDB，不重复下载 */
+      try { WujiAppLoader.invalidate(src, { noBump: true }); } catch { }
+      try { WujiApps.unload?.(bundle); } catch { }
+    }
+
+    /* 彻底杀死一个正在运行的应用（前台或后台），供 update/uninstall 前调用。
+       复用现成的关闭/杀死路径，它们已包含 shutdownOne + unloadAppCode。
+       返回 true 表示确实杀掉了一个运行中的应用。 */
+    function closeRunningApp(bundle) {
+      if (!bundle) return false;
+      let killed = false;
+      if (S.view === 'app' && S.currentBundle === bundle) {
+        /* 前台：直接销毁并回桌面（disposeCurrentApp 内含 shutdown + unload） */
+        try { disposeCurrentApp(); } catch { }
+        setView('home');
+        killed = true;
+      }
+      /* 后台同 bundle 也可能有多个残留：全部杀掉 */
+      while (findBackground(bundle)) {
+        try { killBackground(bundle); } catch { }
+        killed = true;
+      }
+      return killed;
+    }
+    try { window.WujiAppInstaller?.setRunningAppCloser?.(closeRunningApp); } catch { }
+
+    /* ---------- 弹窗宿主：把对话框挂进「对应应用」的 ShadowRoot ----------
+       这样弹窗只在对应应用/窗口内居中显示；应用被切到后台时弹窗随之隐藏，
+       切回来还在；backdrop 不覆盖整个 OS，侧滑返回/多任务手势照常可用。 */
+    function dialogRootFor(bundle) {
+      const b = bundle || S.currentBundle;
+      if (!b) return null;
+      let host = null;
+      if (S.view === 'app' && S.currentBundle === b) {
+        host = appScreen.querySelector('[data-wj-platform="wujios"]');
+      } else {
+        const bg = findBackground(b);
+        if (bg) host = bg.hostEl.querySelector('[data-wj-platform="wujios"]');
+      }
+      if (host && host.shadowRoot) return { root: host.shadowRoot, bundle: b };
+      return null;
+    }
+    try { window.WujiDialog?.setHostProvider?.(dialogRootFor); } catch { }
+
     /* 把当前前台应用移到后台（保留 DOM 与导航）；返回 entry 或 null */
     function backgroundCurrentApp() {
       const bundle = S.currentBundle;
@@ -1733,6 +1788,8 @@
       try { window.WujiDialog?.closeByBundle?.(bundle); } catch { }
       try { WujiApps.shutdownOne?.(bundle); } catch { }
       try { window.WujiLife?.kill?.(bundle); } catch { }
+      /* ★ 杀后台：清副作用并把应用降级回 meta，丢弃函数引用释放内存 */
+      unloadAppCode(bundle);
       if (!S.backgroundApps.length) appScreenFrozen.hidden = true;
       window.dispatchEvent(new CustomEvent('wuji:app-killed', { detail: { bundle } }));
       return true;
@@ -1948,6 +2005,12 @@
         compLink.href = 'styles/components.css';
         shadow.appendChild(compLink);
 
+        /* 弹窗样式：对话框挂载在本应用 ShadowRoot 内，必须在这里引入样式 */
+        const dialogLink = document.createElement('link');
+        dialogLink.rel = 'stylesheet';
+        dialogLink.href = 'styles/dialog.css';
+        shadow.appendChild(dialogLink);
+
         const appStyleEl = document.createElement('style');
         shadow.appendChild(appStyleEl);
 
@@ -2080,6 +2143,8 @@
       if (closingBundle) {
         try { WujiApps.shutdownOne?.(closingBundle); } catch { }
         try { window.WujiLife?.kill?.(closingBundle); } catch { }
+        /* ★ 真正退出：降级回 meta 释放内存，下次打开从 IDB 重新加载 */
+        unloadAppCode(closingBundle);
       }
 
       // 注意：不再 killAllBackground —— 关闭前台应用不影响其它后台
@@ -2836,6 +2901,8 @@
       setView('locked');
       setPower('running');
 
+      /* 常驻应用（电话）先加载完成，boot 时 onBoot 才会执行建 peer */
+      await preloadPersistentApps();
       try { WujiApps.boot(); } catch (e) { console.error(e); }
     }
 
@@ -2933,7 +3000,7 @@
         console.log(`[update] 市场应用更新完成：${ok}/${appResults.length}`);
       }
 
-      Store.set('wujios.lastbootversion', '1.1.101');
+      Store.set('wujios.lastbootversion', '1.1.103');
 
       await sleep(400);
       setPower('shuttingdown');
@@ -2952,9 +3019,9 @@
 
       if (lastVersion === null) {
         /* 首次开机：直接写版本，正常开机 */
-        Store.set('wujios.lastbootversion', '1.1.101');
-      } else if (lastVersion !== '1.1.101') {
-        /* 已有旧版本号且不是 1.1.101 → 更新 */
+        Store.set('wujios.lastbootversion', '1.1.103');
+      } else if (lastVersion !== '1.1.103') {
+        /* 已有旧版本号且不是 1.1.103 → 更新 */
         await runUpdate();
         return;
       }
@@ -2964,7 +3031,10 @@
     async function powerOff() {
       if (S.power !== 'running' && S.power !== 'booting') return;
       setPower('shuttingdown');
+      /* 先杀掉所有后台应用（各自 onShutdown + unload），否则它们的清理会漏 */
+      try { killAllBackground(); } catch (e) { console.error(e); }
       try { disposeCurrentApp(); } catch (e) { console.error(e); }
+      /* WujiApps.shutdown() 现在只负责常驻应用（电话）的系统关机 onShutdown */
       try { WujiApps.shutdown(); } catch (e) { console.error(e); }
       try { WujiOverlay?.closeAll?.(); } catch { }
 
@@ -3061,9 +3131,14 @@
       powerOn();
     }
     async function restart() {
-      await powerOff();
-      await sleep(300);
-      await powerOn();
+      /* 让应用有机会在页面卸载前保存状态（onShutdown） */
+      try { WujiApps.shutdown(); } catch (e) { console.error(e); }
+      /* reload 后 S.power 回到 off，用这个标记触发自动开机 */
+      try { sessionStorage.setItem('wujios:restore-pending', '1'); } catch { }
+      /* 重启前尽量解锁音频；reload 后新 AudioContext 仍需浏览器放行 */
+      try { window.WujiAudio?.unlock?.(); } catch { }
+      /* 真正重载页面：所有应用脚本重新注入执行，代码改动立即生效 */
+      try { window.location.reload(); } catch { }
     }
 
     window.addEventListener('message', e => {
@@ -3146,8 +3221,23 @@
     /* =========================================================
        预加载
        ========================================================= */
+    /* ★ 开机只加载「系统常驻应用」（电话），让它的 PeerJS 在 boot 时就位、
+       后台常驻监听来电。其它应用仍是打开时才加载。 */
+    async function preloadPersistentApps() {
+      const list = BUILTIN_APPS.filter(m =>
+        WujiApps.isPersistent?.(m.bundlename) && WujiApps.deviceAllowed(m));
+      await Promise.allSettled(list.map(m => {
+        if (!m.src) return Promise.resolve();
+        return WujiAppLoader.load(m.src, m.version);
+      }));
+    }
+
     let _builtinPreloadScheduled = false;
     function scheduleBuiltinPreload() {
+      /* ★ 不再开机预加载所有应用 —— 应用改为「打开时才加载代码」，
+         避免所有应用函数常驻内存。常驻应用由 preloadPersistentApps 单独处理。 */
+      return;
+
       if (_builtinPreloadScheduled) return;
       _builtinPreloadScheduled = true;
 
@@ -3615,7 +3705,7 @@
       /* canStart：锁屏/密码、下拉面板、应用根路由禁用 等统一拦截 */
       function canStartEdge(x, y, side) {
         if (S.power !== 'running' || S.view === 'locked' || S.screenOff) return false;
-        if (window.WujiDialog?.isOpen) return false;
+        /* ★ 弹窗打开时不再拦截侧滑 —— 让手势先用于关闭弹窗 */
         if (window.PanelSystem?.isOpen) return false;
         const rect = osEl.getBoundingClientRect();
         // 顶部 30px 是通知/控制中心下拉区，不触发侧滑
@@ -3644,9 +3734,16 @@
         threshold: () => Math.min(75, Math.max(48, osEl.clientWidth * 0.15)),
         canStart: canStartEdge,
         modeForSide,
-        allowHold: side => S.view === 'app' && !mt.isOpen, // ★ 仅应用内回退图标会长按变 ≡
+        /* 弹窗打开时也允许长按切多任务（弹窗随应用一起进后台，切回来还在） */
+        allowHold: side => S.view === 'app' && !mt.isOpen,
         onCommit(side, mode) {
           if (animatingGuard) return;
+          /* ★ 弹窗打开时：普通侧滑(back)优先关弹窗；
+             长按切成 ≡(home) 则照常进多任务，不被这里拦截。 */
+          if (mode !== 'home' && window.WujiDialog?.isOpen) {
+            try { window.WujiDialog.dismissBySwipe(); } catch { }
+            return;
+          }
           if (mode === 'home') {
             // 三条横线 → 进入/退出多任务
             if (mt.isOpen || S.view === 'multitask') {
@@ -3690,6 +3787,11 @@
          有路由栈：pop 页面（销毁页面局部变量）。 */
       function handleAppBack() {
         if (S.view !== 'app') return;
+        /* ★ 有弹窗时，侧滑返回优先关闭弹窗，而不是退出应用/页面 */
+        if (window.WujiDialog?.isOpen) {
+          try { window.WujiDialog.dismissBySwipe(); } catch { }
+          return;
+        }
         if (currentNav && currentNav.depth > 1) {
           const item = currentNav.current;
           if (item) {

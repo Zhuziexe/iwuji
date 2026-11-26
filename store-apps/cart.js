@@ -131,7 +131,9 @@ try { if (old.state !== 'closed') old.close().catch(() => { }); } catch { }
 }
 return { resume, sync, playCollect, playBeep, destroy };
 })();
-window.addEventListener('wuji:cc-toggle-change', () => AudioEngine.sync());
+/* 顶层监听器：提升到具名函数，onShutdown 里显式移除，避免重新注入累积 */
+function onCcToggleChange() { AudioEngine.sync(); }
+window.addEventListener('wuji:cc-toggle-change', onCcToggleChange);
 function pushRoute(ctx, name, data) {
 try {
 if (typeof ctx.push === 'function') return ctx.push(name, data);
@@ -151,10 +153,11 @@ bundlename: BUNDLE,
 name: '吴际赛车',
 icon: './assets/cart.svg',
 initialRoute: 'home',
-version: '1.1.1',
+version: '1.1.2',
 onBoot() { },
 onShutdown() {
 AudioEngine.destroy();
+try { window.removeEventListener('wuji:cc-toggle-change', onCcToggleChange); } catch { }
 },
 styles: `
 .ct-home {

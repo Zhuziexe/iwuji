@@ -7,6 +7,7 @@
   <title>ZhuziOS</title>
   <link rel="stylesheet" href="styles/tokens.css">
   <link rel="stylesheet" href="styles/components.css">
+  <link rel="stylesheet" href="styles/dialog.css">
   <script>window.__OPENWUJI_PLATFORM = 'zhuzios';</script>
   <style>
     :root {
@@ -60,7 +61,7 @@
     #os>.pc-taskbar,
     #os>.pc-start-menu,
     #os>#wjOverlayHost,
-    #os>#wjDialogHost {
+    #os>#wjDialogFallbackHost {
       pointer-events: auto;
     }
 
@@ -314,8 +315,7 @@
       background: transparent;
       color: #101828;
       font: inherit;
-      font-size: 17px;
-      font-weight: 600;
+      font-size: 18px;
       cursor: pointer;
       display: flex;
       align-items: center;
@@ -1096,7 +1096,7 @@
       opacity: .65 !important;
     }
 
-    #wjDialogHost {
+    #wjDialogFallbackHost {
       z-index: 900 !important;
     }
 
@@ -1136,7 +1136,7 @@
     }
 
     .wj-dialog__title {
-      font-size: 17px;
+      font-size: 18px;
       font-weight: 600;
       color: #101828;
       line-height: 1.4;
@@ -1854,6 +1854,14 @@
           compLink.href = 'styles/components.css';
           shadow.appendChild(compLink);
 
+          /* 弹窗样式：对话框挂在本窗口的 ShadowRoot 内。
+             电脑系统用紧凑旧样式（小圆角/圆角矩形按钮/分割线），
+             backdrop 只覆盖本窗口 → 对话框在窗口中央。 */
+          const dialogLink = document.createElement('link');
+          dialogLink.rel = 'stylesheet';
+          dialogLink.href = 'styles/dialog-pc.css';
+          shadow.appendChild(dialogLink);
+
           const appStyle = document.createElement('style');
           appStyle.textContent = app.styles || '';
           shadow.appendChild(appStyle);
@@ -1922,6 +1930,20 @@
         const taskItemMap = new Map();
 
         const MIN_W = 320, MIN_H = 220;
+
+        /* 卸载应用代码：降级回 meta + 清 loader 缓存。
+           <script> 无法真正卸载，但丢掉注册对象里的函数引用后可被 GC 回收。
+           单实例应用关窗时调用；下次 open 走 ensureLoaded 重新从 IDB 注入。 */
+        function unloadAppCode(bundle) {
+          if (!bundle) return;
+          /* 常驻应用（电话）不卸载、不清缓存，保持来电监听常驻 */
+          if (WujiApps.isPersistent?.(bundle)) return;
+          const app = WujiApps.get(bundle);
+          const src = app?._src || WujiAppInstaller?.get?.(bundle)?.src || `idb://${bundle}`;
+          /* noBump：URL 保持稳定，内置应用走 HTTP 缓存、市场应用走 IDB */
+          try { WujiAppLoader.invalidate(src, { noBump: true }); } catch { }
+          try { WujiApps.unload?.(bundle); } catch { }
+        }
 
         function bindResize(win) {
           const DIRS = ['n', 's', 'e', 'w', 'ne', 'nw', 'se', 'sw'];
@@ -2145,6 +2167,11 @@
 
           const backBtn = el.querySelector('.pc-win__back');
           backBtn.addEventListener('click', () => {
+            /* 返回优先关闭本窗口的弹窗 */
+            if (window.WujiDialog?.isOpenFor?.(win.bundle)) {
+              try { window.WujiDialog.dismissBySwipe(win.bundle); } catch { }
+              return;
+            }
             if (win.instance.nav.depth > 1) win.instance.nav.pop();
           });
           const offNav = win.instance.nav.onChange(() => {
@@ -2194,6 +2221,12 @@
           win.el.remove();
           removeTaskItem(win);
           try { window.WujiLife?.kill?.(win.bundle); } catch { }
+
+          /* ★ 单实例：关窗即应用退出 → 先跑 onShutdown 清模块级副作用，
+             再降级回 meta + 清 loader 缓存释放内存。
+             重新打开时 AppRuntime.ensureLoaded() 会从 IDB 重新注入执行。 */
+          try { WujiApps.shutdownOne?.(win.bundle); } catch { }
+          unloadAppCode(win.bundle);
 
           const next = wins
             .filter(w => !w.minimized)
@@ -2299,6 +2332,12 @@
           function onKey(e) {
             if (!e.altKey || e.key !== 'ArrowLeft') return;
             if (!win.el.classList.contains('is-focused')) return;
+            /* 返回优先关闭本窗口的弹窗 */
+            if (window.WujiDialog?.isOpenFor?.(win.bundle)) {
+              try { window.WujiDialog.dismissBySwipe(win.bundle); } catch { }
+              e.preventDefault();
+              return;
+            }
             if (nav.depth > 1) { nav.pop(); e.preventDefault(); }
           }
           window.addEventListener('keydown', onKey);
@@ -2308,12 +2347,49 @@
           };
         }
 
+        /* 更新/卸载前彻底杀死正在运行的应用（单实例：一个 bundle 一个窗口）。
+           复用 close()：内含 shutdownOne + unloadAppCode。 */
+        function closeRunningApp(bundle) {
+          const win = wins.find(w => w.bundle === bundle);
+          if (!win) return false;
+          try { close(win); } catch { }
+          return true;
+        }
+
         return {
           open, close, minimize, restore, toggleMax, focus,
+          closeRunning: closeRunningApp,
           list: () => wins.slice(),
         };
       })();
       window.WujiWindows = WujiWindows;
+
+      /* 注入 installer：更新/卸载前先杀掉运行中的窗口，避免换脚本后残留 */
+      try {
+        window.WujiAppInstaller?.setRunningAppCloser?.(
+          bundle => window.WujiWindows?.closeRunning?.(bundle)
+        );
+      } catch { }
+
+      /* 弹窗宿主：把对话框挂进「对应应用窗口」的 ShadowRoot。
+         单实例应用 -> 同 bundle 只有一个窗口，弹窗只在该窗口内居中；
+         最小化/失焦时随窗口隐藏，恢复时仍在。 */
+      try {
+        window.WujiDialog?.setHostProvider?.(bundle => {
+          const b = bundle || window.WujiAppLauncher?.getCurrentBundle?.();
+          if (!b) return null;
+          /* ★ 用公开 API WujiWindows.list()：wins 是 WujiWindows IIFE 内的
+             私有变量，在这里直接引用会抛 ReferenceError 被 dialog.js 吞掉，
+             导致每次都回退到全屏 fallback host。 */
+          const win = window.WujiWindows?.list?.().find(w => w.bundle === b);
+          /* win.bodyEl 自身就是 shadow host（mount 时给它 attach 了 ShadowRoot） */
+          if (win && win.bodyEl && win.bodyEl.shadowRoot) {
+            return { root: win.bodyEl.shadowRoot, bundle: b };
+          }
+          return null;
+        });
+      } catch { }
+
       window.WujiAppLauncher = {
         open(bundle, params) {
           WujiWindows.open(bundle, params || {});
@@ -2882,24 +2958,14 @@
         try { await WujiAppInstaller.restore(); }
         catch (e) { console.warn('[boot] restore failed', e); }
 
-        /* ★ 内置应用按平台过滤后预加载 */
-        BUILTIN_APPS
-          .filter(m => WujiApps.deviceAllowed(m))
-          .forEach(m => {
-            if (!m.src) return;
-            WujiAppLoader.load(m.src, m.version).catch(e => {
-              console.warn('[preload builtin]', m.bundlename, e);
-            });
-          });
-
-        /* installeds() 已过滤，天然只含本平台应用 */
-        WujiApps.installeds().forEach(app => {
-          if (!app._src) return;
-          WujiAppLoader.load(app._src, app.version).catch(e => {
-            console.warn('[preload installed]', app.bundlename, e);
-          });
-        });
-
+        /* ★ 不再开机预加载所有应用：改为打开时才从 IDB/HTTP 加载。
+           常驻应用（电话）需先加载以便 boot 建 peer，但电话仅 iwuji 可用，
+           zhuzios(pc) 上必须按设备过滤，否则白白注入一个会被拒绝注册的应用。 */
+        await Promise.allSettled(
+          BUILTIN_APPS
+            .filter(m => WujiApps.isPersistent?.(m.bundlename) && WujiApps.deviceAllowed(m))
+            .map(m => m.src ? WujiAppLoader.load(m.src, m.version) : Promise.resolve())
+        );
         try { WujiApps.boot(); }
         catch (e) { console.warn('[boot]', e); }
 

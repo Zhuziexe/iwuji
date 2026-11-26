@@ -66,7 +66,7 @@
     name: '吴际MC',
     icon: './assets/mc.svg',
     initialRoute: 'main',
-    version: '1.4.8',
+    version: '1.4.9',
     devices: ['iwuji'],
     disablebackgesture: true,  // 3D 游戏：全局禁用侧滑返回
     styles: `
@@ -1269,6 +1269,9 @@
         });
         blockTexture.dispose();
         renderer.dispose();
+        /* ★ dispose() 只清 Three.js 内部资源，不释放 WebGL context。
+           主动 forceContextLoss，避免反复进出游戏累积 context（浏览器上限约 16）。 */
+        try { renderer.forceContextLoss(); } catch { }
       },
     };
   }

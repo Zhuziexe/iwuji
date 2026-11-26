@@ -287,6 +287,7 @@
     status: 'idle',
     target: '',
     callStart: 0,
+    destroying: false,
   };
 
   const listeners = new Set();
@@ -412,11 +413,41 @@
     try { WujiToast.show('对方已挂断'); } catch { }
   }
 
+  /* 固定号码：存 localStorage，重启不换号；仅当该号被占用(unavailable-id)才换新。 */
+  const NUM_KEY = 'wujios.phone.number';
+  function readSavedNumber() {
+    try {
+      const n = String(localStorage.getItem(NUM_KEY) || '').trim();
+      return /^1\d{5}$/.test(n) ? n : '';
+    } catch { return ''; }
+  }
+  function saveNumber(n) {
+    try { localStorage.setItem(NUM_KEY, String(n)); } catch { }
+  }
+  function genNumber() {
+    return '1' + String(Math.floor(10000 + Math.random() * 90000));
+  }
+  function publishNewNumber(n) {
+    try {
+      WujiNotification.publish({
+        bundlename: BUNDLE,
+        id: 1,
+        title: '电话',
+        content: `你的新号码是${n}`,
+        showtime: true,
+        notifyuser: true,
+      });
+    } catch (e) { console.warn('[phone] publish new number failed', e); }
+  }
+
   async function initPeer() {
     if (S.peer && !S.peer.destroyed) return;
+    S.destroying = false;
     try { await ensurePeerJs(); } catch (e) { console.warn('[phone] PeerJS 加载失败', e); return; }
 
-    const id = '1' + String(Math.floor(10000 + Math.random() * 90000));
+    /* 优先用已保存的号码，没有才生成并保存 */
+    let id = readSavedNumber();
+    if (!id) { id = genNumber(); saveNumber(id); }
     S.myPeerId = id;
 
     let peer;
@@ -469,10 +500,14 @@
     peer.on('error', err => {
       console.warn('[phone] peer error:', err.type);
       if (err.type === 'unavailable-id') {
+        /* 号码被占用：换新号、存起来、发通知告知用户 */
         try { peer.destroy(); } catch { }
         S.peer = null;
         S.ready = false;
-        S.myPeerId = '';
+        const newId = genNumber();
+        saveNumber(newId);
+        S.myPeerId = newId;
+        publishNewNumber(newId);
         notify();
         setTimeout(() => { initPeer(); }, 300);
       }
@@ -481,7 +516,8 @@
     peer.on('disconnected', () => {
       S.ready = false;
       notify();
-      if (peer && !peer.destroyed) { try { peer.reconnect(); } catch { } }
+      /* 系统关机 / 主动销毁后不再重连（否则号码一直被占） */
+      if (peer && !peer.destroyed && !S.destroying) { try { peer.reconnect(); } catch { } }
     });
 
     peer.on('close', () => {
@@ -493,6 +529,7 @@
 
   function destroyPeer() {
     resetState();
+    S.destroying = true;
     if (S.peer) { try { S.peer.destroy(); } catch { } S.peer = null; }
     if (S.stream) {
       try { S.stream.getTracks().forEach(t => t.stop()); } catch { }
@@ -651,8 +688,10 @@
     name: '电话',
     icon: './assets/phone.svg',
     initialRoute: 'dialer',
-    version: '2.3.2',
+    version: '2.3.3',
 
+    /* 电话是系统常驻应用：onBoot 只在系统开机触发，
+       onShutdown 只在系统关机触发（应用自身退出不会调这两个）。 */
     onBoot() {
       resetState();
       initPeer().catch(() => { });
@@ -660,8 +699,7 @@
     },
 
     onShutdown() {
-      resetState();
-      destroyPeer();
+      try { destroyPeer(); } catch { }
       Ringtone.stop();
       try { WujiOverlay.close(); } catch { }
     },

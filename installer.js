@@ -13,6 +13,20 @@ window.WujiAppInstaller = (() => {
   const KEY = 'installedApps';
   let migrationDone = false;
 
+  /* ★ 关闭「正在运行的应用」的钩子，由宿主 Shell 注入。
+     更新/卸载前必须调用：否则应用页面正持有旧代码的函数/mount 副作用，
+     换掉脚本后会残留。Shell 负责彻底销毁（前台 dispose / 后台 kill / 窗口 close），
+     这些路径已包含 onShutdown + unloadAppCode。 */
+  let runningAppCloser = null;
+  function setRunningAppCloser(fn) {
+    runningAppCloser = typeof fn === 'function' ? fn : null;
+  }
+  async function closeRunning(bundle) {
+    if (!bundle || !runningAppCloser) return;
+    try { await runningAppCloser(bundle); }
+    catch (e) { console.warn('[installer] closeRunning', bundle, e); }
+  }
+
   /* ---------- 版本比较 ---------- */
   function cmpVer(a, b) {
     const pa = String(a || '0').split('.').map(n => parseInt(n, 10) || 0);
@@ -103,6 +117,8 @@ window.WujiAppInstaller = (() => {
 
   /* ---------- 对外 API ---------- */
   return {
+    setRunningAppCloser,
+
     list() { return readAll().slice(); },
 
     /** 当前设备可见的已安装记录（供 PC 的"已安装管理"用） */
@@ -142,6 +158,12 @@ window.WujiAppInstaller = (() => {
 
       const nextVersion = meta.version || '1.0.0';
       const existing = this.get(bundle);
+
+      /* ★ 更新正在运行的已安装应用：先彻底杀死，清掉旧代码的 mount 副作用、
+         模块级状态和 script 节点，避免换脚本后残留泄漏。 */
+      if (existing && WujiApps.isInstalled(bundle)) {
+        await closeRunning(bundle);
+      }
 
       if (existing && !force) {
         const c = cmpVer(existing.version, nextVersion);

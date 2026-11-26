@@ -1,5 +1,5 @@
 /* =========================================================
-   dialog.js —— 全局对话框
+   dialog.js —— 全局对话框（挂载在「对应应用」内）
 
    用法：
      WujiDialog.show({
@@ -36,31 +36,63 @@
    返回值：
      - 无 input：resolve 按钮的 value（字符串），和原来一致
      - 有 input：resolve { button, value }
-     - close() / 被替换：resolve(null)
+     - close() / 被替换 / 侧滑关闭：resolve(null)
 
-   特点：
+   特点（重要）：
+     - 弹窗 DOM 挂在「对应应用的 ShadowRoot / DOM」里，而不是全局覆盖层：
+       · 只在对应应用/窗口内居中显示
+       · 切到别的应用时随之隐藏，切回来还在
+       · backdrop 只覆盖该应用/窗口，不影响侧滑返回/多任务手势
+     - 宿主 Shell 通过 WujiDialog.setHostProvider(provider) 提供
+       「当前应用根节点」；provider(bundle) 返回 { root, bundle } 或 null。
+       找不到应用根节点时回退到 #os / body（系统级弹窗，如卸载确认）。
      - 有 bundlename 字段，应用被关闭/替换时通过 closeByBundle 自动关闭
-     - 无法左滑关闭，必须点按钮
-     - backdrop 会拦截所有触摸，阻止返回手势穿透
+     - dismissBySwipe()：侧滑返回手势优先关闭当前弹窗（resolve(null)）
+     - 不再 stopPropagation 触摸事件 —— 手势交给系统正常处理
    ========================================================= */
 window.WujiDialog = (() => {
-  let hostEl = null;
-  let active = null;   /* { backdrop, resolve, bundle } */
-
-  function ensureHost() {
-    if (hostEl && hostEl.isConnected) return hostEl;
-    hostEl = document.createElement('div');
-    hostEl.id = 'wjDialogHost';
-    hostEl.style.cssText =
-      'position:absolute;inset:0;z-index:500;display:none;pointer-events:none;';
-    const os = document.getElementById('os') || document.body;
-    os.appendChild(hostEl);
-    return hostEl;
-  }
+  let active = null;          /* { backdrop, resolve, bundle } */
+  let hostProvider = null;    /* function(bundle) -> { root, bundle } | null */
+  let fallbackHost = null;    /* 系统级弹窗的兜底宿主 */
 
   function esc(s) {
     return String(s == null ? '' : s).replace(/[&<>"']/g, c =>
       ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+  }
+
+  function ensureFallbackHost() {
+    if (fallbackHost && fallbackHost.isConnected) return fallbackHost;
+    fallbackHost = document.createElement('div');
+    fallbackHost.id = 'wjDialogFallbackHost';
+    fallbackHost.style.cssText = 'position:absolute;inset:0;z-index:500;pointer-events:none;';
+    const os = document.getElementById('os') || document.body;
+    os.appendChild(fallbackHost);
+    return fallbackHost;
+  }
+
+  /** Shell 注入：返回当前应用的挂载根节点（ShadowRoot 或普通元素） */
+  function setHostProvider(provider) {
+    hostProvider = typeof provider === 'function' ? provider : null;
+  }
+
+  function hostFor(bundle) {
+    let info = null;
+    if (hostProvider) {
+      try { info = hostProvider(bundle); } catch { info = null; }
+    }
+    if (info && info.root && typeof info.root.appendChild === 'function') {
+      /* 同一个宿主里附一个透明层，让 backdrop 的 position:absolute 填满它。
+         pointer-events:none 让手势穿透到宿主；backdrop 自己是 auto。 */
+      let layer = info.root.querySelector(':scope > #wjDialogLayer');
+      if (!layer) {
+        layer = info.root.ownerDocument.createElement('div');
+        layer.id = 'wjDialogLayer';
+        layer.style.cssText = 'position:absolute;inset:0;z-index:900;pointer-events:none;';
+        info.root.appendChild(layer);
+      }
+      return layer;
+    }
+    return ensureFallbackHost();
   }
 
   function dismiss(entry, value) {
@@ -72,7 +104,6 @@ window.WujiDialog = (() => {
     backdrop.classList.remove('is-show');
     setTimeout(() => {
       if (backdrop.parentNode) backdrop.parentNode.removeChild(backdrop);
-      if (!active && hostEl) hostEl.style.display = 'none';
     }, 220);
     if (typeof resolve === 'function') resolve(value);
   }
@@ -81,15 +112,16 @@ window.WujiDialog = (() => {
     if (!opts || typeof opts !== 'object') return null;
 
     if (active) {
-      dismiss(active, null);
+      const prev = active;
       active = null;
+      dismiss(prev, null);
     }
 
-    const host = ensureHost();
-    host.style.display = 'block';
+    const bundle = opts.bundlename || '';
+    const host = hostFor(bundle);
 
     return new Promise(resolve => {
-      const backdrop = document.createElement('div');
+      const backdrop = host.ownerDocument.createElement('div');
       backdrop.className = 'wj-dialog-backdrop';
 
       const btns = Array.isArray(opts.buttons) ? opts.buttons : [];
@@ -137,13 +169,7 @@ window.WujiDialog = (() => {
 
       host.appendChild(backdrop);
 
-      const stop = e => e.stopPropagation();
-      backdrop.addEventListener('touchstart', stop, { passive: true });
-      backdrop.addEventListener('touchmove', stop, { passive: true });
-      backdrop.addEventListener('pointerdown', stop, { passive: true });
-      backdrop.addEventListener('pointermove', stop, { passive: true });
-
-      const entry = { backdrop, resolve, bundle: opts.bundlename || '' };
+      const entry = { backdrop, resolve, bundle };
       active = entry;
 
       const inputEl = backdrop.querySelector('.wj-dialog__input');
@@ -239,6 +265,15 @@ window.WujiDialog = (() => {
     dismiss(entry, null);
   }
 
+  /* 侧滑返回手势优先调用：关闭当前弹窗并 resolve(null)。
+     传 bundle 时只关闭属于该应用的弹窗（多窗口场景避免误关别的窗口）。 */
+  function dismissBySwipe(bundle) {
+    if (!active) return false;
+    if (bundle && active.bundle && active.bundle !== bundle) return false;
+    close();
+    return true;
+  }
+
   function closeByBundle(bundle) {
     if (!active || !bundle) return;
     if (active.bundle === bundle) close();
@@ -247,8 +282,11 @@ window.WujiDialog = (() => {
   return {
     show,
     close,
+    dismissBySwipe,
     closeByBundle,
+    setHostProvider,
     get isOpen() { return active !== null; },
+    isOpenFor(bundle) { return !!active && (!bundle || active.bundle === bundle); },
     get current() { return active; },
   };
 })();
