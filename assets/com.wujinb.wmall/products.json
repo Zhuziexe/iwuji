@@ -12,7 +12,7 @@
           "id": "blue",
           "text": "牛逼蓝",
           "image": "./assets/com.wujinb.wmall/iwuji_blue.png",
-          "buyable": false
+          "buyable": true
         },
         {
           "id": "white",
@@ -24,7 +24,7 @@
           "id": "black",
           "text": "牛逼黑",
           "image": "./assets/com.wujinb.wmall/iwuji_black.png",
-          "buyable": false
+          "buyable": true
         }
       ],
       "specs": [
@@ -67,13 +67,13 @@
           "id": "white",
           "text": "牛逼白",
           "image": "./assets/com.wujinb.wmall/iwuji_neo_white.png",
-          "buyable": true
+          "buyable": false
         },
         {
           "id": "purple",
           "text": "牛逼紫",
           "image": "./assets/com.wujinb.wmall/iwuji_neo_purple.png",
-          "buyable": true
+          "buyable": false
         }
       ],
       "specs": [
@@ -108,13 +108,13 @@
           "id": "sky",
           "text": "天空蓝",
           "image": "./assets/com.wujinb.wmall/wujibuds_sky.png",
-          "buyable": false
+          "buyable": true
         },
         {
           "id": "blue",
           "text": "牛逼蓝",
           "image": "./assets/com.wujinb.wmall/wujibuds_blue.png",
-          "buyable": false
+          "buyable": true
         }
       ]
     },
@@ -132,7 +132,7 @@
       "name": "iWuji透明保护壳",
       "shop": "iWuji官方旗舰店",
       "price": 39,
-      "buyable": false
+      "buyable": true
     },
     {
       "id": "iwuji_neo_case",
@@ -148,7 +148,7 @@
       "name": "iWuji钢化膜",
       "shop": "iWuji官方旗舰店",
       "price": 29,
-      "buyable": true
+      "buyable": false
     },
     {
       "id": "iwuji_neo_glass",
@@ -164,7 +164,7 @@
       "name": "牛逼素皮保护壳",
       "shop": "iWuji官方旗舰店",
       "price": 109,
-      "buyable": false
+      "buyable": true
     },
     {
       "id": "nb_sticker",
@@ -172,7 +172,7 @@
       "name": "吴际牛逼贴纸",
       "shop": "吴际玩具官方旗舰店",
       "price": 12,
-      "buyable": false
+      "buyable": true
     },
     {
       "id": "nb_sticker_big",
