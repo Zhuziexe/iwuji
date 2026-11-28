@@ -12,13 +12,13 @@
           "id": "blue",
           "text": "牛逼蓝",
           "image": "./assets/com.wujinb.wmall/iwuji_blue.png",
-          "buyable": true
+          "buyable": false
         },
         {
           "id": "white",
           "text": "牛逼白",
           "image": "./assets/com.wujinb.wmall/iwuji_white.png",
-          "buyable": true
+          "buyable": false
         },
         {
           "id": "black",
@@ -67,7 +67,7 @@
           "id": "white",
           "text": "牛逼白",
           "image": "./assets/com.wujinb.wmall/iwuji_neo_white.png",
-          "buyable": false
+          "buyable": true
         },
         {
           "id": "purple",
@@ -114,7 +114,7 @@
           "id": "blue",
           "text": "牛逼蓝",
           "image": "./assets/com.wujinb.wmall/wujibuds_blue.png",
-          "buyable": true
+          "buyable": false
         }
       ]
     },
@@ -148,7 +148,7 @@
       "name": "iWuji钢化膜",
       "shop": "iWuji官方旗舰店",
       "price": 29,
-      "buyable": false
+      "buyable": true
     },
     {
       "id": "iwuji_neo_glass",
